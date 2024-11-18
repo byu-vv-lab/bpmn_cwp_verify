@@ -40,10 +40,9 @@ class Cwp:
             return Failure(e)
 
     def accept(self, visitor: "CwpVisitor") -> None:
-        result = visitor.visit_cwp(self)
-        if result:
-            for state in self.start_states.values():
-                state.accept(visitor)
+        visitor.visit_cwp(self)
+        for state in self.start_states.values():
+            state.accept(visitor)
         visitor.end_visit_cwp(self)
 
     def generate_graph_viz(self) -> None:
