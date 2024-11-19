@@ -1,15 +1,19 @@
-from bpmncwpverify.core.expr import ExpressionListener
-import pytest
-from bpmncwpverify.antlr.ExprLexer import ExprLexer
-from bpmncwpverify.antlr.ExprParser import ExprParser
-
-from antlr4.error.ErrorListener import ErrorListener
-from returns.pipeline import is_successful
-
-from bpmncwpverify.core.state import SymbolTable
+# type: ignore
 
 from antlr4 import CommonTokenStream, InputStream
+from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
+from antlr4.error.ErrorStrategy import ParseCancellationException
 
+from bpmncwpverify.antlr.ExprLexer import ExprLexer
+from bpmncwpverify.antlr.ExprParser import ExprParser
+from bpmncwpverify.core.expr import ExpressionListener
+from bpmncwpverify.core.state import SymbolTable
+from bpmncwpverify.error import Error
+
+import pytest
+
+from returns.pipeline import is_successful
+from returns.result import Result, Success
 
 from typing import Iterable
 
@@ -84,9 +88,32 @@ def bad_input_binaryInUnary() -> Iterable[str]:
     yield "* 1"
 
 
+def _get_parser(file_contents: str) -> Result[ExprParser, Error]:
+    input_stream = InputStream(file_contents)
+    lexer = ExprLexer(input_stream)
+    stream = CommonTokenStream(lexer)
+    parser = ExprParser(stream)
+    parser.removeErrorListener(ConsoleErrorListener.INSTANCE)
+    parser.addErrorListener(ThrowingErrorListener())
+    return Success(parser)
+
+
 # TODO: write a function that returns sucess/failure on a bad/good input
-# TODO: write nested expr tests
 # TODO: check for parse errors for bad inputs
+
+
+def test_bad_input_parser_test(bad_input_binaryInUnary):
+    parser_result = _get_parser(bad_input_binaryInUnary)
+    assert is_successful(parser_result)
+    parser = parser_result.unwrap()
+
+    with pytest.raises(
+        ParseCancellationException, match=r".* extraneous .*"
+    ) as exception:
+        _ = parser.start()
+
+    assert exception.type is ParseCancellationException
+    assert parser.getNumberOfSyntaxErrors() == 1
 
 
 def test_parenthesis_input_test(parenthesis_input):
