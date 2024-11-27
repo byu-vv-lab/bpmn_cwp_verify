@@ -8,6 +8,60 @@ class Error:
         pass
 
 
+class ExpressionComputationCompatabilityError(Error):
+    __slots__ = ["ltype", "rtype"]
+
+    def __init__(self, ltype: str, rtype: str) -> None:
+        super().__init__()
+        self.ltype = ltype
+        self.rtype = rtype
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionComputationCompatabilityError):
+            return self.ltype == other.ltype and self.rtype == other.rtype
+        return False
+
+
+class ExpressionNegatorError(Error):
+    __slots__ = ["_type"]
+
+    def __init__(self, type: str) -> None:
+        super().__init__()
+        self._type = type
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionNegatorError):
+            return self._type == other._type
+        return False
+
+
+class ExpressionRelationCompatabilityError(Error):
+    __slots__ = ["ltype", "rtype"]
+
+    def __init__(self, ltype: str, rtype: str) -> None:
+        super().__init__()
+        self.ltype = ltype
+        self.rtype = rtype
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionComputationCompatabilityError):
+            return self.ltype == other.ltype and self.rtype == other.rtype
+        return False
+
+
+class ExpressionRelationalNotError(Error):
+    __slots__ = ["_type"]
+
+    def __init__(self, type: str) -> None:
+        super().__init__()
+        self._type = type
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionRelationalNotError):
+            return self._type == other._type
+        return False
+
+
 class BpmnNodeNotFound(Error):
     __slots__ = ["node_id"]
 
@@ -117,6 +171,7 @@ def _get_exception_message(error: Exception) -> str:
     return "ERROR: {0} ({1})".format(type(error), error)
 
 
+# TODO: WRITE ERROR MESSAGES FOR EXPR
 def _get_error_message(error: Error) -> str:
     match error:
         case BpmnNodeNotFound(node_id=node_id):

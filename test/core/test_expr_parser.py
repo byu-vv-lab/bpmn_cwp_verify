@@ -1,19 +1,21 @@
 # type: ignore
 
 from antlr4 import CommonTokenStream, InputStream
-from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
+
+# from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
+from antlr4.error.ErrorListener import ErrorListener
 from antlr4.error.ErrorStrategy import ParseCancellationException
 
 from bpmncwpverify.antlr.ExprLexer import ExprLexer
 from bpmncwpverify.antlr.ExprParser import ExprParser
-from bpmncwpverify.core.expr import ExpressionListener
+from bpmncwpverify.core.expr import _get_parser, _parse_expressions, ExpressionListener
 from bpmncwpverify.core.state import SymbolTable
-from bpmncwpverify.error import Error
+# from bpmncwpverify.error import Error
 
 import pytest
 
 from returns.pipeline import is_successful
-from returns.result import Result, Success
+# from returns.result import Result, Success
 
 from typing import Iterable
 
@@ -88,20 +90,6 @@ def bad_input_binaryInUnary() -> Iterable[str]:
     yield "* 1"
 
 
-def _get_parser(file_contents: str) -> Result[ExprParser, Error]:
-    input_stream = InputStream(file_contents)
-    lexer = ExprLexer(input_stream)
-    stream = CommonTokenStream(lexer)
-    parser = ExprParser(stream)
-    parser.removeErrorListener(ConsoleErrorListener.INSTANCE)
-    parser.addErrorListener(ThrowingErrorListener())
-    return Success(parser)
-
-
-# TODO: write a function that returns sucess/failure on a bad/good input
-# TODO: check for parse errors for bad inputs
-
-
 def test_bad_input_parser_test(bad_input_binaryInUnary):
     parser_result = _get_parser(bad_input_binaryInUnary)
     assert is_successful(parser_result)
@@ -114,6 +102,9 @@ def test_bad_input_parser_test(bad_input_binaryInUnary):
 
     assert exception.type is ParseCancellationException
     assert parser.getNumberOfSyntaxErrors() == 1
+
+
+# TODO: TRY TO MAKE IT THROW THE PARSE CANCEL ERROR
 
 
 def test_parenthesis_input_test(parenthesis_input):
@@ -298,10 +289,11 @@ def parse_input(expression: str):
 )
 def test_valid_inputs(input_text):
     try:
-        parse_input(input_text)
+        parser_result = _get_parser(input_text)
+        _parse_expressions(parser_result.unwrap())
         assert True
-    except SyntaxError as e:
-        pytest.fail(f"Valid input raised SyntaxError: {e}")
+    except ParseCancellationException as e:
+        pytest.fail(f"Valid input raised ParseCancellationException: {e}")
 
 
 @pytest.mark.parametrize(
@@ -348,8 +340,8 @@ def test_valid_inputs(input_text):
     ],
 )
 def test_invalid_inputs(input_text):
-    with pytest.raises(SyntaxError):
-        parse_input(input_text)
+    with pytest.raises(ParseCancellationException):
+        _get_parser(input_text)
 
 
 @pytest.mark.parametrize(
