@@ -249,7 +249,8 @@ class SymbolTable:
     def get_type(self, id: str) -> Result[str, Error]:
         if id in self._id2type:
             return Success(self._id2type[id])
-        return typechecking.get_type_literal(id)
+        # TODO: ADD GET TYPE LITERAL
+        return Failure(StateUnknownTypeError(id))
 
     def is_defined(self, id: str) -> bool:
         defined: bool = is_successful(self.get_type(id))
