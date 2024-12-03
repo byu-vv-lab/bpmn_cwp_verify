@@ -2,8 +2,9 @@ from typing import List, Dict, Union
 from xml.etree.ElementTree import Element
 from bpmncwpverify.core.state import SymbolTable
 from returns.result import Result
-from defusedxml.ElementTree import parse
 from bpmncwpverify.constants import NAMESPACES
+from returns.pipeline import is_successful
+from returns.functions import not_
 from bpmncwpverify.error import (
     BpmnStructureError,
     Error,
@@ -315,15 +316,15 @@ class Bpmn:
         return str(promela_visitor)
 
     @staticmethod
-    def from_xml(xml_file: str, symbol_table: SymbolTable) -> Result["Bpmn", Error]:
+    def from_xml(root: Element, symbol_table: SymbolTable) -> Result["Bpmn", Error]:
         from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
 
-        tree = parse(xml_file)
-        root = tree.getroot()
         builder = BpmnBuilder()
         processes = root.findall("bpmn:process", NAMESPACES)
         for process_element in processes:
-            builder.add_process(process_element, symbol_table)
+            result = builder.add_process(process_element, symbol_table)
+            if not_(is_successful)(result):
+                return result
 
         collab = root.find("bpmn:collaboration", NAMESPACES)
         if collab is not None:
