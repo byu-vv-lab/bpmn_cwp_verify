@@ -6,9 +6,8 @@ from bpmncwpverify.core.state import SymbolTable
 from returns.result import Failure, Success
 
 
-def test_complete_bpmn_with_no_start_or_end_event():
-    symbol_table = SymbolTable()
-
+def create_bpmn_definition():
+    """Create a basic BPMN definitions root element."""
     root = Element(
         "bpmn:definitions",
         attrib={
@@ -17,27 +16,43 @@ def test_complete_bpmn_with_no_start_or_end_event():
             "targetNamespace": "http://example.com/schema/bpmn",
         },
     )
+    SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
+    return root
 
-    collab = SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
+
+def add_process(root: Element, process_id="Process_1"):
+    """Add a collaboration and participant to the BPMN definition."""
     SubElement(
-        collab,
+        root,
         "bpmn:participant",
         attrib={
             "id": "Participant_1",
             "name": "Test Participant",
-            "processRef": "Process_1",
+            "processRef": process_id,
         },
     )
 
+
+def add_process_with_elements(root, elements):
+    """Add a process with specified elements to the BPMN definition."""
     process = SubElement(
         root, "bpmn:process", attrib={"id": "Process_1", "isExecutable": "false"}
     )
-    SubElement(process, "bpmn:task", attrib={"id": "Task_1", "name": "Test Task"})
+    for element in elements:
+        process.append(element)
+
+
+def test_complete_bpmn_with_no_start_or_end_event():
+    symbol_table = SymbolTable()
+    root = create_bpmn_definition()
+    add_process(root)
+    task = Element("bpmn:task", attrib={"id": "Task_1", "name": "Test Task"})
+    add_process_with_elements(root, [task])
 
     bpmn = tostring(root, encoding="unicode")
+    parsed_root = ElementTree.fromstring(bpmn)
+    result = Bpmn.from_xml(parsed_root, symbol_table)
 
-    root = ElementTree.fromstring(bpmn)
-    result = Bpmn.from_xml(root, symbol_table)
     assert isinstance(result, Failure)
     exception = result.failure()
     assert (
@@ -48,44 +63,24 @@ def test_complete_bpmn_with_no_start_or_end_event():
 
 def test_complete_bpmn_with_no_end_event():
     symbol_table = SymbolTable()
+    root = create_bpmn_definition()
+    add_process(root)
 
-    root = Element(
-        "bpmn:definitions",
-        attrib={
-            "xmlns:bpmn": NAMESPACES["bpmn"],
-            "id": "Definitions_1",
-            "targetNamespace": "http://example.com/schema/bpmn",
-        },
-    )
-
-    collab = SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
-    SubElement(
-        collab,
-        "bpmn:participant",
-        attrib={
-            "id": "Participant_1",
-            "name": "Test Participant",
-            "processRef": "Process_1",
-        },
-    )
-
-    process = SubElement(
-        root, "bpmn:process", attrib={"id": "Process_1", "isExecutable": "false"}
-    )
-    start = SubElement(process, "bpmn:startEvent", attrib={"id": "se1"})
-    outgoing = SubElement(start, "bpmn:outgoing")
+    start_event = Element("bpmn:startEvent", attrib={"id": "se1"})
+    outgoing = SubElement(start_event, "bpmn:outgoing")
     outgoing.text = "flow1"
-    SubElement(process, "bpmn:exclusiveGateway", attrib={"id": "eg1"})
-    SubElement(
-        process,
+    gateway = Element("bpmn:exclusiveGateway", attrib={"id": "eg1"})
+    sequence_flow = Element(
         "bpmn:sequenceFlow",
         attrib={"id": "flow1", "sourceRef": "se1", "targetRef": "eg1"},
     )
 
-    bpmn = tostring(root, encoding="unicode")
+    add_process_with_elements(root, [start_event, gateway, sequence_flow])
 
-    root = ElementTree.fromstring(bpmn)
-    result = Bpmn.from_xml(root, symbol_table)
+    bpmn = tostring(root, encoding="unicode")
+    parsed_root = ElementTree.fromstring(bpmn)
+    result = Bpmn.from_xml(parsed_root, symbol_table)
+
     assert isinstance(result, Failure)
     exception = result.failure()
     assert (
@@ -96,42 +91,22 @@ def test_complete_bpmn_with_no_end_event():
 
 def test_complete_bpmn_with_good_process():
     symbol_table = SymbolTable()
+    root = create_bpmn_definition()
+    add_process(root)
 
-    root = Element(
-        "bpmn:definitions",
-        attrib={
-            "xmlns:bpmn": NAMESPACES["bpmn"],
-            "id": "Definitions_1",
-            "targetNamespace": "http://example.com/schema/bpmn",
-        },
-    )
-
-    collab = SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
-    SubElement(
-        collab,
-        "bpmn:participant",
-        attrib={
-            "id": "Participant_1",
-            "name": "Test Participant",
-            "processRef": "Process_1",
-        },
-    )
-
-    process = SubElement(
-        root, "bpmn:process", attrib={"id": "Process_1", "isExecutable": "false"}
-    )
-    start = SubElement(process, "bpmn:startEvent", attrib={"id": "se1"})
-    outgoing = SubElement(start, "bpmn:outgoing")
+    start_event = Element("bpmn:startEvent", attrib={"id": "se1"})
+    outgoing = SubElement(start_event, "bpmn:outgoing")
     outgoing.text = "flow1"
-    SubElement(process, "bpmn:endEvent", attrib={"id": "ee1"})
-    SubElement(
-        process,
+    end_event = Element("bpmn:endEvent", attrib={"id": "ee1"})
+    sequence_flow = Element(
         "bpmn:sequenceFlow",
         attrib={"id": "flow1", "sourceRef": "se1", "targetRef": "ee1"},
     )
 
-    bpmn = tostring(root, encoding="unicode")
+    add_process_with_elements(root, [start_event, end_event, sequence_flow])
 
-    root = ElementTree.fromstring(bpmn)
-    result = Bpmn.from_xml(root, symbol_table)
+    bpmn = tostring(root, encoding="unicode")
+    parsed_root = ElementTree.fromstring(bpmn)
+    result = Bpmn.from_xml(parsed_root, symbol_table)
+
     assert isinstance(result, Success)
