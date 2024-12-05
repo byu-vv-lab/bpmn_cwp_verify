@@ -202,11 +202,6 @@ class MessageFlow(Flow):
     def __init__(self, element: Element):
         super().__init__(element)
 
-    def accept(self, visitor: "BpmnVisitor") -> None:
-        if visitor.visit_message_flow(self):
-            self.target_node.accept(visitor)
-        visitor.end_visit_message_flow(self)
-
 
 ###################
 # Process class
@@ -272,23 +267,6 @@ class Bpmn:
 
     def add_inter_process_msg(self, msg: MessageFlow) -> None:
         self.inter_process_msgs[msg.id] = msg
-
-    def __str__(self) -> str:
-        build_arr: List[str] = []
-        for process in self.processes.values():
-            build_arr.append(f"Process ID: {process.id}, Name: {process.name}")
-            for element_id, element in process.all_items().items():
-                build_arr.append(f"  Element ID: {element_id}, Name: {element.name}")
-                build_arr.append("    Outgoing to:")
-                for flow in element.out_flows:
-                    target_element = process.all_items().get(flow.target_node.id)
-                    target_name = target_element.name if target_element else "Unknown"
-                    build_arr.append(
-                        f"      Element ID: {flow.target_node.id}, Name: {target_name}"
-                    )
-            build_arr.append("\n")
-
-        return "\n".join(build_arr)
 
     def accept(self, visitor: "BpmnVisitor") -> None:
         visitor.visit_bpmn(self)
