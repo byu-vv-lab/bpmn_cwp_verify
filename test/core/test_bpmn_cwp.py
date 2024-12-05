@@ -3,7 +3,7 @@ from defusedxml import ElementTree
 from bpmncwpverify.constants import NAMESPACES
 from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.state import SymbolTable
-from returns.result import Failure
+from returns.result import Failure, Success
 
 
 def test_complete_bpmn_with_no_start_or_end_event():
@@ -40,7 +40,10 @@ def test_complete_bpmn_with_no_start_or_end_event():
     result = Bpmn.from_xml(root, symbol_table)
     assert isinstance(result, Failure)
     exception = result.failure()
-    assert exception == "Error with end events or start events: # end events = 0, # start events = 0"
+    assert (
+        exception
+        == "Error with end events or start events: # end events = 0, # start events = 0"
+    )
 
 
 def test_complete_bpmn_with_no_end_event():
@@ -85,4 +88,50 @@ def test_complete_bpmn_with_no_end_event():
     result = Bpmn.from_xml(root, symbol_table)
     assert isinstance(result, Failure)
     exception = result.failure()
-    assert exception == "Error with end events or start events: # end events = 0, # start events = 1"
+    assert (
+        exception
+        == "Error with end events or start events: # end events = 0, # start events = 1"
+    )
+
+
+def test_complete_bpmn_with_good_process():
+    symbol_table = SymbolTable()
+
+    root = Element(
+        "bpmn:definitions",
+        attrib={
+            "xmlns:bpmn": NAMESPACES["bpmn"],
+            "id": "Definitions_1",
+            "targetNamespace": "http://example.com/schema/bpmn",
+        },
+    )
+
+    collab = SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
+    SubElement(
+        collab,
+        "bpmn:participant",
+        attrib={
+            "id": "Participant_1",
+            "name": "Test Participant",
+            "processRef": "Process_1",
+        },
+    )
+
+    process = SubElement(
+        root, "bpmn:process", attrib={"id": "Process_1", "isExecutable": "false"}
+    )
+    start = SubElement(process, "bpmn:startEvent", attrib={"id": "se1"})
+    outgoing = SubElement(start, "bpmn:outgoing")
+    outgoing.text = "flow1"
+    SubElement(process, "bpmn:endEvent", attrib={"id": "ee1"})
+    SubElement(
+        process,
+        "bpmn:sequenceFlow",
+        attrib={"id": "flow1", "sourceRef": "se1", "targetRef": "ee1"},
+    )
+
+    bpmn = tostring(root, encoding="unicode")
+
+    root = ElementTree.fromstring(bpmn)
+    result = Bpmn.from_xml(root, symbol_table)
+    assert isinstance(result, Success)
