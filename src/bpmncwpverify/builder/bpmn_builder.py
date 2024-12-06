@@ -3,7 +3,7 @@ from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
 from bpmncwpverify.core.state import SymbolTable
 from bpmncwpverify.visitors.bpmn_connectivity_visitor import BpmnConnectivityVisitor
 from returns.result import Result, Success, Failure
-from bpmncwpverify.error import Error, MessageError
+from bpmncwpverify.error import BpmnMsgFlowSamePoolError, Error
 
 
 class BpmnBuilder:
@@ -17,12 +17,7 @@ class BpmnBuilder:
                     msg.target_node.id in process.all_items()
                     and msg.source_node.id in process.all_items()
                 ):
-                    raise Exception(
-                        MessageError(
-                            msg.id,
-                            "A message flow cannot connect nodes in the same pool.",
-                        )
-                    )
+                    raise Exception(BpmnMsgFlowSamePoolError(msg.id))
 
     def build(self) -> Result[Bpmn, Error]:
         try:
@@ -37,7 +32,9 @@ class BpmnBuilder:
         except Exception as e:
             return Failure(e)
 
-    def add_process(self, element: Element, symbol_table: SymbolTable) -> Result[Process, Error]:
+    def add_process(
+        self, element: Element, symbol_table: SymbolTable
+    ) -> Result[Process, Error]:
         from bpmncwpverify.builder.process_builder import ProcessBuilder
 
         process_builder = ProcessBuilder(self._bpmn, element, symbol_table)

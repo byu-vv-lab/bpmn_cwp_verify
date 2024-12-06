@@ -1,4 +1,4 @@
-from bpmncwpverify.error import MessageError
+from bpmncwpverify.error import BpmnMsgFlowSamePoolError
 import pytest
 from xml.etree.ElementTree import Element
 from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
@@ -106,11 +106,8 @@ def test_check_messages_valid(mocker):
         Exception,
     ) as exc_info:
         obj._msg_connects_diff_pools()
-    assert isinstance(exc_info.value.args[0], MessageError)
-    assert "message1" == str(exc_info.value.args[0].node_id)
-    assert "A message flow cannot connect nodes in the same pool." == str(
-        exc_info.value.args[0].error_msg
-    )
+    assert isinstance(exc_info.value.args[0], BpmnMsgFlowSamePoolError)
+    assert "message1" == str(exc_info.value.args[0].msg_id)
 
 
 def test_check_messages_no_intersection(mocker):
