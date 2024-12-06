@@ -14,7 +14,7 @@ from bpmncwpverify.core.bpmn import (
     ExclusiveGatewayNode,
     ParallelGatewayNode,
 )
-from bpmncwpverify.error import BpmnStructureError
+from bpmncwpverify.error import BpmnSeqFlowEndEventError, BpmnStructureError
 
 
 class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
@@ -28,11 +28,7 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
 
     def visit_end_event(self, event: EndEvent) -> bool:
         if event.out_flows:
-            raise Exception(
-                BpmnStructureError(
-                    event.id, "An end event cannot have outgoing sequence flow"
-                )
-            )
+            raise Exception(BpmnSeqFlowEndEventError(event.id))
         self.visited.add(event)
         return True
 

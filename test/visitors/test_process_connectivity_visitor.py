@@ -1,5 +1,5 @@
 # type: ignore
-from bpmncwpverify.error import BpmnStructureError
+from bpmncwpverify.error import BpmnSeqFlowEndEventError, BpmnStructureError
 import pytest
 from bpmncwpverify.core.bpmn import EndEvent, StartEvent
 from bpmncwpverify.visitors.process_connectivity_visitor import (
@@ -133,11 +133,8 @@ def test_visit_end_event_with_outgoing_flows(mocker):
     with pytest.raises(Exception) as exc_info:
         obj.visit_end_event(event)
 
-    assert isinstance(exc_info.value.args[0], BpmnStructureError)
-    assert "end_event_2" == str(exc_info.value.args[0].node_id)
-    assert "An end event cannot have outgoing sequence flow" == str(
-        exc_info.value.args[0].error_msg
-    )
+    assert isinstance(exc_info.value.args[0], BpmnSeqFlowEndEventError)
+    assert "end_event_2" == str(exc_info.value.args[0].event_id)
     assert event not in obj.visited
 
 
