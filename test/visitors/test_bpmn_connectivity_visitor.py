@@ -1,4 +1,4 @@
-from bpmncwpverify.error import MessageError
+from bpmncwpverify.error import BpmnMsgSrcError, BpmnMsgTargetError, MessageError
 from bpmncwpverify.visitors.bpmn_connectivity_visitor import BpmnConnectivityVisitor
 import pytest
 from bpmncwpverify.core.bpmn import Node
@@ -21,12 +21,8 @@ def test_ensure_in_and_out_messages(mocker):
         Exception,
     ) as exc_info:
         visitor._ensure_in_messages(test_node_in, "event")
-    assert isinstance(exc_info.value.args[0], MessageError)
+    assert isinstance(exc_info.value.args[0], BpmnMsgTargetError)
     assert "123" == str(exc_info.value.args[0].node_id)
-    assert (
-        "Error while visiting a event. A message flow can only go to a Message start or intermediate event; Receive, User, or Service task; Subprocess; or black box pool."
-        == str(exc_info.value.args[0].error_msg)
-    )
 
     # Test ensure_in_messages - with message event definition
     test_node_in_def = setup_node(
@@ -40,11 +36,8 @@ def test_ensure_in_and_out_messages(mocker):
         Exception,
     ) as exc_info:
         visitor._ensure_out_messages(test_node_out, "event")
-    assert isinstance(exc_info.value.args[0], MessageError)
-    assert (
-        "Error while visiting a event. A message flow can only come from a Messege end or intermediate event; Send, User, or Service task; Subprocess; or black box pool."
-        == str(exc_info.value.args[0].error_msg)
-    )
+    assert isinstance(exc_info.value.args[0], BpmnMsgSrcError)
+    assert "123" == str(exc_info.value.args[0].node_id)
 
     # Test ensure_out_messages - with message event definition
     test_node_out_def = setup_node(

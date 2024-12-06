@@ -90,21 +90,21 @@ class BpmnMsgNodeTypeError(Error):
 
 
 class BpmnMsgSrcError(Error):
-    __slots__ = ["obj_type", "msg_id"]
+    __slots__ = ["obj_type", "node_id"]
 
-    def __init__(self, obj_type: str, msg_id: str) -> None:
+    def __init__(self, obj_type: str, node_id: str) -> None:
         super().__init__()
         self.obj_type = obj_type
-        self.msg_id = msg_id
+        self.node_id = node_id
 
 
 class BpmnMsgTargetError(Error):
-    __slots__ = ["obj_type", "msg_id"]
+    __slots__ = ["obj_type", "node_id"]
 
-    def __init__(self, obj_type: str, msg_id: str) -> None:
+    def __init__(self, obj_type: str, node_id: str) -> None:
         super().__init__()
         self.obj_type = obj_type
-        self.msg_id = msg_id
+        self.node_id = node_id
 
 
 class BpmnNodeTypeError(Error):
@@ -309,10 +309,10 @@ def _get_error_message(error: Error) -> str:
             return f"Message flow error: Source ref or target ref is missing for message '{msg_id}'."
         case BpmnMsgNodeTypeError(msg_id=msg_id):
             return f"Message flow error: 'From' node and 'To' node of message are not of type Node. Message flow id: {msg_id}."
-        case BpmnMsgTargetError(obj_type=obj_type, msg_id=msg_id):
-            return f"Message flow target error while visiting {obj_type}. A message flow can only go to specific targets. Message ID: {msg_id}."
-        case BpmnMsgSrcError(obj_type=obj_type, msg_id=msg_id):
-            return f"Message flow source error while visiting {obj_type}. A message flow can only come from specific sources. Message ID: {msg_id}."
+        case BpmnMsgTargetError(obj_type=obj_type, node_id=node_id):
+            return f"Message flow target error while visiting {obj_type}. A message flow can only go to a Message start or intermediate event; Receive, User, or Service task; Subprocess; or black box pool. Node ID: {node_id}."
+        case BpmnMsgSrcError(obj_type=obj_type, node_id=node_id):
+            return f"Message flow source error while visiting {obj_type}. A message flow can only come from specific sources. Node ID: {node_id}."
         case BpmnMsgEndEventError(event_id=event_id):
             return f"Message flow error: End events cannot have incoming messages. Event ID: {event_id}."
         case BpmnMsgGatewayError(gateway_type=gateway_type, gateway_id=gateway_id):
