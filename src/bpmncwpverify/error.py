@@ -285,6 +285,22 @@ class TypingNoTypeError(Error):
         return False
 
 
+class TypingNegateBoolError(Error):
+    __slots__ = ["expr_type"]
+
+    def __init__(self, expr_type: str) -> None:
+        super().__init__()
+        self.expr_type = expr_type
+
+
+class TypingNotNonBoolError(Error):
+    __slots__ = ["expr_type"]
+
+    def __init__(self, expr_type: str) -> None:
+        super().__init__()
+        self.expr_type = expr_type
+
+
 def _get_exception_message(error: Exception) -> str:
     return "ERROR: {0} ({1})".format(type(error), error)
 
@@ -341,6 +357,12 @@ def _get_error_message(error: Error) -> str:
             return "CWP ERROR: No end states found."
         case CwpGraphConnError():
             return "CWP ERROR: Graph is not connected."
+        case TypingNegateBoolError(expr_type=expr_type):
+            return f"Type mismatch: tried to negate a boolean expression: {expr_type}"
+        case TypingNotNonBoolError(expr_type=expr_type):
+            return (
+                f"Type mismatch: tried to `not` a non-boolean expression: {expr_type}"
+            )
         case StateInitNotInValues(id=id, line=line, column=column, values=values):
             # Convert to a list since Python sets are not stable
             return "STATE ERROR: init value '{}' at line {}:{} not in allowed values {}".format(

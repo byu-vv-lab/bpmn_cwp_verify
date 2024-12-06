@@ -13,7 +13,12 @@ from returns.pointfree import bind_result
 from returns.curry import partial
 from returns.functions import not_
 from bpmncwpverify.core.state import SymbolTable
-from bpmncwpverify.error import Error
+from bpmncwpverify.error import (
+    Error,
+    TypingNegateBoolError,
+    TypingNoTypeError,
+    TypingNotNonBoolError,
+)
 
 
 class ThrowingErrorListener(ErrorListener):  # type: ignore[misc]
@@ -63,16 +68,14 @@ class ExpressionListener(ExprListener):  # type: ignore
         if not_(is_successful)(
             result := typechecking.get_computation_type_result(left_type, right_type)
         ):
-            raise TypeError(f"Type mismatch: {left_type} != {right_type}")
+            raise Exception(result.failure())
         self.type_stack.append(result.unwrap())
 
     def check_and_or_types(self, left_type: str, right_type: str) -> None:
         if not_(is_successful)(
             result := typechecking.get_and_or_type_result(left_type, right_type)
         ):
-            raise TypeError(
-                f"Type mismatch: {left_type} ||/&& {right_type}. Both should be BOOL"
-            )
+            raise Exception(result.failure())
         self.type_stack.append(result.unwrap())
 
     def exitStart(self, ctx: ExprParser.StartContext) -> None:
@@ -91,18 +94,16 @@ class ExpressionListener(ExprListener):  # type: ignore
     def exitNot(self, ctx: ExprParser.NotContext) -> None:
         expr_type = self.type_stack.pop()
         if expr_type != typechecking.BOOL:
-            raise TypeError(
-                f"Type mismatch: tried to `not` a non-boolean expression: {expr_type}"
-            )
+            raise Exception(TypingNotNonBoolError(expr_type))
         self.type_stack.append(typechecking.BOOL)
 
     def exitRelational(self, ctx: ExprParser.RelationalContext) -> None:
         right_type = self.type_stack.pop()
         left_type = self.type_stack.pop()
         if not_(is_successful)(
-            typechecking.get_relational_type_result(left_type, right_type)
+            result := typechecking.get_relational_type_result(left_type, right_type)
         ):
-            raise TypeError(f"Type mismatch: {left_type} != {right_type}")
+            raise Exception(result.failure())
         self.type_stack.append(typechecking.BOOL)
 
     def exitAddSub(self, ctx: ExprParser.AddSubContext) -> None:
@@ -118,9 +119,7 @@ class ExpressionListener(ExprListener):  # type: ignore
     def exitNegate(self, ctx: ExprParser.NegateContext) -> None:
         expr_type = self.type_stack.pop()
         if expr_type == typechecking.BOOL:
-            raise TypeError(
-                f"Type mismatch: tried to negate a boolean expression: {expr_type}"
-            )
+            raise Exception(TypingNegateBoolError(expr_type))
         self.type_stack.append(expr_type)
 
     def enterID(self, ctx: ExprParser.IDContext) -> None:
@@ -129,7 +128,7 @@ class ExpressionListener(ExprListener):  # type: ignore
             typechecking.get_type_literal
         )
         if not_(is_successful)(type):
-            raise TypeError("Did not recognize ID")
+            raise Exception(TypingNoTypeError(identifier))
         self.type_stack.append(type.unwrap())
 
     @staticmethod
