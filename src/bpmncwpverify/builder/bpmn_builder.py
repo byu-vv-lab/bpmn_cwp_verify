@@ -3,7 +3,12 @@ from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
 from bpmncwpverify.core.state import SymbolTable
 from bpmncwpverify.visitors.bpmn_connectivity_visitor import BpmnConnectivityVisitor
 from returns.result import Result, Success, Failure
-from bpmncwpverify.error import BpmnMsgFlowSamePoolError, BpmnMsgMissingRefError, Error
+from bpmncwpverify.error import (
+    BpmnMsgFlowSamePoolError,
+    BpmnMsgMissingRefError,
+    BpmnMsgNodeTypeError,
+    Error,
+)
 
 
 class BpmnBuilder:
@@ -68,4 +73,4 @@ class BpmnBuilder:
             from_node.add_out_msg(message)
             to_node.add_in_msg(message)
         else:
-            raise TypeError("to_node or from_node is not of type Node")
+            raise Exception(BpmnMsgNodeTypeError(message.id))

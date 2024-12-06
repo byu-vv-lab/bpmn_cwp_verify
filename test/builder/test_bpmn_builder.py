@@ -1,4 +1,8 @@
-from bpmncwpverify.error import BpmnMsgFlowSamePoolError, BpmnMsgMissingRefError
+from bpmncwpverify.error import (
+    BpmnMsgFlowSamePoolError,
+    BpmnMsgMissingRefError,
+    BpmnMsgNodeTypeError,
+)
 import pytest
 from xml.etree.ElementTree import Element
 from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
@@ -82,8 +86,10 @@ def test_add_message_invalid_nodes(mocker):
     builder = BpmnBuilder()
     builder._bpmn = mock_bpmn
 
-    with pytest.raises(TypeError, match="to_node or from_node is not of type Node"):
+    with pytest.raises(Exception) as exc_info:
         builder.add_message(mock_msg_flow)
+
+    assert isinstance(exc_info.value.args[0], BpmnMsgNodeTypeError)
 
 
 def test_check_messages_valid(mocker):
