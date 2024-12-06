@@ -322,7 +322,7 @@ def _get_error_message(error: Error) -> str:
         case BpmnTaskFlowError(task_id=task_id):
             return f"Task flow error: Task '{task_id}' should have at least one incoming and one outgoing flow."
         case BpmnSeqFlowNoExprError(gateway_id=gateway_id, out_flow_id=out_flow_id):
-            return f"Sequence flow error: Flow '{out_flow_id}' does not have an expression. All flows coming out of gateway '{gateway_id}' must have expressions."
+            return f"Flow: `{out_flow_id}` does not have an expression. All flows coming out of gateways must have expressions. Gateway id: {gateway_id}"
         case BpmnMissingEventsError(start_events=start_events, end_events=end_events):
             return f"Event error: Start events = {start_events}, End events = {end_events}. Missing required start or end events."
         case BpmnGraphConnError():
