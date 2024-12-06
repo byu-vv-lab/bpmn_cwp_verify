@@ -3,7 +3,7 @@ from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
 from bpmncwpverify.core.state import SymbolTable
 from bpmncwpverify.visitors.bpmn_connectivity_visitor import BpmnConnectivityVisitor
 from returns.result import Result, Success, Failure
-from bpmncwpverify.error import BpmnMsgFlowSamePoolError, Error
+from bpmncwpverify.error import BpmnMsgFlowSamePoolError, BpmnMsgMissingRefError, Error
 
 
 class BpmnBuilder:
@@ -50,10 +50,11 @@ class BpmnBuilder:
             msg_flow.get("targetRef"),
         )
 
-        if not (source_ref and target_ref):
-            raise Exception("source ref or target ref not included with message")
-
         message = MessageFlow(msg_flow)
+
+        if not (source_ref and target_ref):
+            raise Exception(BpmnMsgMissingRefError(message.id))
+
         self._bpmn.add_inter_process_msg(message)
         self._bpmn.store_element(message)
 

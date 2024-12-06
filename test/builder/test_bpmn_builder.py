@@ -1,4 +1,4 @@
-from bpmncwpverify.error import BpmnMsgFlowSamePoolError
+from bpmncwpverify.error import BpmnMsgFlowSamePoolError, BpmnMsgMissingRefError
 import pytest
 from xml.etree.ElementTree import Element
 from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
@@ -61,10 +61,10 @@ def test_add_message_missing_refs(mocker):
     builder = BpmnBuilder()
     builder._bpmn = mock_bpmn
 
-    with pytest.raises(
-        Exception, match="source ref or target ref not included with message"
-    ):
+    with pytest.raises(Exception) as exc_info:
         builder.add_message(mock_msg_flow)
+
+    assert isinstance(exc_info.value.args[0], BpmnMsgMissingRefError)
 
 
 def test_add_message_invalid_nodes(mocker):
