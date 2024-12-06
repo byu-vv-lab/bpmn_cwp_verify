@@ -10,7 +10,12 @@ from bpmncwpverify.core.bpmn import (
     EndEvent,
     IntermediateEvent,
 )
-from bpmncwpverify.error import BpmnMsgSrcError, BpmnMsgTargetError, MessageError
+from bpmncwpverify.error import (
+    BpmnMsgEndEventError,
+    BpmnMsgGatewayError,
+    BpmnMsgSrcError,
+    BpmnMsgTargetError,
+)
 
 
 class BpmnConnectivityVisitor(BpmnVisitor):  # type: ignore
@@ -30,12 +35,7 @@ class BpmnConnectivityVisitor(BpmnVisitor):  # type: ignore
 
     def visit_end_event(self, event: EndEvent) -> bool:
         if event.in_msgs:
-            raise Exception(
-                MessageError(
-                    event.id,
-                    "Error while visiting an end_event. End events cannot have incoming messages.",
-                )
-            )
+            raise Exception(BpmnMsgEndEventError(event.id))
         self._ensure_out_messages(event, "end event")
         return True
 
@@ -43,12 +43,7 @@ class BpmnConnectivityVisitor(BpmnVisitor):  # type: ignore
         self, gateway: GatewayNode, gateway_type: str
     ) -> bool:
         if gateway.in_msgs or gateway.out_msgs:
-            raise Exception(
-                MessageError(
-                    gateway.id,
-                    f"Error while visiting a {gateway_type}. Gateways cannot have incoming or outgoing messages.",
-                )
-            )
+            raise Exception(BpmnMsgGatewayError(gateway_type, gateway.id))
         return True
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
