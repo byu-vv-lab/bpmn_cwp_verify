@@ -7,7 +7,7 @@ from returns.result import Success
 
 
 def test_given_valid_tree_process_then_process_visitor_works(mocker):
-    from bpmncwpverify.visitors.process_connectivity_visitor import (
+    from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
         ProcessConnectivityVisitor,
     )
 

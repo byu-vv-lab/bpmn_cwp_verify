@@ -127,7 +127,7 @@ class ProcessBuilder:
         try:
             self._bpmn.processes[self._process.id] = self._process
             self._construct_flow_network()
-            from bpmncwpverify.visitors.process_connectivity_visitor import (
+            from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
                 ProcessConnectivityVisitor,
             )
 

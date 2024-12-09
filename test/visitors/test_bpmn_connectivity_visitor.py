@@ -4,7 +4,9 @@ from bpmncwpverify.error import (
     BpmnMsgSrcError,
     BpmnMsgTargetError,
 )
-from bpmncwpverify.visitors.bpmn_connectivity_visitor import BpmnConnectivityVisitor
+from bpmncwpverify.visitors.bpmnchecks.bpmn_connectivity_visitor import (
+    BpmnConnectivityVisitor,
+)
 import pytest
 from bpmncwpverify.core.bpmn import Node
 

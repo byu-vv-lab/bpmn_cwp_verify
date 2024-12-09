@@ -1,7 +1,9 @@
 from xml.etree.ElementTree import Element
 from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
 from bpmncwpverify.core.state import SymbolTable
-from bpmncwpverify.visitors.bpmn_connectivity_visitor import BpmnConnectivityVisitor
+from bpmncwpverify.visitors.bpmnchecks.bpmn_connectivity_visitor import (
+    BpmnConnectivityVisitor,
+)
 from returns.result import Result, Success, Failure
 from bpmncwpverify.error import (
     BpmnMsgFlowSamePoolError,
