@@ -127,12 +127,9 @@ class ProcessBuilder:
         try:
             self._bpmn.processes[self._process.id] = self._process
             self._construct_flow_network()
-            from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
-                ProcessConnectivityVisitor,
-            )
+            from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
 
-            visitor = ProcessConnectivityVisitor()
-            self._process.accept(visitor)
+            validate_process(self._process)
             return Success(self._process)
         except Exception as e:
             return Failure(e.args[0])

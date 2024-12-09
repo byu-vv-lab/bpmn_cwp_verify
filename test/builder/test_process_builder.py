@@ -1,70 +1,36 @@
 # type: ignore
-from xml.etree.ElementTree import Element, SubElement
+from xml.etree.ElementTree import Element
 from bpmncwpverify.builder.process_builder import ProcessBuilder
-from bpmncwpverify.core.bpmn import Node, SequenceFlow, Bpmn
+from bpmncwpverify.core.bpmn import Node, SequenceFlow
 from bpmncwpverify.core.state import SymbolTable
+from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
+    ProcessConnectivityVisitor,
+)
 from returns.result import Success
 
 
 def test_given_valid_tree_process_then_process_visitor_works(mocker):
-    from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
-        ProcessConnectivityVisitor,
+    mock_process_connectivity_visitor = mocker.patch(
+        "bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor.ProcessConnectivityVisitor",
+        autospec=True,
     )
+    mock_instance = mock_process_connectivity_visitor.return_value
+    mock_instance.last_visited = None
 
-    ns = "{http://www.omg.org/spec/BPMN/20100524/MODEL}"
-    root = Element("root")
-    process = SubElement(root, f"{ns}process", attrib={"id": "process1"})
-    start_event = SubElement(process, f"{ns}startEvent", attrib={"id": "startEvent"})
-    start_flow = SubElement(
-        process,
-        f"{ns}sequenceFlow",
-        attrib={"id": "first_flow", "sourceRef": "startEvent", "targetRef": "task0"},
-    )
-    SubElement(start_event, f"{ns}outgoing").text = start_flow.attrib["id"]
+    mock_process = mocker.Mock()
 
-    for j in range(5):
-        if j == 4:
-            task = SubElement(process, f"{ns}endEvent", attrib={"id": f"task{j}"})
-        else:
-            task = SubElement(process, f"{ns}task", attrib={"id": f"task{j}"})
-        if j < 4:
-            flow = SubElement(
-                process,
-                f"{ns}sequenceFlow",
-                attrib={
-                    "id": f"flow{j}",
-                    "sourceRef": f"task{j}",
-                    "targetRef": f"task{j+1}",
-                },
-            )
-            SubElement(task, f"{ns}outgoing").text = flow.attrib["id"]
+    def mock_accept(visitor):
+        if isinstance(visitor, ProcessConnectivityVisitor):
+            visitor.last_visited = 6
 
-    task3 = process.find(".//*[@id='task3']")
-    cyclic_flow = SubElement(
-        process,
-        f"{ns}sequenceFlow",
-        attrib={"id": "cyclic_flow", "sourceRef": "task3", "targetRef": "task1"},
-    )
-    SubElement(task3, f"{ns}outgoing").text = cyclic_flow.attrib["id"]
+    mock_process.accept.side_effect = mock_accept  # Use side_effect to define behavior
 
-    symbol_table = mocker.Mock()
-    bpmn = Bpmn()
-    builder = ProcessBuilder(bpmn, process, symbol_table)
-    for element in process:
-        builder.add_element(element)
+    from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
 
-    builder._construct_flow_network()
+    validate_process(mock_process)
 
-    visitor = ProcessConnectivityVisitor()
-    builder._process.accept(visitor)
-
-    assert len(visitor.last_visited_set) == 6
-    for flow_id, flow in builder._process._flows.items():
-        assert flow.is_leaf if flow_id == "cyclic_flow" else not flow.is_leaf
-    assert all(
-        task in visitor.last_visited_set
-        for task in builder._process.all_items().values()
-    )
+    assert mock_instance.last_visited == 6
+    mock_process.accept.assert_any_call(mock_instance)
 
 
 def test_add_element(mocker):

@@ -14,7 +14,7 @@ from bpmncwpverify.core.bpmn import (
 )
 
 
-class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
+class SetFlowLeafs(BpmnVisitor):  # type: ignore
     def __init__(self) -> None:
         self.visited: Set[BpmnElement] = set()
 

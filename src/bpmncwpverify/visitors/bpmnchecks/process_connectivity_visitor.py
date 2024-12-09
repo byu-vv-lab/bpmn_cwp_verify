@@ -2,10 +2,8 @@ from typing import Set
 from bpmncwpverify.core.bpmn import (
     BpmnElement,
     BpmnVisitor,
-    Flow,
     GatewayNode,
     Process,
-    SequenceFlow,
     StartEvent,
     EndEvent,
     IntermediateEvent,
@@ -66,15 +64,6 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         self._validate_out_flows(gateway)
         self.visited.add(gateway)
         return True
-
-    def process_flow(self, flow: Flow) -> bool:
-        if flow.target_node in self.visited:
-            flow.is_leaf = True
-            return False
-        return True
-
-    def visit_sequence_flow(self, flow: SequenceFlow) -> bool:
-        return self.process_flow(flow)
 
     def end_visit_process(self, process: Process) -> None:
         start_events = sum(
