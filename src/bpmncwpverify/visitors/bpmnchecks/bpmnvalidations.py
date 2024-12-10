@@ -24,7 +24,6 @@ from bpmncwpverify.error import (
 class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
     def __init__(self) -> None:
         self.visited: Set[BpmnElement] = set()
-        self.last_visited_set: Set[BpmnElement] = set()
 
     def visit_start_event(self, event: StartEvent) -> bool:
         self.visited.add(event)
@@ -58,10 +57,6 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         # Ensure all items in the process graph are visited
         if set(process.all_items().values()) != self.visited:
             raise Exception(BpmnGraphConnError())
-
-        # Testing and cleanup
-        self.last_visited_set = self.visited
-        self.visited = set()
 
 
 class ValidateGwOutflowVisitor(BpmnVisitor):  # type: ignore

@@ -74,18 +74,6 @@ class TestProcessConnectivityVisitor:
         # No exception should be raised
         visitor.end_visit_process(process)
 
-    def test_valid_graph_resets_visited(self, setup_process_and_visitor):
-        process, visitor, start_event, end_event, _ = setup_process_and_visitor
-
-        process.all_items.return_value = {"start": start_event, "end": end_event}
-        visitor.visited = {start_event, end_event}
-        start_event.in_msgs = []
-        end_event.in_msgs = [1]
-
-        visitor.end_visit_process(process)
-
-        assert visitor.visited == set()
-
     def test_end_event(self, mocker):
         event = mocker.MagicMock()
 
