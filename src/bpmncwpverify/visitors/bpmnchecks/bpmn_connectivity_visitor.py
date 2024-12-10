@@ -1,11 +1,9 @@
 from bpmncwpverify.core.bpmn import (
     BpmnVisitor,
     ExclusiveGatewayNode,
-    Flow,
     GatewayNode,
     Node,
     ParallelGatewayNode,
-    SequenceFlow,
     StartEvent,
     EndEvent,
     IntermediateEvent,
@@ -56,12 +54,3 @@ class BpmnConnectivityVisitor(BpmnVisitor):  # type: ignore
         self._ensure_in_messages(event, "intermediate event")
         self._ensure_out_messages(event, "intermediate event")
         return True
-
-    def process_flow(self, flow: Flow) -> bool:
-        # For this is_leaf to work, this model would have already needed to been visited by a visitor that sets this attribute
-        if flow.is_leaf:
-            return False
-        return True
-
-    def visit_sequence_flow(self, flow: SequenceFlow) -> bool:
-        return self.process_flow(flow)
