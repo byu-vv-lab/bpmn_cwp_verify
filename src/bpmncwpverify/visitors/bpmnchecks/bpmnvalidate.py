@@ -1,4 +1,5 @@
 from bpmncwpverify.core.bpmn import Bpmn, Process
+from bpmncwpverify.error import BpmnMsgFlowSamePoolError
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ValidateEndEventVisitor,
     ValidateTaskVisitor,
@@ -11,9 +12,20 @@ def validate_bpmn(bpmn: Bpmn) -> None:
         BpmnConnectivityVisitor,
     )
 
+    def msg_connects_diff_pools() -> None:
+        for msg in bpmn.inter_process_msgs.values():
+            for process in bpmn.processes.values():
+                if (
+                    msg.target_node.id in process.all_items()
+                    and msg.source_node.id in process.all_items()
+                ):
+                    raise Exception(BpmnMsgFlowSamePoolError(msg.id))
+
     visitor = BpmnConnectivityVisitor()
 
     bpmn.accept(visitor)
+
+    msg_connects_diff_pools()
 
 
 def validate_process(process: Process) -> None:
