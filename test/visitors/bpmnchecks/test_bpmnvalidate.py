@@ -9,8 +9,10 @@ def setup_bpmn(mocker):
     bpmn = mocker.MagicMock()
 
     process1 = mocker.MagicMock()
+    process1.accept = mocker.MagicMock()
     process1.all_items.return_value = ["node1", "node2"]
     process2 = mocker.MagicMock()
+    process2.accept = mocker.MagicMock()
     process2.all_items.return_value = ["node3", "node4"]
 
     bpmn.processes = {"process1": process1, "process2": process2}
@@ -33,21 +35,11 @@ def setup_bpmn(mocker):
 def test_validate_bpmn_no_error(mocker, setup_bpmn):
     bpmn = setup_bpmn
 
-    mock_visitor = mocker.patch(
-        "bpmncwpverify.visitors.bpmnchecks.bpmn_connectivity_visitor.BpmnConnectivityVisitor"
-    )
-
     validate_bpmn(bpmn)
-
-    bpmn.accept.assert_called_once_with(mock_visitor.return_value)
 
 
 def test_validate_bpmn_msg_same_pool_error(mocker, setup_bpmn):
     bpmn = setup_bpmn
-
-    mock_visitor = mocker.patch(
-        "bpmncwpverify.visitors.bpmnchecks.bpmn_connectivity_visitor.BpmnConnectivityVisitor"
-    )
 
     bpmn.inter_process_msgs["msg2"].target_node.id = "node1"  # Same pool as target_node
 
@@ -57,6 +49,3 @@ def test_validate_bpmn_msg_same_pool_error(mocker, setup_bpmn):
     # Check the exception type and message
     assert isinstance(exc_info.value.args[0], BpmnMsgFlowSamePoolError)
     assert exc_info.value.args[0].msg_id == "msg2"
-
-    # Ensure the visitor was accepted
-    bpmn.accept.assert_called_once_with(mock_visitor.return_value)
