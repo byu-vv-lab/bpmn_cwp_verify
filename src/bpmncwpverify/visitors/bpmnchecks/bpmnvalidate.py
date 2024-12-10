@@ -13,7 +13,7 @@ def validate_bpmn(bpmn: Bpmn) -> None:
 
 def validate_process(process: Process) -> None:
     from bpmncwpverify.visitors.bpmnchecks.setflowleafs import SetFlowLeafs
-    from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
+    from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
         ProcessConnectivityVisitor,
     )
 

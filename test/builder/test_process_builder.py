@@ -3,7 +3,7 @@ from xml.etree.ElementTree import Element
 from bpmncwpverify.builder.process_builder import ProcessBuilder
 from bpmncwpverify.core.bpmn import Node, SequenceFlow
 from bpmncwpverify.core.state import SymbolTable
-from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
+from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ProcessConnectivityVisitor,
 )
 from returns.result import Success
@@ -11,7 +11,7 @@ from returns.result import Success
 
 def test_given_valid_tree_process_then_process_visitor_works(mocker):
     mock_process_connectivity_visitor = mocker.patch(
-        "bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor.ProcessConnectivityVisitor",
+        "bpmncwpverify.visitors.bpmnchecks.bpmnvalidations.ProcessConnectivityVisitor",
         autospec=True,
     )
     mock_instance = mock_process_connectivity_visitor.return_value

@@ -8,7 +8,7 @@ from bpmncwpverify.error import (
 )
 import pytest
 from bpmncwpverify.core.bpmn import EndEvent, StartEvent
-from bpmncwpverify.visitors.bpmnchecks.process_connectivity_visitor import (
+from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ProcessConnectivityVisitor,
 )
 
