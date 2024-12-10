@@ -31,8 +31,6 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
-        if event.out_flows:
-            raise Exception(BpmnSeqFlowEndEventError(event.id))
         self.visited.add(event)
         return True
 
@@ -57,21 +55,6 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def end_visit_process(self, process: Process) -> None:
-        start_events = sum(
-            isinstance(itm, StartEvent) for itm in process.all_items().values()
-        )
-        end_events = sum(
-            isinstance(itm, EndEvent) for itm in process.all_items().values()
-        )
-
-        # Determine if there is a valid starting point
-        starting_point = start_events > 0 or any(
-            itm.in_msgs for itm in process.all_items().values()
-        )
-
-        if not starting_point or end_events == 0:
-            raise Exception(BpmnMissingEventsError(start_events, end_events))
-
         # Ensure all items in the process graph are visited
         if set(process.all_items().values()) != self.visited:
             raise Exception(BpmnGraphConnError())
@@ -101,3 +84,28 @@ class ValidateTaskVisitor(BpmnVisitor):  # type: ignore
         if not (task.in_flows and task.out_flows):
             raise Exception(BpmnTaskFlowError(task.id))
         return True
+
+
+class ValidateEndEventVisitor(BpmnVisitor):  # type: ignore
+    def visit_end_event(self, event: EndEvent) -> bool:
+        if event.out_flows:
+            raise Exception(BpmnSeqFlowEndEventError(event.id))
+        return True
+
+
+##########################
+# validation functions
+##########################
+def validate_start_end_events(process: Process) -> None:
+    start_events = sum(
+        isinstance(itm, StartEvent) for itm in process.all_items().values()
+    )
+    end_events = sum(isinstance(itm, EndEvent) for itm in process.all_items().values())
+
+    # Determine if there is a valid starting point
+    starting_point = start_events > 0 or any(
+        itm.in_msgs for itm in process.all_items().values()
+    )
+
+    if not starting_point or end_events == 0:
+        raise Exception(BpmnMissingEventsError(start_events, end_events))

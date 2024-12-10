@@ -9,9 +9,11 @@ from bpmncwpverify.error import (
 import pytest
 from bpmncwpverify.core.bpmn import EndEvent, StartEvent
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
+    ValidateEndEventVisitor,
     ValidateGwOutflowVisitor,
     ProcessConnectivityVisitor,
     ValidateTaskVisitor,
+    validate_start_end_events,
 )
 
 
@@ -61,18 +63,6 @@ class TestProcessConnectivityVisitor:
 
         assert isinstance(exc_info.value.args[0], BpmnGraphConnError)
 
-    def test_no_start_or_end_event_raises_exception(self, setup_process_and_visitor):
-        process, visitor, _, _, other_event = setup_process_and_visitor
-        # Simulate no StartEvent or EndEvent
-        process.all_items.return_value = {"middle": other_event}
-        visitor.visited = {other_event}
-        other_event.in_msgs = []
-
-        with pytest.raises(Exception) as exc_info:
-            visitor.end_visit_process(process)
-
-        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
-
     def test_no_start_event_with_incoming_msgs(self, setup_process_and_visitor):
         process, visitor, _, end_event, other_event = setup_process_and_visitor
         # Simulate no StartEvent but a valid starting point with incoming messages
@@ -83,34 +73,6 @@ class TestProcessConnectivityVisitor:
 
         # No exception should be raised
         visitor.end_visit_process(process)
-
-    def test_no_end_event_raises_exception(self, setup_process_and_visitor):
-        process, visitor, start_event, end_event, other_event = (
-            setup_process_and_visitor
-        )
-        # Simulate no EndEvent
-        process.all_items.return_value = {"start": start_event, "middle": other_event}
-        visitor.visited = {start_event, other_event}
-        start_event.in_msgs = []
-        other_event.in_msgs = [1]
-
-        with pytest.raises(Exception) as exc_info:
-            visitor.end_visit_process(process)
-
-        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
-
-    def test_no_start_event_with_no_incoming_msgs(self, setup_process_and_visitor):
-        process, visitor, _, end_event, other_event = setup_process_and_visitor
-        # Simulate no StartEvent but a valid starting point with incoming messages
-        process.all_items.return_value = {"middle": other_event, "end": end_event}
-        visitor.visited = {other_event, end_event}
-        other_event.in_msgs = []
-        end_event.in_msgs = []
-
-        with pytest.raises(Exception) as exc_info:
-            visitor.end_visit_process(process)
-
-        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
 
     def test_valid_graph_resets_visited(self, setup_process_and_visitor):
         process, visitor, start_event, end_event, _ = setup_process_and_visitor
@@ -124,33 +86,15 @@ class TestProcessConnectivityVisitor:
 
         assert visitor.visited == set()
 
-    def test_visit_end_event_no_outgoing_flows(self, mocker):
+    def test_end_event(self, mocker):
         event = mocker.MagicMock()
-        event.out_flows = []
-        event.id = "end_event_1"
 
         obj = ProcessConnectivityVisitor()
-        obj.visited = set()
 
         result = obj.visit_end_event(event)
 
         assert result is True
         assert event in obj.visited
-
-    def test_visit_end_event_with_outgoing_flows(self, mocker):
-        event = mocker.MagicMock()
-        event.out_flows = ["flow1"]
-        event.id = "end_event_2"
-
-        obj = ProcessConnectivityVisitor()
-        obj.visited = set()
-
-        with pytest.raises(Exception) as exc_info:
-            obj.visit_end_event(event)
-
-        assert isinstance(exc_info.value.args[0], BpmnSeqFlowEndEventError)
-        assert "end_event_2" == str(exc_info.value.args[0].event_id)
-        assert event not in obj.visited
 
 
 class TestValidateGwOutflowVisitor:
@@ -254,3 +198,64 @@ class TestValidateTaskVisitor:
             visitor.visit_task(task)
         assert isinstance(exc_info.value.args[0], BpmnTaskFlowError)
         assert "task1" == str(exc_info.value.args[0].task_id)
+
+
+class TestValidateEndEventVisitor:
+    def test_visit_end_event_with_outgoing_flows(self, mocker):
+        event = mocker.MagicMock()
+        event.out_flows = ["flow1"]
+        event.id = "end_event_2"
+
+        obj = ValidateEndEventVisitor()
+
+        with pytest.raises(Exception) as exc_info:
+            obj.visit_end_event(event)
+
+        assert isinstance(exc_info.value.args[0], BpmnSeqFlowEndEventError)
+        assert "end_event_2" == str(exc_info.value.args[0].event_id)
+
+    def test_visit_end_event_no_outgoing_flows(self, mocker):
+        event = mocker.MagicMock()
+        event.out_flows = []
+        event.id = "end_event_1"
+
+        obj = ValidateEndEventVisitor()
+
+        result = obj.visit_end_event(event)
+
+        assert result is True
+
+
+class TestValidateStartEndEventsFunction:
+    def test_no_start_event_with_no_incoming_msgs(self, setup_process_and_visitor):
+        process, _, _, end_event, other_event = setup_process_and_visitor
+        process.all_items.return_value = {"middle": other_event, "end": end_event}
+        other_event.in_msgs = []
+        end_event.in_msgs = []
+
+        with pytest.raises(Exception) as exc_info:
+            validate_start_end_events(process)
+
+        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
+
+    def test_no_end_event_raises_exception(self, setup_process_and_visitor):
+        process, _, start_event, _, other_event = setup_process_and_visitor
+        process.all_items.return_value = {"start": start_event, "middle": other_event}
+        start_event.in_msgs = []
+        other_event.in_msgs = [1]
+
+        with pytest.raises(Exception) as exc_info:
+            validate_start_end_events(process)
+
+        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
+
+    def test_no_start_or_end_event_raises_exception(self, setup_process_and_visitor):
+        process, _, _, _, other_event = setup_process_and_visitor
+        # Simulate no StartEvent or EndEvent
+        process.all_items.return_value = {"middle": other_event}
+        other_event.in_msgs = []
+
+        with pytest.raises(Exception) as exc_info:
+            validate_start_end_events(process)
+
+        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
