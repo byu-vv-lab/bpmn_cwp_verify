@@ -41,8 +41,6 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_task(self, task: Task) -> bool:
-        if not (task.in_flows and task.out_flows):
-            raise Exception(BpmnTaskFlowError(task.id))
         self.visited.add(task)
         return True
 
@@ -95,4 +93,11 @@ class ValidateGwOutflowVisitor(BpmnVisitor):  # type: ignore
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
         self._validate_out_flows(gateway)
+        return True
+
+
+class ValidateTaskVisitor(BpmnVisitor):  # type: ignore
+    def visit_task(self, task: Task) -> bool:
+        if not (task.in_flows and task.out_flows):
+            raise Exception(BpmnTaskFlowError(task.id))
         return True
