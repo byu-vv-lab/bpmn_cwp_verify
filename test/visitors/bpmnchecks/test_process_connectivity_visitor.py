@@ -9,6 +9,7 @@ from bpmncwpverify.error import (
 import pytest
 from bpmncwpverify.core.bpmn import EndEvent, StartEvent
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
+    ValidateGwOutflowVisitor,
     ProcessConnectivityVisitor,
 )
 
@@ -153,7 +154,7 @@ def test_visit_end_event_with_outgoing_flows(mocker):
 
 
 def test_validate_out_flows_valid_case(mocker):
-    visitor = ProcessConnectivityVisitor()
+    visitor = ValidateGwOutflowVisitor()
     gateway = mocker.MagicMock()
     gateway.out_flows = [
         mocker.MagicMock(expression=True),
@@ -164,7 +165,7 @@ def test_validate_out_flows_valid_case(mocker):
 
 
 def test_validate_out_flows_invalid_case(mocker):
-    visitor = ProcessConnectivityVisitor()
+    visitor = ValidateGwOutflowVisitor()
     gateway = mocker.MagicMock()
     gateway.id = "gateway1"
     gateway.out_flows = [
@@ -177,7 +178,7 @@ def test_validate_out_flows_invalid_case(mocker):
 
 
 def test_visit_exclusive_gateway_valid(mocker):
-    visitor = ProcessConnectivityVisitor()
+    visitor = ValidateGwOutflowVisitor()
     gateway = mocker.MagicMock()
     gateway.out_flows = [
         mocker.MagicMock(expression=True),
@@ -188,12 +189,11 @@ def test_visit_exclusive_gateway_valid(mocker):
     )
     result = visitor.visit_exclusive_gateway(gateway)
     assert result is True
-    assert gateway in visitor.visited
     visitor._validate_out_flows.assert_called_once_with(gateway)
 
 
 def test_visit_exclusive_gateway_invalid(mocker):
-    visitor = ProcessConnectivityVisitor()
+    visitor = ValidateGwOutflowVisitor()
     gateway = mocker.MagicMock()
     gateway.out_flows = [
         mocker.MagicMock(expression=True),
@@ -208,7 +208,7 @@ def test_visit_exclusive_gateway_invalid(mocker):
 
 
 def test_visit_parallel_gateway_valid(mocker):
-    visitor = ProcessConnectivityVisitor()
+    visitor = ValidateGwOutflowVisitor()
     gateway = mocker.MagicMock()
     gateway.out_flows = [
         mocker.MagicMock(expression=True),
@@ -219,12 +219,11 @@ def test_visit_parallel_gateway_valid(mocker):
     )
     result = visitor.visit_parallel_gateway(gateway)
     assert result is True
-    assert gateway in visitor.visited
     visitor._validate_out_flows.assert_called_once_with(gateway)
 
 
 def test_visit_parallel_gateway_invalid(mocker):
-    visitor = ProcessConnectivityVisitor()
+    visitor = ValidateGwOutflowVisitor()
     gateway = mocker.MagicMock()
     gateway.out_flows = [
         mocker.MagicMock(expression=True),

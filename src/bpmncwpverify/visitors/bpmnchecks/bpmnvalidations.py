@@ -50,18 +50,11 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         self.visited.add(subprocess)
         return True
 
-    def _validate_out_flows(self, gateway: GatewayNode) -> None:
-        for out_flow in gateway.out_flows:
-            if not out_flow.expression:
-                raise Exception(BpmnSeqFlowNoExprError(gateway.id, out_flow.id))
-
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
-        self._validate_out_flows(gateway)
         self.visited.add(gateway)
         return True
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
-        self._validate_out_flows(gateway)
         self.visited.add(gateway)
         return True
 
@@ -88,3 +81,18 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         # Testing and cleanup
         self.last_visited_set = self.visited
         self.visited = set()
+
+
+class ValidateGwOutflowVisitor(BpmnVisitor):  # type: ignore
+    def _validate_out_flows(self, gateway: GatewayNode) -> None:
+        for out_flow in gateway.out_flows:
+            if not out_flow.expression:
+                raise Exception(BpmnSeqFlowNoExprError(gateway.id, out_flow.id))
+
+    def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
+        self._validate_out_flows(gateway)
+        return True
+
+    def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
+        self._validate_out_flows(gateway)
+        return True
