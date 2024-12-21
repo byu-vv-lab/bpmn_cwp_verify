@@ -1,15 +1,8 @@
 from xml.etree.ElementTree import Element
-from typing import Dict, Tuple, Type
+from typing import Tuple
 from bpmncwpverify.core.bpmn import (
     Process,
     Bpmn,
-    BpmnElement,
-    Task,
-    EndEvent,
-    IntermediateEvent,
-    ParallelGatewayNode,
-    ExclusiveGatewayNode,
-    StartEvent,
     SequenceFlow,
     Node,
     BPMN_XML_NAMESPACE,
@@ -33,19 +26,6 @@ class ProcessBuilder:
         self._process = Process(element)
         self._bpmn = bpmn
         self._symbol_table = symbol_table
-
-    _TAG_CLASS_MAPPING: Dict[str, Type[BpmnElement]] = {
-        "task": Task,
-        "startEvent": StartEvent,
-        "endEvent": EndEvent,
-        "exclusiveGateway": ExclusiveGatewayNode,
-        "parallelGateway": ParallelGatewayNode,
-        "sendTask": IntermediateEvent,
-        "intermediateCatchEvent": IntermediateEvent,
-        "intermediateThrowEvent": IntermediateEvent,
-    }
-
-    _FLOW_MAPPING = {"sequenceFlow": SequenceFlow}
 
     ########################
     # Start of helper methods
@@ -106,25 +86,7 @@ class ProcessBuilder:
     ########################
 
     def with_element(self, element: Element) -> None:
-        def get_tag_name(element: Element) -> str:
-            return element.tag.partition("}")[2]
-
-        tag_name = get_tag_name(element)
-
-        element_class = (
-            ProcessBuilder._TAG_CLASS_MAPPING.get(tag_name)
-            or (
-                ProcessBuilder._TAG_CLASS_MAPPING["task"]
-                if "task" in tag_name.lower()
-                else None
-            )
-            or ProcessBuilder._FLOW_MAPPING.get(tag_name)
-        )
-
-        if element_class:
-            element_instance = element_class(element)
-            self._process[element_instance.id] = element_instance
-            self._bpmn.store_element(element_instance)
+        pass
 
     def build(self) -> Result[Process, BpmnStructureError]:
         try:
