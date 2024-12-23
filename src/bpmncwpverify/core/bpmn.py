@@ -1,14 +1,23 @@
-from typing import List, Dict, Type, Union
+from __future__ import annotations
+from typing import List, Dict, Tuple, Type, Union
 from xml.etree.ElementTree import Element
 from bpmncwpverify.core.state import State
 from returns.result import Result, Failure
 from returns.pipeline import is_successful
 from returns.functions import not_
 from abc import abstractmethod
+from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.error import (
+    BpmnFlowNoIdError,
+    BpmnFlowTypeError,
+    BpmnNodeTypeError,
     BpmnStructureError,
     Error,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from bpmncwpverify.builder.process_builder import ProcessBuilder
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
@@ -106,10 +115,7 @@ class StartEvent(Event):
 
     @staticmethod
     def from_xml(bpmn: "Bpmn", process: "Process", element: Element) -> "StartEvent":
-        element_instance = StartEvent(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return StartEvent(element)
 
 
 class EndEvent(Event):
@@ -120,10 +126,7 @@ class EndEvent(Event):
 
     @staticmethod
     def from_xml(bpmn: "Bpmn", process: "Process", element: Element) -> "EndEvent":
-        element_instance = EndEvent(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return EndEvent(element)
 
 
 class IntermediateEvent(Event):
@@ -141,10 +144,7 @@ class IntermediateEvent(Event):
     def from_xml(
         bpmn: "Bpmn", process: "Process", element: Element
     ) -> "IntermediateEvent":
-        element_instance = IntermediateEvent(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return IntermediateEvent(element)
 
 
 ###################
@@ -158,10 +158,7 @@ class Task(Node):
 
     @staticmethod
     def from_xml(bpmn: "Bpmn", process: "Process", element: Element) -> "Task":
-        element_instance = Task(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return Task(element)
 
 
 ###################
@@ -181,10 +178,7 @@ class ExclusiveGatewayNode(GatewayNode):
     def from_xml(
         bpmn: "Bpmn", process: "Process", element: Element
     ) -> "ExclusiveGatewayNode":
-        element_instance = ExclusiveGatewayNode(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return ExclusiveGatewayNode(element)
 
 
 class ParallelGatewayNode(GatewayNode):
@@ -206,10 +200,7 @@ class ParallelGatewayNode(GatewayNode):
     def from_xml(
         bpmn: "Bpmn", process: "Process", element: Element
     ) -> "ParallelGatewayNode":
-        element_instance = ParallelGatewayNode(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return ParallelGatewayNode(element)
 
 
 ###################
@@ -247,10 +238,7 @@ class SequenceFlow(Flow):
 
     @staticmethod
     def from_xml(bpmn: "Bpmn", process: "Process", element: Element) -> "SequenceFlow":
-        element_instance = SequenceFlow(element)
-        process[element_instance.id] = element_instance
-        bpmn.store_element(element_instance)
-        return element_instance
+        return SequenceFlow(element)
 
 
 class MessageFlow(Flow):
@@ -296,9 +284,13 @@ class Process(BpmnElement):
         return self._start_states
 
     @staticmethod
-    def from_xml(bpmn: "Bpmn", process_element: Element) -> "Process":
-        process = Process(process_element)
-        for element in process_element:
+    def from_xml(
+        bpmn: "Bpmn",
+        process: "Process",
+        process_builder: "ProcessBuilder",
+        symbol_table: State,
+    ) -> "Process":
+        for element in process.element:
 
             def get_tag_name(element: Element) -> str:
                 return element.tag.partition("}")[2]
@@ -312,10 +304,69 @@ class Process(BpmnElement):
             assert element_class or flow_class, "Element type unknown"
 
             if element_class:
-                element_class.from_xml(bpmn, process, element)
+                node_instance = element_class.from_xml(bpmn, process, element)
+                process_builder.with_element(node_instance)
             elif flow_class:
-                flow_class.from_xml(bpmn, process, element)
+                flow_instance = flow_class.from_xml(bpmn, process, element)
+                process_builder.with_element(flow_instance)
 
+        ########################
+        # Start of helper methods
+        ########################
+        def _construct_flow_network() -> None:
+            for seq_flow in process.element.findall(
+                "bpmn:sequenceFlow", BPMN_XML_NAMESPACE
+            ):
+                flow_id = _get_flow_id(seq_flow)
+                flow = _get_flow(flow_id)
+                source_ref, target_ref = _get_source_and_target_refs(flow)
+                _validate_and_set_flow_expression(flow)
+                _link_flow_to_nodes(flow, source_ref, target_ref)
+
+        def _get_flow_id(seq_flow: Element) -> str:
+            if not (flow_id := seq_flow.attrib["id"]):
+                raise Exception(BpmnFlowNoIdError(seq_flow))
+            return flow_id.strip()
+
+        def _get_flow(flow_id: str) -> SequenceFlow:
+            flow = process[flow_id]
+            if not isinstance(flow, SequenceFlow):
+                raise Exception(BpmnFlowTypeError(flow.id))
+            return flow
+
+        def _get_source_and_target_refs(flow: SequenceFlow) -> Tuple[Node, Node]:
+            source_ref = bpmn.get_element_from_id_mapping(
+                flow.element.attrib["sourceRef"]
+            )
+            target_ref = bpmn.get_element_from_id_mapping(
+                flow.element.attrib["targetRef"]
+            )
+            if not (isinstance(source_ref, Node) and isinstance(target_ref, Node)):
+                raise Exception(BpmnNodeTypeError(flow.id))
+            return source_ref, target_ref
+
+        def _validate_and_set_flow_expression(flow: SequenceFlow) -> None:
+            expression = flow.element.attrib.get("name", "")
+            if expression:
+                result = ExpressionListener.type_check(expression, symbol_table)
+                if not_(is_successful)(result) or result.unwrap() != "bool":
+                    raise Exception(result.failure())
+                flow.expression = expression
+
+        def _link_flow_to_nodes(
+            flow: SequenceFlow, source_ref: Node, target_ref: Node
+        ) -> None:
+            flow.source_node = source_ref
+            flow.target_node = target_ref
+
+            source_ref.add_out_flow(flow)
+            target_ref.add_in_flow(flow)
+
+        ########################
+        # End of helper methods
+        ########################
+
+        _construct_flow_network()
         return process
 
     def accept(self, visitor: "BpmnVisitor") -> None:
@@ -385,13 +436,18 @@ class Bpmn:
     @staticmethod
     def from_xml(root: Element, symbol_table: State) -> Result["Bpmn", Error]:
         from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
+        from bpmncwpverify.builder.process_builder import ProcessBuilder
 
         builder = BpmnBuilder()
         processes = root.findall("bpmn:process", BPMN_XML_NAMESPACE)
         result: Result["Bpmn", Error] = Failure(Error())
         process_result: Result[Process, Error] = Failure(Error())
         for process_element in processes:
-            process_result = builder.with_process(process_element, symbol_table)
+            process = Process(process_element)
+            process_builder = ProcessBuilder(builder._bpmn, process)
+            Process.from_xml(builder._bpmn, process, process_builder, symbol_table)
+            process_builder.build()
+
             if not_(is_successful)(process_result):
                 return Failure(process_result.failure())
 

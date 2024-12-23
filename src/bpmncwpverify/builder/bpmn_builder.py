@@ -1,6 +1,5 @@
 from xml.etree.ElementTree import Element
 from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
-from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 from returns.result import Result, Success, Failure
 from bpmncwpverify.core.error import (
@@ -23,14 +22,12 @@ class BpmnBuilder:
             return Failure(ExceptionError(str(e)))
 
     def with_process(
-        self, element: Element, symbol_table: State
+        self,
+        process: Process,
     ) -> Result[Process, Error]:
         from bpmncwpverify.builder.process_builder import ProcessBuilder
 
-        process_builder = ProcessBuilder(self._bpmn, element, symbol_table)
-
-        for element in element:
-            process_builder.with_element(element)
+        process_builder = ProcessBuilder(self._bpmn, process)
 
         result: Result[Process, Error] = process_builder.build()
         return result
