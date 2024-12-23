@@ -10,6 +10,8 @@ from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.error import (
     BpmnFlowNoIdError,
     BpmnFlowTypeError,
+    BpmnMsgMissingRefError,
+    BpmnMsgNodeTypeError,
     BpmnNodeTypeError,
     BpmnStructureError,
     Error,
@@ -242,7 +244,9 @@ class SequenceFlow(Flow):
 
 
 class MessageFlow(Flow):
-    pass
+    @staticmethod
+    def from_xml(bpmn: "Bpmn", process: "Process", element: Element) -> "MessageFlow":
+        return MessageFlow(element)
 
 
 ###################
@@ -454,7 +458,31 @@ class Bpmn:
         collab = root.find("bpmn:collaboration", BPMN_XML_NAMESPACE)
         if collab is not None:
             for msg_flow in collab.findall("bpmn:messageFlow", BPMN_XML_NAMESPACE):
-                builder.with_message(msg_flow)
+                source_ref, target_ref = (
+                    msg_flow.get("sourceRef"),
+                    msg_flow.get("targetRef"),
+                )
+
+                message = MessageFlow(msg_flow)
+
+                if not (source_ref and target_ref):
+                    raise Exception(BpmnMsgMissingRefError(message.id))
+
+                builder._bpmn.add_inter_process_msg(message)
+                builder._bpmn.store_element(message)
+
+                from_node, to_node = (
+                    builder._bpmn.get_element_from_id_mapping(source_ref),
+                    builder._bpmn.get_element_from_id_mapping(target_ref),
+                )
+
+                if isinstance(from_node, Node) and isinstance(to_node, Node):
+                    message.target_node, message.source_node = to_node, from_node
+                    from_node.add_out_msg(message)
+                    to_node.add_in_msg(message)
+                else:
+                    raise Exception(BpmnMsgNodeTypeError(message.id))
+
         result = builder.build()
         return result
 
