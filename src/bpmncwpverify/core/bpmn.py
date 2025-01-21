@@ -1,14 +1,8 @@
-from __future__ import annotations
-from typing import List, Dict, Union, cast
+from typing import List, Dict, Union
 from xml.etree.ElementTree import Element
-from bpmncwpverify.core.state import State
-from returns.result import Result
 from abc import abstractmethod
-from returns.pipeline import is_successful
-from returns.functions import not_
 from bpmncwpverify.core.error import (
     BpmnStructureError,
-    Error,
 )
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
@@ -271,33 +265,6 @@ class Process(BpmnElement):
     def get_start_states(self) -> Dict[str, StartEvent]:
         return self._start_states
 
-    @staticmethod
-    def from_xml(
-        element: Element,
-        symbol_table: State,
-    ) -> Result["Process", Error]:
-        from bpmncwpverify.builder.process_builder import ProcessBuilder
-
-        builder = ProcessBuilder(element, symbol_table)
-
-        for sub_element in element:
-            tag = sub_element.tag.partition("}")[2]
-
-            result = get_element_type(tag)
-
-            class_object = result.from_xml(sub_element)
-            builder = builder.with_element(class_object)
-
-        for seq_flow in element.findall("bpmn:sequenceFlow", BPMN_XML_NAMESPACE):
-            builder = builder.with_process_flow(
-                seq_flow.attrib["id"],
-                seq_flow.attrib["sourceRef"],
-                seq_flow.attrib["targetRef"],
-                seq_flow.attrib.get("name", ""),
-            )
-
-        return cast(Result[Process, Error], builder.build())
-
     def accept(self, visitor: "BpmnVisitor") -> None:
         visitor.visit_process(self)
         for start_event in self.get_start_states().values():
@@ -353,63 +320,6 @@ class Bpmn:
         for process in self.processes.values():
             process.accept(visitor)
         visitor.end_visit_bpmn(self)
-
-    def generate_graph_viz(self) -> None:
-        from bpmncwpverify.visitors.bpmn_graph_visitor import GraphVizVisitor
-
-        for process in range(len(self.processes)):
-            graph_viz_visitor = GraphVizVisitor(process + 1)
-
-            self.accept(graph_viz_visitor)
-
-            graph_viz_visitor.dot.render("graphs/bpmn_graph.gv", format="png")  # type: ignore[unused-ignore]
-
-    def generate_promela(self) -> str:
-        from bpmncwpverify.visitors.bpmn_promela_visitor import PromelaGenVisitor
-
-        promela_visitor = PromelaGenVisitor()
-
-        self.accept(promela_visitor)
-
-        return str(promela_visitor)
-
-    @staticmethod
-    def from_xml(root: Element, symbol_table: State) -> Result["Bpmn", Error]:
-        from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
-
-        ##############
-        # Build and add processes
-        ##############
-        processes = root.findall("bpmn:process", BPMN_XML_NAMESPACE)
-        bpmn_builder = BpmnBuilder()
-        for process_element in processes:
-            process = Process.from_xml(process_element, symbol_table)
-            if not_(is_successful)(process):
-                return cast(Result[Bpmn, Error], process)
-            bpmn_builder = bpmn_builder.with_process(process.unwrap())
-
-        ##############
-        # Build and add messages
-        ##############
-        collab = root.find("bpmn:collaboration", BPMN_XML_NAMESPACE)
-        if collab is not None:
-            # TODO: write test for messages in the bpmn diagram
-            bpmn_builder = bpmn_builder.with_process_elements()
-            for msg_flow in collab.findall("bpmn:messageFlow", BPMN_XML_NAMESPACE):
-                source_ref, target_ref = (
-                    msg_flow.get("sourceRef"),
-                    msg_flow.get("targetRef"),
-                )
-
-                message = MessageFlow.from_xml(msg_flow)
-
-                assert source_ref and target_ref
-
-                bpmn_builder = bpmn_builder.with_message(
-                    message, source_ref, target_ref
-                )
-
-        return cast(Result[Bpmn, Error], bpmn_builder.build())
 
 
 ###################

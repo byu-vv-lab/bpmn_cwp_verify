@@ -13,6 +13,7 @@ import pytest
 from xml.etree.ElementTree import Element, SubElement
 from returns.pipeline import is_successful
 from returns.functions import not_
+from bpmncwpverify.core.accessmethods.cwpmethods import from_xml
 
 
 @pytest.fixture
@@ -43,12 +44,10 @@ def test_gen_edge_name(builder):
 
 
 def test_from_xml_success(mocker):
-    mock_builder = mocker.patch("bpmncwpverify.builder.cwp_builder.CwpBuilder")
-    mocker.patch("bpmncwpverify.core.cwp.CwpState")
-    mocker.patch("bpmncwpverify.core.cwp.CwpEdge")
-    mocker.patch("bpmncwpverify.core.expr.ExpressionListener")
+    mock_builder = mocker.patch(
+        "bpmncwpverify.core.accessmethods.cwpmethods.CwpBuilder"
+    )
     mock_result = mocker.Mock(spec=Success)
-
     mock_builder.return_value.with_state.return_value = mock_builder.return_value
     mock_builder.return_value.with_edge.return_value = mock_builder.return_value
     mock_builder.return_value.build.return_value = mock_result
@@ -58,15 +57,20 @@ def test_from_xml_success(mocker):
     mx_graph_model = SubElement(diagram, "mxGraphModel")
     mx_root = SubElement(mx_graph_model, "root")
 
-    state = SubElement(mx_root, "mxCell", vertex="1", style="stateStyle")
-    state.set("id", "state1")
+    state1 = SubElement(mx_root, "mxCell", vertex="1", style="stateStyle")
+    state1.set("id", "state1")
+
+    state2 = SubElement(mx_root, "mxCell", vertex="1", style="stateStyle")
+    state2.set("id", "state2")
 
     edge = SubElement(mx_root, "mxCell", edge="1", source="state1", target="state2")
     edge.set("id", "edge1")
 
-    SubElement(mx_root, "mxCell", style="edgeLabel", value="x > 0", parent="state1")
+    SubElement(
+        mx_root, "mxCell", style="edgeLabel", vertex="1", value="x > 0", parent="edge1"
+    )
 
-    result = Cwp.from_xml(root, mocker.Mock())
+    result = from_xml(root, mocker.Mock())
 
     assert isinstance(result, Success)
     mock_builder.return_value.with_state.assert_called()
@@ -85,7 +89,7 @@ def test_from_xml_edge_missing_source_target(mocker):
     symbol_table = mocker.MagicMock()
 
     with pytest.raises(Exception) as exc_info:
-        Cwp.from_xml(root, symbol_table)
+        from_xml(root, symbol_table)
 
     assert isinstance(exc_info.value.args[0], CwpEdgeNoStateError)
 
@@ -100,7 +104,7 @@ def test_from_xml_missing_parent_or_expression(mocker):
     symbol_table = mocker.MagicMock()
 
     with pytest.raises(Exception) as exc_info:
-        Cwp.from_xml(root, symbol_table)
+        from_xml(root, symbol_table)
 
     assert isinstance(exc_info.value.args[0], CwpEdgeNoParentExprError)
 
