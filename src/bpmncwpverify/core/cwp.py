@@ -1,13 +1,22 @@
+from bpmncwpverify.core.error import CwpFileStructureError, Error
+from bpmncwpverify.core.state import State
+
+from returns.result import Result, Failure
 from typing import Dict, List, Optional
 from xml.etree.ElementTree import Element
+
 import re
-from bpmncwpverify.core.state import State
-from returns.result import Result, Failure
-from bpmncwpverify.core.error import CwpFileStructureError, Error
 
 
 class Cwp:
+    """
+    CWP LTL/Promela constructor
+    """
+
     def __init__(self) -> None:
+        """
+        Initialize CWP object
+        """
         self.states: Dict[str, CwpState] = {}
         self.edges: Dict[str, CwpEdge] = {}
         self.start_state: CwpState
@@ -15,6 +24,12 @@ class Cwp:
 
     @staticmethod
     def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
+        """
+        Generate Cwp object from XML file
+
+        root (Element): Element containing all the information to construct Cwp object
+        symbol_table (State): Object that conatains all variables and associated types
+        """
         from bpmncwpverify.builder.cwp_builder import CwpBuilder
 
         builder = CwpBuilder(symbol_table)
@@ -44,6 +59,9 @@ class Cwp:
         visitor.end_visit_cwp(self)
 
     def generate_graph_viz(self) -> None:
+        """
+        Generate a visual graph
+        """
         from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 
         graph_viz_visitor = CwpGraphVizVisitor()
@@ -53,6 +71,12 @@ class Cwp:
         graph_viz_visitor.dot.render("graphs/cwp_graph.gv", format="png")  # type: ignore[unused-ignore]
 
     def generate_ltl(self, symbol_table: State) -> str:
+        """
+        Generate a LTL file
+
+        Args:
+            symbol_table (State): Object that conatains all variables and associated types
+        """
         from bpmncwpverify.visitors.cwp_ltl_visitor import CwpLtlVisitor
 
         ltl_visitor = CwpLtlVisitor(symbol_table)
@@ -65,6 +89,8 @@ class Cwp:
 
 
 class CwpState:
+    """ """
+
     def __init__(self, state: Element) -> None:
         id = state.get("id")
         name = state.get("value")
@@ -89,7 +115,6 @@ class CwpState:
         name = re.sub("[?,+=/]", "", name)
         name = re.sub("-", " ", name)
         name = re.sub(r"\s+", "_", name)
-
         name = re.sub("</?div>", "", name)
 
         self.name = name.strip()
@@ -127,18 +152,19 @@ class CwpEdge:
         expression = re.sub(r"&amp;", "&", expression)
         expression = re.sub(r"&lt;", "<", expression)
         expression = re.sub(r"&gt;", ">", expression)
-
         expression = re.sub(r"</?div>", "", expression)
         expression = re.sub(r"<br>", " ", expression)
-
         expression = re.sub(r"\s*(==|!=|&&|\|\|)\s*", r" \1 ", expression)
-
         expression = re.sub(r"\s+", " ", expression)
 
         return expression.strip()
 
 
 class CwpVisitor:
+    """
+    Visitor methods for when visitor is passing through elements of CWP file
+    """
+
     def visit_state(self, state: CwpState) -> bool:
         return True
 

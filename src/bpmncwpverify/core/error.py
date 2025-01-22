@@ -1,14 +1,21 @@
 # TODO: create a "match" function on Failure(Error) and create standard error messaging.
-import typing
 import builtins
-from xml.etree.ElementTree import Element
-
+import typing
 from returns.maybe import Maybe, Nothing
+from xml.etree.ElementTree import Element
 
 
 class Error:
     def __init__(self) -> None:
         pass
+
+
+class BpmnNoneIDError(Error):
+    __slots__ = ["error_msg"]
+
+    def __init__(self, node_id: str, error_msg: str) -> None:
+        super().__init__()
+        self.error_msg = error_msg
 
 
 class BpmnStructureError(Error):
@@ -423,6 +430,8 @@ def _get_exception_message(error: Exception) -> str:
 
 def _get_error_message(error: Error) -> str:
     match error:
+        case BpmnNoneIDError(error_msg=error_msg):
+            return f"BPMN ERROR: {error_msg}"
         case BpmnStructureError(node_id=node_id, error_msg=error_msg):
             return f"BPMN ERROR at node: {node_id}. {error_msg}"
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):

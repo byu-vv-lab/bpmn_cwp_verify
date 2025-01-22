@@ -107,8 +107,8 @@ def _parse_expressions(parser: ExprParser) -> Result[ExprParser.StartContext, Er
 
 class ExpressionListener(ExprListener):  # type: ignore[misc]
     """
+    Verifies expressions
     Contains interface used to interact with other classes outside of expression checking functionality
-    Contains methods used to verify expressions are valid
     """
 
     __slots__ = ["symbol_table", "type_stack", "final_type"]
@@ -120,9 +120,9 @@ class ExpressionListener(ExprListener):  # type: ignore[misc]
         Args:
             symbol_table (State): State object that identifies variable typing
         """
+        self.final_type: str
         self.symbol_table = symbol_table
         self.type_stack: List[str] = []
-        self.final_type: str
 
     def check_arithmetic_types(self, left_type: str, right_type: str) -> None:
         """
