@@ -1,17 +1,16 @@
 from bpmncwpverify.core.bpmn import Bpmn, Process
-from bpmncwpverify.core.error import BpmnMsgFlowSamePoolError
+from bpmncwpverify.core.error import BpmnMsgFlowSamePoolError, Error
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ValidateBpmnIncomingFlows,
     ValidateBpmnOutgoingFlows,
     ValidateMsgsVisitor,
     ValidateSeqFlowVisitor,
     ValidateStartEventFlows,
+    ProcessConnectivityVisitor,
+    SetFlowLeafs,
     validate_start_end_events,
 )
-from bpmncwpverify.visitors.bpmnchecks.setflowleafs import SetFlowLeafs
-from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
-    ProcessConnectivityVisitor,
-)
+from returns.result import Result, Success
 
 
 def validate_bpmn(bpmn: Bpmn) -> None:
@@ -27,7 +26,11 @@ def validate_bpmn(bpmn: Bpmn) -> None:
     msg_connects_diff_pools()
 
 
-def validate_process(process: Process) -> None:
+# process is going to have a static method for each of the accepts (i.e. set_leafs_vistitor)
+# in this method I create the visitor and call try catch and return a Result[Process, Error]
+
+
+def validate_process(process: Process) -> Result[bool, Error]:
     set_leafs_visitor = SetFlowLeafs()
     process_connectivity_visitor = ProcessConnectivityVisitor()
     validate_msgs_visitor = ValidateMsgsVisitor()
@@ -36,6 +39,7 @@ def validate_process(process: Process) -> None:
     validate_bpmn_outgoing_flows = ValidateBpmnOutgoingFlows()
     validate_start_event_flows = ValidateStartEventFlows()
 
+    # this should all go in a flow (no try catch here)
     validate_start_end_events(process)
     process.accept(set_leafs_visitor)
     process.accept(process_connectivity_visitor)
@@ -44,3 +48,5 @@ def validate_process(process: Process) -> None:
     process.accept(validate_bpmn_incoming_flows)
     process.accept(validate_bpmn_outgoing_flows)
     process.accept(validate_start_event_flows)
+
+    return Success(True)
