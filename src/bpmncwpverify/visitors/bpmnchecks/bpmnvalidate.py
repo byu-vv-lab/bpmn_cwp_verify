@@ -11,22 +11,20 @@ from bpmncwpverify.visitors.bpmnchecks.checkmethods import (
     validate_msgs,
     validate_seq_flows,
 )
-from returns.result import Result
+from returns.result import Result, Failure, Success
 from returns.pipeline import flow
 from returns.pointfree import bind_result
 
 
-def validate_bpmn(bpmn: Bpmn) -> None:
-    def msg_connects_diff_pools() -> None:
-        for msg in bpmn.inter_process_msgs.values():
-            for process in bpmn.processes.values():
-                if (
-                    msg.target_node.id in process.all_items()
-                    and msg.source_node.id in process.all_items()
-                ):
-                    raise Exception(BpmnMsgFlowSamePoolError(msg.id))
-
-    msg_connects_diff_pools()
+def validate_bpmn(bpmn: Bpmn) -> Result[Bpmn, Error]:
+    for msg in bpmn.inter_process_msgs.values():
+        for process in bpmn.processes.values():
+            if (
+                msg.target_node.id in process.all_items()
+                and msg.source_node.id in process.all_items()
+            ):
+                return Failure(BpmnMsgFlowSamePoolError(msg.id))
+    return Success(bpmn)
 
 
 def validate_process(process: Process) -> Result[Process, Error]:

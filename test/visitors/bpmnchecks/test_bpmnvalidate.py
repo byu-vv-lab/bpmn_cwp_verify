@@ -44,9 +44,8 @@ def test_validate_bpmn_msg_same_pool_error(mocker, setup_bpmn):
 
     bpmn.inter_process_msgs["msg2"].target_node.id = "node1"  # Same pool as target_node
 
-    with pytest.raises(Exception) as exc_info:
-        validate_bpmn(bpmn)
+    result = validate_bpmn(bpmn)
 
     # Check the exception type and message
-    assert isinstance(exc_info.value.args[0], BpmnMsgFlowSamePoolError)
-    assert exc_info.value.args[0].msg_id == "msg2"
+    assert isinstance(result.failure(), BpmnMsgFlowSamePoolError)
+    assert result.failure().msg_id == "msg2"
