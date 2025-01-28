@@ -28,7 +28,9 @@ from bpmncwpverify.core.error import (
     BpmnSeqFlowEndEventError,
     BpmnSeqFlowNoExprError,
     BpmnTaskFlowError,
+    Error,
 )
+from returns.result import Result, Success, Failure
 
 
 class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
@@ -226,7 +228,7 @@ class SetFlowLeafs(BpmnVisitor):  # type: ignore
 ##########################
 # validation functions
 ##########################
-def validate_start_end_events(process: Process) -> None:
+def validate_start_end_events(process: Process) -> Result[Process, Error]:
     start_events = sum(
         isinstance(itm, StartEvent) for itm in process.all_items().values()
     )
@@ -238,4 +240,6 @@ def validate_start_end_events(process: Process) -> None:
     )
 
     if not starting_point or end_events == 0:
-        raise Exception(BpmnMissingEventsError(start_events, end_events))
+        return Failure(BpmnMissingEventsError(start_events, end_events))
+
+    return Success(process)

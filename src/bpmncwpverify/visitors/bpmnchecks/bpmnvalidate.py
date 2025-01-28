@@ -1,16 +1,19 @@
 from bpmncwpverify.core.bpmn import Bpmn, Process
 from bpmncwpverify.core.error import BpmnMsgFlowSamePoolError, Error
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
-    ValidateBpmnIncomingFlows,
-    ValidateBpmnOutgoingFlows,
-    ValidateMsgsVisitor,
-    ValidateSeqFlowVisitor,
-    ValidateStartEventFlows,
-    ProcessConnectivityVisitor,
-    SetFlowLeafs,
     validate_start_end_events,
 )
-from returns.result import Result, Success
+from bpmncwpverify.visitors.bpmnchecks.checkmethods import (
+    check_connectivity,
+    set_leaf_flows,
+    validate_bpmn_incoming_flows,
+    validate_bpmn_outgoing_flows,
+    validate_msgs,
+    validate_seq_flows,
+)
+from returns.result import Result
+from returns.pipeline import flow
+from returns.pointfree import bind_result
 
 
 def validate_bpmn(bpmn: Bpmn) -> None:
@@ -26,27 +29,16 @@ def validate_bpmn(bpmn: Bpmn) -> None:
     msg_connects_diff_pools()
 
 
-# process is going to have a static method for each of the accepts (i.e. set_leafs_vistitor)
-# in this method I create the visitor and call try catch and return a Result[Process, Error]
-
-
-def validate_process(process: Process) -> Result[bool, Error]:
-    set_leafs_visitor = SetFlowLeafs()
-    process_connectivity_visitor = ProcessConnectivityVisitor()
-    validate_msgs_visitor = ValidateMsgsVisitor()
-    validate_seq_flow_visitor = ValidateSeqFlowVisitor()
-    validate_bpmn_incoming_flows = ValidateBpmnIncomingFlows()
-    validate_bpmn_outgoing_flows = ValidateBpmnOutgoingFlows()
-    validate_start_event_flows = ValidateStartEventFlows()
-
-    # this should all go in a flow (no try catch here)
-    validate_start_end_events(process)
-    process.accept(set_leafs_visitor)
-    process.accept(process_connectivity_visitor)
-    process.accept(validate_msgs_visitor)
-    process.accept(validate_seq_flow_visitor)
-    process.accept(validate_bpmn_incoming_flows)
-    process.accept(validate_bpmn_outgoing_flows)
-    process.accept(validate_start_event_flows)
-
-    return Success(True)
+def validate_process(process: Process) -> Result[Process, Error]:
+    result: Result[Process, Error] = flow(
+        process,
+        validate_start_end_events,
+        bind_result(set_leaf_flows),
+        bind_result(check_connectivity),
+        bind_result(validate_msgs),
+        bind_result(validate_seq_flows),
+        bind_result(validate_bpmn_incoming_flows),
+        bind_result(validate_bpmn_outgoing_flows),
+        bind_result(validate_bpmn_incoming_flows),
+    )
+    return result
