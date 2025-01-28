@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, cast
 from xml.etree.ElementTree import Element
 from bpmncwpverify.core.bpmn import (
     Node,
@@ -8,10 +8,9 @@ from bpmncwpverify.core.bpmn import (
 from bpmncwpverify.core.error import (
     BpmnStructureError,
 )
-
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
-from returns.result import Result, Success, Failure
+from returns.result import Result
 from returns.pipeline import is_successful
 from returns.functions import not_
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
@@ -57,8 +56,4 @@ class ProcessBuilder:
         return self
 
     def build(self) -> Result[Process, BpmnStructureError]:
-        try:
-            validate_process(self._process)
-            return Success(self._process)
-        except Exception as e:
-            return Failure(e.args[0])
+        return cast(Result, validate_process(self._process))
