@@ -232,3 +232,14 @@ def test_build_guard(promela_visitor, mocker):
     flow1 = mocker.Mock()
     flow1.source_node = node2
     flow1.target_node = node1
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node3
+    flow2.target_node = node1
+
+    node1.in_flows = [flow1, flow2]
+    node1.in_msgs = []
+
+    guard = promela_visitor._build_guard(node1)
+
+    assert str(guard) == "hasToken(NODE1_FROM_NODE2)||hasToken(NODE1_FROM_NODE3)"
