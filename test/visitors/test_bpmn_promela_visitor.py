@@ -1,3 +1,4 @@
+from bpmncwpverify.core.bpmn import Task
 import pytest
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
     IndentAction,
@@ -122,28 +123,112 @@ def test_string_manager_assertion_error_on_negative_indent(string_manager_factor
         manager1._dec_indent()
 
 
+############################
+# PromelaGenVisitor tests
+############################
+
+
 def test_promela_gen_visitor_initial_state(promela_visitor):
+    assert isinstance(promela_visitor.defs, PromelaGenVisitor.StringManager)
+    assert isinstance(
+        promela_visitor.init_proc_contents, PromelaGenVisitor.StringManager
+    )
+    assert isinstance(promela_visitor.promela, PromelaGenVisitor.StringManager)
     assert repr(promela_visitor) == ""
 
 
-def test_promela_gen_visitor_visits(promela_visitor, mocker):
-    mock_event = mocker.Mock()
-    assert promela_visitor.visit_start_event(mock_event) is True
-    assert promela_visitor.visit_end_event(mock_event) is True
-    assert promela_visitor.visit_intermediate_event(mock_event) is True
-    assert promela_visitor.visit_task(mock_event) is True
-    assert promela_visitor.visit_exclusive_gateway(mock_event) is True
-    assert promela_visitor.visit_parallel_gateway(mock_event) is True
-    assert promela_visitor.visit_message_flow(mock_event) is True
-    assert promela_visitor.visit_process(mock_event) is True
-    assert promela_visitor.visit_bpmn(mock_event) is True
+def test_generate_location_label(promela_visitor, mocker):
+    node = mocker.Mock(spec=Task)
+    node.name = "TEST"
+    flow_or_message = mocker.Mock()
+    flow_or_message.source_node.name = "SRC"
+
+    ret_val = promela_visitor._generate_location_label(node, flow_or_message)
+
+    assert ret_val == "TEST_FROM_SRC"
+
+    ret_val = promela_visitor._generate_location_label(node)
+
+    assert ret_val == "TEST_END"
+
+    node_no_spec = mocker.Mock()
+    node_no_spec.name = "TEST"
+
+    ret_val = promela_visitor._generate_location_label(node_no_spec)
+
+    assert ret_val == "TEST"
 
 
-def test_promela_gen_visitor_end_visits(promela_visitor, mocker):
-    mock_process = mocker.Mock()
-    mock_bpmn = mocker.Mock()
+def test_get_consume_locations(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.in_flows = []
+    node1.in_msgs = []
+    node1.name = "NODE1"
 
-    promela_visitor.end_visit_process(mock_process)
-    promela_visitor.end_visit_bpmn(mock_bpmn)
+    node2 = mocker.Mock()
+    node2.name = "NODE2"
 
-    assert repr(promela_visitor) == ""
+    node3 = mocker.Mock()
+    node3.name = "NODE3"
+
+    assert promela_visitor._get_consume_locations(node1) == []
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node1
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node3
+
+    node2.in_flows = [flow1]
+    node2.in_msgs = [flow2]
+
+    assert promela_visitor._get_consume_locations(node2) == [
+        "NODE2_FROM_NODE1",
+        "NODE2_FROM_NODE3",
+    ]
+
+
+def test_get_put_locations(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.out_flows = []
+    node1.out_msgs = []
+    node1.name = "NODE1"
+
+    node2 = mocker.Mock()
+    node2.name = "NODE2"
+
+    node3 = mocker.Mock()
+    node3.name = "NODE3"
+
+    assert promela_visitor._get_put_locations(node1) == []
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node1
+    flow1.target_node = node2
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node1
+    flow2.target_node = node3
+
+    node1.out_flows = [flow1]
+    node1.out_msgs = [flow2]
+
+    assert promela_visitor._get_put_locations(node1) == [
+        "NODE2_FROM_NODE1",
+        "NODE3_FROM_NODE1",
+    ]
+
+
+def test_build_guard(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.name = "NODE1"
+
+    node2 = mocker.Mock()
+    node2.name = "NODE2"
+
+    node3 = mocker.Mock()
+    node3.name = "NODE3"
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node2
+    flow1.target_node = node1
