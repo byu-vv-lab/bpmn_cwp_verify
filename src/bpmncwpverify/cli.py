@@ -3,7 +3,7 @@ from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
 
 from bpmncwpverify.core.spin import Builder, Outputs
-from returns.io import impure_safe, IOResultE
+from returns.io import impure_safe, IOResult, IOResultE
 from returns.curry import partial
 from returns.pipeline import managed, flow
 from returns.pointfree import bind_result
@@ -103,3 +103,23 @@ def verify() -> None:
 def generate_stubs() -> None:
     """Generate behavior stubs for the BPMN workflow"""
     pass
+
+
+def web_verify(
+    bpmn: str, cwp: str, state: str, behavior: str
+) -> Result["Outputs", Error]:
+    bpmn_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(bpmn))
+    cwp_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(cwp))
+
+    builder: Builder = Builder()
+
+    result: Result["Outputs", Error] = flow(
+        Success(builder),
+        partial(Builder.with_state_, IOResult.from_value(state)),
+        partial(Builder.with_cwp_, cwp_root),
+        partial(Builder.with_bpmn_, bpmn_root),
+        partial(Builder.with_behavior_, IOResult.from_value(behavior)),
+        bind_result(Builder.build_),
+    )
+
+    return result
