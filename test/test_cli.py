@@ -4,7 +4,7 @@ from returns.pipeline import is_successful
 from returns.functions import not_
 
 from bpmncwpverify.cli import _verify, web_verify
-from bpmncwpverify.core.error import StateSyntaxError, ExceptionError
+from bpmncwpverify.core.error import MissingFileError, StateSyntaxError
 
 
 def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
@@ -23,9 +23,8 @@ def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
 
     # then
     assert not_(is_successful)(result)
-    error = result.failure()
-    assert isinstance(error, ExceptionError)
-    assert "state.txt" in error.exception_str
+    assert isinstance(result.failure(), MissingFileError)
+    assert result.failure().file_name == "state.txt"
 
 
 def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
@@ -44,9 +43,8 @@ def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
 
     # then
     assert not_(is_successful)(result)
-    error = result.failure()
-    assert isinstance(error, ExceptionError)
-    assert "test_cwp.xml" in error.exception_str
+    assert isinstance(result.failure(), MissingFileError)
+    assert result.failure().file_name == "test_cwp.xml"
 
 
 def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
@@ -65,9 +63,8 @@ def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
 
     # then
     assert not_(is_successful)(result)
-    error = result.failure()
-    assert isinstance(error, ExceptionError)
-    assert "test_bpmn.bpmn" in error.exception_str
+    assert isinstance(result.failure(), MissingFileError)
+    assert result.failure().file_name == "test_bpmn.bpmn"
 
 
 def test_givin_bad_behavior_file_path_when_verify_then_io_error(capsys):
@@ -86,9 +83,8 @@ def test_givin_bad_behavior_file_path_when_verify_then_io_error(capsys):
 
     # then
     assert not_(is_successful)(result)
-    error = result.failure()
-    assert isinstance(error, ExceptionError)
-    assert "behavior.txt" in error.exception_str
+    assert isinstance(result.failure(), MissingFileError)
+    assert result.failure().file_name == "behavior.txt"
 
 
 def test_givin_bad_state_file_when_verify_then_state_errror(capsys):

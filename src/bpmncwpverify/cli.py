@@ -8,10 +8,12 @@ from returns.curry import partial
 from returns.pipeline import managed, flow
 from returns.pointfree import bind_result
 from returns.result import ResultE, Result, Success, Failure
+from returns.pipeline import is_successful
+from returns.functions import not_
 
 from typing import TextIO, cast
 
-from bpmncwpverify.core.error import Error, get_error_message
+from bpmncwpverify.core.error import Error, MissingFileError, get_error_message
 
 
 def element_tree_from_string(input: str) -> Element:
@@ -64,14 +66,26 @@ def _read_file(file_obj: TextIO) -> IOResultE[str]:
 def _verify() -> Result["Outputs", Error]:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
-    state_str = _get_file_contents(args.state_file)
-    bpmn_root: IOResultE[Element] = _get_file_contents(args.bpmn_file).map(
+    state_file = args.state_file
+    state_str = _get_file_contents(state_file)
+    if not_(is_successful)(state_str):
+        return Failure(MissingFileError(state_file))
+    bpmn_file = args.bpmn_file
+    bpmn_root: IOResultE[Element] = _get_file_contents(bpmn_file).map(
         element_tree_from_string
     )
-    cwp_root: IOResultE[Element] = _get_file_contents(args.cwp_file).map(
+    if not_(is_successful)(bpmn_root):
+        return Failure(MissingFileError(bpmn_file))
+    cwp_file = args.cwp_file
+    cwp_root: IOResultE[Element] = _get_file_contents(cwp_file).map(
         element_tree_from_string
     )
-    behavior_str = _get_file_contents(args.behavior_file)
+    if not_(is_successful)(cwp_root):
+        return Failure(MissingFileError(cwp_file))
+    behavior_file = args.behavior_file
+    behavior_str = _get_file_contents(behavior_file)
+    if not_(is_successful)(behavior_str):
+        return Failure(MissingFileError(behavior_file))
 
     builder: Builder = Builder()
 
