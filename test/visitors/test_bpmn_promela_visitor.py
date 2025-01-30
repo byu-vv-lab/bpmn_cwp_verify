@@ -244,10 +244,6 @@ def test_build_guard(promela_visitor, mocker):
 
     assert str(guard) == "hasToken(NODE1_FROM_NODE2)||hasToken(NODE1_FROM_NODE3)"
 
-    flow1 = mocker.Mock()
-    flow1.source_node = node2
-    flow1.target_node = node1
-
 
 def test_build_atomic_block(promela_visitor, mocker):
     node1 = mocker.Mock()
