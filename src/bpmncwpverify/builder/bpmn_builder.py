@@ -1,4 +1,3 @@
-from typing import cast
 from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 from returns.result import Result
@@ -12,8 +11,8 @@ class BpmnBuilder:
         self._bpmn = Bpmn()
 
     def build(self) -> Result[Bpmn, Error]:
-        result = validate_bpmn(self._bpmn)
-        return cast(Result, result)
+        result: Result[Bpmn, Error] = validate_bpmn(self._bpmn)
+        return result
 
     def with_process(self, process: Process) -> "BpmnBuilder":
         self._bpmn.processes[process.id] = process
