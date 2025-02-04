@@ -2,9 +2,11 @@ from typing import Set
 from bpmncwpverify.core.bpmn import (
     BpmnElement,
     BpmnVisitor,
+    Flow,
     GatewayNode,
     Node,
     Process,
+    SequenceFlow,
     StartEvent,
     EndEvent,
     IntermediateEvent,
@@ -26,7 +28,9 @@ from bpmncwpverify.core.error import (
     BpmnSeqFlowEndEventError,
     BpmnSeqFlowNoExprError,
     BpmnTaskFlowError,
+    Error,
 )
+from returns.result import Result, Success, Failure
 
 
 class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
@@ -183,10 +187,48 @@ class ValidateStartEventFlows(BpmnVisitor):  # type: ignore
         return False
 
 
+class SetFlowLeafs(BpmnVisitor):  # type: ignore
+    def __init__(self) -> None:
+        self.visited: Set[BpmnElement] = set()
+
+    def visit_start_event(self, event: StartEvent) -> bool:
+        self.visited.add(event)
+        return True
+
+    def visit_end_event(self, event: EndEvent) -> bool:
+        self.visited.add(event)
+        return True
+
+    def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
+        self.visited.add(event)
+        return True
+
+    def visit_task(self, task: Task) -> bool:
+        self.visited.add(task)
+        return True
+
+    def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
+        self.visited.add(gateway)
+        return True
+
+    def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
+        self.visited.add(gateway)
+        return True
+
+    def process_flow(self, flow: Flow) -> bool:
+        if flow.target_node in self.visited:
+            flow.is_leaf = True
+            return False
+        return True
+
+    def visit_sequence_flow(self, flow: SequenceFlow) -> bool:
+        return self.process_flow(flow)
+
+
 ##########################
 # validation functions
 ##########################
-def validate_start_end_events(process: Process) -> None:
+def validate_start_end_events(process: Process) -> Result[Process, Error]:
     start_events = sum(
         isinstance(itm, StartEvent) for itm in process.all_items().values()
     )
@@ -198,4 +240,6 @@ def validate_start_end_events(process: Process) -> None:
     )
 
     if not starting_point or end_events == 0:
-        raise Exception(BpmnMissingEventsError(start_events, end_events))
+        return Failure(BpmnMissingEventsError(start_events, end_events))
+
+    return Success(process)

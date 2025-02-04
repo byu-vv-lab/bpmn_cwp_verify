@@ -226,10 +226,9 @@ class TestValidateSeqFlowVisitor:
         other_event.in_msgs = []
         end_event.in_msgs = []
 
-        with pytest.raises(Exception) as exc_info:
-            validate_start_end_events(process)
+        result = validate_start_end_events(process)
 
-        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
+        assert isinstance(result.failure(), BpmnMissingEventsError)
 
     def test_no_end_event_raises_exception(self, setup_process_and_visitor):
         process, _, start_event, _, other_event = setup_process_and_visitor
@@ -237,10 +236,9 @@ class TestValidateSeqFlowVisitor:
         start_event.in_msgs = []
         other_event.in_msgs = [1]
 
-        with pytest.raises(Exception) as exc_info:
-            validate_start_end_events(process)
+        result = validate_start_end_events(process)
 
-        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
+        assert isinstance(result.failure(), BpmnMissingEventsError)
 
     def test_no_start_or_end_event_raises_exception(self, setup_process_and_visitor):
         process, _, _, _, other_event = setup_process_and_visitor
@@ -248,10 +246,9 @@ class TestValidateSeqFlowVisitor:
         process.all_items.return_value = {"middle": other_event}
         other_event.in_msgs = []
 
-        with pytest.raises(Exception) as exc_info:
-            validate_start_end_events(process)
+        result = validate_start_end_events(process)
 
-        assert isinstance(exc_info.value.args[0], BpmnMissingEventsError)
+        assert isinstance(result.failure(), BpmnMissingEventsError)
 
 
 class TestValidateBpmnIncomingFlows:
