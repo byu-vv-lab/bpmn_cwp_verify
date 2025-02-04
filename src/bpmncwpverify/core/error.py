@@ -312,6 +312,14 @@ class NotImplementedError(Error):
         self.function = function
 
 
+class MissingFileError(Error):
+    __slots__ = ["file_name"]
+
+    def __init__(self, file_name: str) -> None:
+        super().__init__()
+        self.file_name = file_name
+
+
 class MessageError(Error):
     __slots__ = ["node_id", "error_msg"]
 
@@ -455,6 +463,8 @@ def _get_error_message(error: Error) -> str:
             )
         case NotImplementedError(function=function):
             return "ERROR: not implemented '{}'".format(function)
+        case MissingFileError(file_name=file_name):
+            return f"Could not find file with name {file_name}"
         case MessageError(node_id=node_id, error_msg=error_msg):
             return f"Inter-process message error at node: {node_id}. {error_msg}"
         case BpmnFlowIncomingError(node_id=node_id):
