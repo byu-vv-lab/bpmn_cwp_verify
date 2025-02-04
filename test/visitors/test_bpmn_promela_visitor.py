@@ -1,6 +1,7 @@
 from bpmncwpverify.core.bpmn import Task
 import pytest
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
+    NL_DOUBLE,
     IndentAction,
     PromelaGenVisitor,
     NL_NONE,
@@ -289,4 +290,54 @@ def test_gen_behavior_model(promela_visitor, mocker):
     promela_visitor._gen_behavior_model(node1)
     assert (
         str(promela_visitor.behaviors) == "inline TEST_BehaviorModel(){\n\tskip\n}\n\n"
+    )
+
+
+def test_gen_var_defs(promela_visitor, mocker) -> None:
+    mock_var_defs = mocker.Mock()
+    promela_visitor.var_defs = mock_var_defs
+    mock_get_get_consume_locations = mocker.patch.object(
+        promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
+    )
+    node1 = mocker.Mock()
+    node1.name = "TEST"
+
+    promela_visitor._gen_var_defs(node1)
+
+    mock_get_get_consume_locations.assert_called_once_with(node1)
+
+    mock_var_defs.write_str.assert_has_calls(
+        [
+            mocker.call("bit VAL1 = 0", 1),
+            mocker.call("bit VAL2 = 0", 1),
+        ],
+        any_order=False,
+    )
+
+
+def test_gen_excl_gw_has_option(promela_visitor, mocker):
+    mock_var_defs = mocker.Mock()
+    promela_visitor.defs = mock_var_defs
+
+    gw = mocker.Mock()
+    gw.name = "TEST"
+
+    flow1 = mocker.Mock()
+    flow1.expression = "EXPR1"
+
+    flow2 = mocker.Mock()
+    flow2.expression = "EXPR2"
+
+    gw.out_flows = [flow1, flow2]
+
+    promela_visitor._gen_excl_gw_has_option(gw)
+
+    mock_var_defs.write_str.assert_has_calls(
+        [
+            mocker.call("#define TEST_hasOption \\", NL_SINGLE),
+            mocker.call("( \\", NL_SINGLE, IndentAction.INC),
+            mocker.call("EXPR1 || \\", NL_SINGLE),
+            mocker.call("EXPR2 \\", NL_SINGLE),
+            mocker.call(")", NL_DOUBLE, IndentAction.DEC),
+        ]
     )

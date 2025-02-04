@@ -2,6 +2,7 @@ from typing import List, Optional, Union
 from enum import Enum
 from bpmncwpverify.core.bpmn import (
     Flow,
+    GatewayNode,
     Node,
     StartEvent,
     EndEvent,
@@ -98,6 +99,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def __init__(self) -> None:
         self.defs = PromelaGenVisitor.StringManager()
+        self.var_defs = PromelaGenVisitor.StringManager()
         self.behaviors = PromelaGenVisitor.StringManager()
         self.init_proc_contents = PromelaGenVisitor.StringManager()
         self.promela = PromelaGenVisitor.StringManager()
@@ -191,12 +193,30 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def _execute_methods(self, event: Node) -> None:
         self._gen_behavior_model(event)
+        self._gen_var_defs(event)
         atomic_block = self._build_atomic_block(event)
 
         self.promela.write_str(atomic_block)
 
+    def _gen_var_defs(self, element: Node) -> None:
+        for var in self._get_consume_locations(element):
+            self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+
+    def _gen_excl_gw_has_option(self, gw: GatewayNode) -> None:
+        if len(gw.out_flows) > 1:
+            self.defs.write_str(f"#define {gw.name}_hasOption \\", NL_SINGLE)
+            conditions = [flow.expression for flow in gw.out_flows]
+            self.defs.write_str("( \\", NL_SINGLE, IndentAction.INC)
+
+            for idx, condition in enumerate(conditions):
+                if idx != len(conditions) - 1:
+                    self.defs.write_str(f"{condition} || \\", NL_SINGLE)
+                else:
+                    self.defs.write_str(f"{condition} \\", NL_SINGLE)
+            self.defs.write_str(")", NL_DOUBLE, IndentAction.DEC)
+
     def __repr__(self) -> str:
-        return f"{self.defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
+        return f"{self.defs}{self.var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
 
     ####################
     # Visitor Methods
@@ -211,6 +231,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_end_event(self, event: EndEvent) -> bool:
         self._execute_methods(event)
+        self.var_defs.write_str("", NL_SINGLE)
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
@@ -223,6 +244,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         self._execute_methods(gateway)
+        self._gen_excl_gw_has_option(gateway)
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
@@ -249,7 +271,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
 
     def visit_bpmn(self, bpmn: Bpmn) -> bool:
-        self.defs.write_str(HELPER_FUNCS_STR, NL_DOUBLE, IndentAction.INC)
+        self.defs.write_str(HELPER_FUNCS_STR, NL_DOUBLE)
         self.init_proc_contents.write_str("init {", NL_SINGLE, IndentAction.INC)
         return True
 
