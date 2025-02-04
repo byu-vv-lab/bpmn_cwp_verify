@@ -278,5 +278,15 @@ def test_build_atomic_block(promela_visitor, mocker):
 
     atomic_block = promela_visitor._build_atomic_block(node1)
 
-    expected_output = ":: atomic { (hasToken(NODE1_FROM_NODE2)||hasToken(NODE1_FROM_NODE3)) ->\n\td_step {\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n"
+    expected_output = ":: atomic { (hasToken(NODE1_FROM_NODE2)||hasToken(NODE1_FROM_NODE3)) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n"
     assert str(atomic_block) == expected_output
+
+
+def test_gen_behavior_model(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.name = "TEST"
+
+    promela_visitor._gen_behavior_model(node1)
+    assert (
+        str(promela_visitor.behaviors) == "inline TEST_BehaviorModel(){\n\tskip\n}\n\n"
+    )

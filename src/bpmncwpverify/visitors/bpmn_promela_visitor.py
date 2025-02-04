@@ -98,6 +98,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def __init__(self) -> None:
         self.defs = PromelaGenVisitor.StringManager()
+        self.behaviors = PromelaGenVisitor.StringManager()
         self.init_proc_contents = PromelaGenVisitor.StringManager()
         self.promela = PromelaGenVisitor.StringManager()
 
@@ -167,6 +168,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
+        atomic_block.write_str(f"{element.name}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
         for location in self._get_consume_locations(element):
@@ -180,37 +182,65 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
         return atomic_block
 
+    def _gen_behavior_model(self, element: Node) -> None:
+        self.behaviors.write_str(
+            f"inline {element.name}_BehaviorModel(){{", NL_SINGLE, IndentAction.INC
+        )
+        self.behaviors.write_str("skip", NL_SINGLE)
+        self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
+
     def __repr__(self) -> str:
-        return f"{self.defs}{self.init_proc_contents}{self.promela}"
+        return f"{self.defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
 
     ####################
     # Visitor Methods
     ####################
     def visit_start_event(self, event: StartEvent) -> bool:
+        self._gen_behavior_model(event)
         self.promela.write_str(f"putToken({event.name})", NL_SINGLE, IndentAction.NIL)
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
 
         atomic_block = self._build_atomic_block(event)
 
-        self.promela.write_str(atomic_block, NL_NONE, IndentAction.NIL)
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
+        self._gen_behavior_model(event)
+        atomic_block = self._build_atomic_block(event)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
+        self._gen_behavior_model(event)
+        atomic_block = self._build_atomic_block(event)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_task(self, task: Task) -> bool:
+        self._gen_behavior_model(task)
+        atomic_block = self._build_atomic_block(task)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
+        self._gen_behavior_model(gateway)
+        atomic_block = self._build_atomic_block(gateway)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
         pass
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
+        self._gen_behavior_model(gateway)
+        atomic_block = self._build_atomic_block(gateway)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_message_flow(self, flow: MessageFlow) -> bool:
