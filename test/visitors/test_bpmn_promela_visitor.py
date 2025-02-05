@@ -243,7 +243,7 @@ def test_build_guard(promela_visitor, mocker):
 
     guard = promela_visitor._build_guard(node1)
 
-    assert str(guard) == "hasToken(NODE1_FROM_NODE2)||hasToken(NODE1_FROM_NODE3)"
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))"
 
 
 def test_build_atomic_block(promela_visitor, mocker):
@@ -279,7 +279,7 @@ def test_build_atomic_block(promela_visitor, mocker):
 
     atomic_block = promela_visitor._build_atomic_block(node1)
 
-    expected_output = ":: atomic { (hasToken(NODE1_FROM_NODE2)||hasToken(NODE1_FROM_NODE3)) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n"
+    expected_output = ":: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n"
     assert str(atomic_block) == expected_output
 
 
@@ -296,7 +296,7 @@ def test_gen_behavior_model(promela_visitor, mocker):
 def test_gen_var_defs(promela_visitor, mocker) -> None:
     mock_var_defs = mocker.Mock()
     promela_visitor.var_defs = mock_var_defs
-    mock_get_consume_locations = mocker.patch.object(
+    mock_get_get_consume_locations = mocker.patch.object(
         promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
     )
     node1 = mocker.Mock()
@@ -304,7 +304,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
 
     promela_visitor._gen_var_defs(node1)
 
-    mock_get_consume_locations.assert_called_once_with(node1, False)
+    mock_get_get_consume_locations.assert_called_once_with(node1, False)
 
     mock_var_defs.write_str.assert_has_calls(
         [
@@ -339,5 +339,43 @@ def test_gen_excl_gw_has_option(promela_visitor, mocker):
             mocker.call("EXPR1 || \\", NL_SINGLE),
             mocker.call("EXPR2 \\", NL_SINGLE),
             mocker.call(")", NL_DOUBLE, IndentAction.DEC),
+        ]
+    )
+
+
+def test_build_expr_conditional(promela_visitor, mocker):
+    mock_sm = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor.StringManager"
+    )
+
+    node1, node2, node3 = mocker.Mock(), mocker.Mock(), mocker.Mock()
+    node1.name = "TEST1"
+    node2.name = "TEST2"
+    node3.name = "TEST3"
+
+    flow1, flow2 = mocker.Mock(), mocker.Mock()
+    flow1.source_node = node1
+    flow1.target_node = node2
+    flow1.expression = "EXPR1"
+
+    flow2.source_node = node1
+    flow2.target_node = node3
+    flow2.expression = "EXPR2"
+
+    node1.out_flows = [flow1, flow2]
+    node1.out_msgs = []
+
+    mock_write_str = mocker.Mock()
+    mock_sm.return_value = mocker.Mock()
+    mock_sm.return_value.write_str = mock_write_str
+
+    promela_visitor._build_expr_conditional(node1)
+    mock_write_str.assert_has_calls(
+        [
+            mocker.call("if", NL_SINGLE, IndentAction.INC),
+            mocker.call(":: EXPR1 -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
+            mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
+            mocker.call(":: atomic{else -> assert false}", NL_SINGLE),
+            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         ]
     )
