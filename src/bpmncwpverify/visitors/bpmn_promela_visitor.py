@@ -108,6 +108,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self, element: Node, flow_or_message: Optional[Flow] = None
     ) -> str:
         """
+        Should only be called from _get_consume_locations and _get_put_locations.
         Generates a unique label for a node, indicating the source of flow.
         If multiple flows lead into the node, the label specifies the source element
         (e.g., 'Node1_FROM_Start'). If the node is a Task, the label ends with '_END'.
@@ -118,13 +119,17 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             return f"{element.name}_END"
         return element.name  # type: ignore
 
-    def _get_consume_locations(self, element: Node) -> List[str]:
+    def _get_consume_locations(
+        self, element: Node, task_end: bool = False
+    ) -> List[str]:
         """
         Returns a list of labels representing all incoming flows to a node.
         If there are no incoming flows, the node itself is returned as a label.
         Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
         """
-        if not (element.in_flows or element.in_msgs):
+        if not (element.in_flows or element.in_msgs) or (
+            isinstance(element, Task) and task_end
+        ):
             return [self._generate_location_label(element)]
         consume_locations: List[str] = [
             self._generate_location_label(element, flow)
@@ -132,19 +137,23 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         ]
         return consume_locations
 
-    def _get_put_locations(self, element: Node) -> List[str]:
+    def _get_put_locations(self, element: Node, task_end: bool = False) -> List[str]:
         """
         Returns a list of labels representing all outgoing flows from a node.
         Each label indicates the target node and the current node as the source.
         Example: ['Node2_FROM_Node1']
         """
-        put_locations: List[str] = [
-            self._generate_location_label(flow.target_node, flow)
-            for flow in element.out_flows + element.out_msgs
-        ]
+        put_locations: List[str] = []
+        if isinstance(element, Task) and not task_end:
+            put_locations = [self._generate_location_label(element)]
+        else:
+            put_locations = [
+                self._generate_location_label(flow.target_node, flow)
+                for flow in element.out_flows + element.out_msgs
+            ]
         return put_locations
 
-    def _build_guard(self, element: Node) -> StringManager:
+    def _build_guard(self, element: Node, task_end: bool = False) -> StringManager:
         """
         Constructs a guard condition for an atomic block in a process.
         The guard checks whether a token exists at the current node, based on incoming flows.
@@ -153,12 +162,17 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         guard = PromelaGenVisitor.StringManager()
         guard.write_str(
             "||".join(
-                [f"hasToken({node})" for node in self._get_consume_locations(element)]
+                [
+                    f"hasToken({node})"
+                    for node in self._get_consume_locations(element, task_end)
+                ]
             )
         )
         return guard
 
-    def _build_atomic_block(self, element: Node) -> StringManager:
+    def _build_atomic_block(
+        self, element: Node, task_end: bool = False
+    ) -> StringManager:
         """
         This function builds an atomic block to execute the element's behavior,
         consume the token and move the token forward.
@@ -166,17 +180,17 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         atomic_block = PromelaGenVisitor.StringManager()
         atomic_block.write_str(":: atomic { (")
 
-        guard = self._build_guard(element)
+        guard = self._build_guard(element, task_end)
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
         atomic_block.write_str(f"{element.name}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        for location in self._get_consume_locations(element):
+        for location in self._get_consume_locations(element, task_end):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
-        for location in self._get_put_locations(element):
+        for location in self._get_put_locations(element, task_end):
             atomic_block.write_str(f"putToken({location})", NL_SINGLE)
 
         atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
@@ -191,15 +205,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str("skip", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
-    def _execute_methods(self, event: Node) -> None:
-        self._gen_behavior_model(event)
-        self._gen_var_defs(event)
-        atomic_block = self._build_atomic_block(event)
-
-        self.promela.write_str(atomic_block)
-
-    def _gen_var_defs(self, element: Node) -> None:
-        for var in self._get_consume_locations(element):
+    def _gen_var_defs(self, element: Node, task_end: bool = False) -> None:
+        for var in self._get_consume_locations(element, task_end):
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def _gen_excl_gw_has_option(self, gw: GatewayNode) -> None:
@@ -222,36 +229,70 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     # Visitor Methods
     ####################
     def visit_start_event(self, event: StartEvent) -> bool:
+        self._gen_behavior_model(event)
+        self._gen_var_defs(event)
+
         self.promela.write_str(f"putToken({event.name})", NL_SINGLE, IndentAction.NIL)
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
 
-        self._execute_methods(event)
+        atomic_block = self._build_atomic_block(event)
 
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
-        self._execute_methods(event)
-        self.var_defs.write_str("", NL_SINGLE)
+        self._gen_behavior_model(event)
+        self._gen_var_defs(event)
+
+        atomic_block = self._build_atomic_block(event)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
-        self._execute_methods(event)
+        self._gen_behavior_model(event)
+        self._gen_var_defs(event)
+
+        atomic_block = self._build_atomic_block(event)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_task(self, task: Task) -> bool:
-        self._execute_methods(task)
+        self._gen_behavior_model(task)
+        self._gen_var_defs(task, task_end=False)
+
+        atomic_block = self._build_atomic_block(task, task_end=False)
+
+        self.promela.write_str(atomic_block)
         return True
 
+    def end_visit_task(self, task: Task) -> None:
+        self._gen_var_defs(task, task_end=True)
+
+        atomic_block = self._build_atomic_block(task, task_end=True)
+        self.promela.write_str(atomic_block)
+
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
-        self._execute_methods(gateway)
+        self._gen_behavior_model(gateway)
+        self._gen_var_defs(gateway)
         self._gen_excl_gw_has_option(gateway)
+
+        atomic_block = self._build_atomic_block(gateway)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
         pass
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
-        self._execute_methods(gateway)
+        self._gen_behavior_model(gateway)
+        self._gen_var_defs(gateway)
+
+        atomic_block = self._build_atomic_block(gateway)
+
+        self.promela.write_str(atomic_block)
         return True
 
     def visit_message_flow(self, flow: MessageFlow) -> bool:

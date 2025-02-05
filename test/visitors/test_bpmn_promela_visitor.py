@@ -296,7 +296,7 @@ def test_gen_behavior_model(promela_visitor, mocker):
 def test_gen_var_defs(promela_visitor, mocker) -> None:
     mock_var_defs = mocker.Mock()
     promela_visitor.var_defs = mock_var_defs
-    mock_get_get_consume_locations = mocker.patch.object(
+    mock_get_consume_locations = mocker.patch.object(
         promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
     )
     node1 = mocker.Mock()
@@ -304,7 +304,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
 
     promela_visitor._gen_var_defs(node1)
 
-    mock_get_get_consume_locations.assert_called_once_with(node1)
+    mock_get_consume_locations.assert_called_once_with(node1, False)
 
     mock_var_defs.write_str.assert_has_calls(
         [
