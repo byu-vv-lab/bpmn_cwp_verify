@@ -1,10 +1,23 @@
 # type: ignore
+import pytest
 import sys
+from bpmncwpverify.core.state import State
 from returns.pipeline import is_successful
 from returns.functions import not_
+from returns.result import Success
 
 from bpmncwpverify.cli import _verify, web_verify
 from bpmncwpverify.core.error import MissingFileError, StateSyntaxError
+
+
+@pytest.fixture
+def mock_state(mocker):
+    """Fixture to create a mock State object."""
+    state = mocker.MagicMock()
+    state._consts = []
+    state._enums = []
+    state._vars = []
+    return state
 
 
 def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
@@ -187,3 +200,92 @@ def test_bad_input_webverify_output_error():
     assert not_(is_successful)(result)
     error = result.failure()
     assert isinstance(error, StateSyntaxError)
+
+
+def test_generate_promela_with_full_state(mocker, mock_state):
+    """Test generate_promela with a state containing constants, enums, and variables."""
+
+    mock_const = mocker.MagicMock()
+    mock_const.id = "MAX_COUNT"
+    mock_const.init.value = "10"
+
+    mock_enum = mocker.MagicMock()
+    mock_enum.values = [mocker.MagicMock(value="START"), mocker.MagicMock(value="STOP")]
+
+    mock_var_enum = mocker.MagicMock()
+    mock_var_enum.type_ = "int"
+    mock_var_enum.id = "state_var"
+    mock_var_enum.init.value = "START"
+
+    mock_var_int = mocker.MagicMock()
+    mock_var_int.type_ = "int"
+    mock_var_int.id = "counter"
+    mock_var_int.init.value = "0"
+
+    mock_state._consts = [mock_const]
+    mock_state._enums = [mock_enum]
+    mock_state._vars = [mock_var_enum, mock_var_int]
+
+    result = State.generate_promela(mock_state)
+
+    expected_output = (
+        "//**********VARIABLE DECLARATION************//\n"
+        "#define MAX_COUNT 10\n"
+        "mtype = {START STOP}\n"
+        "int state_var = START\n"
+        "int counter = 0"
+    )
+
+    assert isinstance(result, Success)
+    assert result.unwrap() == expected_output
+
+
+def test_generate_promela_with_only_constants(mocker, mock_state):
+    """Test generate_promela with only constants."""
+
+    mock_const = mocker.MagicMock()
+    mock_const.id = "BUFFER_SIZE"
+    mock_const.init.value = "256"
+
+    mock_state._consts = [mock_const]
+
+    result = State.generate_promela(mock_state)
+
+    expected_output = (
+        "//**********VARIABLE DECLARATION************//\n" "#define BUFFER_SIZE 256"
+    )
+
+    assert isinstance(result, Success)
+    assert result.unwrap() == expected_output
+
+
+def test_generate_promela_with_only_enums(mocker, mock_state):
+    """Test generate_promela with only enums."""
+
+    mock_enum = mocker.MagicMock()
+    mock_enum.values = [
+        mocker.MagicMock(value="IDLE"),
+        mocker.MagicMock(value="RUNNING"),
+    ]
+
+    mock_state._enums = [mock_enum]
+
+    result = State.generate_promela(mock_state)
+
+    expected_output = (
+        "//**********VARIABLE DECLARATION************//\n" "mtype = {IDLE RUNNING}"
+    )
+
+    assert isinstance(result, Success)
+    assert result.unwrap() == expected_output
+
+
+def test_generate_promela_with_empty_state(mock_state):
+    """Test generate_promela with an empty state."""
+
+    result = State.generate_promela(mock_state)
+
+    expected_output = "//**********VARIABLE DECLARATION************//"
+
+    assert isinstance(result, Success)
+    assert result.unwrap() == expected_output

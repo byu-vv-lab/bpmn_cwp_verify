@@ -86,9 +86,10 @@ class Builder:
 
         ltl = generate_ltl((builder.cwp).unwrap(), (builder.symbol_table).unwrap())
         behavior = (builder.behavior_str).unwrap()
+        vars = State.generate_promela((builder.symbol_table).unwrap()).unwrap()
         workflow = generate_promela((builder.bpmn).unwrap())
 
-        outputs.promela = f"{ltl}{behavior}{workflow}"
+        outputs.promela = f"{vars}{ltl}{behavior}{workflow}"
         return Success(outputs)
 
     def build(self) -> Result["Outputs", Error]:
