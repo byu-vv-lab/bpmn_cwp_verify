@@ -171,11 +171,10 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         if not (ctx.element.in_flows or ctx.element.in_msgs) or ctx.task_end:
             return [self._generate_location_label(ctx)]
-        consume_locations: List[str] = [
+        return [
             self._generate_location_label(ctx, flow)
             for flow in ctx.element.in_flows + ctx.element.in_msgs
         ]
-        return consume_locations
 
     def _get_expressions(self, ctx: Context) -> List[str]:
         """

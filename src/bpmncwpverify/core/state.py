@@ -6,6 +6,15 @@ from antlr4.error.ErrorStrategy import ParseCancellationException
 from antlr4.Token import Token
 from antlr4.tree.Tree import TerminalNode, TerminalNodeImpl
 
+from returns.maybe import Maybe, Nothing, Some
+from returns.result import Failure, Result, Success
+from returns.pipeline import flow, is_successful
+from returns.pointfree import bind_result
+from returns.functions import not_
+from returns.curry import partial
+
+from typing import Any, List, cast, Iterable
+
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
 from bpmncwpverify.antlr.StateParser import StateParser
@@ -18,15 +27,6 @@ from bpmncwpverify.core.error import (
     StateMultipleDefinitionError,
     StateSyntaxError,
 )
-
-from returns.curry import partial
-from returns.functions import not_
-from returns.maybe import Maybe, Nothing, Some
-from returns.pipeline import flow, is_successful
-from returns.pointfree import bind_result
-from returns.result import Failure, Result, Success
-
-from typing import Any, cast, Iterable
 
 
 def antlr_id_set_context_get_children(
@@ -731,6 +731,25 @@ class State:
         )
 
         return result
+
+    @staticmethod
+    def generate_promela(state: "State") -> Result[str, Error]:
+        str_builder: List[str] = []
+        str_builder.append("//**********VARIABLE DECLARATION************//")
+        for const_decl in state._consts:
+            str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
+        for enum_decl in state._enums:
+            str_builder.append(
+                f"mtype = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
+            )
+        for var_decl in state._vars:
+            if var_decl.type_ == typechecking.ENUM:
+                str_builder.append(f"mtype {var_decl.id} = {var_decl.init.value}")
+            else:
+                str_builder.append(
+                    f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                )
+        return Success("\n".join(str_builder))
 
     def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result["State", Error]:
         """
