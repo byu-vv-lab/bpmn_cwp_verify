@@ -33,12 +33,13 @@ class IndentAction(Enum):
 
 
 class Context:
-    __slots__ = ["_element", "_has_option", "_task_end"]
+    __slots__ = ["_element", "_has_option", "_task_end", "_is_parallel"]
 
     def __init__(self, element: Node) -> None:
         self._element = element
         self._has_option = False
         self._task_end = False
+        self._is_parallel = False
 
     @property
     def has_option(self) -> bool:
@@ -57,6 +58,15 @@ class Context:
     def task_end(self, new_val: bool) -> None:
         assert isinstance(self._element, Task)
         self._task_end = new_val
+
+    @property
+    def is_parallel(self) -> bool:
+        return self._is_parallel
+
+    @is_parallel.setter
+    def is_parallel(self, new_val: bool) -> None:
+        assert isinstance(self._element, ParallelGatewayNode)
+        self._is_parallel = new_val
 
     @property
     def element(self) -> Node:
@@ -224,11 +234,18 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         guard = PromelaGenVisitor.StringManager()
         guard.write_str("(")
-        guard.write_str(
-            " || ".join(
-                [f"hasToken({node})" for node in self._get_consume_locations(ctx)]
+        if ctx.is_parallel:
+            guard.write_str(
+                " && ".join(
+                    [f"hasToken({loc})" for loc in self._get_consume_locations(ctx)]
+                )
             )
-        )
+        else:
+            guard.write_str(
+                " || ".join(
+                    [f"hasToken({node})" for node in self._get_consume_locations(ctx)]
+                )
+            )
         guard.write_str(")")
         if ctx.has_option:
             guard.write_str(f" && {self._get_has_option(ctx)}")
@@ -366,6 +383,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
         context = Context(gateway)
+        if not gateway.is_fork:
+            context.is_parallel = True
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 

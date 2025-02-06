@@ -260,10 +260,43 @@ def test_build_guard(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
     ctx.has_option = False
+    ctx.is_parallel = False
 
     guard = promela_visitor._build_guard(ctx)
 
     assert str(guard) == "(hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))"
+
+
+def test_build_guard_with_parallel_gw(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.name = "NODE1"
+
+    node2 = mocker.Mock()
+    node2.name = "NODE2"
+
+    node3 = mocker.Mock()
+    node3.name = "NODE3"
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node2
+    flow1.target_node = node1
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node3
+    flow2.target_node = node1
+
+    node1.in_flows = [flow1, flow2]
+    node1.in_msgs = []
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = node1
+    ctx.task_end = False
+    ctx.has_option = False
+    ctx.is_parallel = True
+
+    guard = promela_visitor._build_guard(ctx)
+
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2) && hasToken(NODE1_FROM_NODE3))"
 
 
 def test_build_atomic_block(promela_visitor, mocker):
@@ -301,6 +334,7 @@ def test_build_atomic_block(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
     ctx.has_option = False
+    ctx.is_parallel = False
 
     atomic_block = promela_visitor._build_atomic_block(ctx)
 
