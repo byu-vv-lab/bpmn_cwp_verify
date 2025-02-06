@@ -12,9 +12,9 @@ def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
     test_args = [
         "verify",
         "state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -31,10 +31,10 @@ def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
+        "./test/resources/simple_example/state.txt",
         "test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -51,10 +51,10 @@ def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
-        "./test/resources/test_cwp.xml",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
         "test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -71,9 +71,9 @@ def test_givin_bad_behavior_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
         "behavior.txt",
     ]
     sys.argv = test_args
@@ -91,10 +91,10 @@ def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/bad_state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/bad_state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -111,10 +111,10 @@ def test_givin_good_files_when_verify_then_output_promela(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -131,22 +131,22 @@ def test_givin_good_files_when_verify_then_output_promela(capsys):
 def test_good_input_webverify_output_promela():
     # given
     bpmn = ""
-    with open("./test/resources/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/state.txt", "r") as state_file:
         for line in state_file:
             state += line
 
     behavior = ""
-    with open("./test/resources/behavior.txt", "r") as behavior_file:
+    with open("./test/resources/simple_example/behavior.txt", "r") as behavior_file:
         for line in behavior_file:
             behavior += line
     # when
@@ -162,22 +162,22 @@ def test_good_input_webverify_output_promela():
 def test_bad_input_webverify_output_error():
     # given
     bpmn = ""
-    with open("./test/resources/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/bad_state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/bad_state.txt", "r") as state_file:
         for line in state_file:
             state += line
 
     behavior = ""
-    with open("./test/resources/behavior.txt", "r") as behavior_file:
+    with open("./test/resources/simple_example/behavior.txt", "r") as behavior_file:
         for line in behavior_file:
             behavior += line
     # when
