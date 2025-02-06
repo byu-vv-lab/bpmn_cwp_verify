@@ -354,17 +354,13 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         context = Context(gateway)
+        context.has_option = True
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
         self._gen_excl_gw_has_option(context)
 
         atomic_block = self._build_atomic_block(context)
-
-        context.has_option = True
-        atomic_block2 = self._build_atomic_block(context)
-
         self.promela.write_str(atomic_block)
-        self.promela.write_str(atomic_block2)
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:

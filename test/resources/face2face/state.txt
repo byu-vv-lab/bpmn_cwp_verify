@@ -1,0 +1,18 @@
+enum INIT { INIT }
+enum other { other }
+enum buyerName { buyerName }
+enum sellerName { sellerName }
+enum agreed { agreed }
+enum failed { failed }
+enum pending { pending }
+enum noRetry { noRetry }
+
+const paymentAmount: byte = 253
+const belowPaymentAmount: byte = 252
+const noRetryPayment: byte = 254
+const pendingPayment: byte = 255
+
+var terms: terms = pending { agreed failed pending noRetry }
+var backpackOwner: backpackOwner = sellerName { buyerName sellerName }
+var paymentOwner: paymentOwner = buyerName { sellerName buyerName }
+var paymentOffered: byte = pendingPayment { 252 253 254 255 }

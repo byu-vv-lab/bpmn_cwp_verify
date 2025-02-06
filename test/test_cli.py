@@ -12,9 +12,9 @@ def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
     test_args = [
         "verify",
         "state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -31,10 +31,10 @@ def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
+        "./test/resources/simple_example/state.txt",
         "test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -51,10 +51,10 @@ def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
-        "./test/resources/test_cwp.xml",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
         "test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -71,9 +71,9 @@ def test_givin_bad_behavior_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
         "behavior.txt",
     ]
     sys.argv = test_args
@@ -91,10 +91,10 @@ def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/bad_state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/bad_state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
@@ -111,10 +111,10 @@ def test_givin_good_files_when_verify_then_output_promela(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/state.txt",
-        "./test/resources/test_cwp.xml",
-        "./test/resources/test_bpmn.bpmn",
-        "./test/resources/behavior.txt",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/behavior.txt",
     ]
     sys.argv = test_args
 
