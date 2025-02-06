@@ -151,6 +151,7 @@ def test_generate_location_label(promela_visitor, mocker):
 
     assert ret_val == "TEST_FROM_SRC"
 
+    ctx.task_end = True
     ret_val = promela_visitor._generate_location_label(ctx)
 
     assert ret_val == "TEST_END"
@@ -158,6 +159,7 @@ def test_generate_location_label(promela_visitor, mocker):
     element_no_spec = mocker.Mock()
     element_no_spec.name = "TEST"
     ctx.element = element_no_spec
+    ctx.task_end = False
 
     ret_val = promela_visitor._generate_location_label(ctx)
 
@@ -178,6 +180,7 @@ def test_get_consume_locations(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.task_end = False
 
     assert promela_visitor._get_consume_locations(ctx) == ["NODE1"]
 
@@ -211,6 +214,7 @@ def test_get_put_locations(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.task_end = False
 
     assert promela_visitor._get_put_locations(ctx) == []
 
@@ -254,6 +258,8 @@ def test_build_guard(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.task_end = False
+    ctx.has_option = False
 
     guard = promela_visitor._build_guard(ctx)
 
@@ -293,6 +299,8 @@ def test_build_atomic_block(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.task_end = False
+    ctx.has_option = False
 
     atomic_block = promela_visitor._build_atomic_block(ctx)
 
@@ -393,6 +401,8 @@ def test_build_expr_conditional(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.task_end = False
+    ctx.has_option = False
 
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()

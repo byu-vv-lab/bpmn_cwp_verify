@@ -146,7 +146,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         if flow_or_message:
             return f"{ctx.element.name}_FROM_{flow_or_message.source_node.name}"
-        if isinstance(ctx.element, Task):
+        if ctx.task_end:
             return f"{ctx.element.name}_END"
         return ctx.element.name  # type: ignore
 
@@ -159,9 +159,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         If there are no incoming flows, the node itself is returned as a label.
         Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
         """
-        if not (ctx.element.in_flows or ctx.element.in_msgs) or (
-            isinstance(ctx.element, Task) and ctx.task_end
-        ):
+        if not (ctx.element.in_flows or ctx.element.in_msgs) or ctx.task_end:
             return [self._generate_location_label(ctx)]
         consume_locations: List[str] = [
             self._generate_location_label(ctx, flow)
@@ -209,7 +207,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         Example: ['Node2_FROM_Node1']
         """
         put_locations: List[str] = []
-        if isinstance(ctx.element, Task) and not ctx.task_end:
+        if ctx.task_end:
             put_locations = [self._generate_location_label(ctx)]
         else:
             put_locations = [
@@ -232,7 +230,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             )
         )
         guard.write_str(")")
-        if isinstance(ctx.element, ExclusiveGatewayNode) and ctx.has_option:
+        if ctx.has_option:
             guard.write_str(f" && {self._get_has_option(ctx)}")
         return guard
 
@@ -255,7 +253,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         for location in self._get_consume_locations(ctx):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
-        if isinstance(ctx.element, ExclusiveGatewayNode) and ctx.has_option:
+        if ctx.has_option:
             atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
             for location in self._get_put_locations(ctx):
