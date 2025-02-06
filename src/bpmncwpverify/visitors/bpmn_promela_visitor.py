@@ -2,7 +2,6 @@ from typing import List, Optional, Union
 from enum import Enum
 from bpmncwpverify.core.bpmn import (
     Flow,
-    GatewayNode,
     Node,
     StartEvent,
     EndEvent,
@@ -47,7 +46,9 @@ class Context:
 
     @has_option.setter
     def has_option(self, new_val: bool) -> None:
-        assert isinstance(self._element, GatewayNode)
+        assert isinstance(
+            self._element, ExclusiveGatewayNode
+        ), "has_option can only be set if element is of type ExclusiveGatewayNode"
         self._has_option = new_val
 
     @property
@@ -56,7 +57,9 @@ class Context:
 
     @task_end.setter
     def task_end(self, new_val: bool) -> None:
-        assert isinstance(self._element, Task)
+        assert isinstance(
+            self._element, Task
+        ), "task_end can only be set if element is of type Task"
         self._task_end = new_val
 
     @property
@@ -65,7 +68,9 @@ class Context:
 
     @is_parallel.setter
     def is_parallel(self, new_val: bool) -> None:
-        assert isinstance(self._element, ParallelGatewayNode)
+        assert isinstance(
+            self._element, ParallelGatewayNode
+        ), "is_parallel can only be set if element is of type ParallelGatewayNode"
         self._is_parallel = new_val
 
     @property
@@ -181,11 +186,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         Returns a list of the expressions that lie on the flows leaving a specific
         node. Example: ["x > 5"]
         """
-        conditions: List[str] = []
-        for flow in ctx.element.out_flows:
-            if flow.expression:
-                conditions.append(flow.expression)
-        return conditions
+        return [flow.expression for flow in ctx.element.out_flows if flow.expression]
 
     def _build_expr_conditional(self, ctx: Context) -> StringManager:
         """
@@ -215,15 +216,13 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         Each label indicates the target node and the current node as the source.
         Example: ['Node2_FROM_Node1']
         """
-        put_locations: List[str] = []
         if ctx.task_end:
-            put_locations = [self._generate_location_label(ctx)]
+            return [self._generate_location_label(ctx)]
         else:
-            put_locations = [
+            return [
                 self._generate_location_label(Context(flow.target_node), flow)
                 for flow in ctx.element.out_flows + ctx.element.out_msgs
             ]
-        return put_locations
 
     def _build_guard(self, ctx: Context) -> StringManager:
         """

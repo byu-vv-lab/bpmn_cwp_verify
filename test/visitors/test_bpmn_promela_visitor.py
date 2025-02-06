@@ -1,4 +1,4 @@
-from bpmncwpverify.core.bpmn import Task
+from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
 import pytest
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
     NL_DOUBLE,
@@ -452,3 +452,97 @@ def test_build_expr_conditional(promela_visitor, mocker):
             mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         ]
     )
+
+
+def test_get_expressions(promela_visitor, mocker):
+    node = mocker.Mock()
+
+    ctx = mocker.Mock()
+    ctx.element = node
+
+    flow1 = mocker.Mock()
+    flow1.expression = "TEST_EXPR1"
+    flow2 = mocker.Mock()
+    flow2.expression = "TEST_EXPR2"
+    flow3 = mocker.Mock()
+    flow3.expression = None
+
+    node.out_flows = [flow1, flow2, flow3]
+
+    result = promela_visitor._get_expressions(ctx)
+    assert result == ["TEST_EXPR1", "TEST_EXPR2"]
+
+
+def test_context_setters(mocker):
+    task = mocker.Mock(spec=Task)
+    parallel_gw = mocker.Mock(spec=ParallelGatewayNode)
+
+    ctx = Context(task)
+
+    with pytest.raises(AssertionError) as exc_info:
+        ctx.has_option = True
+
+    assert (
+        exc_info.value.args[0]
+        == "has_option can only be set if element is of type ExclusiveGatewayNode"
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        ctx.is_parallel = True
+
+    assert (
+        exc_info.value.args[0]
+        == "is_parallel can only be set if element is of type ParallelGatewayNode"
+    )
+
+    ctx = Context(parallel_gw)
+
+    with pytest.raises(AssertionError) as exc_info:
+        ctx.task_end = True
+
+    assert (
+        exc_info.value.args[0] == "task_end can only be set if element is of type Task"
+    )
+
+    ctx.is_parallel = True
+
+    assert ctx.is_parallel
+
+
+def test_visit_parallel_gateway(promela_visitor, mocker):
+    mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
+    mock_gen_behavior_model = mocker.patch.object(
+        PromelaGenVisitor, "_gen_behavior_model"
+    )
+    mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "_gen_var_defs")
+    mock_build_atomic_block = mocker.patch.object(
+        PromelaGenVisitor, "_build_atomic_block"
+    )
+    mock_gw = mocker.Mock(spec=ParallelGatewayNode)
+    mock_gw.is_fork = False
+    mock_ctx.return_value = mocker.Mock()
+
+    promela_visitor.visit_parallel_gateway(mock_gw)
+
+    mock_gen_behavior_model.assert_called_once()
+    mock_gen_var_defs.assert_called_once()
+    mock_build_atomic_block.assert_called_once()
+
+
+def test_visit_intermediate_event(promela_visitor, mocker):
+    mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
+    mock_gen_behavior_model = mocker.patch.object(
+        PromelaGenVisitor, "_gen_behavior_model"
+    )
+    mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "_gen_var_defs")
+    mock_build_atomic_block = mocker.patch.object(
+        PromelaGenVisitor, "_build_atomic_block"
+    )
+    mock_event = mocker.Mock(spec=IntermediateEvent)
+    mock_ctx.return_value = mocker.Mock()
+
+    promela_visitor.visit_intermediate_event(mock_event)
+
+    mock_gen_behavior_model.assert_called_once()
+    mock_gen_var_defs.assert_called_once()
+    mock_build_atomic_block.assert_called_once()
