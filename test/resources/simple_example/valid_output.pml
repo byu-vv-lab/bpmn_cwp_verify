@@ -1,3 +1,6 @@
+
+int x = 0
+
 #define Gateway_1_hasOption \
 (\
     x > 5||\
@@ -48,7 +51,6 @@ inline Gateway_1_BehaviorModel() {
 
 init {
     atomic{
-        updateState()
         run Process_1()
     }
 }
@@ -109,6 +111,7 @@ do
         d_step {
             consumeToken(End_FROM_Gateway_1)
         }
+        break
     }
 od
 }

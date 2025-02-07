@@ -2,6 +2,7 @@ from typing import List
 from bpmncwpverify.core.error import Error
 from returns.maybe import Maybe
 from returns.result import Failure, Result
+import subprocess
 
 
 class SpinSummary:
@@ -17,5 +18,9 @@ class SpinOutput:
 
 
 def verify_pml_with_spin(file_path: str) -> Result[SpinOutput, Error]:
+    result = subprocess.run(
+        ["spin", "-run", file_path], capture_output=True, text=True
+    )  # Windows: ["dir"], shell=True
+    print(result.stdout, end="")
     # TODO: implement
     return Failure(SpinOutput())
