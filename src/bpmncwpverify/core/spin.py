@@ -18,9 +18,6 @@ class SpinOutput:
 
 
 def verify_pml_with_spin(file_path: str) -> Result[SpinOutput, Error]:
-    result = subprocess.run(
-        ["spin", "-run", file_path], capture_output=True, text=True
-    )  # Windows: ["dir"], shell=True
+    result = subprocess.run(["spin", "-run", file_path], capture_output=True, text=True)
     print(result.stdout, end="")
-    # TODO: implement
     return Failure(SpinOutput())
