@@ -18,7 +18,7 @@ from bpmncwpverify.core.bpmn import (
 ##############
 # Constants
 ##############
-HELPER_FUNCS_STR = "\n\n#define hasToken(place) (place != 0)\n\n#define putToken(place) place = 1\n\n#define consumeToken(place) place = 0"
+HELPER_FUNCS_STR = "#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tassert (place != 1)\n\tplace = 1\n}\n\n#define consumeToken(place) place = 0\n"
 NL_NONE = 0
 NL_SINGLE = 1
 NL_DOUBLE = 2
