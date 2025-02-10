@@ -31,9 +31,6 @@ class IndentAction(Enum):
     DEC = 2
 
 
-# remove has option, add default edge
-
-
 class Context:
     __slots__ = ["_element", "_task_end", "_is_parallel"]
 
