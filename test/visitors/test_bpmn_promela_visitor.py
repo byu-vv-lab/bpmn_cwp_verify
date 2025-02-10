@@ -1,7 +1,6 @@
 from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
 import pytest
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
-    NL_DOUBLE,
     IndentAction,
     PromelaGenVisitor,
     NL_NONE,
@@ -259,7 +258,6 @@ def test_build_guard(promela_visitor, mocker):
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
     ctx.task_end = False
-    ctx.has_option = False
     ctx.is_parallel = False
 
     guard = promela_visitor._build_guard(ctx)
@@ -291,7 +289,6 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
     ctx.task_end = False
-    ctx.has_option = False
     ctx.is_parallel = True
 
     guard = promela_visitor._build_guard(ctx)
@@ -333,7 +330,6 @@ def test_build_atomic_block(promela_visitor, mocker):
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
     ctx.task_end = False
-    ctx.has_option = False
     ctx.is_parallel = False
 
     atomic_block = promela_visitor._build_atomic_block(ctx)
@@ -380,37 +376,6 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
     )
 
 
-def test_gen_excl_gw_has_option(promela_visitor, mocker):
-    mock_var_defs = mocker.Mock()
-    promela_visitor.defs = mock_var_defs
-
-    gw = mocker.Mock()
-    gw.name = "TEST"
-
-    flow1 = mocker.Mock()
-    flow1.expression = "EXPR1"
-
-    flow2 = mocker.Mock()
-    flow2.expression = "EXPR2"
-
-    gw.out_flows = [flow1, flow2]
-
-    ctx = mocker.Mock(spec=Context)
-    ctx.element = gw
-
-    promela_visitor._gen_excl_gw_has_option(ctx)
-
-    mock_var_defs.write_str.assert_has_calls(
-        [
-            mocker.call("#define TEST_hasOption \\", NL_SINGLE),
-            mocker.call("( \\", NL_SINGLE, IndentAction.INC),
-            mocker.call("EXPR1 || \\", NL_SINGLE),
-            mocker.call("EXPR2 \\", NL_SINGLE),
-            mocker.call(")", NL_DOUBLE, IndentAction.DEC),
-        ]
-    )
-
-
 def test_build_expr_conditional(promela_visitor, mocker):
     mock_sm = mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor.StringManager"
@@ -436,7 +401,6 @@ def test_build_expr_conditional(promela_visitor, mocker):
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
     ctx.task_end = False
-    ctx.has_option = False
 
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()
@@ -478,14 +442,6 @@ def test_context_setters(mocker):
     parallel_gw = mocker.Mock(spec=ParallelGatewayNode)
 
     ctx = Context(task)
-
-    with pytest.raises(AssertionError) as exc_info:
-        ctx.has_option = True
-
-    assert (
-        exc_info.value.args[0]
-        == "has_option can only be set if element is of type ExclusiveGatewayNode"
-    )
 
     with pytest.raises(AssertionError) as exc_info:
         ctx.is_parallel = True
