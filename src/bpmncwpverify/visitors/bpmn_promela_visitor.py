@@ -32,24 +32,12 @@ class IndentAction(Enum):
 
 
 class Context:
-    __slots__ = ["_element", "_has_option", "_task_end", "_is_parallel"]
+    __slots__ = ["_element", "_task_end", "_is_parallel"]
 
     def __init__(self, element: Node) -> None:
         self._element = element
-        self._has_option = False
         self._task_end = False
         self._is_parallel = False
-
-    @property
-    def has_option(self) -> bool:
-        return self._has_option
-
-    @has_option.setter
-    def has_option(self, new_val: bool) -> None:
-        assert isinstance(
-            self._element, ExclusiveGatewayNode
-        ), "has_option can only be set if element is of type ExclusiveGatewayNode"
-        self._has_option = new_val
 
     @property
     def task_end(self) -> bool:
@@ -165,9 +153,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             return f"{ctx.element.name}_END"
         return ctx.element.name  # type: ignore
 
-    def _get_has_option(self, ctx: Context) -> str:
-        return f"{ctx.element.name}_hasOption"
-
     def _get_consume_locations(self, ctx: Context) -> List[str]:
         """
         Returns a list of labels representing all incoming flows to a node.
@@ -245,8 +230,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                 )
             )
         guard.write_str(")")
-        if ctx.has_option:
-            guard.write_str(f" && {self._get_has_option(ctx)}")
         return guard
 
     def _build_atomic_block(self, ctx: Context) -> StringManager:
@@ -268,8 +251,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         for location in self._get_consume_locations(ctx):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
-        if ctx.has_option:
-            atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
             for location in self._get_put_locations(ctx):
                 atomic_block.write_str(f"putToken({location})", NL_SINGLE)
@@ -293,19 +274,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     def _gen_var_defs(self, ctx: Context) -> None:
         for var in self._get_consume_locations(ctx):
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
-
-    def _gen_excl_gw_has_option(self, ctx: Context) -> None:
-        if len(ctx.element.out_flows) > 1:
-            self.defs.write_str(f"#define {self._get_has_option(ctx)} \\", NL_SINGLE)
-            expressions = self._get_expressions(ctx)
-            self.defs.write_str("( \\", NL_SINGLE, IndentAction.INC)
-
-            for idx, condition in enumerate(expressions):
-                if idx != len(expressions) - 1:
-                    self.defs.write_str(f"{condition} || \\", NL_SINGLE)
-                else:
-                    self.defs.write_str(f"{condition} \\", NL_SINGLE)
-            self.defs.write_str(")", NL_DOUBLE, IndentAction.DEC)
 
     def __repr__(self) -> str:
         return f"{self.defs}{self.var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
@@ -367,10 +335,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         context = Context(gateway)
-        context.has_option = True
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
-        self._gen_excl_gw_has_option(context)
 
         atomic_block = self._build_atomic_block(context)
         self.promela.write_str(atomic_block)
