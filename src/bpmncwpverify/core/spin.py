@@ -27,12 +27,24 @@ class SpinOutput:
 
         return self
 
+    def _check_syntax_errors(self, s: str) -> "SpinOutput":
+        charref = re.compile(
+            r"""
+            (?:[\w/.:\s]*)        # Discard the 'spin: file path'
+            :([0-9]+),\s        # Get the line number of syntax error
+            (.*)                # Discard the Error: Syntax error
+        """,
+            re.VERBOSE,
+        )
+        iterator = charref.finditer(s)
+        self.error_trace = Some([error.groups() for error in iterator])
+        return self
+
     @staticmethod
     def get_spin_output(file_path: str) -> "SpinOutput":
         spin_output = SpinOutput()
         result = subprocess.run(
             ["spin", "-run", "-noclaim", file_path], capture_output=True, text=True
         ).stdout
-        # todo: first add check to see if there were any syntax errors in the promela
 
         return spin_output._get_errors(result)

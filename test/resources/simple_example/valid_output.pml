@@ -50,7 +50,6 @@ inline Gateway_1_BehaviorModel() {
 
 
 init {
-    atomic{
         run Process_1()
     }
 }
