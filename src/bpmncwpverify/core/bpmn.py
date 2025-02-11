@@ -1,17 +1,18 @@
-from abc import abstractmethod
-
 from bpmncwpverify.core.error import (
     BpmnStructureError,
 )
 
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Generic, TypeVar, Type
 from xml.etree.ElementTree import Element
 
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
 
-class BpmnElement:
+T = TypeVar("T", bound="BpmnElement")
+
+
+class BpmnElement(Generic[T]):
     """
     Parent class for all BPMN elements
     """
@@ -34,8 +35,12 @@ class BpmnElement:
 
         self.name: str = element.attrib.get("name", self.id)
 
+    @classmethod
+    def from_xml(cls: Type[T], element: Element) -> T:
+        return cls(element)
 
-class Node(BpmnElement):
+
+class Node(BpmnElement[T]):
     """
     Parent class for BPMN elements that have incoming and outgoing flows
     """
@@ -132,20 +137,9 @@ class Node(BpmnElement):
         """
         pass
 
-    @staticmethod
-    @abstractmethod
-    def from_xml(element: Element) -> "Node":
-        """
-        Create a Node object from a XML file
-
-        Args:
-            element (Element): Element object to be converted
-        """
-        pass
-
 
 # Event classes
-class Event(Node):
+class Event(Node[T]):
     """
     Parent class for all BPMN events
     """
@@ -153,7 +147,7 @@ class Event(Node):
     pass
 
 
-class StartEvent(Event):
+class StartEvent(Event["StartEvent"]):
     """
     Event that BPMN starts with
     """
@@ -163,12 +157,8 @@ class StartEvent(Event):
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_start_event(self)
 
-    @staticmethod
-    def from_xml(element: Element) -> "StartEvent":
-        return StartEvent(element)
 
-
-class EndEvent(Event):
+class EndEvent(Event["EndEvent"]):
     """
     Event that BPMN starts with
     """
@@ -178,12 +168,8 @@ class EndEvent(Event):
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_end_event(self)
 
-    @staticmethod
-    def from_xml(element: Element) -> "EndEvent":
-        return EndEvent(element)
 
-
-class IntermediateEvent(Event):
+class IntermediateEvent(Event["IntermediateEvent"]):
     """
     Events between start and end events
     """
@@ -201,13 +187,9 @@ class IntermediateEvent(Event):
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_intermediate_event(self)
 
-    @staticmethod
-    def from_xml(element: Element) -> "IntermediateEvent":
-        return IntermediateEvent(element)
-
 
 # Activity classes
-class Task(Node):
+class Task(Node["Task"]):
     """
     Action that can be acted upon varaible(s)
     """
@@ -217,13 +199,9 @@ class Task(Node):
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_task(self)
 
-    @staticmethod
-    def from_xml(element: Element) -> "Task":
-        return Task(element)
-
 
 # Gateway classes
-class GatewayNode(Node):
+class GatewayNode(Node[T]):
     """
     Parent class for all BPMN gateways
     """
@@ -231,7 +209,7 @@ class GatewayNode(Node):
     pass
 
 
-class ExclusiveGatewayNode(GatewayNode):
+class ExclusiveGatewayNode(GatewayNode["ExclusiveGatewayNode"]):
     """
     Gateway that only allows one path to be taken
     """
@@ -241,12 +219,8 @@ class ExclusiveGatewayNode(GatewayNode):
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_exclusive_gateway(self)
 
-    @staticmethod
-    def from_xml(element: Element) -> "ExclusiveGatewayNode":
-        return ExclusiveGatewayNode(element)
 
-
-class ParallelGatewayNode(GatewayNode):
+class ParallelGatewayNode(GatewayNode["ParallelGatewayNode"]):
     """
     Gateway that allows multiple paths to be taken
     """
@@ -271,13 +245,9 @@ class ParallelGatewayNode(GatewayNode):
         if len(self.out_flows) > 1:
             self.is_fork = True
 
-    @staticmethod
-    def from_xml(element: Element) -> "ParallelGatewayNode":
-        return ParallelGatewayNode(element)
-
 
 # Flow classes
-class Flow(BpmnElement):
+class Flow(BpmnElement[T]):
     """
     Parent class for all BPMN flows
     """
@@ -296,13 +266,8 @@ class Flow(BpmnElement):
         self.target_node: Node
         self.is_leaf: bool = False
 
-    @staticmethod
-    @abstractmethod
-    def from_xml(element: Element) -> "Flow":
-        pass
 
-
-class SequenceFlow(Flow):
+class SequenceFlow(Flow["SequenceFlow"]):
     """
     Representation of how activities and events are connected
     """
@@ -321,22 +286,14 @@ class SequenceFlow(Flow):
             self.target_node.accept(visitor)
         visitor.end_visit_sequence_flow(self)
 
-    @staticmethod
-    def from_xml(element: Element) -> "SequenceFlow":
-        return SequenceFlow(element)
 
-
-class MessageFlow(Flow):
+class MessageFlow(Flow["MessageFlow"]):
     """
     Representation of how things are communicated between participants
     """
 
-    @staticmethod
-    def from_xml(element: Element) -> "MessageFlow":
-        return MessageFlow(element)
 
-
-class Process(BpmnElement):
+class Process(BpmnElement["Process"]):
     """
     Representation of the business process being modeled
     """
