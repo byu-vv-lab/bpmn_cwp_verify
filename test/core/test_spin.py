@@ -1,6 +1,8 @@
 from bpmncwpverify.core.spin import SpinOutput
+from returns.result import Success
 import pytest
-from returns.maybe import Some, Maybe
+from returns.maybe import Some, Maybe, Nothing
+from returns.pipeline import is_successful
 
 
 def test_get_errors_0_errors(mocker):
@@ -13,9 +15,10 @@ def test_get_errors_0_errors(mocker):
         Words...
     """
     mock_spin_output.spin_msg = s
+    mock_spin_output.error_num = Nothing
 
     SpinOutput._get_errors(mock_spin_output)
-    assert mock_spin_output.error_num == Some(0)
+    assert mock_spin_output.error_num == Nothing
 
 
 def test_get_errors_15_errors(mocker):
@@ -62,4 +65,19 @@ def test_check_syntax_errors(mocker):
 
 
 def test_get_spin_output(mocker):
-    pass
+    mock_return_val = mocker.Mock()
+    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_return_val)
+    mock_return_val.stdout = "test_string"
+    mocker.patch("bpmncwpverify.core.spin.SpinOutput")
+    mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._get_errors",
+        return_value=Success(mocker.Mock()),
+    )
+    mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
+        return_value=Success(mocker.Mock()),
+    )
+
+    result = SpinOutput.get_spin_output("")
+    assert isinstance(result, Success)
+    assert is_successful(result)
