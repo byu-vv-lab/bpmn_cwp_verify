@@ -32,12 +32,20 @@ class IndentAction(Enum):
 
 
 class Context:
-    __slots__ = ["_element", "_task_end", "_is_parallel"]
+    __slots__ = [
+        "_element",
+        "_task_end",
+        "_is_parallel",
+        "_behavior_model",
+        "_has_option",
+    ]
 
     def __init__(self, element: Node) -> None:
         self._element = element
         self._task_end = False
         self._is_parallel = False
+        self._has_option = False
+        self._behavior_model = True
 
     @property
     def task_end(self) -> bool:
@@ -49,6 +57,23 @@ class Context:
             self._element, Task
         ), "task_end can only be set if element is of type Task"
         self._task_end = new_val
+
+    @property
+    def has_option(self) -> bool:
+        return self._has_option
+
+    @has_option.setter
+    def has_option(self, new_val: bool) -> None:
+        assert isinstance(self._element, ExclusiveGatewayNode)
+        self._has_option = new_val
+
+    @property
+    def behavior_model(self) -> bool:
+        return self._behavior_model
+
+    @behavior_model.setter
+    def behavior_model(self, new_val: bool) -> None:
+        self._behavior_model = new_val
 
     @property
     def is_parallel(self) -> bool:
@@ -245,12 +270,15 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
-        atomic_block.write_str(f"{ctx.element.name}_BehaviorModel()", NL_SINGLE)
+        if ctx.behavior_model:
+            atomic_block.write_str(f"{ctx.element.name}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
         for location in self._get_consume_locations(ctx):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
+        if ctx.has_option:
+            atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
             for location in self._get_put_locations(ctx):
                 atomic_block.write_str(f"putToken({location})", NL_SINGLE)
@@ -335,7 +363,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         context = Context(gateway)
-        self._gen_behavior_model(context)
+        context.has_option = True
+        context.behavior_model = False
         self._gen_var_defs(context)
 
         atomic_block = self._build_atomic_block(context)
@@ -347,13 +376,12 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
         context = Context(gateway)
+        context.behavior_model = False
         if not gateway.is_fork:
             context.is_parallel = True
-        self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
         atomic_block = self._build_atomic_block(context)
-
         self.promela.write_str(atomic_block)
         return True
 
