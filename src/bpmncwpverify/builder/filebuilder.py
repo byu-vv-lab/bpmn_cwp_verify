@@ -22,7 +22,7 @@ from bpmncwpverify.core.accessmethods.cwpmethods import (
 )
 
 
-class Builder:
+class StateBuilder:
     __slots__ = [
         "behavior_str",
         "bpmn",
@@ -43,7 +43,7 @@ class Builder:
         self.symbol_table: Result[State, Error] = Failure(Error())
 
     @staticmethod
-    def _build_bpmn(builder: "Builder") -> Result["Builder", Error]:
+    def _build_bpmn(builder: "StateBuilder") -> Result["StateBuilder", Error]:
         assert is_successful(builder.symbol_table) and is_successful(builder.bpmn_root)
         builder.bpmn = bpmn_from_xml(
             builder.bpmn_root.unwrap(), builder.symbol_table.unwrap()
@@ -54,7 +54,7 @@ class Builder:
             return Success(builder)
 
     @staticmethod
-    def _build_cwp(builder: "Builder") -> Result["Builder", Error]:
+    def _build_cwp(builder: "StateBuilder") -> Result["StateBuilder", Error]:
         assert is_successful(builder.symbol_table)
         assert is_successful(builder.cwp_root)
         builder.cwp = cwp_from_xml(
@@ -66,7 +66,7 @@ class Builder:
             return Success(builder)
 
     @staticmethod
-    def _build_symbol_table(builder: "Builder") -> Result["Builder", Error]:
+    def _build_symbol_table(builder: "StateBuilder") -> Result["StateBuilder", Error]:
         assert is_successful(builder.state_str)
         builder.symbol_table = State.from_str(builder.state_str.unwrap())
         if not_(is_successful)(builder.symbol_table):
@@ -76,7 +76,7 @@ class Builder:
 
     @staticmethod
     def build_promela(
-        outputs: "Outputs", builder: "Builder"
+        outputs: "Outputs", builder: "StateBuilder"
     ) -> Result["Outputs", Error]:
         assert is_successful(builder.symbol_table)
         assert is_successful(builder.cwp_root)
@@ -96,39 +96,39 @@ class Builder:
         outputs: Outputs = Outputs("")
         result: Result["Outputs", Error] = flow(
             Success(self),
-            bind_result(Builder._build_symbol_table),
-            bind_result(Builder._build_cwp),
-            bind_result(Builder._build_bpmn),
-            bind_result(partial(Builder.build_promela, outputs)),
+            bind_result(StateBuilder._build_symbol_table),
+            bind_result(StateBuilder._build_cwp),
+            bind_result(StateBuilder._build_bpmn),
+            bind_result(partial(StateBuilder.build_promela, outputs)),
         )
 
         return result
 
-    def with_behavior(self, behavior_str: str) -> "Builder":
+    def with_behavior(self, behavior_str: str) -> "StateBuilder":
         self.behavior_str = Success(behavior_str)
         return self
 
-    def with_bpmn(self, bpmn: Element) -> "Builder":
+    def with_bpmn(self, bpmn: Element) -> "StateBuilder":
         self.bpmn_root = Success(bpmn)
         return self
 
-    def with_cwp(self, cwp: Element) -> "Builder":
+    def with_cwp(self, cwp: Element) -> "StateBuilder":
         self.cwp_root = Success(cwp)
         return self
 
-    def with_state(self, state: str) -> "Builder":
+    def with_state(self, state: str) -> "StateBuilder":
         self.state_str = Success(state)
         return self
 
     @staticmethod
-    def build_(builder: "Builder") -> Result["Outputs", Error | Exception]:
+    def build_(builder: "StateBuilder") -> Result["Outputs", Error | Exception]:
         return builder.build()
 
     @staticmethod
     def with_behavior_(
         behavior_str: IOResultE[str],
-        builder_result: Result["Builder", Error],
-    ) -> Result["Builder", Error]:
+        builder_result: Result["StateBuilder", Error],
+    ) -> Result["StateBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(behavior_str):
@@ -142,8 +142,8 @@ class Builder:
     @staticmethod
     def with_bpmn_(
         bpmn_root: IOResultE[Element],
-        builder_result: Result["Builder", Error],
-    ) -> Result["Builder", Error]:
+        builder_result: Result["StateBuilder", Error],
+    ) -> Result["StateBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(bpmn_root):
@@ -157,8 +157,8 @@ class Builder:
     @staticmethod
     def with_cwp_(
         cwp_root: IOResultE[Element],
-        builder_result: Result["Builder", Error],
-    ) -> Result["Builder", Error]:
+        builder_result: Result["StateBuilder", Error],
+    ) -> Result["StateBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(cwp_root):
@@ -171,8 +171,8 @@ class Builder:
 
     @staticmethod
     def with_state_(
-        state_str: IOResultE[str], builder_result: Result["Builder", Error]
-    ) -> Result["Builder", Error]:
+        state_str: IOResultE[str], builder_result: Result["StateBuilder", Error]
+    ) -> Result["StateBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(state_str):

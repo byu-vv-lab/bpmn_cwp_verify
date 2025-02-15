@@ -2,7 +2,7 @@ import argparse
 from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
 
-from bpmncwpverify.core.spin import Builder, Outputs
+from bpmncwpverify.builder.filebuilder import StateBuilder, Outputs
 from returns.io import impure_safe, IOResult, IOResultE
 from returns.curry import partial
 from returns.pipeline import managed, flow
@@ -87,15 +87,15 @@ def _verify() -> Result["Outputs", Error]:
     if not_(is_successful)(behavior_str):
         return Failure(MissingFileError(behavior_file))
 
-    builder: Builder = Builder()
+    builder: StateBuilder = StateBuilder()
 
     result: Result["Outputs", Error] = flow(
         Success(builder),
-        partial(Builder.with_state_, state_str),
-        partial(Builder.with_cwp_, cwp_root),
-        partial(Builder.with_bpmn_, bpmn_root),
-        partial(Builder.with_behavior_, behavior_str),
-        bind_result(Builder.build_),
+        partial(StateBuilder.with_state_, state_str),
+        partial(StateBuilder.with_cwp_, cwp_root),
+        partial(StateBuilder.with_bpmn_, bpmn_root),
+        partial(StateBuilder.with_behavior_, behavior_str),
+        bind_result(StateBuilder.build_),
     )
 
     return result
@@ -125,15 +125,15 @@ def web_verify(
     bpmn_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(bpmn))
     cwp_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(cwp))
 
-    builder: Builder = Builder()
+    builder: StateBuilder = StateBuilder()
 
     result: Result["Outputs", Error] = flow(
         Success(builder),
-        partial(Builder.with_state_, IOResult.from_value(state)),
-        partial(Builder.with_cwp_, cwp_root),
-        partial(Builder.with_bpmn_, bpmn_root),
-        partial(Builder.with_behavior_, IOResult.from_value(behavior)),
-        bind_result(Builder.build_),
+        partial(StateBuilder.with_state_, IOResult.from_value(state)),
+        partial(StateBuilder.with_cwp_, cwp_root),
+        partial(StateBuilder.with_bpmn_, bpmn_root),
+        partial(StateBuilder.with_behavior_, IOResult.from_value(behavior)),
+        bind_result(StateBuilder.build_),
     )
 
     return result
