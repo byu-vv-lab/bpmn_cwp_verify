@@ -19,7 +19,6 @@ from bpmncwpverify.core.accessmethods.bpmnmethods import (
 )
 from bpmncwpverify.core.accessmethods.cwpmethods import (
     from_xml as cwp_from_xml,
-    generate_ltl,
 )
 
 
@@ -84,12 +83,13 @@ class Builder:
         assert is_successful(builder.bpmn_root)
         assert is_successful(builder.behavior_str)
 
-        ltl = generate_ltl((builder.cwp).unwrap(), (builder.symbol_table).unwrap())
-        behavior = (builder.behavior_str).unwrap()
+        # ltl = generate_ltl((builder.cwp).unwrap(), (builder.symbol_table).unwrap())
+        # behavior = (builder.behavior_str).unwrap()
         vars = State.generate_promela((builder.symbol_table).unwrap()).unwrap()
         workflow = generate_promela((builder.bpmn).unwrap())
 
-        outputs.promela = f"{vars}{ltl}{behavior}{workflow}"
+        # outputs.promela = f"{vars}{ltl}{behavior}{workflow}"
+        outputs.promela = f"{vars}{workflow}"
         return Success(outputs)
 
     def build(self) -> Result["Outputs", Error]:
