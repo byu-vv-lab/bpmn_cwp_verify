@@ -50,8 +50,7 @@ inline Gateway_1_BehaviorModel() {
 
 
 init {
-        run Process_1()
-    }
+    run Process_1()
 }
 
 
@@ -101,6 +100,7 @@ do
             if
                 :: x > 5 -> putToken(End_FROM_Gateway_1)
                 :: x <=5 -> putToken(Increment_x_FROM_Gateway_1)
+                :: else -> assert false
             fi
         }
     }

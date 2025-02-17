@@ -312,6 +312,13 @@ class NotImplementedError(Error):
         self.function = function
 
 
+class SpinParseError(Error):
+    __slots__ = ["line_number", "error_msg"]
+
+    def __init__(self, line_number: str, error_msg: str):
+        super().__init__()
+
+
 class MissingFileError(Error):
     __slots__ = ["file_name"]
 
