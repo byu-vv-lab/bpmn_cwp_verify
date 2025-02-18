@@ -312,21 +312,6 @@ class NotImplementedError(Error):
         self.function = function
 
 
-class SpinParseError(Error):
-    __slots__ = ["line_number", "error_msg"]
-
-    def __init__(self, line_number: str, error_msg: str):
-        super().__init__()
-
-
-class SpinSyntaxError(Error):
-    __slots__ = ["list_of_error_maps"]
-
-    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
-        super().__init__()
-        self.list_of_error_maps = list_of_error_maps
-
-
 class MissingFileError(Error):
     __slots__ = ["file_name"]
 
@@ -342,6 +327,29 @@ class MessageError(Error):
         super().__init__()
         self.node_id = node_id
         self.error_msg = error_msg
+
+
+class SpinParseError(Error):
+    __slots__ = ["line_number", "error_msg"]
+
+    def __init__(self, line_number: str, error_msg: str):
+        super().__init__()
+
+
+class SpinSyntaxError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
+
+
+class SpinInvalidEndStateError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
 
 
 class StateInitNotInValues(Error):
@@ -536,8 +544,15 @@ def _get_error_message(error: Error) -> str:
             return "CWP ERROR: No end states found."
         case CwpGraphConnError():
             return "CWP ERROR: Graph is not connected."
+        case SpinInvalidEndStateError(list_of_error_maps=list_of_error_maps):
+            errors = []
+            errors.append("Invalid end state")
+            errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
+            for idx, map in enumerate(list_of_error_maps):
+                errors.append(f"{idx + 1}: {map['info']}")
+            return "\n".join(errors)
         case SpinSyntaxError(list_of_error_maps=list_of_error_maps):
-            errors: typing.List[str] = []
+            errors = []
             errors.append("Syntax Error in generated promela:")
             errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
             for idx, map in enumerate(list_of_error_maps):

@@ -1,7 +1,5 @@
 from bpmncwpverify.core.spin import SpinOutput
-from returns.result import Success, Failure
-from returns.pipeline import is_successful
-from returns.functions import not_
+from returns.result import Failure
 
 
 def test_check_syntax_errors(mocker):
@@ -31,39 +29,25 @@ def test_check_syntax_errors(mocker):
     assert result.list_of_error_maps[1]["error_msg"] == "missing '}' ?"
 
 
-def test_get_spin_output(mocker):
-    mock_return_val = mocker.Mock()
-    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_return_val)
-    mock_return_val.stdout = "test_string"
-    mocker.patch("bpmncwpverify.core.spin.SpinOutput")
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._get_errors",
-        return_value=Success(mocker.Mock()),
-    )
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Success(mocker.Mock()),
-    )
+def test_check_invalid_end_state(mocker):
+    mock_spin_output = mocker.Mock()
+    s = """
+        pan:1: invalid end state (at depth -1)
+        pan: wrote first.pml.trail
 
-    result = SpinOutput.get_spin_output("")
-    assert isinstance(result, Success)
-    assert is_successful(result)
+        (Spin Version 6.5.2 -- 6 December 2019)
+        Warning: Search not completed
+                + Partial Order Reduction
 
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+    """
 
-def test_get_spin_output_bad_return_failure(mocker):
-    mock_return_val = mocker.Mock()
-    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_return_val)
-    mock_return_val.stdout = "test_string"
-    mocker.patch("bpmncwpverify.core.spin.SpinOutput")
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._get_errors",
-        return_value=Failure(mocker.Mock()),
-    )
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Success(mocker.Mock()),
-    )
+    result = SpinOutput._check_invalid_end_state(mock_spin_output, s)
 
-    result = SpinOutput.get_spin_output("")
     assert isinstance(result, Failure)
-    assert not_(is_successful)(result)
+    result = result.failure()
+    assert result.list_of_error_maps[0]["info"] == "at depth -1"

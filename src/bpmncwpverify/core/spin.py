@@ -1,5 +1,5 @@
 from returns.result import Result, Success, Failure
-from bpmncwpverify.core.error import Error, SpinSyntaxError
+from bpmncwpverify.core.error import Error, SpinSyntaxError, SpinInvalidEndStateError
 import subprocess
 import re
 
@@ -9,8 +9,17 @@ class Coverage:
 
 
 class SpinOutput:
-    def _get_errors(self, spin_msg: str) -> Result[Coverage, Error]:
-        return Success(Coverage())
+    def _check_invalid_end_state(self, spin_msg: str) -> Result[Coverage, Error]:
+        r = re.compile(r"invalid end state \((?P<info>.*)\)")
+
+        errors = [
+            {k: re.sub(r"\s+", " ", v).strip() for k, v in t.groupdict().items()}
+            for t in r.finditer(spin_msg)
+        ]
+
+        return (
+            Failure(SpinInvalidEndStateError(errors)) if errors else Success(Coverage())
+        )
 
     def _check_syntax_errors(self, spin_msg: str) -> Result[Coverage, Error]:
         r = re.compile(
