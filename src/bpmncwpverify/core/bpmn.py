@@ -16,27 +16,26 @@ class BpmnElement:
     Parent class for all BPMN elements
     """
 
-    __slots__ = ["element", "name", "id"]
+    __slots__ = ["name", "id"]
 
-    def __init__(self, element: Element) -> None:
+    def __init__(self, id: str, name: str) -> None:
         """
         Initialize BpmnElement object
 
         Args:
-            element (Element): The element to store
+            id (str): id of element
+            name (str): name of element
         """
-        self.element = element
-        id = element.attrib.get("id")
-        if not id:
-            raise Exception("Id cannot be None")
-
         self.id = id
-
-        self.name: str = element.attrib.get("name", self.id)
+        self.name = name
 
     @classmethod
     def from_xml(cls: Type[T], element: Element) -> T:
-        return cls(element)
+        id = element.attrib.get("id")
+        if not id:
+            raise Exception("Id cannot be None")
+        name: str = element.attrib.get("name", id)
+        return cls(id, name)
 
 
 class Node(BpmnElement):
@@ -53,27 +52,17 @@ class Node(BpmnElement):
         "message_timer_definition",
     ]
 
-    def __init__(self, element: Element) -> None:
+    def __init__(self, id: str, name: str, message_event_definition: str, message_timer_definition: str) -> None:
         """
         Initialize Node object
+        
+        Args:
+            message_event_definition (str): Definition of message event if available
+            message_timer_definition (str): Definition of message timer if available
         """
-        super().__init__(element)
-
-        # Determine if node is a message type or timer type
-        message_event_def = element.find(
-            "bpmn:messageEventDefinition", BPMN_XML_NAMESPACE
-        )
-        self.message_event_definition: str = (
-            message_event_def.attrib.get("id", "")
-            if message_event_def is not None
-            else ""
-        )
-
-        timer_event_def = element.find("bpmn:timerEventDefinition", BPMN_XML_NAMESPACE)
-        self.message_timer_definition: str = (
-            timer_event_def.attrib.get("id", "") if timer_event_def is not None else ""
-        )
-
+        super.__init__(id, name)
+        self.message_event_definition = message_event_definition
+        self.message_timer_definition = message_timer_definition
         self.out_flows: List[SequenceFlow] = []
         self.in_flows: List[SequenceFlow] = []
         self.in_msgs: List[MessageFlow] = []
@@ -135,6 +124,23 @@ class Node(BpmnElement):
             visitor (BpmnVisitor): Visitor that will traverse through BPMN elements
         """
         pass
+    
+    @classmethod
+    def from_xml(cls: Type[T], element):
+        instance = super().from_xml(element)
+        message_event = element.find(
+            "bpmn:messageEventDefinition", BPMN_XML_NAMESPACE
+        )
+        message_event_definition: str = (
+            message_event.attrib.get("id", "")
+            if message_event is not None
+            else ""
+        )
+        timer_event = element.find("bpmn:timerEventDefinition", BPMN_XML_NAMESPACE)
+        message_timer_definition: str = (
+            timer_event.attrib.get("id", "") if timer_event is not None else ""
+        )
+        return cls(instance.id, instance.name, message_event_definition, message_timer_definition)
 
 
 # Event classes
@@ -173,18 +179,27 @@ class IntermediateEvent(Event):
     Events between start and end events
     """
 
-    def __init__(self, element: Element):
+    def __init__(self, id: str, name: str, message_event_definition: str, message_timer_definition: str, type: str):
         """
         Initialize IntermediateEvent object
+        
+        Args:
+            type (str): Type of IntermediateEvent
         """
-        super().__init__(element)
-        tag = element.tag.partition("}")[2]
-        self.type = "catch" if "Catch" in tag else "throw" if "Throw" in tag else "send"
+        super().__init__(id, name, message_event_definition, message_timer_definition)
+        self.type = type
 
     def accept(self, visitor: "BpmnVisitor") -> None:
         result = visitor.visit_intermediate_event(self)
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_intermediate_event(self)
+        
+    @classmethod
+    def from_xml(cls: Type[T], element):
+        instance = super().from_xml(element)
+        tag = element.tag.partition("}")[2]
+        type = "catch" if "Catch" in tag else "throw" if "Throw" in tag else "send"
+        return cls(instance.id, instance.name, instance.message_event_definition, instance.message_timer_definition, type)
 
 
 # Activity classes
@@ -224,14 +239,14 @@ class ParallelGatewayNode(GatewayNode):
     Gateway that allows multiple paths to be taken
     """
 
-    def __init__(self, element: Element, is_fork: bool = False):
+    def __init__(self, id: str, name: str, message_event_definition: str, message_timer_definition: str, is_fork: bool = False):
         """
         Initialize ParallelGatewayNode object
 
         Args:
             is_fork (bool, optional): Variable determining if gateway is a forking gateway or not. Defaults to false.
         """
-        super().__init__(element)
+        super().__init__(id, name, message_event_definition, message_timer_definition)
         self.is_fork = is_fork
 
     def accept(self, visitor: "BpmnVisitor") -> None:
@@ -243,6 +258,11 @@ class ParallelGatewayNode(GatewayNode):
         super().add_out_flow(flow)
         if len(self.out_flows) > 1:
             self.is_fork = True
+    
+    @classmethod
+    def from_xml(cls: Type[T], element, is_fork: bool = False):
+        instance = super().from_xml(element)
+        return cls(instance.id, instance.name, instance.message_event_definition, instance.message_timer_definition, is_fork)
 
 
 # Flow classes
@@ -253,14 +273,11 @@ class Flow(BpmnElement):
 
     __slots__ = ["source_node", "target_node", "is_leaf"]
 
-    def __init__(
-        self,
-        element: Element,
-    ) -> None:
+    def __init__(self, id: str, name: str) -> None:
         """
         Initialize Flow object
         """
-        super().__init__(element)
+        super().__init__(id, name)
         self.source_node: Node
         self.target_node: Node
         self.is_leaf: bool = False
@@ -273,11 +290,11 @@ class SequenceFlow(Flow):
 
     __slots__ = ["expression"]
 
-    def __init__(self, element: Element):
+    def __init__(self, id: str, name: str):
         """
         Initialize SequenceFlow object
         """
-        super().__init__(element)
+        super().__init__(id, name)
         self.expression: str = ""
 
     def accept(self, visitor: "BpmnVisitor") -> None:
@@ -297,11 +314,11 @@ class Process(BpmnElement):
     Representation of the business process being modeled
     """
 
-    def __init__(self, element: Element):
+    def __init__(self, id: str, name: str):
         """
         Initialize Process object
         """
-        super().__init__(element)
+        super().__init__(id, name)
         self._flows: Dict[str, SequenceFlow] = {}
         self._elements: Dict[str, Node] = {}
         self._start_states: Dict[str, StartEvent] = {}

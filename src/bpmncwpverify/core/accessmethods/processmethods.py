@@ -2,10 +2,7 @@ from typing import cast
 from xml.etree.ElementTree import Element
 from bpmncwpverify.core.state import State
 from returns.result import Result
-from bpmncwpverify.core.error import (
-    Error,
-)
-
+from bpmncwpverify.core.error import Error
 from bpmncwpverify.builder.process_builder import ProcessBuilder
 from bpmncwpverify.core.bpmn import Process, get_element_type, BPMN_XML_NAMESPACE
 
