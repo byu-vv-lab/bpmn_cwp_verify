@@ -17,6 +17,7 @@ from returns.result import Result
 from typing import cast
 from xml.etree.ElementTree import Element
 
+
 def generate_promela(bpmn: Bpmn) -> str:
     promela_visitor = PromelaGenVisitor()
 

@@ -52,10 +52,16 @@ class Node(BpmnElement):
         "message_timer_definition",
     ]
 
-    def __init__(self, id: str, name: str, message_event_definition: str, message_timer_definition: str) -> None:
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        message_event_definition: str,
+        message_timer_definition: str,
+    ) -> None:
         """
         Initialize Node object
-        
+
         Args:
             message_event_definition (str): Definition of message event if available
             message_timer_definition (str): Definition of message timer if available
@@ -124,23 +130,24 @@ class Node(BpmnElement):
             visitor (BpmnVisitor): Visitor that will traverse through BPMN elements
         """
         pass
-    
+
     @classmethod
     def from_xml(cls: Type[T], element):
         instance = super().from_xml(element)
-        message_event = element.find(
-            "bpmn:messageEventDefinition", BPMN_XML_NAMESPACE
-        )
+        message_event = element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE)
         message_event_definition: str = (
-            message_event.attrib.get("id", "")
-            if message_event is not None
-            else ""
+            message_event.attrib.get("id", "") if message_event is not None else ""
         )
         timer_event = element.find("bpmn:timerEventDefinition", BPMN_XML_NAMESPACE)
         message_timer_definition: str = (
             timer_event.attrib.get("id", "") if timer_event is not None else ""
         )
-        return cls(instance.id, instance.name, message_event_definition, message_timer_definition)
+        return cls(
+            instance.id,
+            instance.name,
+            message_event_definition,
+            message_timer_definition,
+        )
 
 
 # Event classes
@@ -179,10 +186,17 @@ class IntermediateEvent(Event):
     Events between start and end events
     """
 
-    def __init__(self, id: str, name: str, message_event_definition: str, message_timer_definition: str, type: str):
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        message_event_definition: str,
+        message_timer_definition: str,
+        type: str,
+    ):
         """
         Initialize IntermediateEvent object
-        
+
         Args:
             type (str): Type of IntermediateEvent
         """
@@ -193,13 +207,19 @@ class IntermediateEvent(Event):
         result = visitor.visit_intermediate_event(self)
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_intermediate_event(self)
-        
+
     @classmethod
     def from_xml(cls: Type[T], element):
         instance = super().from_xml(element)
         tag = element.tag.partition("}")[2]
         type = "catch" if "Catch" in tag else "throw" if "Throw" in tag else "send"
-        return cls(instance.id, instance.name, instance.message_event_definition, instance.message_timer_definition, type)
+        return cls(
+            instance.id,
+            instance.name,
+            instance.message_event_definition,
+            instance.message_timer_definition,
+            type,
+        )
 
 
 # Activity classes
@@ -239,7 +259,14 @@ class ParallelGatewayNode(GatewayNode):
     Gateway that allows multiple paths to be taken
     """
 
-    def __init__(self, id: str, name: str, message_event_definition: str, message_timer_definition: str, is_fork: bool = False):
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        message_event_definition: str,
+        message_timer_definition: str,
+        is_fork: bool = False,
+    ):
         """
         Initialize ParallelGatewayNode object
 
@@ -258,11 +285,17 @@ class ParallelGatewayNode(GatewayNode):
         super().add_out_flow(flow)
         if len(self.out_flows) > 1:
             self.is_fork = True
-    
+
     @classmethod
     def from_xml(cls: Type[T], element, is_fork: bool = False):
         instance = super().from_xml(element)
-        return cls(instance.id, instance.name, instance.message_event_definition, instance.message_timer_definition, is_fork)
+        return cls(
+            instance.id,
+            instance.name,
+            instance.message_event_definition,
+            instance.message_timer_definition,
+            is_fork,
+        )
 
 
 # Flow classes
