@@ -1,5 +1,10 @@
 from returns.result import Result, Success, Failure
-from bpmncwpverify.core.error import Error, SpinSyntaxError, SpinInvalidEndStateError
+from bpmncwpverify.core.error import (
+    Error,
+    SpinSyntaxError,
+    SpinInvalidEndStateError,
+    SpinAssertionError,
+)
 import subprocess
 import re
 
@@ -9,6 +14,16 @@ class Coverage:
 
 
 class SpinOutput:
+    def _check_assertion_violation(self, spin_msg: str) -> Result[Coverage, Error]:
+        r = re.compile(r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)")
+
+        errors = [
+            {k: re.sub(r"\s+", " ", v).strip() for k, v in t.groupdict().items()}
+            for t in r.finditer(spin_msg)
+        ]
+
+        return Failure(SpinAssertionError(errors)) if errors else Success(Coverage())
+
     def _check_invalid_end_state(self, spin_msg: str) -> Result[Coverage, Error]:
         r = re.compile(r"invalid end state \((?P<info>.*)\)")
 
