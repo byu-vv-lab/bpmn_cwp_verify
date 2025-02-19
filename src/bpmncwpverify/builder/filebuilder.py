@@ -75,7 +75,7 @@ class StateBuilder:
         outputs: "Outputs", builder: "StateBuilder"
     ) -> Result["Outputs", Error]:
         assert is_successful(builder.state)
-        assert is_successful(builder.cwp_root)
+        # assert is_successful(builder.cwp_root) TODO: uncomment once cwp is implemented
         assert is_successful(builder.bpmn_root)
         assert is_successful(builder.behavior_str)
 
@@ -93,7 +93,7 @@ class StateBuilder:
         result: Result["Outputs", Error] = flow(
             Success(self),
             bind_result(StateBuilder._build_state),
-            bind_result(StateBuilder._build_cwp),
+            # bind_result(StateBuilder._build_cwp), TODO: uncomment once cwp is implemented
             bind_result(StateBuilder._build_bpmn),
             bind_result(partial(StateBuilder.build_promela, outputs)),
         )

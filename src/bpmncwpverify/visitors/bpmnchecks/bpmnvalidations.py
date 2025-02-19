@@ -1,9 +1,11 @@
 from typing import Set
+import re
 from bpmncwpverify.core.bpmn import (
     BpmnElement,
     BpmnVisitor,
     Flow,
     GatewayNode,
+    MessageFlow,
     Node,
     Process,
     SequenceFlow,
@@ -29,6 +31,7 @@ from bpmncwpverify.core.error import (
     BpmnSeqFlowEndEventError,
     BpmnSeqFlowNoExprError,
     BpmnTaskFlowError,
+    BpmnInvalidIdError,
     Error,
 )
 from returns.result import Result, Success, Failure
@@ -75,10 +78,6 @@ class ValidateSeqFlowVisitor(BpmnVisitor):  # type: ignore
                 raise Exception(BpmnSeqFlowNoExprError(gateway.id, out_flow.id))
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
-        self._validate_out_flows(gateway)
-        return True
-
-    def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
         self._validate_out_flows(gateway)
         return True
 
@@ -224,6 +223,56 @@ class SetFlowLeafs(BpmnVisitor):  # type: ignore
 
     def visit_sequence_flow(self, flow: SequenceFlow) -> bool:
         return self.process_flow(flow)
+
+
+class ValidateIdVisitor(BpmnVisitor):  # type: ignore
+    def _is_id_valid(self, item: BpmnElement) -> bool:
+        return bool(re.fullmatch(r"[\w_-]+", item.id))
+
+    def visit_start_event(self, event: StartEvent) -> bool:
+        if not self._is_id_valid(event):
+            raise Exception(BpmnInvalidIdError(event.id))
+        return True
+
+    def visit_process(self, process: Process) -> bool:
+        if not self._is_id_valid(process):
+            raise Exception(BpmnInvalidIdError(process.id))
+        return True
+
+    def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
+        if not self._is_id_valid(gateway):
+            raise Exception(BpmnInvalidIdError(gateway.id))
+        return True
+
+    def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
+        if not self._is_id_valid(event):
+            raise Exception(BpmnInvalidIdError(event.id))
+        return True
+
+    def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
+        if not self._is_id_valid(gateway):
+            raise Exception(BpmnInvalidIdError(gateway.id))
+        return True
+
+    def visit_sequence_flow(self, flow: SequenceFlow) -> bool:
+        if not self._is_id_valid(flow):
+            raise Exception(BpmnInvalidIdError(flow.id))
+        return True
+
+    def visit_task(self, task: Task) -> bool:
+        if not self._is_id_valid(task):
+            raise Exception(BpmnInvalidIdError(task.id))
+        return True
+
+    def visit_message_flow(self, flow: MessageFlow) -> bool:
+        if not self._is_id_valid(flow):
+            raise Exception(BpmnInvalidIdError(flow.id))
+        return True
+
+    def visit_end_event(self, event: EndEvent) -> bool:
+        if not self._is_id_valid(event):
+            raise Exception(BpmnInvalidIdError(event.id))
+        return True
 
 
 ##########################
