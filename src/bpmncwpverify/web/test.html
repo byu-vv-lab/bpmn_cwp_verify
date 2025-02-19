@@ -24,7 +24,7 @@
     <button type="submit">Submit</button>
   </form>
 
-  <div id="responseContainer" style="margin-top: 20px; font-size: 16px; color: blue;"></div>
+  <div id="responseContainer" style="margin-top: 20px; font-size: 16px; color: blue; white-space: pre-line;"></div>
 
   <script>
     document.getElementById('lambdaForm').addEventListener('submit', async function (event) {
@@ -75,8 +75,10 @@
         }
 
         const result = await response.json();
+        const result_stringify = JSON.stringify(result);
+        const message = JSON.parse(result_stringify);
 
-        responseContainer.textContent = `Lambda Response: ${JSON.stringify(result)}`;
+        responseContainer.textContent = `Lambda Response: ${message.message}`;
       }
       catch (error) {
         console.error('Error calling Lambda:', error);
