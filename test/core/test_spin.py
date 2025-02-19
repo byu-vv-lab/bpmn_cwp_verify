@@ -3,13 +3,13 @@ from returns.result import Failure, Success
 
 
 def test_check_syntax_errors(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
     spin: test/resources/simple_example/valid_output.pml:55, Error: syntax error    saw ''}' = 125'
     spin: test/resources/simple_example/valid_output.pml:116, Error: missing '}' ?
     """
 
-    result = SpinOutput._check_syntax_errors(mock_spin_output, s)
+    result = spin_output._check_syntax_errors(s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -30,7 +30,7 @@ def test_check_syntax_errors(mocker):
 
 
 def test_check_syntax_errors_none(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -43,13 +43,13 @@ def test_check_syntax_errors_none(mocker):
         ...
     """
 
-    result = SpinOutput._check_syntax_errors(mock_spin_output, s)
+    result = spin_output._check_syntax_errors(s)
 
     assert isinstance(result, Success)
 
 
 def test_check_invalid_end_state(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
         pan:1: invalid end state (at depth -1)
         pan: wrote first.pml.trail
@@ -65,7 +65,7 @@ def test_check_invalid_end_state(mocker):
                 invalid end states      +
     """
 
-    result = SpinOutput._check_invalid_end_state(mock_spin_output, s)
+    result = spin_output._check_invalid_end_state(s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -73,7 +73,7 @@ def test_check_invalid_end_state(mocker):
 
 
 def test_check_invalid_end_state_none(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -86,13 +86,13 @@ def test_check_invalid_end_state_none(mocker):
         ...
     """
 
-    result = SpinOutput._check_invalid_end_state(mock_spin_output, s)
+    result = spin_output._check_invalid_end_state(s)
 
     assert isinstance(result, Success)
 
 
 def test_check_assertion_violation(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
         pan:1: assertion violated (_nr_pr==3) (at depth 0)
         pan: wrote first.pml.trail
@@ -111,7 +111,7 @@ def test_check_assertion_violation(mocker):
                 1 states, stored
     """
 
-    result = SpinOutput._check_assertion_violation(mock_spin_output, s)
+    result = spin_output._check_assertion_violation(s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -119,7 +119,7 @@ def test_check_assertion_violation(mocker):
 
 
 def test_check_assertion_violation_none(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -132,6 +132,6 @@ def test_check_assertion_violation_none(mocker):
         ...
     """
 
-    result = SpinOutput._check_assertion_violation(mock_spin_output, s)
+    result = spin_output._check_assertion_violation(s)
 
     assert isinstance(result, Success)

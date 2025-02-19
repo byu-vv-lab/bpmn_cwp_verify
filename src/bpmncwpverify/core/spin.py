@@ -1,4 +1,5 @@
 from returns.result import Result, Success, Failure
+from typing import Dict, List
 from bpmncwpverify.core.error import (
     Error,
     SpinSyntaxError,
@@ -14,40 +15,33 @@ class Coverage:
 
 
 class SpinOutput:
-    def _check_assertion_violation(self, spin_msg: str) -> Result[Coverage, Error]:
-        r = re.compile(r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)")
+    def _get_re_matches(self, regex: str, spin_msg: str) -> List[Dict[str, str]]:
+        r = re.compile(regex)
 
-        errors = [
+        return [
             {k: re.sub(r"\s+", " ", v).strip() for k, v in t.groupdict().items()}
             for t in r.finditer(spin_msg)
         ]
+
+    def _check_assertion_violation(self, spin_msg: str) -> Result[Coverage, Error]:
+        errors = self._get_re_matches(
+            r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)", spin_msg
+        )
 
         return Failure(SpinAssertionError(errors)) if errors else Success(Coverage())
 
     def _check_invalid_end_state(self, spin_msg: str) -> Result[Coverage, Error]:
-        r = re.compile(r"invalid end state \((?P<info>.*)\)")
-
-        errors = [
-            {k: re.sub(r"\s+", " ", v).strip() for k, v in t.groupdict().items()}
-            for t in r.finditer(spin_msg)
-        ]
+        errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
 
         return (
             Failure(SpinInvalidEndStateError(errors)) if errors else Success(Coverage())
         )
 
     def _check_syntax_errors(self, spin_msg: str) -> Result[Coverage, Error]:
-        r = re.compile(
-            r"""
-            spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)
-            """,
-            re.VERBOSE,
+        errors = self._get_re_matches(
+            r"spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)",
+            spin_msg,
         )
-
-        errors = [
-            {k: re.sub(r"\s+", " ", v).strip() for k, v in t.groupdict().items()}
-            for t in r.finditer(spin_msg)
-        ]
 
         return Failure(SpinSyntaxError(errors)) if errors else Success(Coverage())
 
