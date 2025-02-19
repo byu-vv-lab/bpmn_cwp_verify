@@ -1,103 +1,137 @@
 from bpmncwpverify.core.spin import SpinOutput
-from returns.result import Success, Failure
-import pytest
-from returns.maybe import Some, Maybe, Nothing
-from returns.pipeline import is_successful
-from returns.functions import not_
-
-
-def test_get_errors_0_errors(mocker):
-    mock_spin_output = mocker.Mock()
-
-    s = """
-        Words...
-        State-vector 28 byte, depth reached 9999, errors: 0
-            17750 states, stored
-        Words...
-    """
-    mock_spin_output.spin_msg = s
-    mock_spin_output.error_num = Nothing
-
-    SpinOutput._get_errors(mock_spin_output)
-    assert mock_spin_output.error_num == Nothing
-
-
-def test_get_errors_15_errors(mocker):
-    mock_spin_output = mocker.Mock()
-
-    s = """
-        Words...
-        State-vector 28 byte, depth reached 9999, errors: 15
-            17750 states, stored
-        Words...
-    """
-    mock_spin_output.spin_msg = s
-
-    SpinOutput._get_errors(mock_spin_output)
-    assert mock_spin_output.error_num == Some(15)
-
-
-def test_get_errors_bad_input(mocker):
-    mock_spin_output = mocker.Mock()
-    mock_spin_output.spin_msg = ""
-
-    with pytest.raises(AssertionError) as exc_info:
-        SpinOutput._get_errors(mock_spin_output)
-
-    assert exc_info.value.args[0] == "There should always be an error trace"
+from returns.result import Failure, Success
 
 
 def test_check_syntax_errors(mocker):
-    mock_spin_output = mocker.Mock()
+    spin_output = SpinOutput()
     s = """
     spin: test/resources/simple_example/valid_output.pml:55, Error: syntax error    saw ''}' = 125'
     spin: test/resources/simple_example/valid_output.pml:116, Error: missing '}' ?
     """
-    mock_spin_output.spin_msg = s
-    SpinOutput._check_syntax_errors(mock_spin_output)
-    match mock_spin_output.error_trace:
-        case Some(x):
-            assert x[0][0] == "55"
-            assert x[0][1] == "Error: syntax error    saw ''}' = 125'"
-            assert x[1][0] == "116"
-            assert x[1][1] == "Error: missing '}' ?"
-        case Maybe.empty:
-            assert False
 
+    result = spin_output._check_syntax_errors(s)
 
-def test_get_spin_output(mocker):
-    mock_return_val = mocker.Mock()
-    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_return_val)
-    mock_return_val.stdout = "test_string"
-    mocker.patch("bpmncwpverify.core.spin.SpinOutput")
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._get_errors",
-        return_value=Success(mocker.Mock()),
-    )
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Success(mocker.Mock()),
-    )
-
-    result = SpinOutput.get_spin_output("")
-    assert isinstance(result, Success)
-    assert is_successful(result)
-
-
-def test_get_spin_output_bad_return_failure(mocker):
-    mock_return_val = mocker.Mock()
-    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_return_val)
-    mock_return_val.stdout = "test_string"
-    mocker.patch("bpmncwpverify.core.spin.SpinOutput")
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._get_errors",
-        return_value=Failure(mocker.Mock()),
-    )
-    mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Success(mocker.Mock()),
-    )
-
-    result = SpinOutput.get_spin_output("")
     assert isinstance(result, Failure)
-    assert not_(is_successful)(result)
+    result = result.failure()
+    assert (
+        result.list_of_error_maps[0]["file_path"]
+        == "test/resources/simple_example/valid_output.pml"
+    )
+    assert (
+        result.list_of_error_maps[1]["file_path"]
+        == "test/resources/simple_example/valid_output.pml"
+    )
+
+    assert result.list_of_error_maps[0]["line_number"] == "55"
+    assert result.list_of_error_maps[1]["line_number"] == "116"
+
+    assert result.list_of_error_maps[0]["error_msg"] == "syntax error saw ''}' = 125'"
+    assert result.list_of_error_maps[1]["error_msg"] == "missing '}' ?"
+
+
+def test_check_syntax_errors_none(mocker):
+    spin_output = SpinOutput()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = spin_output._check_syntax_errors(s)
+
+    assert isinstance(result, Success)
+
+
+def test_check_invalid_end_state(mocker):
+    spin_output = SpinOutput()
+    s = """
+        pan:1: invalid end state (at depth -1)
+        pan: wrote first.pml.trail
+
+        (Spin Version 6.5.2 -- 6 December 2019)
+        Warning: Search not completed
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+    """
+
+    result = spin_output._check_invalid_end_state(s)
+
+    assert isinstance(result, Failure)
+    result = result.failure()
+    assert result.list_of_error_maps[0]["info"] == "at depth -1"
+
+
+def test_check_invalid_end_state_none(mocker):
+    spin_output = SpinOutput()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = spin_output._check_invalid_end_state(s)
+
+    assert isinstance(result, Success)
+
+
+def test_check_assertion_violation(mocker):
+    spin_output = SpinOutput()
+    s = """
+        pan:1: assertion violated (_nr_pr==3) (at depth 0)
+        pan: wrote first.pml.trail
+
+        (Spin Version 6.5.2 -- 6 December 2019)
+        Warning: Search not completed
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (not selected)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+
+        State-vector 12 byte, depth reached 0, errors: 1
+                1 states, stored
+    """
+
+    result = spin_output._check_assertion_violation(s)
+
+    assert isinstance(result, Failure)
+    result = result.failure()
+    assert result.list_of_error_maps[0]["assertion"] == "_nr_pr==3"
+
+
+def test_check_assertion_violation_none(mocker):
+    spin_output = SpinOutput()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = spin_output._check_assertion_violation(s)
+
+    assert isinstance(result, Success)
