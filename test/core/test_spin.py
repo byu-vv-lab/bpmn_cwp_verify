@@ -1,5 +1,5 @@
 from bpmncwpverify.core.spin import SpinOutput
-from returns.result import Failure
+from returns.result import Failure, Success
 
 
 def test_check_syntax_errors(mocker):
@@ -29,6 +29,25 @@ def test_check_syntax_errors(mocker):
     assert result.list_of_error_maps[1]["error_msg"] == "missing '}' ?"
 
 
+def test_check_syntax_errors_none(mocker):
+    mock_spin_output = mocker.Mock()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = SpinOutput._check_syntax_errors(mock_spin_output, s)
+
+    assert isinstance(result, Success)
+
+
 def test_check_invalid_end_state(mocker):
     mock_spin_output = mocker.Mock()
     s = """
@@ -51,6 +70,25 @@ def test_check_invalid_end_state(mocker):
     assert isinstance(result, Failure)
     result = result.failure()
     assert result.list_of_error_maps[0]["info"] == "at depth -1"
+
+
+def test_check_invalid_end_state_none(mocker):
+    mock_spin_output = mocker.Mock()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = SpinOutput._check_invalid_end_state(mock_spin_output, s)
+
+    assert isinstance(result, Success)
 
 
 def test_check_assertion_violation(mocker):
@@ -78,3 +116,22 @@ def test_check_assertion_violation(mocker):
     assert isinstance(result, Failure)
     result = result.failure()
     assert result.list_of_error_maps[0]["assertion"] == "_nr_pr==3"
+
+
+def test_check_assertion_violation_none(mocker):
+    mock_spin_output = mocker.Mock()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = SpinOutput._check_assertion_violation(mock_spin_output, s)
+
+    assert isinstance(result, Success)
