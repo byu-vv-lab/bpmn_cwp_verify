@@ -8,6 +8,7 @@ from bpmncwpverify.visitors.bpmnchecks.checkmethods import (
     set_leaf_flows,
     validate_bpmn_incoming_flows,
     validate_bpmn_outgoing_flows,
+    validate_start_event_flows,
     validate_msgs,
     validate_seq_flows,
 )
@@ -37,6 +38,6 @@ def validate_process(process: Process) -> Result[Process, Error]:
         bind_result(validate_seq_flows),
         bind_result(validate_bpmn_incoming_flows),
         bind_result(validate_bpmn_outgoing_flows),
-        bind_result(validate_bpmn_incoming_flows),
+        bind_result(validate_start_event_flows),
     )
     return result

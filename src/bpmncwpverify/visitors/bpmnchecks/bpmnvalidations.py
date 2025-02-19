@@ -77,10 +77,6 @@ class ValidateSeqFlowVisitor(BpmnVisitor):  # type: ignore
         self._validate_out_flows(gateway)
         return True
 
-    def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
-        self._validate_out_flows(gateway)
-        return True
-
     def visit_task(self, task: Task) -> bool:
         if not (task.in_flows and task.out_flows):
             raise Exception(BpmnTaskFlowError(task.id))
