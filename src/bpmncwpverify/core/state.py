@@ -751,7 +751,7 @@ class State:
                 str_builder.append(
                     f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
                 )
-        return Success("\n".join(str_builder))
+        return Success("\n".join(str_builder) + "\n\n")
 
     def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result["State", Error]:
         """
