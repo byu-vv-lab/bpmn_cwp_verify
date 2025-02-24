@@ -4,9 +4,11 @@ from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ProcessConnectivityVisitor,
     SetFlowLeafs,
     ValidateBpmnIncomingFlows,
+    ValidateBpmnOutgoingFlows,
     ValidateMsgsVisitor,
     ValidateSeqFlowVisitor,
     ValidateStartEventFlows,
+    ValidateIdVisitor,
 )
 from returns.result import Result, Success, Failure
 
@@ -47,10 +49,15 @@ def validate_bpmn_incoming_flows(process: Process) -> Result[Process, Error]:
 
 
 def validate_bpmn_outgoing_flows(process: Process) -> Result[Process, Error]:
-    visitor = ValidateBpmnIncomingFlows()
+    visitor = ValidateBpmnOutgoingFlows()
     return validate_process_with_visitor(process, visitor)
 
 
 def validate_start_event_flows(process: Process) -> Result[Process, Error]:
     visitor = ValidateStartEventFlows()
+    return validate_process_with_visitor(process, visitor)
+
+
+def validate_bpmn_ids(process: Process) -> Result[Process, Error]:
+    visitor = ValidateIdVisitor()
     return validate_process_with_visitor(process, visitor)
