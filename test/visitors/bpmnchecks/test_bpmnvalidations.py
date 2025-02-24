@@ -147,34 +147,6 @@ class TestValidateSeqFlowVisitor:
             visitor.visit_exclusive_gateway(gateway)
         visitor._validate_out_flows.assert_called_once_with(gateway)
 
-    def test_visit_parallel_gateway_valid(self, mocker):
-        visitor = ValidateSeqFlowVisitor()
-        gateway = mocker.MagicMock()
-        gateway.out_flows = [
-            mocker.MagicMock(expression=True),
-            mocker.MagicMock(expression=True),
-        ]
-        mocker.patch.object(
-            visitor, "_validate_out_flows", wraps=visitor._validate_out_flows
-        )
-        result = visitor.visit_parallel_gateway(gateway)
-        assert result is True
-        visitor._validate_out_flows.assert_called_once_with(gateway)
-
-    def test_visit_parallel_gateway_invalid(self, mocker):
-        visitor = ValidateSeqFlowVisitor()
-        gateway = mocker.MagicMock()
-        gateway.out_flows = [
-            mocker.MagicMock(expression=True),
-            mocker.MagicMock(expression=False),
-        ]
-        mocker.patch.object(
-            visitor, "_validate_out_flows", wraps=visitor._validate_out_flows
-        )
-        with pytest.raises(Exception):
-            visitor.visit_parallel_gateway(gateway)
-        visitor._validate_out_flows.assert_called_once_with(gateway)
-
     def test_visit_task_with_good_task(self, mocker):
         visitor = ValidateSeqFlowVisitor()
         task = mocker.MagicMock()

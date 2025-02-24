@@ -210,6 +210,7 @@ def test_generate_promela_with_full_state(mocker, mock_state):
     mock_const.init.value = "10"
 
     mock_enum = mocker.MagicMock()
+    mock_enum.id = "TestEnum"
     mock_enum.values = [mocker.MagicMock(value="START"), mocker.MagicMock(value="STOP")]
 
     mock_var_enum = mocker.MagicMock()
@@ -231,9 +232,9 @@ def test_generate_promela_with_full_state(mocker, mock_state):
     expected_output = (
         "//**********VARIABLE DECLARATION************//\n"
         "#define MAX_COUNT 10\n"
-        "mtype = {START STOP}\n"
+        "mtype:TestEnum = {START STOP}\n"
         "int state_var = START\n"
-        "int counter = 0"
+        "int counter = 0\n\n"
     )
 
     assert isinstance(result, Success)
@@ -252,7 +253,7 @@ def test_generate_promela_with_only_constants(mocker, mock_state):
     result = State.generate_promela(mock_state)
 
     expected_output = (
-        "//**********VARIABLE DECLARATION************//\n" "#define BUFFER_SIZE 256"
+        "//**********VARIABLE DECLARATION************//\n" "#define BUFFER_SIZE 256\n\n"
     )
 
     assert isinstance(result, Success)
@@ -263,6 +264,7 @@ def test_generate_promela_with_only_enums(mocker, mock_state):
     """Test generate_promela with only enums."""
 
     mock_enum = mocker.MagicMock()
+    mock_enum.id = "TestEnum"
     mock_enum.values = [
         mocker.MagicMock(value="IDLE"),
         mocker.MagicMock(value="RUNNING"),
@@ -273,7 +275,8 @@ def test_generate_promela_with_only_enums(mocker, mock_state):
     result = State.generate_promela(mock_state)
 
     expected_output = (
-        "//**********VARIABLE DECLARATION************//\n" "mtype = {IDLE RUNNING}"
+        "//**********VARIABLE DECLARATION************//\n"
+        "mtype:TestEnum = {IDLE RUNNING}\n\n"
     )
 
     assert isinstance(result, Success)
@@ -285,7 +288,7 @@ def test_generate_promela_with_empty_state(mock_state):
 
     result = State.generate_promela(mock_state)
 
-    expected_output = "//**********VARIABLE DECLARATION************//"
+    expected_output = "//**********VARIABLE DECLARATION************//\n\n"
 
     assert isinstance(result, Success)
     assert result.unwrap() == expected_output
