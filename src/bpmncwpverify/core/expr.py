@@ -50,7 +50,7 @@ class ThrowingErrorListener(ErrorListener):  # type: ignore[misc]
         line: int,
         column: int,
         msg: str,
-        excpt: Exception,
+        e: Exception,
     ) -> None:
         """
         Raises ParseCancellationException when a syntax error is encountered
