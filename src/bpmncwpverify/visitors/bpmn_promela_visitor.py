@@ -173,10 +173,10 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         (e.g., 'Node1_FROM_Start'). If the node is a Task, the label ends with '_END'.
         """
         if flow_or_message:
-            return f"{ctx.element.name}_FROM_{flow_or_message.source_node.name}"
+            return f"{ctx.element.id}_FROM_{flow_or_message.source_node.id}"
         if ctx.task_end:
-            return f"{ctx.element.name}_END"
-        return ctx.element.name  # type: ignore
+            return f"{ctx.element.id}_END"
+        return ctx.element.id  # type: ignore
 
     def _get_consume_locations(self, ctx: Context) -> List[str]:
         """
@@ -271,7 +271,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
         if ctx.behavior_model:
-            atomic_block.write_str(f"{ctx.element.name}_BehaviorModel()", NL_SINGLE)
+            atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
         for location in self._get_consume_locations(ctx):
@@ -294,7 +294,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         passed element.
         """
         self.behaviors.write_str(
-            f"inline {ctx.element.name}_BehaviorModel(){{", NL_SINGLE, IndentAction.INC
+            f"inline {ctx.element.id}_BehaviorModel(){{", NL_SINGLE, IndentAction.INC
         )
         self.behaviors.write_str("skip", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
@@ -314,7 +314,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
-        self.promela.write_str(f"putToken({event.name})", NL_SINGLE, IndentAction.NIL)
+        self.promela.write_str(f"putToken({event.id})", NL_SINGLE, IndentAction.NIL)
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
 
         atomic_block = self._build_atomic_block(context)
@@ -390,10 +390,10 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_process(self, process: Process) -> bool:
         self.init_proc_contents.write_str(
-            f"run {process.name}()", NL_SINGLE, IndentAction.NIL
+            f"run {process.id}()", NL_SINGLE, IndentAction.NIL
         )
         self.promela.write_str(
-            f"proctype {process.name}() {{", NL_SINGLE, IndentAction.INC
+            f"proctype {process.id}() {{", NL_SINGLE, IndentAction.INC
         )
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
         return True
