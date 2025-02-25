@@ -1,3 +1,6 @@
+
+int x = 0
+
 #define Gateway_1_hasOption \
 (\
     x > 5||\
@@ -47,10 +50,7 @@ inline Gateway_1_BehaviorModel() {
 
 
 init {
-    atomic{
-        updateState()
-        run Process_1()
-    }
+    run Process_1()
 }
 
 
@@ -100,6 +100,7 @@ do
             if
                 :: x > 5 -> putToken(End_FROM_Gateway_1)
                 :: x <=5 -> putToken(Increment_x_FROM_Gateway_1)
+                :: else -> assert false
             fi
         }
     }
@@ -109,6 +110,7 @@ do
         d_step {
             consumeToken(End_FROM_Gateway_1)
         }
+        break
     }
 od
 }

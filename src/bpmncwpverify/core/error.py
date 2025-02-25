@@ -329,6 +329,37 @@ class MessageError(Error):
         self.error_msg = error_msg
 
 
+class SpinParseError(Error):
+    __slots__ = ["line_number", "error_msg"]
+
+    def __init__(self, line_number: str, error_msg: str):
+        super().__init__()
+
+
+class SpinSyntaxError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
+
+
+class SpinInvalidEndStateError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
+
+
+class SpinAssertionError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
+
+
 class StateInitNotInValues(Error):
     __slots__ = ["id", "line", "column", "values"]
 
@@ -521,6 +552,31 @@ def _get_error_message(error: Error) -> str:
             return "CWP ERROR: No end states found."
         case CwpGraphConnError():
             return "CWP ERROR: Graph is not connected."
+        case SpinAssertionError(list_of_error_maps=list_of_error_maps):
+            errors = []
+            errors.append("Assertion Error:")
+            errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
+            for idx, map in enumerate(list_of_error_maps):
+                errors.append(
+                    f"{idx + 1}: Assertion: {map['assertion']}, Depth info: {map['depth']}"
+                )
+            return "\n".join(errors)
+        case SpinInvalidEndStateError(list_of_error_maps=list_of_error_maps):
+            errors = []
+            errors.append("Invalid end state")
+            errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
+            for idx, map in enumerate(list_of_error_maps):
+                errors.append(f"{idx + 1}: {map['info']}")
+            return "\n".join(errors)
+        case SpinSyntaxError(list_of_error_maps=list_of_error_maps):
+            errors = []
+            errors.append("Syntax Error in generated promela:")
+            errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
+            for idx, map in enumerate(list_of_error_maps):
+                errors.append(
+                    f"{idx + 1}: On line {map['line_number']} in the file '{map['file_path']}': {map['error_msg']}"
+                )
+            return "\n".join(errors)
         case StateInitNotInValues(id=id, line=line, column=column, values=values):
             # Convert to a list since Python sets are not stable
             location: str = " "

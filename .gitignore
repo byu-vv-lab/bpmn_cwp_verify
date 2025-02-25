@@ -169,3 +169,6 @@ pan
 *.trail
 
 .DS_Store
+
+# vs-code workspaces
+work.code-workspace
