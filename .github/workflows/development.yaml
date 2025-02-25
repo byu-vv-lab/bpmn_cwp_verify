@@ -29,3 +29,13 @@ jobs:
     - name: Test pass-off
       run: |
         pytest --no-header -s -v -vv
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+
+    - name: Install Pyright
+      run: npm install -g pyright
+
+    - name: Check Pyright version
+      run: pyright --version
