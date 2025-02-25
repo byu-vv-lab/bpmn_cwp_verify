@@ -45,6 +45,15 @@ class SpinOutput:
 
         return Failure(SpinSyntaxError(errors)) if errors else Success(Coverage())
 
+    def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
+        errors = self._get_re_matches(r"\((?!0)\d+ of \d+ states\)", spin_msg)
+
+        return (
+            Failure(Error(f"Coverage errors detected: {errors}"))
+            if errors
+            else Success(Coverage())
+        )
+
     @staticmethod
     def get_spin_output(file_path: str) -> Result["SpinOutput", Error]:
         subprocess.run(

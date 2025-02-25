@@ -48,6 +48,43 @@ def test_check_syntax_errors_none(mocker):
     assert isinstance(result, Success)
 
 
+def test_has_uncovered_states():
+    spin_output = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+
+        State-vector 20 byte, depth reached 6, errors: 0
+                7 states, stored
+                0 states, matched
+                7 transitions (= stored+matched)
+                0 atomic steps
+        hash conflicts:         0 (resolved)
+
+        Stats on memory usage (in Megabytes):
+            0.000       equivalent memory usage for states (stored*(State-vector + overhead))
+            0.292       actual memory usage for states
+          128.000       memory used for hash table (-w24)
+            0.534       memory used for DFS stack (-m10000)
+          128.730       total actual memory usage
+
+        unreached in proctype test
+                (0 of 7 states)
+        unreached in init
+                (0 of 3 states)
+
+        pan: elapsed time 0 seconds
+    """
+
+    result = spin_output._check_coverage_errors(spin_output)
+    assert isinstance(result, Success)
+
+
 def test_check_invalid_end_state(mocker):
     spin_output = SpinOutput()
     s = """
