@@ -1,26 +1,21 @@
-from typing import Union, cast
-from xml.etree.ElementTree import Element
-from bpmncwpverify.core.bpmn import (
-    Node,
-    Process,
-    SequenceFlow,
-)
-from bpmncwpverify.core.error import (
-    BpmnStructureError,
-)
+from bpmncwpverify.core.bpmn import Node, Process, SequenceFlow
 from bpmncwpverify.core.expr import ExpressionListener
+from bpmncwpverify.core.error import BpmnStructureError
 from bpmncwpverify.core.state import State
+from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
+
 from returns.result import Result
 from returns.pipeline import is_successful
 from returns.functions import not_
-from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
+
+from typing import Union, cast
 
 
 class ProcessBuilder:
     __slots__ = ["_process", "_symbol_table"]
 
-    def __init__(self, element: Element, symbol_table: State) -> None:
-        self._process = Process(element)
+    def __init__(self, id: str, name: str, symbol_table: State) -> None:
+        self._process = Process(id, name)
         self._symbol_table = symbol_table
 
     def with_element(self, element: Union[SequenceFlow, Node]) -> "ProcessBuilder":

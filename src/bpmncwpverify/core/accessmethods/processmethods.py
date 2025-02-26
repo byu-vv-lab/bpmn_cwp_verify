@@ -7,11 +7,12 @@ from bpmncwpverify.builder.process_builder import ProcessBuilder
 from bpmncwpverify.core.bpmn import Process, get_element_type, BPMN_XML_NAMESPACE
 
 
-def from_xml(
-    element: Element,
-    symbol_table: State,
-) -> Result["Process", Error]:
-    builder = ProcessBuilder(element, symbol_table)
+def from_xml(element: Element, symbol_table: State) -> Result["Process", Error]:
+    id = element.attrib.get("id")
+    if not id:
+        raise Exception("Id cannot be None")
+    name: str = element.attrib.get("name", id)
+    builder = ProcessBuilder(id, name, symbol_table)
 
     for sub_element in element:
         tag = sub_element.tag.partition("}")[2]

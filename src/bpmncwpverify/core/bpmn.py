@@ -35,7 +35,17 @@ class BpmnElement:
         if not id:
             raise Exception("Id cannot be None")
         name: str = element.attrib.get("name", id)
-        return cls(id, name)
+
+        subclass_attrs = cls._extract_attributes(element)
+
+        return cls(id, name, **subclass_attrs)
+
+    @classmethod
+    def _extract_attributes(cls, element: Element) -> dict:
+        """
+        Method for subclasses to add additional attributes to from_xml method
+        """
+        return {}
 
 
 class Node(BpmnElement):
@@ -66,7 +76,7 @@ class Node(BpmnElement):
             message_event_definition (str): Definition of message event if available
             message_timer_definition (str): Definition of message timer if available
         """
-        super.__init__(id, name)
+        super().__init__(id, name)
         self.message_event_definition = message_event_definition
         self.message_timer_definition = message_timer_definition
         self.out_flows: List[SequenceFlow] = []
@@ -132,8 +142,10 @@ class Node(BpmnElement):
         pass
 
     @classmethod
-    def from_xml(cls: Type[T], element):
-        instance = super().from_xml(element)
+    def _extract_attributes(cls, element: Element) -> dict:
+        """
+        Method for subclasses to add additional attributes to from_xml method
+        """
         message_event = element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE)
         message_event_definition: str = (
             message_event.attrib.get("id", "") if message_event is not None else ""
@@ -142,12 +154,10 @@ class Node(BpmnElement):
         message_timer_definition: str = (
             timer_event.attrib.get("id", "") if timer_event is not None else ""
         )
-        return cls(
-            instance.id,
-            instance.name,
-            message_event_definition,
-            message_timer_definition,
-        )
+        return {
+            "message_event_definition": message_event_definition,
+            "message_timer_definition": message_timer_definition,
+        }
 
 
 # Event classes
@@ -209,17 +219,12 @@ class IntermediateEvent(Event):
         visitor.end_visit_intermediate_event(self)
 
     @classmethod
-    def from_xml(cls: Type[T], element):
-        instance = super().from_xml(element)
+    def _extract_attributes(cls, element: Element) -> dict:
+        attributes = super()._extract_attributes(element)
         tag = element.tag.partition("}")[2]
         type = "catch" if "Catch" in tag else "throw" if "Throw" in tag else "send"
-        return cls(
-            instance.id,
-            instance.name,
-            instance.message_event_definition,
-            instance.message_timer_definition,
-            type,
-        )
+        attributes["type"] = type
+        return attributes
 
 
 # Activity classes
@@ -287,15 +292,10 @@ class ParallelGatewayNode(GatewayNode):
             self.is_fork = True
 
     @classmethod
-    def from_xml(cls: Type[T], element, is_fork: bool = False):
-        instance = super().from_xml(element)
-        return cls(
-            instance.id,
-            instance.name,
-            instance.message_event_definition,
-            instance.message_timer_definition,
-            is_fork,
-        )
+    def _extract_attributes(cls, element: Element, is_fork: bool = False) -> dict:
+        attributes = super()._extract_attributes(element)
+        attributes["is_fork"] = is_fork
+        return attributes
 
 
 # Flow classes
