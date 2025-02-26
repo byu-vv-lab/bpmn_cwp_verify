@@ -50,3 +50,10 @@ repos:
         exclude: ^src/bpmncwpverify/antlr
     -   id: remove-tabs
         exclude: ^src/bpmncwpverify/antlr
+- repo: local
+  hooks:
+    - id: pyright-type-check
+      name: Pyright Type Check
+      entry: pyright
+      language: system
+      types: [python]
