@@ -79,7 +79,7 @@ class StateBuilder:
         outputs: "Outputs", builder: "StateBuilder"
     ) -> Result["Outputs", Error]:
         assert is_successful(builder.symbol_table)
-        assert is_successful(builder.cwp_root)
+        # assert is_successful(builder.cwp_root) TODO: Uncomment this and subsequent lines once LTL is working
         assert is_successful(builder.bpmn_root)
         assert is_successful(builder.behavior_str)
 
@@ -97,7 +97,7 @@ class StateBuilder:
         result: Result["Outputs", Error] = flow(
             Success(self),
             bind_result(StateBuilder._build_symbol_table),
-            bind_result(StateBuilder._build_cwp),
+            # bind_result(StateBuilder._build_cwp),
             bind_result(StateBuilder._build_bpmn),
             bind_result(partial(StateBuilder.build_promela, outputs)),
         )
