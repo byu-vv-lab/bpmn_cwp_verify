@@ -2,17 +2,16 @@ from bpmncwpverify.core.error import (
     BpmnStructureError,
 )
 
-from typing import List, Dict, Union, Generic, TypeVar, Type
+from typing import List, Dict, Union, TypeVar, Type
 from xml.etree.ElementTree import Element
 
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
-
 T = TypeVar("T", bound="BpmnElement")
 
 
-class BpmnElement(Generic[T]):
+class BpmnElement:
     """
     Parent class for all BPMN elements
     """
@@ -40,7 +39,7 @@ class BpmnElement(Generic[T]):
         return cls(element)
 
 
-class Node(BpmnElement[T]):
+class Node(BpmnElement):
     """
     Parent class for BPMN elements that have incoming and outgoing flows
     """
@@ -139,7 +138,7 @@ class Node(BpmnElement[T]):
 
 
 # Event classes
-class Event(Node[T]):
+class Event(Node):
     """
     Parent class for all BPMN events
     """
@@ -147,7 +146,7 @@ class Event(Node[T]):
     pass
 
 
-class StartEvent(Event["StartEvent"]):
+class StartEvent(Event):
     """
     Event that BPMN starts with
     """
@@ -158,7 +157,7 @@ class StartEvent(Event["StartEvent"]):
         visitor.end_visit_start_event(self)
 
 
-class EndEvent(Event["EndEvent"]):
+class EndEvent(Event):
     """
     Event that BPMN starts with
     """
@@ -169,7 +168,7 @@ class EndEvent(Event["EndEvent"]):
         visitor.end_visit_end_event(self)
 
 
-class IntermediateEvent(Event["IntermediateEvent"]):
+class IntermediateEvent(Event):
     """
     Events between start and end events
     """
@@ -189,7 +188,7 @@ class IntermediateEvent(Event["IntermediateEvent"]):
 
 
 # Activity classes
-class Task(Node["Task"]):
+class Task(Node):
     """
     Action that can be acted upon varaible(s)
     """
@@ -201,7 +200,7 @@ class Task(Node["Task"]):
 
 
 # Gateway classes
-class GatewayNode(Node[T]):
+class GatewayNode(Node):
     """
     Parent class for all BPMN gateways
     """
@@ -209,7 +208,7 @@ class GatewayNode(Node[T]):
     pass
 
 
-class ExclusiveGatewayNode(GatewayNode["ExclusiveGatewayNode"]):
+class ExclusiveGatewayNode(GatewayNode):
     """
     Gateway that only allows one path to be taken
     """
@@ -220,7 +219,7 @@ class ExclusiveGatewayNode(GatewayNode["ExclusiveGatewayNode"]):
         visitor.end_visit_exclusive_gateway(self)
 
 
-class ParallelGatewayNode(GatewayNode["ParallelGatewayNode"]):
+class ParallelGatewayNode(GatewayNode):
     """
     Gateway that allows multiple paths to be taken
     """
@@ -247,7 +246,7 @@ class ParallelGatewayNode(GatewayNode["ParallelGatewayNode"]):
 
 
 # Flow classes
-class Flow(BpmnElement[T]):
+class Flow(BpmnElement):
     """
     Parent class for all BPMN flows
     """
@@ -267,7 +266,7 @@ class Flow(BpmnElement[T]):
         self.is_leaf: bool = False
 
 
-class SequenceFlow(Flow["SequenceFlow"]):
+class SequenceFlow(Flow):
     """
     Representation of how activities and events are connected
     """
@@ -287,13 +286,13 @@ class SequenceFlow(Flow["SequenceFlow"]):
         visitor.end_visit_sequence_flow(self)
 
 
-class MessageFlow(Flow["MessageFlow"]):
+class MessageFlow(Flow):
     """
     Representation of how things are communicated between participants
     """
 
 
-class Process(BpmnElement["Process"]):
+class Process(BpmnElement):
     """
     Representation of the business process being modeled
     """
