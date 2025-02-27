@@ -47,3 +47,46 @@ def test_check_syntax_errors_none(mocker):
     result = spin_output._check_syntax_errors(s)
 
     assert isinstance(result, Success)
+
+
+def test_check_invalid_end_state(mocker):
+    spin_output = SpinOutput()
+    s = """
+        pan:1: invalid end state (at depth -1)
+        pan: wrote first.pml.trail
+
+        (Spin Version 6.5.2 -- 6 December 2019)
+        Warning: Search not completed
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+    """
+
+    result = spin_output._check_invalid_end_state(s)
+
+    assert isinstance(result, Failure)
+    result = result.failure()
+    assert result.list_of_error_maps[0]["info"] == "at depth -1"
+
+
+def test_check_invalid_end_state_none(mocker):
+    spin_output = SpinOutput()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = spin_output._check_invalid_end_state(s)
+
+    assert isinstance(result, Success)
