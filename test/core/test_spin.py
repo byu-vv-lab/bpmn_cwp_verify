@@ -90,3 +90,49 @@ def test_check_invalid_end_state_none(mocker):
     result = spin_output._check_invalid_end_state(s)
 
     assert isinstance(result, Success)
+
+
+def test_check_assertion_violation(mocker):
+    spin_output = SpinOutput()
+    s = """
+        pan:1: assertion violated (_nr_pr==3) (at depth 0)
+        pan: wrote first.pml.trail
+
+        (Spin Version 6.5.2 -- 6 December 2019)
+        Warning: Search not completed
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (not selected)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+
+        State-vector 12 byte, depth reached 0, errors: 1
+                1 states, stored
+    """
+
+    result = spin_output._check_assertion_violation(s)
+
+    assert isinstance(result, Failure)
+    result = result.failure()
+    assert result.list_of_error_maps[0]["assertion"] == "_nr_pr==3"
+
+
+def test_check_assertion_violation_none(mocker):
+    spin_output = SpinOutput()
+    s = """
+        (Spin Version 6.5.2 -- 6 December 2019)
+                + Partial Order Reduction
+
+        Full statespace search for:
+                never claim             - (none specified)
+                assertion violations    +
+                cycle checks            - (disabled by -DSAFETY)
+                invalid end states      +
+        ...
+    """
+
+    result = spin_output._check_assertion_violation(s)
+
+    assert isinstance(result, Success)
