@@ -24,7 +24,7 @@
     <button type="submit">Submit</button>
   </form>
 
-  <div id="responseContainer" style="margin-top: 20px; font-size: 16px; color: blue; white-space: pre-line;"></div>
+  <div id="responseContainer" style="margin-top: 20px; font-size: 16px; color: blue;"></div>
 
   <script>
     document.getElementById('lambdaForm').addEventListener('submit', async function (event) {
@@ -78,7 +78,19 @@
         const result_stringify = JSON.stringify(result);
         const message = JSON.parse(result_stringify);
 
-        responseContainer.textContent = `Lambda Response: ${message.message}`;
+        message.message = message.message.replace(/[&<>"'\n\t]/g,function(match) {
+          return {
+              '&': "&amp;",
+              '<': "&lt;",
+              '>': "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+              "\n": "<br>",
+              "\t": "&nbsp;&nbsp;&nbsp;&nbsp;"
+          }[match];
+        });
+
+        responseContainer.innerHTML = `Lambda Response: ${message.message}`;
       }
       catch (error) {
         console.error('Error calling Lambda:', error);
