@@ -216,7 +216,7 @@ class Task(Node):
     Action that can be acted upon varaible(s)
     """
 
-    def __init__(self, id: str, name: str, behavior: str = "") -> None:
+    def __init__(self, id: str, name: str, behavior: str) -> None:
         super().__init__(id, name)
         self.behavior = behavior
 
@@ -228,6 +228,10 @@ class Task(Node):
     @classmethod
     def _extract_attributes(cls, element: Element) -> dict:
         attributes = super()._extract_attributes(element)
+        behavior = element.find("bpmn:documentation", BPMN_XML_NAMESPACE)
+        attributes["behavior"] = (
+            behavior.text if behavior is not None and behavior.text else ""
+        )
         return attributes
 
 
