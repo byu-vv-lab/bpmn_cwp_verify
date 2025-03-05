@@ -30,7 +30,7 @@ class StateBuilder:
         "cwp",
         "cwp_root",
         "state_str",
-        "symbol_table",
+        "state",
     ]
 
     def __init__(self) -> None:
@@ -40,14 +40,12 @@ class StateBuilder:
         self.cwp: Result[Cwp, Error] = Failure(Error())
         self.cwp_root: Result[Element, Error] = Failure(Error())
         self.state_str: Result[str, Error] = Failure(Error())
-        self.symbol_table: Result[State, Error] = Failure(Error())
+        self.state: Result[State, Error] = Failure(Error())
 
     @staticmethod
     def _build_bpmn(builder: "StateBuilder") -> Result["StateBuilder", Error]:
-        assert is_successful(builder.symbol_table) and is_successful(builder.bpmn_root)
-        builder.bpmn = bpmn_from_xml(
-            builder.bpmn_root.unwrap(), builder.symbol_table.unwrap()
-        )
+        assert is_successful(builder.state) and is_successful(builder.bpmn_root)
+        builder.bpmn = bpmn_from_xml(builder.bpmn_root.unwrap(), builder.state.unwrap())
         if not_(is_successful)(builder.bpmn):
             return Failure(builder.bpmn.failure())
         else:
@@ -55,22 +53,20 @@ class StateBuilder:
 
     @staticmethod
     def _build_cwp(builder: "StateBuilder") -> Result["StateBuilder", Error]:
-        assert is_successful(builder.symbol_table)
+        assert is_successful(builder.state)
         assert is_successful(builder.cwp_root)
-        builder.cwp = cwp_from_xml(
-            builder.cwp_root.unwrap(), builder.symbol_table.unwrap()
-        )
+        builder.cwp = cwp_from_xml(builder.cwp_root.unwrap(), builder.state.unwrap())
         if not_(is_successful)(builder.cwp):
             return Failure(builder.cwp.failure())
         else:
             return Success(builder)
 
     @staticmethod
-    def _build_symbol_table(builder: "StateBuilder") -> Result["StateBuilder", Error]:
+    def _build_state(builder: "StateBuilder") -> Result["StateBuilder", Error]:
         assert is_successful(builder.state_str)
-        builder.symbol_table = State.from_str(builder.state_str.unwrap())
-        if not_(is_successful)(builder.symbol_table):
-            return Failure(builder.symbol_table.failure())
+        builder.state = State.from_str(builder.state_str.unwrap())
+        if not_(is_successful)(builder.state):
+            return Failure(builder.state.failure())
         else:
             return Success(builder)
 
@@ -78,14 +74,14 @@ class StateBuilder:
     def build_promela(
         outputs: "Outputs", builder: "StateBuilder"
     ) -> Result["Outputs", Error]:
-        assert is_successful(builder.symbol_table)
+        assert is_successful(builder.state)
         assert is_successful(builder.cwp_root)
         assert is_successful(builder.bpmn_root)
         assert is_successful(builder.behavior_str)
 
-        # ltl = generate_ltl((builder.cwp).unwrap(), (builder.symbol_table).unwrap())
+        # ltl = generate_ltl((builder.cwp).unwrap(), (builder.state).unwrap())
         # behavior = (builder.behavior_str).unwrap()
-        vars = State.generate_promela((builder.symbol_table).unwrap()).unwrap()
+        vars = State.generate_promela((builder.state).unwrap()).unwrap()
         workflow = generate_promela((builder.bpmn).unwrap())
 
         # outputs.promela = f"{vars}{ltl}{behavior}{workflow}"
@@ -96,7 +92,7 @@ class StateBuilder:
         outputs: Outputs = Outputs("")
         result: Result["Outputs", Error] = flow(
             Success(self),
-            bind_result(StateBuilder._build_symbol_table),
+            bind_result(StateBuilder._build_state),
             bind_result(StateBuilder._build_cwp),
             bind_result(StateBuilder._build_bpmn),
             bind_result(partial(StateBuilder.build_promela, outputs)),

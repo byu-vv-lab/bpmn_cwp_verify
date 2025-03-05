@@ -86,10 +86,10 @@ def test_from_xml_edge_missing_source_target(mocker):
     mx_root = SubElement(mx_graph_model, "root")
 
     SubElement(mx_root, "mxCell", edge="1")
-    symbol_table = mocker.MagicMock()
+    state = mocker.MagicMock()
 
     with pytest.raises(Exception) as exc_info:
-        from_xml(root, symbol_table)
+        from_xml(root, state)
 
     assert isinstance(exc_info.value.args[0], CwpEdgeNoStateError)
 
@@ -101,10 +101,10 @@ def test_from_xml_missing_parent_or_expression(mocker):
     mx_root = SubElement(mx_graph_model, "root")
 
     SubElement(mx_root, "mxCell", style="edgeLabel")
-    symbol_table = mocker.MagicMock()
+    state = mocker.MagicMock()
 
     with pytest.raises(Exception) as exc_info:
-        from_xml(root, symbol_table)
+        from_xml(root, state)
 
     assert isinstance(exc_info.value.args[0], CwpEdgeNoParentExprError)
 
@@ -113,7 +113,7 @@ def test_check_expression(mocker):
     mock_expr_checker = mocker.MagicMock()
     mock_expr_checker.type_check.return_value = Success(None)
 
-    symbol_table = mocker.MagicMock()
+    state = mocker.MagicMock()
 
     builder = CwpBuilder()
     builder._cwp = Cwp()
@@ -121,7 +121,7 @@ def test_check_expression(mocker):
 
     expression = "expression"
 
-    builder.check_expression(mock_expr_checker, expression, "parent", symbol_table)
+    builder.check_expression(mock_expr_checker, expression, "parent", state)
 
 
 def test_check_expression_no_parent(mocker):
