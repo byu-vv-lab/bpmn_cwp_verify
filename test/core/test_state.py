@@ -168,9 +168,9 @@ class Test_SymbolTable_build:
 
         # then
         assert is_successful(result)
-        symbol_table: State = result.unwrap()
+        state: State = result.unwrap()
         for i, expected_type in expected:
-            result_type = symbol_table.get_type(i)
+            result_type = state.get_type(i)
             assert is_successful(result_type)
             assert expected_type == result_type.unwrap()
 

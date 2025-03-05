@@ -5,9 +5,9 @@ from bpmncwpverify.core import typechecking
 
 
 class CwpLtlVisitor(CwpVisitor):  # type: ignore
-    def __init__(self, symbol_table: State, print_on: bool = False) -> None:
+    def __init__(self, state: State, print_on: bool = False) -> None:
         self.state_info: List[str] = []
-        self.symbol_table = symbol_table
+        self.state = state
         self.output_str: List[str] = []
         self.print_on: bool = print_on
         self.property_list: List[str] = []
@@ -38,17 +38,17 @@ class CwpLtlVisitor(CwpVisitor):  # type: ignore
 
     def write_state_variables(self) -> None:
         self.write_line("\n\n//**********VARIABLE DECLARATION************//\n")
-        for const_decl in self.symbol_table._consts:
+        for const_decl in self.state._consts:
             self.write_line(f"#define {const_decl.id} {const_decl.init.value}")
             self.write_line("\n")
         self.write_line("\n")
-        for enum_decl in self.symbol_table._enums:
+        for enum_decl in self.state._enums:
             self.write_line(
                 f"mytpe = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
             )
             self.write_line("\n")
         self.write_line("\n")
-        for var_decl in self.symbol_table._vars:
+        for var_decl in self.state._vars:
             if var_decl.type_ == typechecking.ENUM:
                 self.write_line(f"mytype {var_decl.id} = {var_decl.init.value}")
             else:
@@ -63,7 +63,7 @@ class CwpLtlVisitor(CwpVisitor):  # type: ignore
         self.state_info.append(
             "\n\n//**********Variable Range Invariants************//"
         )
-        for enum_decl in self.symbol_table._enums:
+        for enum_decl in self.state._enums:
             # if enum.isConstant:
             #     continue
             # cwp = enum.cwp
@@ -103,7 +103,7 @@ class CwpLtlVisitor(CwpVisitor):  # type: ignore
         self.write_line("}")
 
     def write_variable_range_assertions(self) -> None:
-        for var_name in self.symbol_table._vars:
+        for var_name in self.state._vars:
             self.write_line("assert({}Invariant)".format(var_name.id))
 
     def write_refresh_edges(self) -> None:
@@ -242,7 +242,7 @@ class CwpLtlVisitor(CwpVisitor):  # type: ignore
             self.write_log_state(state)
         for edge in self.cwp.edges.values():
             self.write_log_edge(edge)
-        for var in self.symbol_table._vars:
+        for var in self.state._vars:
             self.write_log_var(var.id)
         if self.print_on:
             self.write_line('printf("******************************\\n")')

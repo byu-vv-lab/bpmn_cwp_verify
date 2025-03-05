@@ -45,7 +45,7 @@ def add_process_with_elements(root, elements):
 
 
 def test_complete_bpmn_with_no_start_or_end_event():
-    symbol_table = StateBuilder().build()
+    state = StateBuilder().build()
     root = create_bpmn_definition()
     add_process(root)
     task = Element("bpmn:task", attrib={"id": "Task_1", "name": "Test Task"})
@@ -53,7 +53,7 @@ def test_complete_bpmn_with_no_start_or_end_event():
 
     bpmn = tostring(root, encoding="unicode")
     parsed_root = ElementTree.fromstring(bpmn)
-    result = from_xml(parsed_root, symbol_table)
+    result = from_xml(parsed_root, state)
 
     assert isinstance(result, Failure)
     exception = result.failure()
@@ -61,7 +61,7 @@ def test_complete_bpmn_with_no_start_or_end_event():
 
 
 def test_complete_bpmn_with_no_end_event():
-    symbol_table = StateBuilder().build()
+    state = StateBuilder().build()
     root = create_bpmn_definition()
     add_process(root)
 
@@ -78,7 +78,7 @@ def test_complete_bpmn_with_no_end_event():
 
     bpmn = tostring(root, encoding="unicode")
     parsed_root = ElementTree.fromstring(bpmn)
-    result = from_xml(parsed_root, symbol_table)
+    result = from_xml(parsed_root, state)
 
     assert isinstance(result, Failure)
     exception = result.failure()
@@ -86,7 +86,7 @@ def test_complete_bpmn_with_no_end_event():
 
 
 def test_complete_bpmn_with_good_process():
-    symbol_table = StateBuilder().build()
+    state = StateBuilder().build()
     root = create_bpmn_definition()
     add_process(root)
 
@@ -103,6 +103,6 @@ def test_complete_bpmn_with_good_process():
 
     bpmn = tostring(root, encoding="unicode")
     parsed_root = ElementTree.fromstring(bpmn)
-    result = from_xml(parsed_root, symbol_table)
+    result = from_xml(parsed_root, state)
 
     assert isinstance(result, Success)

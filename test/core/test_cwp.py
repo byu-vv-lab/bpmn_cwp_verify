@@ -25,18 +25,18 @@ def get_root_mx_root():
     return root, mx_root
 
 
-def build_symbol_table(code):
-    symbol_table = State.from_str(code)
-    assert is_successful(symbol_table)
-    return symbol_table.unwrap()
+def build_state(code):
+    state = State.from_str(code)
+    assert is_successful(state)
+    return state.unwrap()
 
 
 def add_mx_cell(mx_root, **attributes):
     SubElement(mx_root, "mxCell", attrib=attributes)
 
 
-def setup_cwp_and_assert(xml_root, symbol_table, success=True, failure_message=Error):
-    cwp = from_xml(xml_root, symbol_table)
+def setup_cwp_and_assert(xml_root, state, success=True, failure_message=Error):
+    cwp = from_xml(xml_root, state)
     if success:
         assert is_successful(cwp)
         return cwp.unwrap()
@@ -47,7 +47,7 @@ def setup_cwp_and_assert(xml_root, symbol_table, success=True, failure_message=E
 
 
 def test_valid_cwp_end_start_events():
-    symbol_table = build_symbol_table("var x: int = 0")
+    state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
     add_mx_cell(mx_root, id="s1", value="Start", style="state", vertex="1")
@@ -57,25 +57,25 @@ def test_valid_cwp_end_start_events():
         mx_root, id="expr1", value="x > 0", style="edgeLabel", parent="e1", vertex="1"
     )
 
-    cwp = setup_cwp_and_assert(root, symbol_table)
+    cwp = setup_cwp_and_assert(root, state)
     assert len(cwp.edges) == 1
     assert cwp.start_state.id == "s1"
     assert len(cwp.states) == 1
 
 
 def test_invalid_cwp_missing_start_event():
-    symbol_table = build_symbol_table("var x: int = 0")
+    state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
     add_mx_cell(mx_root, id="s1", value="state", style="state", vertex="1")
 
     setup_cwp_and_assert(
-        root, symbol_table, success=False, failure_message=CwpNoStartStateError
+        root, state, success=False, failure_message=CwpNoStartStateError
     )
 
 
 def test_invalid_cwp_not_connected():
-    symbol_table = build_symbol_table("var x: int = 0")
+    state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
     # First disconnected component
@@ -96,14 +96,14 @@ def test_invalid_cwp_not_connected():
 
     setup_cwp_and_assert(
         root,
-        symbol_table,
+        state,
         success=False,
         failure_message=CwpMultStartStateError,
     )
 
 
 def test_invalid_cwp_no_end_state():
-    symbol_table = build_symbol_table("var x: int = 0")
+    state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
     add_mx_cell(mx_root, id="s1", value="Start", style="state", vertex="1")
@@ -127,7 +127,7 @@ def test_invalid_cwp_no_end_state():
 
     setup_cwp_and_assert(
         root,
-        symbol_table,
+        state,
         success=False,
         failure_message=CwpNoEndStatesError,
     )
