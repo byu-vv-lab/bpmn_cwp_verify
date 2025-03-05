@@ -345,6 +345,14 @@ class SpinInvalidEndStateError(Error):
         self.list_of_error_maps = list_of_error_maps
 
 
+class SpinAssertionError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
+
+
 class StateInitNotInValues(Error):
     __slots__ = ["id", "line", "column", "values"]
 
@@ -537,6 +545,15 @@ def _get_error_message(error: Error) -> str:
             return "CWP ERROR: No end states found."
         case CwpGraphConnError():
             return "CWP ERROR: Graph is not connected."
+        case SpinAssertionError(list_of_error_maps=list_of_error_maps):
+            errors = []
+            errors.append("Assertion Error:")
+            errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
+            for idx, map in enumerate(list_of_error_maps):
+                errors.append(
+                    f"{idx + 1}: Assertion: {map['assertion']}, Depth info: {map['depth']}"
+                )
+            return "\n".join(errors)
         case SpinInvalidEndStateError(list_of_error_maps=list_of_error_maps):
             errors = []
             errors.append("Invalid end state")
