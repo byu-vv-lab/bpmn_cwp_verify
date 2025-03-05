@@ -16,8 +16,8 @@ import pytest
 def test_write_init_states(mocker):
     mock_write = mocker.patch.object(CwpLtlVisitor, "write_line")
 
-    symbol_table = mocker.MagicMock()
-    instance = CwpLtlVisitor(symbol_table)
+    state = mocker.MagicMock()
+    instance = CwpLtlVisitor(state)
 
     instance.cwp = Cwp()
     instance.cwp.states = {
@@ -42,8 +42,8 @@ def test_cwp_write_exists_properties(mocker):
     state = mocker.MagicMock()
     state.name = "TestState"
 
-    symbol_table = mocker.MagicMock()
-    visitor = CwpLtlVisitor(symbol_table)
+    state = mocker.MagicMock()
+    visitor = CwpLtlVisitor(state)
     visitor.property_list = []
 
     visitor.write_exists_property(state)
@@ -73,8 +73,8 @@ def test_cwp_mutex_property(mocker):
     dummy_cwp.states["OtherState2"].name = "OtherState2"
     dummy_cwp.states["OtherState3"].name = "OtherState3"
 
-    symbol_table = mocker.MagicMock()
-    visitor = CwpLtlVisitor(symbol_table)
+    state = mocker.MagicMock()
+    visitor = CwpLtlVisitor(state)
     visitor.property_list = []
     visitor.cwp = dummy_cwp
     visitor.tab = 0
@@ -121,8 +121,8 @@ def test_cwp_write_edges_property(mocker):
         mocker.MagicMock(dest=dest_state3),
     ]
 
-    symbol_table = mocker.MagicMock()
-    visitor = CwpLtlVisitor(symbol_table)
+    state = mocker.MagicMock()
+    visitor = CwpLtlVisitor(state)
     visitor.property_list = []
     visitor.tab = 0
 

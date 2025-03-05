@@ -82,13 +82,13 @@ class CwpBuilder:
         expr_checker: ExpressionListener,
         expression: str,
         parent: str,
-        symbol_table: State,
+        state: State,
     ) -> None:
         edge = self._cwp.edges.get(parent)
         if not edge:
             raise Exception(CwpNoParentEdgeError(parent))
         edge.expression = CwpEdge.cleanup_expression(expression)
-        result = expr_checker.type_check(edge.expression, symbol_table)
+        result = expr_checker.type_check(edge.expression, state)
         if not_(is_successful)(result):
             raise Exception(result.failure())
 

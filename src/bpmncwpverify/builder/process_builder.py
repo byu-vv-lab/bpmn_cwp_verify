@@ -12,11 +12,11 @@ from typing import Union, cast
 
 
 class ProcessBuilder:
-    __slots__ = ["_process", "_symbol_table"]
+    __slots__ = ["_process", "_state"]
 
-    def __init__(self, id: str, name: str, symbol_table: State) -> None:
+    def __init__(self, id: str, name: str, state: State) -> None:
         self._process = Process(id, name)
-        self._symbol_table = symbol_table
+        self._state = state
 
     def with_element(self, element: Union[SequenceFlow, Node]) -> "ProcessBuilder":
         self._process[element.id] = element
@@ -38,7 +38,7 @@ class ProcessBuilder:
         assert isinstance(target_node, Node)
 
         if expression:
-            result = ExpressionListener.type_check(expression, self._symbol_table)
+            result = ExpressionListener.type_check(expression, self._state)
             if not_(is_successful)(result) or result.unwrap() != "bool":
                 raise Exception(result.failure())
             flow.expression = expression

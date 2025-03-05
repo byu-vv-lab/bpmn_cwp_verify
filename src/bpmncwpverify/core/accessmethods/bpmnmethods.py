@@ -26,14 +26,14 @@ def generate_promela(bpmn: Bpmn) -> str:
     return str(promela_visitor)
 
 
-def from_xml(root: Element, symbol_table: State) -> Result["Bpmn", Error]:
+def from_xml(root: Element, state: State) -> Result["Bpmn", Error]:
     ##############
     # Build and add processes
     ##############
     processes = root.findall("bpmn:process", BPMN_XML_NAMESPACE)
     bpmn_builder = BpmnBuilder()
     for process_element in processes:
-        process = process_from_xml(process_element, symbol_table)
+        process = process_from_xml(process_element, state)
         if not_(is_successful)(process):
             return cast(Result[Bpmn, Error], process)
         bpmn_builder = bpmn_builder.with_process(process.unwrap())

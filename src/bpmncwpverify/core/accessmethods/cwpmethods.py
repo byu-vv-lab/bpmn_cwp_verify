@@ -15,7 +15,7 @@ from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 from bpmncwpverify.visitors.cwp_ltl_visitor import CwpLtlVisitor
 
 
-def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
+def from_xml(root: Element, state: State) -> Result["Cwp", Error]:
     builder = CwpBuilder()
 
     if (diagram := root.find("diagram")) is None:
@@ -30,13 +30,13 @@ def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
     all_items: List[Element] = [itm for itm in mx_cells]
     edges: List[Element] = [itm for itm in mx_cells if itm.get("edge")]
     states: List[Element] = [itm for itm in mx_cells if itm.get("vertex")]
-    expression_checker = ExpressionListener(symbol_table)
+    expression_checker = ExpressionListener(state)
 
     for element in states:
         style = element.get("style")
         if style and "edgeLabel" not in style:
-            state = CwpState.from_xml(element)
-            builder = builder.with_state(state)
+            cwpState = CwpState.from_xml(element)
+            builder = builder.with_state(cwpState)
 
     for element in edges:
         source_ref = element.get("source")
@@ -54,9 +54,7 @@ def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
             expression = itm.get("value")
             if not (parent and expression):
                 raise Exception(CwpEdgeNoParentExprError(itm))
-            builder.check_expression(
-                expression_checker, expression, parent, symbol_table
-            )
+            builder.check_expression(expression_checker, expression, parent, state)
 
     result: Result["Cwp", Error] = builder.build()
     return result
@@ -70,8 +68,8 @@ def generate_graph_viz(cwp: Cwp) -> None:
     graph_viz_visitor.dot.render("graphs/cwp_graph.gv", format="png")  # type: ignore[unused-ignore]
 
 
-def generate_ltl(cwp: Cwp, symbol_table: State) -> str:
-    ltl_visitor = CwpLtlVisitor(symbol_table)
+def generate_ltl(cwp: Cwp, state: State) -> str:
+    ltl_visitor = CwpLtlVisitor(state)
 
     cwp.accept(ltl_visitor)
 
