@@ -329,6 +329,14 @@ class MessageError(Error):
         self.error_msg = error_msg
 
 
+class SpinCoverageError(Error):
+    __slots__ = ""
+
+    def __init__(self, coverage_errors: typing.Dict) -> None:
+        super().__init__()
+        self.coverage_errors = coverage_errors
+
+
 class SpinParseError(Error):
     __slots__ = ["line_number", "error_msg"]
 
@@ -552,6 +560,13 @@ def _get_error_message(error: Error) -> str:
             return "CWP ERROR: No end states found."
         case CwpGraphConnError():
             return "CWP ERROR: Graph is not connected."
+        case SpinCoverageError(coverage_errors=coverage_errors):
+            return "\n".join(
+                [
+                    f"Proctype: {error['proctype']}, File: {error['file']}, Line: {str(error['line'])}, Message: {error["message"]}"
+                    for error in coverage_errors
+                ]
+            )
         case SpinAssertionError(list_of_error_maps=list_of_error_maps):
             errors = []
             errors.append("Assertion Error:")

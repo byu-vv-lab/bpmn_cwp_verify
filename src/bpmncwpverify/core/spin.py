@@ -5,6 +5,7 @@ from bpmncwpverify.core.error import (
     SpinSyntaxError,
     SpinInvalidEndStateError,
     SpinAssertionError,
+    SpinCoverageError,
 )
 import subprocess
 import re
@@ -46,11 +47,34 @@ class SpinOutput:
         return Failure(SpinSyntaxError(errors)) if errors else Success(Coverage())
 
     def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
-        errors = self._get_re_matches(r"\((?!0)\d+ of \d+ states\)", spin_msg)
+        errors = self._get_re_matches(
+            r"unreached in (proctype|init) (?P<proctype>\w+)?\n((?:\s+[^\n]+\n)+)",
+            spin_msg,
+        )
+
+        detailed_errors = []
+        for error in errors:
+            proctype_name = error.get("proctype", "init")
+            lines_block = error.get("content", "")
+
+            line_matches = self._get_re_matches(
+                r"(?P<file>[\w\.]+):(?P<line>\d+), state \d+, (?P<message>\".*?\")",
+                lines_block,
+            )
+
+            for line in line_matches:
+                detailed_errors.append(
+                    {
+                        "proctype": proctype_name,
+                        "file": line["file"],
+                        "line": line["line"],
+                        "message": line["message"],
+                    }
+                )
 
         return (
-            Failure(Error(f"Coverage errors detected: {errors}"))
-            if errors
+            Failure(SpinCoverageError(detailed_errors))
+            if detailed_errors
             else Success(Coverage())
         )
 
