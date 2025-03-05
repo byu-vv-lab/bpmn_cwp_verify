@@ -38,6 +38,7 @@ class Context:
         "_is_parallel",
         "_behavior_model",
         "_has_option",
+        "_behavior",
     ]
 
     def __init__(self, element: Node) -> None:
@@ -46,6 +47,7 @@ class Context:
         self._is_parallel = False
         self._has_option = False
         self._behavior_model = True
+        self._behavior = ""
 
     @property
     def task_end(self) -> bool:
@@ -85,6 +87,17 @@ class Context:
             self._element, ParallelGatewayNode
         ), "is_parallel can only be set if element is of type ParallelGatewayNode"
         self._is_parallel = new_val
+
+    @property
+    def behavior(self) -> str:
+        return self._behavior
+
+    @behavior.setter
+    def behavior(self, new_val: str) -> None:
+        assert isinstance(
+            self._element, Task
+        ), "only tasks can have a behavior associated with them."
+        self._behavior = new_val
 
     @property
     def element(self) -> Node:
@@ -296,7 +309,10 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str(
             f"inline {ctx.element.name}_BehaviorModel(){{", NL_SINGLE, IndentAction.INC
         )
-        self.behaviors.write_str("skip", NL_SINGLE)
+        if ctx.behavior:
+            self.behaviors.write_str(ctx.behavior, NL_SINGLE)
+        else:
+            self.behaviors.write_str("skip", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
@@ -344,6 +360,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
     def visit_task(self, task: Task) -> bool:
         context = Context(task)
+        context.behavior = task.behavior
         context.task_end = False
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
