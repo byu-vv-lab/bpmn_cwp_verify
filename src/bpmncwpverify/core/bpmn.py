@@ -132,10 +132,35 @@ class Node(BpmnElement):
 # Event classes
 class Event(Node):
     """
-    Parent class for all BPMN events
+    Parent class for Bpmn events
     """
 
-    pass
+    __slots__ = ["message_event_definition", "message_timer_definition"]
+
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        message_event_definition: str,
+        message_timer_definition: str,
+    ):
+        super().__init__(id, name)
+        self.message_event_definition = message_event_definition
+        self.message_timer_definition = message_timer_definition
+
+    @classmethod
+    def _extract_attributes(cls, element: Element) -> dict:
+        attributes = super()._extract_attributes(element)
+        message_event = element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE)
+        attributes["message_event_definition"] = (
+            message_event.attrib.get("id", "") if message_event is not None else ""
+        )
+        timer_event = element.find("bpmn:timerEventDefinition", BPMN_XML_NAMESPACE)
+        attributes["message_timer_definition"] = (
+            timer_event.attrib.get("id", "") if timer_event is not None else ""
+        )
+
+        return attributes
 
 
 class StartEvent(Event):
@@ -165,7 +190,7 @@ class IntermediateEvent(Event):
     Events between start and end events
     """
 
-    __slots__ = ["type", "message_event_definition", "message_timer_definition"]
+    __slots__ = ["type"]
 
     def __init__(
         self,
@@ -181,9 +206,7 @@ class IntermediateEvent(Event):
         Args:
             type (str): Type of IntermediateEvent
         """
-        super().__init__(id, name)
-        self.message_event_definition = message_event_definition
-        self.message_timer_definition = message_timer_definition
+        super().__init__(id, name, message_event_definition, message_timer_definition)
         self.type = type
 
     def accept(self, visitor: "BpmnVisitor") -> None:
@@ -197,14 +220,6 @@ class IntermediateEvent(Event):
         tag = element.tag.partition("}")[2]
         type = "catch" if "Catch" in tag else "throw" if "Throw" in tag else "send"
         attributes["type"] = type
-        message_event = element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE)
-        attributes["message_event_definition"](
-            message_event.attrib.get("id", "") if message_event is not None else ""
-        )
-        timer_event = element.find("bpmn:timerEventDefinition", BPMN_XML_NAMESPACE)
-        attributes["message_timer_definition"](
-            timer_event.attrib.get("id", "") if timer_event is not None else ""
-        )
 
         return attributes
 
@@ -260,14 +275,12 @@ class ParallelGatewayNode(GatewayNode):
     Gateway that allows multiple paths to be taken
     """
 
-    __slots__ = ["is_fork", "message_event_definition", "message_timer_definition"]
+    __slots__ = ["is_fork"]
 
     def __init__(
         self,
         id: str,
         name: str,
-        message_event_definition: str,
-        message_timer_definition: str,
         is_fork: bool = False,
     ):
         """
@@ -277,8 +290,6 @@ class ParallelGatewayNode(GatewayNode):
             is_fork (bool, optional): Variable determining if gateway is a forking gateway or not. Defaults to false.
         """
         super().__init__(id, name)
-        self.message_event_definition = message_event_definition
-        self.message_timer_definition = message_timer_definition
         self.is_fork = is_fork
 
     def accept(self, visitor: "BpmnVisitor") -> None:
@@ -290,19 +301,6 @@ class ParallelGatewayNode(GatewayNode):
         super().add_out_flow(flow)
         if len(self.out_flows) > 1:
             self.is_fork = True
-
-    @classmethod
-    def _extract_attributes(cls, element: Element) -> dict:
-        attributes = super()._extract_attributes(element)
-        message_event = element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE)
-        attributes["message_event_definition"](
-            message_event.attrib.get("id", "") if message_event is not None else ""
-        )
-        timer_event = element.find("bpmn:timerEventDefinition", BPMN_XML_NAMESPACE)
-        attributes["message_timer_definition"](
-            timer_event.attrib.get("id", "") if timer_event is not None else ""
-        )
-        return attributes
 
 
 # Flow classes
