@@ -1,4 +1,3 @@
-
 # type: ignore
 
 from bpmncwpverify.core.spin import SpinOutput
@@ -49,7 +48,6 @@ def test_check_syntax_errors_none(mocker):
     result = spin_output._check_syntax_errors(s)
 
     assert isinstance(result, Success)
-
 
 
 def test_has_uncovered_states(mocker):
@@ -123,9 +121,9 @@ def test_has_no_uncovered_states(mocker):
                 (0 of 3 states)
     """
 
-    result = spin_output._check_coverage_errors(spin_output)
+    spin_obj = SpinOutput()
+    result = spin_obj._check_coverage_errors(spin_output)
     assert isinstance(result, Success)
-
 
 
 def test_check_invalid_end_state(mocker):
