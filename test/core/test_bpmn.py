@@ -1,7 +1,7 @@
 # type: ignore
 from xml.etree.ElementTree import Element, SubElement, tostring
 from defusedxml import ElementTree
-from bpmncwpverify.core.bpmn import BPMN_XML_NAMESPACE
+from bpmncwpverify.core.bpmn import BPMN_XML_NAMESPACE, StartEvent
 from bpmncwpverify.core.accessmethods.bpmnmethods import from_xml
 from bpmncwpverify.core.state import StateBuilder
 from bpmncwpverify.core.error import BpmnMissingEventsError
@@ -45,7 +45,7 @@ def add_process_with_elements(root, elements):
 
 
 def test_complete_bpmn_with_no_start_or_end_event():
-    symbol_table = StateBuilder().build()
+    state = StateBuilder().build()
     root = create_bpmn_definition()
     add_process(root)
     task = Element("bpmn:task", attrib={"id": "Task_1", "name": "Test Task"})
@@ -53,7 +53,7 @@ def test_complete_bpmn_with_no_start_or_end_event():
 
     bpmn = tostring(root, encoding="unicode")
     parsed_root = ElementTree.fromstring(bpmn)
-    result = from_xml(parsed_root, symbol_table)
+    result = from_xml(parsed_root, state)
 
     assert isinstance(result, Failure)
     exception = result.failure()
@@ -61,7 +61,7 @@ def test_complete_bpmn_with_no_start_or_end_event():
 
 
 def test_complete_bpmn_with_no_end_event():
-    symbol_table = StateBuilder().build()
+    state = StateBuilder().build()
     root = create_bpmn_definition()
     add_process(root)
 
@@ -78,7 +78,7 @@ def test_complete_bpmn_with_no_end_event():
 
     bpmn = tostring(root, encoding="unicode")
     parsed_root = ElementTree.fromstring(bpmn)
-    result = from_xml(parsed_root, symbol_table)
+    result = from_xml(parsed_root, state)
 
     assert isinstance(result, Failure)
     exception = result.failure()
@@ -86,7 +86,7 @@ def test_complete_bpmn_with_no_end_event():
 
 
 def test_complete_bpmn_with_good_process():
-    symbol_table = StateBuilder().build()
+    state = StateBuilder().build()
     root = create_bpmn_definition()
     add_process(root)
 
@@ -103,6 +103,25 @@ def test_complete_bpmn_with_good_process():
 
     bpmn = tostring(root, encoding="unicode")
     parsed_root = ElementTree.fromstring(bpmn)
-    result = from_xml(parsed_root, symbol_table)
+    result = from_xml(parsed_root, state)
 
     assert isinstance(result, Success)
+
+
+def test_from_xml(mocker):
+    mock_start_event_element = mocker.Mock()
+    mock_start_event_element.attrib.get.return_value = "TestId"
+    mock_msg_event_def = mocker.Mock()
+    mock_msg_event_def.attrib.get.return_value = "test mock msg event def"
+    mock_timer_event_def = mocker.Mock()
+    mock_timer_event_def.attrib.get.return_value = None
+    mock_start_event_element.find.side_effect = lambda x, _: {
+        "bpmn:messageEventDefinition": mock_msg_event_def,
+        "bpmn:timerEventDefinition": mock_timer_event_def,
+    }.get(x)
+
+    start_event = StartEvent.from_xml(mock_start_event_element)
+
+    assert isinstance(start_event, StartEvent)
+    assert start_event.message_event_definition == "test mock msg event def"
+    assert start_event.message_timer_definition is None

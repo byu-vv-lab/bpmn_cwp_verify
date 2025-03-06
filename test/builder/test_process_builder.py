@@ -9,7 +9,7 @@ def test_add_element(mocker):
     mock_element = mocker.MagicMock()
     mock_element.id = "1"
 
-    builder = ProcessBuilder(mocker.MagicMock(), mocker.MagicMock())
+    builder = ProcessBuilder(mocker.MagicMock(), mocker.MagicMock(), mocker.MagicMock())
 
     mock_process = mocker.MagicMock()
     builder._process = mock_process
@@ -56,7 +56,7 @@ def test_build_graph(mocker):
 
     mock_process.element.findall.return_value = [element_1, element_2]
 
-    builder = ProcessBuilder(mocker.Mock(), mocker.Mock())
+    builder = ProcessBuilder(mocker.Mock(), mocker.Mock(), mocker.Mock())
     builder._process = mock_process
 
     builder.with_process_flow("flow_1", "node_1", "node_2", None)
@@ -88,16 +88,16 @@ def test_build_graph_with_expression_checker(mocker):
         "node_2": node_2,
     }[key]
 
-    mock_symbol_table = mocker.MagicMock(spec=State)
+    mock_state = mocker.MagicMock(spec=State)
     mock_type_check = mocker.patch(
         "bpmncwpverify.core.expr.ExpressionListener.type_check",
         return_value=Success("bool"),
     )
 
-    builder = ProcessBuilder(mocker.Mock(), mock_symbol_table)
+    builder = ProcessBuilder(mocker.Mock(), mocker.Mock, mock_state)
     builder._process = mock_process
 
     builder.with_process_flow("flow_1", "node_1", "node_2", "clean_expression")
 
-    mock_type_check.assert_called_once_with("clean_expression", mock_symbol_table)
+    mock_type_check.assert_called_once_with("clean_expression", mock_state)
     assert flow_1.expression == "clean_expression"

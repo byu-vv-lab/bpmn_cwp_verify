@@ -1,21 +1,21 @@
-from typing import cast
-from xml.etree.ElementTree import Element
-from bpmncwpverify.core.state import State
-from returns.result import Result
-from returns.pipeline import is_successful
-from returns.functions import not_
-from bpmncwpverify.core.error import (
-    Error,
-)
+from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
+from bpmncwpverify.core.accessmethods.processmethods import from_xml as process_from_xml
 from bpmncwpverify.core.bpmn import (
     Bpmn,
     BPMN_XML_NAMESPACE,
     MessageFlow,
 )
-from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
-from bpmncwpverify.core.accessmethods.processmethods import from_xml as process_from_xml
+from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmn_promela_visitor import PromelaGenVisitor
 from bpmncwpverify.visitors.bpmn_graph_visitor import GraphVizVisitor
+
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Result
+
+from typing import cast
+from xml.etree.ElementTree import Element
 
 
 def generate_promela(bpmn: Bpmn) -> str:
@@ -26,14 +26,14 @@ def generate_promela(bpmn: Bpmn) -> str:
     return str(promela_visitor)
 
 
-def from_xml(root: Element, symbol_table: State) -> Result["Bpmn", Error]:
+def from_xml(root: Element, state: State) -> Result["Bpmn", Error]:
     ##############
     # Build and add processes
     ##############
     processes = root.findall("bpmn:process", BPMN_XML_NAMESPACE)
     bpmn_builder = BpmnBuilder()
     for process_element in processes:
-        process = process_from_xml(process_element, symbol_table)
+        process = process_from_xml(process_element, state)
         if not_(is_successful)(process):
             return cast(Result[Bpmn, Error], process)
         bpmn_builder = bpmn_builder.with_process(process.unwrap())

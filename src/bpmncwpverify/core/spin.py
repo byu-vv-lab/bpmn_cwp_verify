@@ -5,10 +5,14 @@ from bpmncwpverify.core.error import (
     SpinSyntaxError,
     SpinInvalidEndStateError,
     SpinAssertionError,
+
     SpinCoverageError,
 )
 import subprocess
 import re
+from returns.pipeline import flow, is_successful
+from returns.pointfree import bind_result
+
 
 
 class Coverage:
@@ -24,6 +28,14 @@ class SpinOutput:
             for t in r.finditer(spin_msg)
         ]
 
+
+    def _check_invalid_end_state(self, spin_msg: str) -> Result[str, Error]:
+        errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
+
+        return (
+            Failure(SpinInvalidEndStateError(errors)) if errors else Success(spin_msg)
+        )
+
     def _check_assertion_violation(self, spin_msg: str) -> Result[Coverage, Error]:
         errors = self._get_re_matches(
             r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)", spin_msg
@@ -31,21 +43,14 @@ class SpinOutput:
 
         return Failure(SpinAssertionError(errors)) if errors else Success(Coverage())
 
-    def _check_invalid_end_state(self, spin_msg: str) -> Result[Coverage, Error]:
-        errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
-
-        return (
-            Failure(SpinInvalidEndStateError(errors)) if errors else Success(Coverage())
-        )
-
-    def _check_syntax_errors(self, spin_msg: str) -> Result[Coverage, Error]:
+    def _check_syntax_errors(self, spin_msg: str) -> Result[str, Error]:
         errors = self._get_re_matches(
             r"spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)",
             spin_msg,
         )
 
-        return Failure(SpinSyntaxError(errors)) if errors else Success(Coverage())
-
+        return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
+      
     def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
         errors = self._get_re_matches(
             r"unreached in (proctype|init) (?P<proctype>\w+)?\n((?:\s+[^\n]+\n)+)",
@@ -77,11 +82,21 @@ class SpinOutput:
             if detailed_errors
             else Success(Coverage())
         )
-
+      
     @staticmethod
-    def get_spin_output(file_path: str) -> Result["SpinOutput", Error]:
-        subprocess.run(
+    def get_spin_output(file_path: str) -> Result[Coverage, Error]:
+        spin_run_string = subprocess.run(
             ["spin", "-run", "-noclaim", file_path], capture_output=True, text=True
         ).stdout
 
-        return Success(SpinOutput())
+        spin_output = SpinOutput()
+
+        result: Result[str, Error] = flow(
+            spin_run_string,
+            spin_output._check_syntax_errors,
+            bind_result(spin_output._check_invalid_end_state),
+        )
+        if is_successful(result):
+            return Success(Coverage())
+        return Failure(result.failure())
+

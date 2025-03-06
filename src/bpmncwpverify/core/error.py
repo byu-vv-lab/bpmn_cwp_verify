@@ -329,6 +329,7 @@ class MessageError(Error):
         self.error_msg = error_msg
 
 
+
 class SpinCoverageError(Error):
     __slots__ = ""
 
@@ -336,12 +337,6 @@ class SpinCoverageError(Error):
         super().__init__()
         self.coverage_errors = coverage_errors
 
-
-class SpinParseError(Error):
-    __slots__ = ["line_number", "error_msg"]
-
-    def __init__(self, line_number: str, error_msg: str):
-        super().__init__()
 
 
 class SpinSyntaxError(Error):
@@ -567,6 +562,7 @@ def _get_error_message(error: Error) -> str:
                     for error in coverage_errors
                 ]
             )
+
         case SpinAssertionError(list_of_error_maps=list_of_error_maps):
             errors = []
             errors.append("Assertion Error:")

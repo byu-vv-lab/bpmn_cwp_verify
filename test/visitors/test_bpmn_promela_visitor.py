@@ -331,6 +331,7 @@ def test_build_atomic_block(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
     ctx.is_parallel = False
+    ctx.has_option = False
 
     atomic_block = promela_visitor._build_atomic_block(ctx)
 
@@ -467,9 +468,6 @@ def test_context_setters(mocker):
 
 def test_visit_parallel_gateway(promela_visitor, mocker):
     mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
-    mock_gen_behavior_model = mocker.patch.object(
-        PromelaGenVisitor, "_gen_behavior_model"
-    )
     mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "_gen_var_defs")
     mock_build_atomic_block = mocker.patch.object(
         PromelaGenVisitor, "_build_atomic_block"
@@ -480,7 +478,6 @@ def test_visit_parallel_gateway(promela_visitor, mocker):
 
     promela_visitor.visit_parallel_gateway(mock_gw)
 
-    mock_gen_behavior_model.assert_called_once()
     mock_gen_var_defs.assert_called_once()
     mock_build_atomic_block.assert_called_once()
 

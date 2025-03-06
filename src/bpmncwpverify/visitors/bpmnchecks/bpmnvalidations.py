@@ -9,6 +9,7 @@ from bpmncwpverify.core.bpmn import (
     SequenceFlow,
     StartEvent,
     EndEvent,
+    Event,
     IntermediateEvent,
     Task,
     ExclusiveGatewayNode,
@@ -93,12 +94,12 @@ class ValidateSeqFlowVisitor(BpmnVisitor):  # type: ignore
 
 
 class ValidateMsgsVisitor(BpmnVisitor):  # type: ignore
-    def _ensure_in_messages(self, node: Node, obj_type: str) -> None:
+    def _ensure_in_messages(self, node: Event, obj_type: str) -> None:
         if node.in_msgs:
             if not node.message_event_definition:
                 raise Exception(BpmnMsgTargetError(obj_type, node.id))
 
-    def _ensure_out_messages(self, node: Node, obj_type: str) -> None:
+    def _ensure_out_messages(self, node: Event, obj_type: str) -> None:
         if node.out_msgs:
             if not node.message_event_definition:
                 raise Exception(BpmnMsgSrcError(obj_type, node.id))

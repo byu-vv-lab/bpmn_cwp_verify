@@ -15,6 +15,14 @@ jobs:
         python-version: ["3.12"]
 
     steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+    - name: Install Pyright
+      run: npm install -g pyright
+    - name: Check Pyright version
+      run: pyright --version
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3

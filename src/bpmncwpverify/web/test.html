@@ -75,8 +75,22 @@
         }
 
         const result = await response.json();
+        const result_stringify = JSON.stringify(result);
+        const message = JSON.parse(result_stringify);
 
-        responseContainer.textContent = `Lambda Response: ${JSON.stringify(result)}`;
+        message.message = message.message.replace(/[&<>"'\n\t]/g,function(match) {
+          return {
+              '&': "&amp;",
+              '<': "&lt;",
+              '>': "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+              "\n": "<br>",
+              "\t": "&nbsp;&nbsp;&nbsp;&nbsp;"
+          }[match];
+        });
+
+        responseContainer.innerHTML = `Lambda Response: ${message.message}`;
       }
       catch (error) {
         console.error('Error calling Lambda:', error);

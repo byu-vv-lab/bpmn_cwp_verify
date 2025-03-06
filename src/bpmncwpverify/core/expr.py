@@ -50,7 +50,7 @@ class ThrowingErrorListener(ErrorListener):  # type: ignore[misc]
         line: int,
         column: int,
         msg: str,
-        excpt: Exception,
+        e: Exception,
     ) -> None:
         """
         Raises ParseCancellationException when a syntax error is encountered
@@ -111,17 +111,17 @@ class ExpressionListener(ExprListener):  # type: ignore[misc]
     Contains interface used to interact with other classes outside of expression checking functionality
     """
 
-    __slots__ = ["symbol_table", "type_stack", "final_type"]
+    __slots__ = ["state", "type_stack", "final_type"]
 
-    def __init__(self, symbol_table: State) -> None:
+    def __init__(self, state: State) -> None:
         """
         Initialize ExpressionListener object
 
         Args:
-            symbol_table (State): State object that identifies variable typing
+            state (State): State object that identifies variable typing
         """
         self.final_type: str
-        self.symbol_table = symbol_table
+        self.state = state
         self.type_stack: List[str] = []
 
     def check_arithmetic_types(self, left_type: str, right_type: str) -> None:
@@ -262,23 +262,21 @@ class ExpressionListener(ExprListener):  # type: ignore[misc]
         """
         node = antlr_get_terminal_node_impl(ctx.ID())
         identifier = antlr_get_text(node)
-        type = self.symbol_table.get_type(identifier)  # Variable type retrieval method
+        type = self.state.get_type(identifier)  # Variable type retrieval method
         if not_(is_successful)(type):
             raise Exception(ExpressionUnrecognizedID(identifier))
         self.type_stack.append(type.unwrap())
 
     @staticmethod
-    def _build(
-        symbol_table: State, context: ExprParser.ExprContext
-    ) -> Result[str, Error]:
+    def _build(state: State, context: ExprParser.ExprContext) -> Result[str, Error]:
         """
         Static method used to build the tree walker and return the final type of the given expression, error otherwise
 
         Args:
-            symbol_table (State): State object that holds variable typing
+            state (State): State object that holds variable typing
             context (ExprParser.ExprContext): Provides the grammar context to be used for the tree walker
         """
-        listener = ExpressionListener(symbol_table)
+        listener = ExpressionListener(state)
         try:
             walker: ParseTreeWalker = cast(ParseTreeWalker, ParseTreeWalker.DEFAULT)
             walker.walk(listener, context)
@@ -290,16 +288,16 @@ class ExpressionListener(ExprListener):  # type: ignore[misc]
             return Failure(error)
 
     @staticmethod
-    def type_check(expression: str, symbol_table: State) -> Result[str, Error]:
+    def type_check(expression: str, state: State) -> Result[str, Error]:
         """
         Interface used to interact with code outside of expression type checking functionality
         Returns final type of expression, error otherwise
 
         Args:
             expression (str): Expression to be evaluated
-            symbol_table (State): State object that holds variable typing
+            state (State): State object that holds variable typing
         """
-        build_with_params = partial(ExpressionListener._build, symbol_table)
+        build_with_params = partial(ExpressionListener._build, state)
         # flow will allow result of previous code in previous line to pipeline into next function/line of code
         result: Result[str, Error] = flow(
             expression,
