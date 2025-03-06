@@ -329,14 +329,12 @@ class MessageError(Error):
         self.error_msg = error_msg
 
 
-
 class SpinCoverageError(Error):
-    __slots__ = ""
+    __slots__ = ["coverage_errors"]
 
-    def __init__(self, coverage_errors: typing.Dict) -> None:
+    def __init__(self, coverage_errors: typing.List[typing.Dict[str, str]]) -> None:
         super().__init__()
         self.coverage_errors = coverage_errors
-
 
 
 class SpinSyntaxError(Error):

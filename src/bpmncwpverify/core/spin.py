@@ -5,14 +5,12 @@ from bpmncwpverify.core.error import (
     SpinSyntaxError,
     SpinInvalidEndStateError,
     SpinAssertionError,
-
     SpinCoverageError,
 )
 import subprocess
 import re
 from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
-
 
 
 class Coverage:
@@ -27,7 +25,6 @@ class SpinOutput:
             {k: re.sub(r"\s+", " ", v).strip() for k, v in t.groupdict().items()}
             for t in r.finditer(spin_msg)
         ]
-
 
     def _check_invalid_end_state(self, spin_msg: str) -> Result[str, Error]:
         errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
@@ -50,14 +47,14 @@ class SpinOutput:
         )
 
         return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
-      
+
     def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
         errors = self._get_re_matches(
             r"unreached in (proctype|init) (?P<proctype>\w+)?\n((?:\s+[^\n]+\n)+)",
             spin_msg,
         )
 
-        detailed_errors = []
+        detailed_errors: List[Dict[str, str]] = []
         for error in errors:
             proctype_name = error.get("proctype", "init")
             lines_block = error.get("content", "")
@@ -82,7 +79,7 @@ class SpinOutput:
             if detailed_errors
             else Success(Coverage())
         )
-      
+
     @staticmethod
     def get_spin_output(file_path: str) -> Result[Coverage, Error]:
         spin_run_string = subprocess.run(
@@ -99,4 +96,3 @@ class SpinOutput:
         if is_successful(result):
             return Success(Coverage())
         return Failure(result.failure())
-
