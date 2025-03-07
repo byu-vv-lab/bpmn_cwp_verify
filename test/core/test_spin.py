@@ -2,6 +2,9 @@
 from bpmncwpverify.core.spin import SpinOutput
 from returns.result import Failure, Success
 
+from returns.pipeline import is_successful
+from returns.functions import not_
+
 
 def test_check_syntax_errors(mocker):
     spin_output = SpinOutput()
@@ -136,3 +139,53 @@ def test_check_assertion_violation_none(mocker):
     result = spin_output._check_assertion_violation(s)
 
     assert isinstance(result, Success)
+
+
+def test_get_spin_output_no_errors(mocker):
+    test_spin_output = "test spin output"
+    mock_run = mocker.Mock()
+    mock_run.stdout = test_spin_output
+    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_run)
+    mock_stx_error = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
+        return_value=Success(test_spin_output),
+    )
+    mock_invalid_end_state_error = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_invalid_end_state",
+        return_value=Success(test_spin_output),
+    )
+    mock_assertion_error = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_assertion_violation",
+        return_value=Success(test_spin_output),
+    )
+
+    result = SpinOutput.get_spin_output(test_spin_output)
+    assert is_successful(result)
+    mock_stx_error.assert_called_once_with(test_spin_output)
+    mock_invalid_end_state_error.assert_called_once_with(test_spin_output)
+    mock_assertion_error.assert_called_once_with(test_spin_output)
+
+
+def test_get_spin_output_with_errors(mocker):
+    test_spin_output = "test spin output"
+    mock_run = mocker.Mock()
+    mock_run.stdout = test_spin_output
+    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_run)
+    mock_stx_error = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
+        return_value=Failure("Error"),
+    )
+    mock_invalid_end_state_error = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_invalid_end_state",
+        return_value=Success(test_spin_output),
+    )
+    mock_assertion_error = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_assertion_violation",
+        return_value=Success(test_spin_output),
+    )
+
+    result = SpinOutput.get_spin_output(test_spin_output)
+    assert not_(is_successful)(result)
+    mock_stx_error.assert_called_once_with(test_spin_output)
+    mock_invalid_end_state_error.assert_not_called()
+    mock_assertion_error.assert_not_called()

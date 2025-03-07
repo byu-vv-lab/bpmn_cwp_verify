@@ -32,12 +32,12 @@ class SpinOutput:
             Failure(SpinInvalidEndStateError(errors)) if errors else Success(spin_msg)
         )
 
-    def _check_assertion_violation(self, spin_msg: str) -> Result[Coverage, Error]:
+    def _check_assertion_violation(self, spin_msg: str) -> Result[str, Error]:
         errors = self._get_re_matches(
             r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)", spin_msg
         )
 
-        return Failure(SpinAssertionError(errors)) if errors else Success(Coverage())
+        return Failure(SpinAssertionError(errors)) if errors else Success(spin_msg)
 
     def _check_syntax_errors(self, spin_msg: str) -> Result[str, Error]:
         errors = self._get_re_matches(
@@ -59,6 +59,7 @@ class SpinOutput:
             spin_run_string,
             spin_output._check_syntax_errors,
             bind_result(spin_output._check_invalid_end_state),
+            bind_result(spin_output._check_assertion_violation),
         )
         if is_successful(result):
             return Success(Coverage())
