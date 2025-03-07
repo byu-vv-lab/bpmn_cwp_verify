@@ -87,8 +87,8 @@ def test_has_uncovered_states(mocker):
                 test.pml:28, state 7, "-end-"
                 (1 of 7 states)
     """
-
-    result = spin_output._check_coverage_errors(spin_output)
+    spin_obj = SpinOutput()
+    result = spin_obj._check_coverage_errors(spin_output)
     assert isinstance(result, Failure)
 
 

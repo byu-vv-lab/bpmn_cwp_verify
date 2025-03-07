@@ -49,28 +49,38 @@ class SpinOutput:
         return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
 
     def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
-        errors = self._get_re_matches(
-            r"unreached in (proctype|init) (?P<proctype>\w+)?\n((?:\s+[^\n]+\n)+)",
-            spin_msg,
+        # Regular expression to match proctype and init blocks, excluding never claims
+        block_pattern = re.compile(
+            r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n((?:\s+[^\n]+\n)+)"
         )
 
+        # Regular expression to match line information
+        line_pattern = re.compile(
+            r"(?P<file>[\w\.]+):(?P<line>\d+), state \d+, (?P<message>\".*?\")"
+        )
+
+        # Find all relevant blocks (excluding never claims)
+        matches = block_pattern.finditer(spin_msg)
+
         detailed_errors: List[Dict[str, str]] = []
-        for error in errors:
-            proctype_name = error.get("proctype", "init")
-            lines_block = error.get("content", "")
 
-            line_matches = self._get_re_matches(
-                r"(?P<file>[\w\.]+):(?P<line>\d+), state \d+, (?P<message>\".*?\")",
-                lines_block,
+        for match in matches:
+            proctype_name = (
+                match.group("proctype") if match.group("proctype") else "init"
             )
+            lines_block = match.group(3)  # Extract only the lines within the block
 
-            for line in line_matches:
+            for line_match in line_pattern.finditer(lines_block):
+                file_name = line_match.group("file")
+                line_number = line_match.group("line")
+                message = line_match.group("message")
+
                 detailed_errors.append(
                     {
                         "proctype": proctype_name,
-                        "file": line["file"],
-                        "line": line["line"],
-                        "message": line["message"],
+                        "file": file_name,
+                        "line": line_number,
+                        "message": message,
                     }
                 )
 
