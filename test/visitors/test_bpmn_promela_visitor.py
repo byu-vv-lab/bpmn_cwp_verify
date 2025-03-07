@@ -345,6 +345,7 @@ def test_gen_behavior_model(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.behavior = ""
 
     promela_visitor._gen_behavior_model(ctx)
     assert (
@@ -499,3 +500,24 @@ def test_visit_intermediate_event(promela_visitor, mocker):
     mock_gen_behavior_model.assert_called_once()
     mock_gen_var_defs.assert_called_once()
     mock_build_atomic_block.assert_called_once()
+
+
+def test_visit_task_with_behavior(promela_visitor, mocker):
+    mock_gen_method = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._gen_behavior_model"
+    )
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._gen_var_defs"
+    )
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._build_atomic_block"
+    )
+    mock_context_class = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.Context"
+    )
+
+    mock_context_object = mocker.Mock()
+    mock_context_class.return_value = mock_context_object
+
+    promela_visitor.visit_task(mocker.Mock())
+    mock_gen_method.assert_called_once_with(mock_context_object)
