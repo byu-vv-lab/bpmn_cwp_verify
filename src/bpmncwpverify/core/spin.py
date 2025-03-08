@@ -51,7 +51,7 @@ class SpinOutput:
     def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
         # Regular expression to match proctype and init blocks, excluding never claims
         block_pattern = re.compile(
-            r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+\n)+)"
+            r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+(?!\s+unreached))+)"
         )
 
         # Regular expression to match line information
@@ -68,6 +68,7 @@ class SpinOutput:
             proctype_name = (
                 match.group("proctype") if match.group("proctype") else "init"
             )
+
             lines_block = match.group("body")  # Extract only the lines within the block
 
             for line_match in line_pattern.finditer(lines_block):

@@ -95,30 +95,36 @@ def test_has_uncovered_states(mocker):
 def test_has_no_uncovered_states(mocker):
     spin_output = """
 
-        Full statespace search for:
-                never claim             - (none specified)
-                assertion violations    +
-                cycle checks            - (disabled by -DSAFETY)
-                invalid end states      +
+Full statespace search for:
+        never claim             - (none specified)
+        assertion violations    +
+        cycle checks            - (disabled by -DSAFETY)
+        invalid end states      +
 
-        State-vector 20 byte, depth reached 6, errors: 0
-                7 states, stored
-                0 states, matched
-                7 transitions (= stored+matched)
-                0 atomic steps
-        hash conflicts:         0 (resolved)
+State-vector 20 byte, depth reached 6, errors: 0
+        7 states, stored
+        0 states, matched
+        7 transitions (= stored+matched)
+        0 atomic steps
+hash conflicts:         0 (resolved)
 
-        Stats on memory usage (in Megabytes):
-            0.000       equivalent memory usage for states (stored*(State-vector + overhead))
-            0.292       actual memory usage for states
-        128.000       memory used for hash table (-w24)
-            0.534       memory used for DFS stack (-m10000)
-        128.730       total actual memory usage
+Stats on memory usage (in Megabytes):
+    0.000       equivalent memory usage for states (stored*(State-vector + overhead))
+    0.292       actual memory usage for states
+128.000       memory used for hash table (-w24)
+    0.534       memory used for DFS stack (-m10000)
+128.730       total actual memory usage
 
-        unreached in proctype test
-                (0 of 7 states)
-        unreached in init
-                (0 of 3 states)
+unreached in proctype test
+        (0 of 7 states)
+unreached in init
+        (0 of 3 states)
+unreached in claim never_0
+        test.pml:20, state 7, "-end-"
+        (1 of 7 states)
+unreached in claim never_1
+        test.pml:28, state 7, "-end-"
+        (1 of 7 states)
     """
 
     spin_obj = SpinOutput()
