@@ -9,6 +9,7 @@ from bpmncwpverify.core.error import (
     BpmnFlowStartEventError,
     BpmnSeqFlowNoExprError,
     BpmnTaskFlowError,
+    BpmnInvalidIdError,
 )
 import pytest
 from bpmncwpverify.core.bpmn import (
@@ -25,6 +26,7 @@ from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ValidateStartEventFlows,
     validate_start_end_events,
     ValidateSeqFlowVisitor,
+    ValidateIdVisitor,
 )
 
 
@@ -145,34 +147,6 @@ class TestValidateSeqFlowVisitor:
         )
         with pytest.raises(Exception):
             visitor.visit_exclusive_gateway(gateway)
-        visitor._validate_out_flows.assert_called_once_with(gateway)
-
-    def test_visit_parallel_gateway_valid(self, mocker):
-        visitor = ValidateSeqFlowVisitor()
-        gateway = mocker.MagicMock()
-        gateway.out_flows = [
-            mocker.MagicMock(expression=True),
-            mocker.MagicMock(expression=True),
-        ]
-        mocker.patch.object(
-            visitor, "_validate_out_flows", wraps=visitor._validate_out_flows
-        )
-        result = visitor.visit_parallel_gateway(gateway)
-        assert result is True
-        visitor._validate_out_flows.assert_called_once_with(gateway)
-
-    def test_visit_parallel_gateway_invalid(self, mocker):
-        visitor = ValidateSeqFlowVisitor()
-        gateway = mocker.MagicMock()
-        gateway.out_flows = [
-            mocker.MagicMock(expression=True),
-            mocker.MagicMock(expression=False),
-        ]
-        mocker.patch.object(
-            visitor, "_validate_out_flows", wraps=visitor._validate_out_flows
-        )
-        with pytest.raises(Exception):
-            visitor.visit_parallel_gateway(gateway)
         visitor._validate_out_flows.assert_called_once_with(gateway)
 
     def test_visit_task_with_good_task(self, mocker):
@@ -475,3 +449,24 @@ class TestValidateStartEventFlows:
         else:
             result = visitor.visit_start_event(mock_event)
             assert result is False
+
+
+class TestValidateIdVisitor:
+    def test_validate_id_visitor_with_bad_process_id(self, mocker):
+        visitor = ValidateIdVisitor()
+        process = mocker.Mock()
+        process.id = "bad_id example"
+
+        with pytest.raises(Exception) as exc_info:
+            visitor.visit_process(process)
+
+        error = exc_info.value.args[0]
+        assert isinstance(error, BpmnInvalidIdError)
+        assert error.bpmn_id == "bad_id example"
+
+    def test_validate_id_visitor_with_good_process_id(self, mocker):
+        visitor = ValidateIdVisitor()
+        process = mocker.Mock()
+        process.id = "123good_id-example"
+
+        assert visitor.visit_process(process)

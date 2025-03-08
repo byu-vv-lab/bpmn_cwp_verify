@@ -740,16 +740,18 @@ class State:
             str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
         for enum_decl in state._enums:
             str_builder.append(
-                f"mtype = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
+                f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
             )
         for var_decl in state._vars:
-            if var_decl.type_ == typechecking.ENUM:
-                str_builder.append(f"mtype {var_decl.id} = {var_decl.init.value}")
+            if var_decl.type_ in {enum.id for enum in state._enums}:
+                str_builder.append(
+                    f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                )
             else:
                 str_builder.append(
                     f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
                 )
-        return Success("\n".join(str_builder))
+        return Success("\n".join(str_builder) + "\n\n")
 
     def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result["State", Error]:
         """

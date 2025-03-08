@@ -140,11 +140,11 @@ def test_promela_gen_visitor_initial_state(promela_visitor):
 
 def test_generate_location_label(promela_visitor, mocker):
     element = mocker.Mock(spec=Task)
-    element.name = "TEST"
+    element.id = "TEST"
     ctx = mocker.Mock(spec=Context)
     ctx.element = element
     flow_or_message = mocker.Mock()
-    flow_or_message.source_node.name = "SRC"
+    flow_or_message.source_node.id = "SRC"
 
     ret_val = promela_visitor._generate_location_label(ctx, flow_or_message)
 
@@ -156,7 +156,7 @@ def test_generate_location_label(promela_visitor, mocker):
     assert ret_val == "TEST_END"
 
     element_no_spec = mocker.Mock()
-    element_no_spec.name = "TEST"
+    element_no_spec.id = "TEST"
     ctx.element = element_no_spec
     ctx.task_end = False
 
@@ -169,13 +169,13 @@ def test_get_consume_locations(promela_visitor, mocker):
     node1 = mocker.Mock()
     node1.in_flows = []
     node1.in_msgs = []
-    node1.name = "NODE1"
+    node1.id = "NODE1"
 
     node2 = mocker.Mock()
-    node2.name = "NODE2"
+    node2.id = "NODE2"
 
     node3 = mocker.Mock()
-    node3.name = "NODE3"
+    node3.id = "NODE3"
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
@@ -203,13 +203,13 @@ def test_get_put_locations(promela_visitor, mocker):
     node1 = mocker.Mock()
     node1.out_flows = []
     node1.out_msgs = []
-    node1.name = "NODE1"
+    node1.id = "NODE1"
 
     node2 = mocker.Mock()
-    node2.name = "NODE2"
+    node2.id = "NODE2"
 
     node3 = mocker.Mock()
-    node3.name = "NODE3"
+    node3.id = "NODE3"
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
@@ -236,13 +236,13 @@ def test_get_put_locations(promela_visitor, mocker):
 
 def test_build_guard(promela_visitor, mocker):
     node1 = mocker.Mock()
-    node1.name = "NODE1"
+    node1.id = "NODE1"
 
     node2 = mocker.Mock()
-    node2.name = "NODE2"
+    node2.id = "NODE2"
 
     node3 = mocker.Mock()
-    node3.name = "NODE3"
+    node3.id = "NODE3"
 
     flow1 = mocker.Mock()
     flow1.source_node = node2
@@ -267,13 +267,13 @@ def test_build_guard(promela_visitor, mocker):
 
 def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     node1 = mocker.Mock()
-    node1.name = "NODE1"
+    node1.id = "NODE1"
 
     node2 = mocker.Mock()
-    node2.name = "NODE2"
+    node2.id = "NODE2"
 
     node3 = mocker.Mock()
-    node3.name = "NODE3"
+    node3.id = "NODE3"
 
     flow1 = mocker.Mock()
     flow1.source_node = node2
@@ -298,16 +298,16 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
 
 def test_build_atomic_block(promela_visitor, mocker):
     node1 = mocker.Mock()
-    node1.name = "NODE1"
+    node1.id = "NODE1"
 
     node2 = mocker.Mock()
-    node2.name = "NODE2"
+    node2.id = "NODE2"
 
     node3 = mocker.Mock()
-    node3.name = "NODE3"
+    node3.id = "NODE3"
 
     node4 = mocker.Mock()
-    node4.name = "NODE4"
+    node4.id = "NODE4"
 
     flow1 = mocker.Mock()
     flow1.source_node = node2
@@ -329,6 +329,7 @@ def test_build_atomic_block(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
+    ctx.end_event = False
     ctx.task_end = False
     ctx.is_parallel = False
     ctx.has_option = False
@@ -341,7 +342,7 @@ def test_build_atomic_block(promela_visitor, mocker):
 
 def test_gen_behavior_model(promela_visitor, mocker):
     node1 = mocker.Mock()
-    node1.name = "TEST"
+    node1.id = "TEST"
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
@@ -360,7 +361,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
         promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
     )
     node1 = mocker.Mock()
-    node1.name = "TEST"
+    node1.id = "TEST"
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
@@ -384,9 +385,9 @@ def test_build_expr_conditional(promela_visitor, mocker):
     )
 
     node1, node2, node3 = mocker.Mock(), mocker.Mock(), mocker.Mock()
-    node1.name = "TEST1"
-    node2.name = "TEST2"
-    node3.name = "TEST3"
+    node1.id = "TEST1"
+    node2.id = "TEST2"
+    node3.id = "TEST3"
 
     flow1, flow2 = mocker.Mock(), mocker.Mock()
     flow1.source_node = node1
