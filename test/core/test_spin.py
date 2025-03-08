@@ -107,6 +107,25 @@ def test_has_uncovered_states(mocker):
     assert errors[1]["proctype"] == "testproc"
     assert errors[1]["file"] == "test.pml"
     assert errors[1]["line"] == "7"
+    assert errors[2]["proctype"] == "otherproc"
+    assert errors[2]["file"] == "whatever.pml"
+    assert errors[2]["line"] == "100098"
+    assert errors[2]["message"] == '"TEST1"'
+
+    assert errors[3]["proctype"] == "otherproc"
+    assert errors[3]["file"] == "whatever.pml"
+    assert errors[3]["line"] == "908"
+    assert errors[3]["message"] == '"TEST2"'
+
+    assert errors[4]["proctype"] == "init"
+    assert errors[4]["file"] == "init.pml"
+    assert errors[4]["line"] == "100098"
+    assert errors[4]["message"] == '"INIT_TEST1"'
+
+    assert errors[5]["proctype"] == "init"
+    assert errors[5]["file"] == "init.pml"
+    assert errors[5]["line"] == "908"
+    assert errors[5]["message"] == '"INIT_TEST2"'
 
 
 def test_has_no_uncovered_states(mocker):
