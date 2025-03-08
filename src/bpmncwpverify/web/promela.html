@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lambda Response</title>
+</head>
+<body>
+  <h1>Lambda Response</h1>
+  <div id="responseContainer" style="white-space: pre-wrap; font-size: 16px; color: blue;"></div>
+  <br>
+  <a href="mainpage.html">Go Back</a>
+
+  <script>
+    // Retrieve and display the stored response
+    const responseContainer = document.getElementById('responseContainer');
+    const responseMessage = localStorage.getItem('lambdaResponse');
+
+    if (responseMessage) {
+      responseContainer.innerHTML = `Lambda Response: ${responseMessage}`;
+    } else {
+      responseContainer.textContent = "No response found.";
+    }
+  </script>
+</body>
+</html>
