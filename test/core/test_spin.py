@@ -78,6 +78,14 @@ def test_has_uncovered_states(mocker):
                 test.pml:5, state 1, "printf('run')"
                 test.pml:7, state 3, "-end-"
                 (2 of 3 states)
+        unreached in proctype otherproc
+                whatever.pml:100098, state 1, "TEST1"
+                whatever.pml:908, state 3, "TEST2"
+                (2 of 3 states)
+        unreached in init
+                init.pml:100098, state 1, "INIT_TEST1"
+                init.pml:908, state 3, "INIT_TEST2"
+                (2 of 3 states)
         unreached in init
                 (0 of 2 states)
         unreached in claim never_0
@@ -90,6 +98,15 @@ def test_has_uncovered_states(mocker):
     spin_obj = SpinOutput()
     result = spin_obj._check_coverage_errors(spin_output)
     assert isinstance(result, Failure)
+
+    errors = result.failure().coverage_errors
+    assert errors[0]["proctype"] == "testproc"
+    assert errors[0]["file"] == "test.pml"
+    assert errors[0]["line"] == "5"
+    assert errors[0]["message"] == "\"printf('run')\""
+    assert errors[1]["proctype"] == "testproc"
+    assert errors[1]["file"] == "test.pml"
+    assert errors[1]["line"] == "7"
 
 
 def test_has_no_uncovered_states(mocker):
