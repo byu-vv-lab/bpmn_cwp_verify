@@ -5,6 +5,7 @@ from bpmncwpverify.core.error import (
     SpinSyntaxError,
     SpinInvalidEndStateError,
     SpinAssertionError,
+    SpinCoverageError,
 )
 import subprocess
 import re
@@ -46,6 +47,49 @@ class SpinOutput:
         )
 
         return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
+
+    def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
+        # Regular expression to match proctype and init blocks, excluding never claims
+        block_pattern = re.compile(
+            r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+(?!\s+unreached))+)"
+        )
+
+        # Regular expression to match line information
+        line_pattern = re.compile(
+            r"(?P<file>[\w\.]+):(?P<line>\d+), state \d+, (?P<message>\".*?\")"
+        )
+
+        # Find all relevant blocks (excluding never claims)
+        matches = block_pattern.finditer(spin_msg)
+
+        detailed_errors: List[Dict[str, str]] = []
+
+        for match in matches:
+            proctype_name = (
+                match.group("proctype") if match.group("proctype") else "init"
+            )
+
+            lines_block = match.group("body")  # Extract only the lines within the block
+
+            for line_match in line_pattern.finditer(lines_block):
+                file_name = line_match.group("file")
+                line_number = line_match.group("line")
+                message = line_match.group("message")
+
+                detailed_errors.append(
+                    {
+                        "proctype": proctype_name,
+                        "file": file_name,
+                        "line": line_number,
+                        "message": message,
+                    }
+                )
+
+        return (
+            Failure(SpinCoverageError(detailed_errors))
+            if detailed_errors
+            else Success(Coverage())
+        )
 
     @staticmethod
     def get_spin_output(file_path: str) -> Result[Coverage, Error]:
