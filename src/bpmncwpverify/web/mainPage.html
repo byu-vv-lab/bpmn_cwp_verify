@@ -78,19 +78,21 @@
         const result_stringify = JSON.stringify(result);
         const message = JSON.parse(result_stringify);
 
-        message.message = message.message.replace(/[&<>"'\n\t]/g,function(match) {
+        message.message = message.message.replace(/[&<>"'\n\t]/g, function(match) {
           return {
-              '&': "&amp;",
-              '<': "&lt;",
-              '>': "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-              "\n": "<br>",
-              "\t": "&nbsp;&nbsp;&nbsp;&nbsp;"
+            '&': "&amp;",
+            '<': "&lt;",
+            '>': "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+            "\n": "<br>",
+            "\t": "&nbsp;&nbsp;&nbsp;&nbsp;"
           }[match];
         });
 
-        responseContainer.innerHTML = `Lambda Response: ${message.message}`;
+        localStorage.setItem('lambdaResponse', message.message);
+
+        responseContainer.innerHTML = `<a href="promela.html" target="_blank">Promela</a>`;
       }
       catch (error) {
         console.error('Error calling Lambda:', error);
