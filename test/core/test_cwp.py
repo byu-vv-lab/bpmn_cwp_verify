@@ -171,3 +171,13 @@ def test_cwp_state_from_xml_with_no_id(mocker):
         CwpState.from_xml(mock_element)
 
     assert exc_info.value.args[0] == "id not in cwp state"
+
+
+def test_cwp_edge_from_xml_with_no_id(mocker):
+    mock_element = mocker.Mock()
+    mock_element.get.side_effect = lambda x: {"id": None}.get(x)
+
+    with pytest.raises(Exception) as exc_info:
+        CwpEdge.from_xml(mock_element, "test")
+
+    assert exc_info.value.args[0] == "No ID for edge or no targetRef"
