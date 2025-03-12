@@ -70,7 +70,7 @@ class CwpEdge:
 
     @staticmethod
     def cleanup_expression(expression: str) -> str:
-        expression = re.sub(r"&amp;", "&", expression)
+        expression = re.sub(r"&amp;amp;|&amp;", "&", expression)
         expression = re.sub(r"&lt;", "<", expression)
         expression = re.sub(r"&gt;", ">", expression)
 

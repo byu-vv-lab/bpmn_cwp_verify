@@ -11,6 +11,8 @@ from returns.functions import not_
 from bpmncwpverify.core.state import State
 from returns.pipeline import is_successful
 from bpmncwpverify.core.accessmethods.cwpmethods import from_xml
+from bpmncwpverify.core.cwp import CwpEdge
+import pytest
 
 
 def get_root_mx_root():
@@ -131,3 +133,31 @@ def test_invalid_cwp_no_end_state():
         success=False,
         failure_message=CwpNoEndStatesError,
     )
+
+
+@pytest.mark.parametrize(
+    "input, output",
+    [
+        (
+            "&lt;div&gt;paymentOwner == buyerName &amp;amp;&amp;amp;&lt;/div&gt;&lt;div&gt;backpackOwner == sellerName&lt;br&gt;&lt;/div&gt;",
+            "paymentOwner == buyerName && backpackOwner == sellerName",
+        ),
+        (
+            "terms==noRetry || paymentOffered == noRetryPayment",
+            "terms == noRetry || paymentOffered == noRetryPayment",
+        ),
+        (
+            "terms == agreed &amp;amp;&amp;amp;&lt;br&gt;paymentOffered == paymentAmount",
+            "terms == agreed && paymentOffered == paymentAmount",
+        ),
+        (
+            "terms != pending ||&lt;br&gt;paymentOffered != pendingPayment",
+            "terms != pending || paymentOffered != pendingPayment",
+        ),
+        ("x &amp;gt; 5", "x > 5"),
+        ("x &amp;lt;= 5", "x <= 5"),
+    ],
+)
+def test_cleanup_expression_with_good_examples(input, output):
+    actual = CwpEdge.cleanup_expression(input)
+    assert actual == output
