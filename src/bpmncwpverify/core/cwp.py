@@ -47,10 +47,7 @@ class CwpState:
 
 
 class CwpEdge:
-    def __init__(self, edge: Element, name: str) -> None:
-        id = edge.get("id")
-        if id is None:
-            raise Exception("No ID for edge or no targetRef")
+    def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name
         self.expression: str
@@ -88,7 +85,10 @@ class CwpEdge:
 
     @staticmethod
     def from_xml(element: Element, name: str) -> "CwpEdge":
-        return CwpEdge(element, name)
+        id = element.get("id")
+        if id is None:
+            raise Exception("No ID for edge or no targetRef")
+        return CwpEdge(id, name)
 
 
 class CwpVisitor:

@@ -12,7 +12,7 @@ from bpmncwpverify.core.error import (
 from bpmncwpverify.core.cwp import Cwp, CwpState, CwpEdge
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
-from bpmncwpverify.visitors.cwp_ltl_visitor import CwpLtlVisitor
+from bpmncwpverify.visitors.cwpvisitor import CwpLtlVisitor
 
 
 def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
