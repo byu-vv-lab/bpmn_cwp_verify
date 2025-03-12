@@ -11,7 +11,7 @@ from returns.functions import not_
 from bpmncwpverify.core.state import State
 from returns.pipeline import is_successful
 from bpmncwpverify.core.accessmethods.cwpmethods import from_xml
-from bpmncwpverify.core.cwp import CwpEdge
+from bpmncwpverify.core.cwp import CwpEdge, CwpState
 import pytest
 
 
@@ -136,7 +136,7 @@ def test_invalid_cwp_no_end_state():
 
 
 @pytest.mark.parametrize(
-    "input, output",
+    "input, expected",
     [
         (
             "&lt;div&gt;paymentOwner == buyerName &amp;amp;&amp;amp;&lt;/div&gt;&lt;div&gt;backpackOwner == sellerName&lt;br&gt;&lt;/div&gt;",
@@ -158,6 +158,16 @@ def test_invalid_cwp_no_end_state():
         ("x &amp;lt;= 5", "x <= 5"),
     ],
 )
-def test_cleanup_expression_with_good_examples(input, output):
+def test_cleanup_expression_with_good_examples(input, expected):
     actual = CwpEdge.cleanup_expression(input)
-    assert actual == output
+    assert actual == expected
+
+
+def test_cwp_state_from_xml_with_no_id(mocker):
+    mock_element = mocker.Mock()
+    mock_element.get.side_effect = lambda x: {"id": None}.get(x)
+
+    with pytest.raises(Exception) as exc_info:
+        CwpState.from_xml(mock_element)
+
+    assert exc_info.value.args[0] == "id not in cwp state"
