@@ -18,18 +18,11 @@ class Cwp:
 
 
 class CwpState:
-    def __init__(self, state: Element) -> None:
-        id = state.get("id")
-        name = state.get("value")
-        if id is None:
-            raise Exception("id not in cwp state")
-        if name is None:
-            name = id
-        self.name: str
+    def __init__(self, id: str, name: str) -> None:
         self.id = id
+        self.name = name
         self.out_edges: List[CwpEdge] = []
         self.in_edges: List[CwpEdge] = []
-        self.cleanup_name(name)
 
     def accept(self, visitor: "CwpVisitor") -> None:
         result = visitor.visit_state(self)
@@ -38,18 +31,19 @@ class CwpState:
                 edge.accept(visitor)
         visitor.end_visit_state(self)
 
-    def cleanup_name(self, name: str) -> None:
+    @staticmethod
+    def from_xml(element: Element) -> "CwpState":
+        id = element.get("id")
+        name = element.get("value")
+        if id is None:
+            raise Exception("id not in cwp state")
+        if name is None:
+            name = id
         name = re.sub("[?,+=/]", "", name)
         name = re.sub("-", " ", name)
         name = re.sub(r"\s+", "_", name)
-
-        name = re.sub("</?div>", "", name)
-
-        self.name = name.strip()
-
-    @staticmethod
-    def from_xml(element: Element) -> "CwpState":
-        return CwpState(element)
+        name = re.sub("</?div>", "", name).strip()
+        return CwpState(id, name)
 
 
 class CwpEdge:
