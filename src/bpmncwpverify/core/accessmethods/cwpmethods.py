@@ -12,7 +12,7 @@ from bpmncwpverify.core.error import (
 from bpmncwpverify.core.cwp import Cwp, CwpState, CwpEdge
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
-from bpmncwpverify.visitors.cwpvisitor import CwpLtlVisitor
+from bpmncwpverify.visitors.cwppromelavisitor import CwpPromelaVisitor
 
 
 def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
@@ -70,11 +70,9 @@ def generate_graph_viz(cwp: Cwp) -> None:
     graph_viz_visitor.dot.render("graphs/cwp_graph.gv", format="png")  # type: ignore[unused-ignore]
 
 
-def generate_ltl(cwp: Cwp, symbol_table: State) -> str:
-    ltl_visitor = CwpLtlVisitor(symbol_table)
+def generate_cwp_promela(cwp: Cwp, state: State) -> str:
+    ltl_visitor = CwpPromelaVisitor()
 
     cwp.accept(ltl_visitor)
 
-    output_str = ltl_visitor.output_str
-
-    return "".join(output_str)
+    return ""
