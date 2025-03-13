@@ -140,6 +140,14 @@ class BpmnGraphConnError(Error):
         super().__init__()
 
 
+class BpmnInvalidIdError(Error):
+    __slots__ = ["bpmn_id"]
+
+    def __init__(self, bpmn_id: str) -> None:
+        super().__init__()
+        self.bpmn_id = bpmn_id
+
+
 class BpmnMissingEventsError(Error):
     __slots__ = ["start_events", "end_events"]
 
@@ -509,6 +517,8 @@ def _get_error_message(error: Error) -> str:
             return f"Flow error: A start event cannot have an incoming sequence flow and cannot have an outgoing message flow. node: {node_id}"
         case BpmnFlowTypeError(flow_id=flow_id):
             return f"Flow error: Flow '{flow_id}' is not a sequence flow when it should be."
+        case BpmnInvalidIdError(bpmn_id=bpmn_id):
+            return f"Bpmn id error: the bpmn element with id:{bpmn_id} contains an unsupported character (probably white space)."
         case BpmnNodeTypeError(flow_id=flow_id):
             return f"Node type error: Source or target node of flow is not of type node. Flow details: {flow_id}."
         case BpmnMsgFlowSamePoolError(msg_id=msg_id):
