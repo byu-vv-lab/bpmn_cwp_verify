@@ -13,7 +13,7 @@ from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
 
 
-class Coverage:
+class CoverageReport:
     pass
 
 
@@ -48,7 +48,7 @@ class SpinOutput:
 
         return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
 
-    def _check_coverage_errors(self, spin_msg: str) -> Result[Coverage, Error]:
+    def _check_coverage_errors(self, spin_msg: str) -> Result[str, Error]:
         # Regular expression to match proctype and init blocks, excluding never claims
         block_pattern = re.compile(
             r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+(?!\s+unreached))+)"
@@ -88,11 +88,11 @@ class SpinOutput:
         return (
             Failure(SpinCoverageError(detailed_errors))
             if detailed_errors
-            else Success(Coverage())
+            else Success(spin_msg)
         )
 
     @staticmethod
-    def get_spin_output(file_path: str) -> Result[Coverage, Error]:
+    def get_spin_output(file_path: str) -> Result[CoverageReport, Error]:
         spin_run_string = subprocess.run(
             ["spin", "-run", "-noclaim", file_path], capture_output=True, text=True
         ).stdout
@@ -104,7 +104,8 @@ class SpinOutput:
             spin_output._check_syntax_errors,
             bind_result(spin_output._check_invalid_end_state),
             bind_result(spin_output._check_assertion_violation),
+            bind_result(spin_output._check_coverage_errors),
         )
         if is_successful(result):
-            return Success(Coverage())
+            return Success(CoverageReport())
         return Failure(result.failure())
