@@ -277,12 +277,17 @@ def test_get_spin_output_no_errors(mocker):
         "bpmncwpverify.core.spin.SpinOutput._check_assertion_violation",
         return_value=Success(test_spin_output),
     )
+    mock_coverage_errors = mocker.patch(
+        "bpmncwpverify.core.spin.SpinOutput._check_coverage_errors",
+        return_value=Success(test_spin_output),
+    )
 
     result = SpinOutput.get_spin_output(test_spin_output)
     assert is_successful(result)
     mock_stx_error.assert_called_once_with(test_spin_output)
     mock_invalid_end_state_error.assert_called_once_with(test_spin_output)
     mock_assertion_error.assert_called_once_with(test_spin_output)
+    mock_coverage_errors.assert_called_once_with(test_spin_output)
 
 
 def test_get_spin_output_with_errors(mocker):
