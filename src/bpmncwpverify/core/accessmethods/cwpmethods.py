@@ -75,4 +75,4 @@ def generate_cwp_promela(cwp: Cwp, state: State) -> str:
 
     cwp.accept(ltl_visitor)
 
-    return ""
+    return str(ltl_visitor)
