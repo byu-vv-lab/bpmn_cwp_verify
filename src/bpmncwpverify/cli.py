@@ -92,7 +92,7 @@ def _verify() -> Result["Outputs", Error]:
     result: Result["Outputs", Error] = flow(
         Success(builder),
         partial(StateBuilder.with_state_, state_str),
-        # partial(StateBuilder.with_cwp_, cwp_root), TODO: Uncomment once LTL is working
+        partial(StateBuilder.with_cwp_, cwp_root),
         partial(StateBuilder.with_bpmn_, bpmn_root),
         partial(StateBuilder.with_behavior_, behavior_str),
         bind_result(StateBuilder.build_),
