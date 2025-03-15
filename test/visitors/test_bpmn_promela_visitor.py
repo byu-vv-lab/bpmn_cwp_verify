@@ -1,18 +1,18 @@
 from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
 import pytest
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
-    IndentAction,
     PromelaGenVisitor,
     NL_NONE,
     NL_SINGLE,
     Context,
 )
+from bpmncwpverify.util.stringmanager import StringManager, IndentAction
 
 
 @pytest.fixture
 def string_manager_factory():
     def _factory():
-        return PromelaGenVisitor.StringManager()
+        return StringManager()
 
     return _factory
 
@@ -35,8 +35,8 @@ def test_string_manager_write_str(string_manager_factory):
 
 
 def test_string_manager_write_str_no_tab(string_manager_factory):
-    manager1: PromelaGenVisitor.StringManager = string_manager_factory()
-    manager2: PromelaGenVisitor.StringManager = string_manager_factory()
+    manager1: StringManager = string_manager_factory()
+    manager2: StringManager = string_manager_factory()
     manager1.contents = []
 
     manager1.indent = 1
@@ -54,8 +54,8 @@ def test_string_manager_write_str_no_tab(string_manager_factory):
 
 
 def test_string_manager_write_str_with_tab(string_manager_factory):
-    manager1: PromelaGenVisitor.StringManager = string_manager_factory()
-    manager2: PromelaGenVisitor.StringManager = string_manager_factory()
+    manager1: StringManager = string_manager_factory()
+    manager2: StringManager = string_manager_factory()
     manager1.contents = []
     manager1.indent = 1
 
@@ -130,11 +130,9 @@ def test_string_manager_assertion_error_on_negative_indent(string_manager_factor
 
 
 def test_promela_gen_visitor_initial_state(promela_visitor):
-    assert isinstance(promela_visitor.defs, PromelaGenVisitor.StringManager)
-    assert isinstance(
-        promela_visitor.init_proc_contents, PromelaGenVisitor.StringManager
-    )
-    assert isinstance(promela_visitor.promela, PromelaGenVisitor.StringManager)
+    assert isinstance(promela_visitor.defs, StringManager)
+    assert isinstance(promela_visitor.init_proc_contents, StringManager)
+    assert isinstance(promela_visitor.promela, StringManager)
     assert repr(promela_visitor) == ""
 
 
@@ -380,9 +378,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
 
 
 def test_build_expr_conditional(promela_visitor, mocker):
-    mock_sm = mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor.StringManager"
-    )
+    mock_sm = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.StringManager")
 
     node1, node2, node3 = mocker.Mock(), mocker.Mock(), mocker.Mock()
     node1.id = "TEST1"
