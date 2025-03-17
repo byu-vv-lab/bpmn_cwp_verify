@@ -42,7 +42,7 @@ def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
         source_ref = element.get("source")
         target_ref = element.get("target")
         if not target_ref or not source_ref:
-            raise Exception(CwpEdgeNoStateError(element))
+            return Failure(CwpEdgeNoStateError(element))
         edge = CwpEdge.from_xml(element, builder.gen_edge_name())
 
         builder = builder.with_edge(edge, source_ref, target_ref)
@@ -53,7 +53,7 @@ def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
             parent = itm.get("parent")
             expression = itm.get("value")
             if not (parent and expression):
-                raise Exception(CwpEdgeNoParentExprError(itm))
+                return Failure(CwpEdgeNoParentExprError(itm))
             builder.check_expression(
                 expression_checker, expression, parent, symbol_table
             )
