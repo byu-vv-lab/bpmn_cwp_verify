@@ -4,12 +4,14 @@ from returns.result import Result, Success, Failure
 from bpmncwpverify.core.error import (
     CwpMultStartStateError,
     CwpNoEndStatesError,
+    CwpNoParentEdgeError,
     CwpNoStartStateError,
     Error,
 )
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.expr import ExpressionListener
 from returns.pipeline import is_successful
+from returns.functions import not_
 
 
 class CwpBuilder:
@@ -83,10 +85,12 @@ class CwpBuilder:
         state: State,
     ) -> None:
         edge = self._cwp.edges.get(parent)
-        assert edge is not None
+        if not edge:
+            raise Exception(CwpNoParentEdgeError(parent))
         edge.expression = CwpEdge.cleanup_expression(expression)
         result = expr_checker.type_check(edge.expression, state)
-        assert is_successful(result), "Type check failed"
+        if not_(is_successful)(result):
+            raise Exception(result.failure())
 
     def with_state(self, cwpState: CwpState) -> "CwpBuilder":
         self._cwp.states[cwpState.id] = cwpState

@@ -54,9 +54,12 @@ def from_xml(root: Element, symbol_table: State) -> Result["Cwp", Error]:
             expression = itm.get("value")
             if not (parent and expression):
                 return Failure(CwpEdgeNoParentExprError(itm))
-            builder.check_expression(
-                expression_checker, expression, parent, symbol_table
-            )
+            try:
+                builder.check_expression(
+                    expression_checker, expression, parent, symbol_table
+                )
+            except Exception as e:
+                return Failure(e.args[0])
 
     result: Result["Cwp", Error] = builder.build()
     return result
