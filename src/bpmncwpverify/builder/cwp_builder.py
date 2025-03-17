@@ -86,7 +86,7 @@ class CwpBuilder:
         assert edge is not None
         edge.expression = CwpEdge.cleanup_expression(expression)
         result = expr_checker.type_check(edge.expression, state)
-        assert is_successful(result)
+        assert is_successful(result), "Type check failed"
 
     def with_state(self, cwpState: CwpState) -> "CwpBuilder":
         self._cwp.states[cwpState.id] = cwpState
