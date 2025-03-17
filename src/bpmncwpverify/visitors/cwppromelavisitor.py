@@ -12,7 +12,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.end = StringManager()
 
     def visit_state(self, state: CwpState) -> bool:
-        new_str = f"bool {state.name} = false // {state.name}"
+        new_str = f"bool {state.name} = false"
         self.cwp_states.write_str(new_str, NL_SINGLE)
         return True
 
