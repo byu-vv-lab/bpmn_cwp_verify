@@ -18,7 +18,7 @@ from bpmncwpverify.core.accessmethods.bpmnmethods import (
     generate_promela,
 )
 from bpmncwpverify.core.accessmethods.cwpmethods import (
-    from_xml as cwp_from_xml,
+    CwpXmlParser,
     generate_cwp_promela,
 )
 
@@ -56,7 +56,9 @@ class StateBuilder:
     def _build_cwp(builder: "StateBuilder") -> Result["StateBuilder", Error]:
         assert is_successful(builder.state)
         assert is_successful(builder.cwp_root)
-        builder.cwp = cwp_from_xml(builder.cwp_root.unwrap(), builder.state.unwrap())
+        builder.cwp = CwpXmlParser.from_xml(
+            builder.cwp_root.unwrap(), builder.state.unwrap()
+        )
         if not_(is_successful)(builder.cwp):
             return Failure(builder.cwp.failure())
         else:
