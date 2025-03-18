@@ -19,6 +19,7 @@ from bpmncwpverify.core.accessmethods.bpmnmethods import (
 )
 from bpmncwpverify.core.accessmethods.cwpmethods import (
     from_xml as cwp_from_xml,
+    generate_cwp_promela,
 )
 
 
@@ -75,17 +76,15 @@ class StateBuilder:
         outputs: "Outputs", builder: "StateBuilder"
     ) -> Result["Outputs", Error]:
         assert is_successful(builder.state)
-        # assert is_successful(builder.cwp_root) TODO: uncomment once cwp is implemented
+        assert is_successful(builder.cwp_root)
         assert is_successful(builder.bpmn_root)
         assert is_successful(builder.behavior_str)
 
-        # ltl = generate_ltl((builder.cwp).unwrap(), (builder.state).unwrap())
-        # behavior = (builder.behavior_str).unwrap()
+        cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
         vars = State.generate_promela((builder.state).unwrap()).unwrap()
         workflow = generate_promela((builder.bpmn).unwrap())
 
-        # outputs.promela = f"{vars}{ltl}{behavior}{workflow}"
-        outputs.promela = f"{vars}{workflow}"
+        outputs.promela = f"{vars}{cwp}{workflow}"
         return Success(outputs)
 
     def build(self) -> Result["Outputs", Error]:
@@ -93,7 +92,7 @@ class StateBuilder:
         result: Result["Outputs", Error] = flow(
             Success(self),
             bind_result(StateBuilder._build_state),
-            # bind_result(StateBuilder._build_cwp), TODO: uncomment once cwp is implemented
+            bind_result(StateBuilder._build_cwp),
             bind_result(StateBuilder._build_bpmn),
             bind_result(partial(StateBuilder.build_promela, outputs)),
         )

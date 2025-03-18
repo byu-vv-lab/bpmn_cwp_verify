@@ -88,10 +88,9 @@ def test_from_xml_edge_missing_source_target(mocker):
     SubElement(mx_root, "mxCell", edge="1")
     state = mocker.MagicMock()
 
-    with pytest.raises(Exception) as exc_info:
-        from_xml(root, state)
+    result = from_xml(root, state)
 
-    assert isinstance(exc_info.value.args[0], CwpEdgeNoStateError)
+    assert isinstance(result.failure(), CwpEdgeNoStateError)
 
 
 def test_from_xml_missing_parent_or_expression(mocker):
@@ -103,10 +102,9 @@ def test_from_xml_missing_parent_or_expression(mocker):
     SubElement(mx_root, "mxCell", style="edgeLabel")
     state = mocker.MagicMock()
 
-    with pytest.raises(Exception) as exc_info:
-        from_xml(root, state)
+    result = from_xml(root, state)
 
-    assert isinstance(exc_info.value.args[0], CwpEdgeNoParentExprError)
+    assert isinstance(result.failure(), CwpEdgeNoParentExprError)
 
 
 def test_check_expression(mocker):

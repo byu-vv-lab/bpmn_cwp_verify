@@ -39,16 +39,16 @@ class CwpBuilder:
             ]
 
             if len(start_states) > 1:
-                raise Exception(
+                return Failure(
                     CwpMultStartStateError([state.id for state in start_states])
                 )
             elif not start_states:
-                raise Exception(CwpNoStartStateError())
+                return Failure(CwpNoStartStateError())
 
             self._cwp.start_state = start_states[0]
 
             if not end_states:
-                raise Exception(CwpNoEndStatesError())
+                return Failure(CwpNoEndStatesError())
 
             self._cwp.states = {
                 id: state
