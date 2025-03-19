@@ -10,7 +10,7 @@ from bpmncwpverify.core.error import (
 from returns.functions import not_
 from bpmncwpverify.core.state import State
 from returns.pipeline import is_successful
-from bpmncwpverify.core.accessmethods.cwpmethods import from_xml
+from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.cwp import CwpEdge, CwpState
 import pytest
 
@@ -38,7 +38,7 @@ def add_mx_cell(mx_root, **attributes):
 
 
 def setup_cwp_and_assert(xml_root, state, success=True, failure_message=Error):
-    cwp = from_xml(xml_root, state)
+    cwp = CwpXmlParser.from_xml(xml_root, state)
     if success:
         assert is_successful(cwp)
         return cwp.unwrap()

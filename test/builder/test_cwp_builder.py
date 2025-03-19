@@ -2,18 +2,14 @@
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
-    CwpEdgeNoParentExprError,
-    CwpEdgeNoStateError,
     CwpNoParentEdgeError,
     CwpNoStartStateError,
 )
 from returns.result import Success
 import pytest
 
-from xml.etree.ElementTree import Element, SubElement
 from returns.pipeline import is_successful
 from returns.functions import not_
-from bpmncwpverify.core.accessmethods.cwpmethods import from_xml
 
 
 @pytest.fixture
@@ -41,70 +37,6 @@ def test_gen_edge_name(builder):
     assert builder.gen_edge_name() == "EdgeA"
     assert builder.gen_edge_name() == "EdgeB"
     assert builder.gen_edge_name() == "EdgeC"
-
-
-def test_from_xml_success(mocker):
-    mock_builder = mocker.patch(
-        "bpmncwpverify.core.accessmethods.cwpmethods.CwpBuilder"
-    )
-    mock_result = mocker.Mock(spec=Success)
-    mock_builder.return_value.with_state.return_value = mock_builder.return_value
-    mock_builder.return_value.with_edge.return_value = mock_builder.return_value
-    mock_builder.return_value.build.return_value = mock_result
-
-    root = Element("root")
-    diagram = SubElement(root, "diagram")
-    mx_graph_model = SubElement(diagram, "mxGraphModel")
-    mx_root = SubElement(mx_graph_model, "root")
-
-    state1 = SubElement(mx_root, "mxCell", vertex="1", style="stateStyle")
-    state1.set("id", "state1")
-
-    state2 = SubElement(mx_root, "mxCell", vertex="1", style="stateStyle")
-    state2.set("id", "state2")
-
-    edge = SubElement(mx_root, "mxCell", edge="1", source="state1", target="state2")
-    edge.set("id", "edge1")
-
-    SubElement(
-        mx_root, "mxCell", style="edgeLabel", vertex="1", value="x > 0", parent="edge1"
-    )
-
-    result = from_xml(root, mocker.Mock())
-
-    assert isinstance(result, Success)
-    mock_builder.return_value.with_state.assert_called()
-    mock_builder.return_value.with_edge.assert_called()
-    mock_builder.return_value.check_expression.assert_called()
-    mock_builder.return_value.build.assert_called_once()
-
-
-def test_from_xml_edge_missing_source_target(mocker):
-    root = Element("root")
-    diagram = SubElement(root, "diagram")
-    mx_graph_model = SubElement(diagram, "mxGraphModel")
-    mx_root = SubElement(mx_graph_model, "root")
-
-    SubElement(mx_root, "mxCell", edge="1")
-    state = mocker.MagicMock()
-
-    result = from_xml(root, state)
-
-    assert isinstance(result.failure(), CwpEdgeNoStateError)
-
-
-def test_from_xml_missing_parent_or_expression(mocker):
-    root = Element("root")
-    diagram = SubElement(root, "diagram")
-    mx_graph_model = SubElement(diagram, "mxGraphModel")
-    mx_root = SubElement(mx_graph_model, "root")
-
-    SubElement(mx_root, "mxCell", style="edgeLabel")
-    state = mocker.MagicMock()
-
-    result = from_xml(root, state)
-
-    assert isinstance(result.failure(), CwpEdgeNoParentExprError)
 
 
 def test_check_expression(mocker):
