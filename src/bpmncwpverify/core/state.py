@@ -1,5 +1,3 @@
-import builtins
-
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
 from antlr4.error.ErrorStrategy import ParseCancellationException
@@ -567,7 +565,38 @@ class State:
         """
         Return string representation of State object
         """
-        raise builtins.NotImplementedError("SymbolTable::__str__")
+        state_str = ""
+        for enum in self._enums:
+            state_str += "enum " + enum.id + " {"
+            for vals in range(len(enum.values)):
+                if vals == 0:
+                    state_str += enum.values[vals].value
+                    continue
+                state_str += " " + enum.values[vals].value
+            state_str += "}\n"
+        for const in self._consts:
+            state_str += (
+                "const "
+                + const.id
+                + ": "
+                + const.type_
+                + " = "
+                + const.init.value
+                + "\n"
+            )
+        for var in self._vars:
+            state_str += "var " + var.id + " : " + var.type_ + " = " + var.init.value
+            if len(var.values) != 0:
+                state_str += " {"
+                for vals in range(len(var.values)):
+                    if vals == 0:
+                        state_str += var.values[vals].value
+                        continue
+                    state_str += " " + var.values[vals].value
+                state_str += "}\n"
+            else:
+                state_str += "\n"
+        return state_str
 
     @staticmethod
     def _build_id_2_type_consts(state: "State") -> Result["State", Error]:
