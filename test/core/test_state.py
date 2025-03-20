@@ -22,6 +22,8 @@ from bpmncwpverify.core.error import (
 from bpmncwpverify.core.state import _get_parser, _parse_state, State
 from bpmncwpverify.core import typechecking
 
+import re
+
 
 @pytest.fixture(scope="module")
 def bad_input() -> Iterable[str]:
@@ -169,6 +171,7 @@ class Test_SymbolTable_build:
         # then
         assert is_successful(result)
         state: State = result.unwrap()
+        assert good_input == re.sub(r"\s+", " ", str(state)).strip()
         for i, expected_type in expected:
             result_type = state.get_type(i)
             assert is_successful(result_type)
