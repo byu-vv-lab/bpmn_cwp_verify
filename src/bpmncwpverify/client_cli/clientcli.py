@@ -1,55 +1,77 @@
-from typing import Dict
-import os
-import re
+import argparse
+from returns.pipeline import is_successful
+from returns.functions import not_
+from returns.io import impure_safe, IOResultE
+from returns.pipeline import managed, flow
+from returns.result import ResultE
+from typing import TextIO
 
 LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"
 
 
-def parse_command(cmd: str) -> Dict[str, str]:
-    regex = re.compile(r"^\s*verify\s+(?P<path>[^\s]+)\s*$")
-    match = re.match(regex, cmd)
-    if match:
-        return match.groupdict()
-    else:
-        raise Exception("Did not Recognize user input")
+def _get_argument_parser() -> "argparse.ArgumentParser":
+    argument_parser = argparse.ArgumentParser(
+        description="Verify the BPMN is a safe substitution for the CWP given the state"
+    )
+
+    argument_parser.add_argument(
+        "state_file",
+        help="State definition text file",
+    )
+    argument_parser.add_argument(
+        "cwp_file",
+        help="CWP state machine file in XML",
+    )
+    argument_parser.add_argument(
+        "bpmn_file",
+        help="BPMN workflow file in XML",
+    )
+    argument_parser.add_argument(
+        "behavior_file",
+        help="Behavior models file in Promela",
+    )
+    return argument_parser
 
 
-def get_file(file_name: str, accepted_files: Dict[str, str]) -> None:
-    state_regex = re.compile("state.txt")
-    cwp_regex = re.compile(".*cwp.*")
-    bpmn_regex = re.compile(".*(bpmn|workflow).*")
-    behavior_regex = re.compile(".*behavior.*")
-
-    if re.match(state_regex, file_name):
-        assert not accepted_files["state"]
-        accepted_files["state"] = file_name
-    elif re.match(cwp_regex, file_name):
-        assert not accepted_files["cwp"]
-        accepted_files["cwp"] = file_name
-    elif re.match(bpmn_regex, file_name):
-        assert not accepted_files["bpmn"]
-        accepted_files["bpmn"] = file_name
-    elif re.match(behavior_regex, file_name):
-        assert not accepted_files["behavior"]
-        accepted_files["behavior"] = file_name
+def _get_file_contents(name: str) -> IOResultE[str]:
+    return flow(
+        name,
+        impure_safe(lambda filename: open(filename, "r")),  # type: ignore[unused-ignore]
+        managed(_read_file, _close_file),
+    )
 
 
-def process_command(parsed_input: Dict[str, str]) -> None:
-    accepted_files = {"state": "", "cwp": "", "bpmn": "", "behavior": ""}
-    try:
-        files = os.listdir(parsed_input["path"])
-        for file_name in files:
-            get_file(file_name, accepted_files)
-
-        assert "" not in set(accepted_files.values())
-
-    except FileNotFoundError as e:
-        print("FILE NOT FOUND ERROR", e)
-        return
+def _close_file(
+    file_obj: TextIO,
+    file_contents: ResultE[str],
+) -> IOResultE[None]:
+    return impure_safe(file_obj.close)()
 
 
-while True:
-    user_cmd = input("> ")
-    values = parse_command(user_cmd)
-    if values:
-        process_command(values)
+def _read_file(file_obj: TextIO) -> IOResultE[str]:
+    return impure_safe(file_obj.read)()
+
+
+def process_command() -> None:
+    argument_parser = _get_argument_parser()
+    args = argument_parser.parse_args()
+    state_file = args.state_file
+    state_str = _get_file_contents(state_file)
+    if not_(is_successful)(state_str):
+        pass
+    bpmn_file = args.bpmn_file
+    bpmn_str = _get_file_contents(bpmn_file)
+    if not_(is_successful)(bpmn_str):
+        pass
+    cwp_file = args.cwp_file
+    cwp_root: IOResultE[str] = _get_file_contents(cwp_file)
+    if not_(is_successful)(cwp_root):
+        pass
+    behavior_file = args.behavior_file
+    behavior_str = _get_file_contents(behavior_file)
+    if not_(is_successful)(behavior_str):
+        pass
+
+
+if __name__ == "__main__":
+    process_command()
