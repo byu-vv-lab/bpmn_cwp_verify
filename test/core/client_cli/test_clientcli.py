@@ -1,8 +1,13 @@
 from bpmncwpverify.client_cli.clientcli import process_command
+from returns.result import Success
 import sys
 
 
-def test_givin_good_state(capsys):
+def test_givin_good_state_expect_good_response(mocker):
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli._trigger_lambda",
+        return_value=Success("test_success"),
+    )
     test_args = [
         "verify",
         "./test/resources/simple_example/state.txt",
@@ -12,4 +17,4 @@ def test_givin_good_state(capsys):
     sys.argv = test_args
 
     result = process_command()
-    print(result)
+    assert result.unwrap() == "test_success"

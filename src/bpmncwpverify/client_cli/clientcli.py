@@ -47,8 +47,18 @@ def _close_file(
 
 
 def _trigger_lambda(state: str, cwp: str, bpmn: str) -> Result[str, str]:
-    requests.post(url=LAMBDA_URL, data={"file": [state, cwp, bpmn]})
-    return Failure("")
+    try:
+        response: requests.Response = requests.post(
+            url=LAMBDA_URL, data={"file": [state, cwp, bpmn]}
+        )
+        response.raise_for_status()
+        return Success(response.text)
+    except requests.exceptions.HTTPError as http_err:
+        return Failure(
+            f"HTTP error occurred: {http_err} - Response: {http_err.response.text}"
+        )
+    except requests.exceptions.RequestException as err:
+        return Failure(f"Other error occurred: {err}")
 
 
 def _read_file(file_obj: TextIO) -> IOResultE[str]:
@@ -63,7 +73,7 @@ def _with_file(file_contents: IOResultE[str]) -> Result[str, str]:
     return Success(unsafe_perform_io(file_contents.unwrap()))
 
 
-def process_command() -> None:
+def process_command() -> Result[str, str]:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
     state_file = args.state_file
@@ -82,8 +92,9 @@ def process_command() -> None:
     if not_(is_successful)(bpmn_str):
         raise Exception("Could not get contents of BPMN file")
 
-    _trigger_lambda(
+    result: Result[str, str] = _trigger_lambda(
         _with_file(state_str).unwrap(),
         _with_file(cwp_str).unwrap(),
         _with_file(bpmn_str).unwrap(),
     )
+    return result
