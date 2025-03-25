@@ -3,8 +3,9 @@ from returns.pipeline import is_successful
 from returns.functions import not_
 from returns.io import impure_safe, IOResultE
 from returns.pipeline import managed, flow
-from returns.result import ResultE
+from returns.result import ResultE, Result, Success, Failure
 from typing import TextIO
+from returns.unsafe import unsafe_perform_io
 
 LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"
 
@@ -26,10 +27,6 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
         "bpmn_file",
         help="BPMN workflow file in XML",
     )
-    argument_parser.add_argument(
-        "behavior_file",
-        help="Behavior models file in Promela",
-    )
     return argument_parser
 
 
@@ -48,29 +45,46 @@ def _close_file(
     return impure_safe(file_obj.close)()
 
 
+def _trigger_lambda(state: str, cwp: str, bpmn: str) -> Result[str, str]:
+    return Failure("")
+
+
 def _read_file(file_obj: TextIO) -> IOResultE[str]:
     return impure_safe(file_obj.read)()
+
+
+def _with_file(file_contents: IOResultE[str]) -> Result[str, str]:
+    if not_(is_successful)(file_contents):
+        error = unsafe_perform_io(file_contents.failure())
+        return Failure(f"ERROR OCCURRED {error}")
+
+    return Success(unsafe_perform_io(file_contents.unwrap()))
 
 
 def process_command() -> None:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
     state_file = args.state_file
+
     state_str = _get_file_contents(state_file)
     if not_(is_successful)(state_str):
-        pass
+        raise Exception("Could not get contents of State file")
+
+    cwp_file = args.cwp_file
+    cwp_str = _get_file_contents(cwp_file)
+    if not_(is_successful)(cwp_str):
+        raise Exception("Could not get contents of CWP file")
+
     bpmn_file = args.bpmn_file
     bpmn_str = _get_file_contents(bpmn_file)
     if not_(is_successful)(bpmn_str):
-        pass
-    cwp_file = args.cwp_file
-    cwp_root: IOResultE[str] = _get_file_contents(cwp_file)
-    if not_(is_successful)(cwp_root):
-        pass
-    behavior_file = args.behavior_file
-    behavior_str = _get_file_contents(behavior_file)
-    if not_(is_successful)(behavior_str):
-        pass
+        raise Exception("Could not get contents of BPMN file")
+
+    _trigger_lambda(
+        _with_file(state_str).unwrap(),
+        _with_file(cwp_str).unwrap(),
+        _with_file(bpmn_str).unwrap(),
+    )
 
 
 if __name__ == "__main__":
