@@ -49,7 +49,7 @@ def _close_file(
 def _trigger_lambda(state: str, cwp: str, bpmn: str) -> Result[str, str]:
     try:
         response: requests.Response = requests.post(
-            url=LAMBDA_URL, data={"file": [state, cwp, bpmn]}
+            url=LAMBDA_URL, data={"file": [bpmn, cwp, state]}
         )
         response.raise_for_status()
         return Success(response.text)
