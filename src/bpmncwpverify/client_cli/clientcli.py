@@ -5,6 +5,7 @@ from returns.io import impure_safe, IOResultE
 from returns.pipeline import managed, flow
 from returns.result import ResultE, Result, Success, Failure
 from typing import TextIO
+import requests  # type: ignore
 from returns.unsafe import unsafe_perform_io
 
 LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"
@@ -46,6 +47,7 @@ def _close_file(
 
 
 def _trigger_lambda(state: str, cwp: str, bpmn: str) -> Result[str, str]:
+    requests.post(url=LAMBDA_URL, data={"file": [state, cwp, bpmn]})
     return Failure("")
 
 
@@ -85,7 +87,3 @@ def process_command() -> None:
         _with_file(cwp_str).unwrap(),
         _with_file(bpmn_str).unwrap(),
     )
-
-
-if __name__ == "__main__":
-    process_command()
