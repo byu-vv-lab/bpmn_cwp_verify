@@ -130,7 +130,7 @@ def _with_file(file_contents: IOResultE[str]) -> Result[str, Error]:
     return Success(unsafe_perform_io(file_contents.unwrap()))
 
 
-def process_command() -> Result["Outputs", Error]:
+def _verify() -> Result["Outputs", Error]:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
     state_file = args.state_file
@@ -155,3 +155,16 @@ def process_command() -> Result["Outputs", Error]:
         _with_file(bpmn_str).unwrap(),
     )
     return result
+
+
+def cli_verify() -> None:
+    result: Result[Outputs, Error] = _verify()
+
+    match result:
+        case Success(o):
+            print(o.promela)
+        case Failure(e):
+            msg = get_error_message(e)
+            print(msg)
+        case _:
+            assert False, "ERROR: unhandled type"
