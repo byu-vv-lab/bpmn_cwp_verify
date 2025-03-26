@@ -80,17 +80,17 @@ def process_command() -> Result[str, str]:
 
     state_str = _get_file_contents(state_file)
     if not_(is_successful)(state_str):
-        raise Exception("Could not get contents of State file")
+        return Failure("Could not get contents of State file")
 
     cwp_file = args.cwp_file
     cwp_str = _get_file_contents(cwp_file)
     if not_(is_successful)(cwp_str):
-        raise Exception("Could not get contents of CWP file")
+        return Failure("Could not get contents of CWP file")
 
     bpmn_file = args.bpmn_file
     bpmn_str = _get_file_contents(bpmn_file)
     if not_(is_successful)(bpmn_str):
-        raise Exception("Could not get contents of BPMN file")
+        return Failure("Could not get contents of BPMN file")
 
     result: Result[str, str] = _trigger_lambda(
         _with_file(state_str).unwrap(),
