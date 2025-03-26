@@ -12,9 +12,23 @@ from returns.unsafe import unsafe_perform_io
 LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"
 
 
+class Outputs:
+    __slots__ = ["promela"]
+
+    def __init__(self, promela: str) -> None:
+        self.promela = promela
+
+
 class Error:
     def __init__(self) -> None:
         pass
+
+
+class FileOpenError(Error):
+    __slots__ = ["err"]
+
+    def __init__(self, err: Exception) -> None:
+        self.err = err
 
 
 class FileError(Error):
@@ -45,6 +59,8 @@ def get_error_message(error: Error) -> str:
     match error:
         case FileError(file_name=file_name):
             return f"Could not get contents of {file_name} file"
+        case RequestError(err=err):
+            return f"Error occurred while getting file contents: {err}"
         case HTTPError(http_error=http_error, http_error_text=http_error_text):
             return f"HTTP error occurred: {http_error} - Response: {http_error_text}"
         case RequestError(err=err):
@@ -88,13 +104,14 @@ def _close_file(
     return impure_safe(file_obj.close)()
 
 
-def _trigger_lambda(state: str, cwp: str, bpmn: str) -> Result[str, Error]:
+def _trigger_lambda(state: str, cwp: str, bpmn: str) -> Result["Outputs", Error]:
     try:
         response: requests.Response = requests.post(
             url=LAMBDA_URL, data={"file": [bpmn, cwp, state]}
         )
+        outputs = Outputs(response.text)
         response.raise_for_status()
-        return Success(response.text)
+        return Success(outputs)
     except requests.exceptions.HTTPError as http_err:
         return Failure(HTTPError(http_err, http_err.response.text))
     except requests.exceptions.RequestException as err:
@@ -105,15 +122,15 @@ def _read_file(file_obj: TextIO) -> IOResultE[str]:
     return impure_safe(file_obj.read)()
 
 
-def _with_file(file_contents: IOResultE[str]) -> Result[str, str]:
+def _with_file(file_contents: IOResultE[str]) -> Result[str, Error]:
     if not_(is_successful)(file_contents):
         error = unsafe_perform_io(file_contents.failure())
-        return Failure(f"ERROR OCCURRED {error}")
+        return Failure(FileOpenError(error))
 
     return Success(unsafe_perform_io(file_contents.unwrap()))
 
 
-def process_command() -> Result[str, Error]:
+def process_command() -> Result["Outputs", Error]:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
     state_file = args.state_file
@@ -132,7 +149,7 @@ def process_command() -> Result[str, Error]:
     if not_(is_successful)(bpmn_str):
         return Failure(FileError(bpmn_file))
 
-    result: Result[str, Error] = _trigger_lambda(
+    result: Result["Outputs", Error] = _trigger_lambda(
         _with_file(state_str).unwrap(),
         _with_file(cwp_str).unwrap(),
         _with_file(bpmn_str).unwrap(),
