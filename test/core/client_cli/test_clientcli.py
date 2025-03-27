@@ -1,6 +1,16 @@
-from bpmncwpverify.client_cli.clientcli import _verify, get_error_message
+from bpmncwpverify.client_cli.clientcli import (
+    _verify,
+    get_error_message,
+    FileOpenError,
+    Error,
+    FileError,
+    RequestError,
+    HTTPError,
+)
 from returns.result import Success, Failure
 import sys
+import pytest
+from requests.exceptions import RequestException, HTTPError as httperr
 
 
 def test_givin_good_state_expect_good_response(mocker):
@@ -81,3 +91,38 @@ def test_givin_bad_bpmn_file_expect_bad_response(mocker):
         get_error_message(result.failure())
         == "Could not get contents of test_bpmn.bpmn file"
     )
+
+
+test_inputs: list[tuple[Error, str]] = [
+    (
+        FileOpenError(Exception("test")),
+        "Error while getting file contents: test",
+    ),
+    (
+        FileError("test_file_name"),
+        "Could not get contents of test_file_name file",
+    ),
+    (
+        RequestError(err=RequestException("test")),
+        "Unkown error occurred while sending request: test",
+    ),
+    (
+        HTTPError(httperr("test1"), "test2"),
+        "HTTP error occurred: test1 - Response: test2",
+    ),
+]
+test_ids: list[str] = ["FileOpenError", "FileError", "RequestError", "HTTPError"]
+
+
+@pytest.mark.parametrize(
+    scope="function",
+    argnames=["error", "expected"],
+    argvalues=test_inputs,
+    ids=test_ids,
+)
+def test_given_error_when_get_error_message_then_message_equals_expected(
+    error: Error, expected: str
+):
+    result = get_error_message(error)
+
+    assert expected == result

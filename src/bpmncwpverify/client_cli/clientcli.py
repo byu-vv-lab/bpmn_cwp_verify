@@ -57,10 +57,10 @@ class RequestError(Error):
 
 def get_error_message(error: Error) -> str:
     match error:
+        case FileOpenError(err=err):
+            return f"Error while getting file contents: {err}"
         case FileError(file_name=file_name):
             return f"Could not get contents of {file_name} file"
-        case RequestError(err=err):
-            return f"Error occurred while getting file contents: {err}"
         case HTTPError(http_error=http_error, http_error_text=http_error_text):
             return f"HTTP error occurred: {http_error} - Response: {http_error_text}"
         case RequestError(err=err):
