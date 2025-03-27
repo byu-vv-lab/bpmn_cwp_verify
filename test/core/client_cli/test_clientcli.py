@@ -1,6 +1,7 @@
 from bpmncwpverify.client_cli.clientcli import (
     _verify,
     get_error_message,
+    _trigger_lambda,
     FileOpenError,
     Error,
     FileError,
@@ -126,3 +127,20 @@ def test_given_error_when_get_error_message_then_message_equals_expected(
     result = get_error_message(error)
 
     assert expected == result
+
+
+def test_trigger_lambda_with_http_error(mocker):
+    mock_response = mocker.Mock()
+    mock_response.text = "test_response_text"
+
+    mock_err = httperr("Bad request")
+    mock_err.response = mock_response
+    mock_response.raise_for_status.side_effect = mock_err
+
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli.requests.post", side_effect=mock_err
+    )
+    return_val = _trigger_lambda(mocker.Mock(), mocker.Mock(), mocker.Mock())
+
+    assert isinstance(return_val, Failure)
+    assert isinstance(return_val.failure(), HTTPError)
