@@ -1,3 +1,4 @@
+# type: ignore
 from bpmncwpverify.client_cli.clientcli import (
     _verify,
     get_error_message,
@@ -7,6 +8,7 @@ from bpmncwpverify.client_cli.clientcli import (
     FileError,
     RequestError,
     HTTPError,
+    Outputs,
 )
 from returns.result import Success, Failure
 import sys
@@ -144,3 +146,37 @@ def test_trigger_lambda_with_http_error(mocker):
 
     assert isinstance(return_val, Failure)
     assert isinstance(return_val.failure(), HTTPError)
+
+
+def test_trigger_lambda_with_request_error(mocker):
+    mock_response = mocker.Mock()
+
+    mock_err = RequestException("Bad request")
+    mock_err.response = mock_response
+    mock_response.raise_for_status.side_effect = mock_err
+
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli.requests.post", side_effect=mock_err
+    )
+    return_val = _trigger_lambda(mocker.Mock(), mocker.Mock(), mocker.Mock())
+
+    assert isinstance(return_val, Failure)
+    assert isinstance(return_val.failure(), RequestError)
+
+    assert return_val.failure().err.args[0] == "Bad request"
+
+
+def test_trigger_lambda_success(mocker):
+    mock_response = mocker.Mock()
+    mock_response.text = "test_good_response"
+
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli.requests.post", return_value=mock_response
+    )
+    return_val = _trigger_lambda(mocker.Mock(), mocker.Mock(), mocker.Mock())
+
+    returns_response = return_val.unwrap()
+    assert isinstance(return_val, Success)
+    assert isinstance(returns_response, Outputs)
+
+    assert returns_response.promela == "test_good_response"
