@@ -18,9 +18,6 @@
     <label for="stateData">Upload state file:</label>
     <input type="file" id="stateData" name="stateData" required><br><br>
 
-    <label for="behaviorData">Upload behavior file:</label>
-    <input type="file" id="behaviorData" name="behaviorData" required><br><br>
-
     <button type="submit">Submit</button>
   </form>
 
@@ -33,13 +30,12 @@
       const bpmnData = document.getElementById('bpmnData').files[0];
       const cwpData = document.getElementById('cwpData').files[0];
       const stateData = document.getElementById('stateData').files[0];
-      const behaviorData = document.getElementById('behaviorData').files[0];
       const responseContainer = document.getElementById('responseContainer');
       const lambda_url = 'https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/';
 
       responseContainer.textContent = 'Processing...';
 
-      const files = [bpmnData, cwpData, stateData, behaviorData];
+      const files = [bpmnData, cwpData, stateData];
       const fileContents = [];
 
       const fileToString = (file) => {
