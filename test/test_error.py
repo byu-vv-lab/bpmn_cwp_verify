@@ -4,7 +4,6 @@ from unittest import mock
 from returns.maybe import Some, Nothing
 
 from bpmncwpverify.core.error import (
-    Error,
     BpmnFlowIncomingError,
     BpmnFlowNoIdError,
     BpmnFlowOutgoingError,
@@ -172,6 +171,34 @@ test_inputs: list[tuple[Error, str]] = [
         CwpNoStartStateError(),
         "CWP ERROR: No start states found.",
     ),
+    (
+        ExpressionComputationCompatabilityError("ltype", "rtype"),
+        "EXPR ERROR: sometion of type 'rtype' cannot be computed with something of type 'ltype'",
+    ),
+    (
+        ExpressionNegatorError("_type"),
+        "EXPR ERROR: sometiong of type '_type' cannot be used with a mathmatical negator",
+    ),
+    (
+        ExpressionRelationCompatabilityError("ltype", "rtype"),
+        "EXPR ERROR: sometion of type 'rtype' cannot be related with something of type 'ltype'",
+    ),
+    (
+        ExpressionRelationalNotError("_type"),
+        "EXPR ERROR: sometiong of type '_type' cannot be used with a relational not",
+    ),
+    (
+        ExpressionUnrecognizedID("_id"),
+        "EXPR ERROR: '_id' is not recognized as a literal or something stored in the symbol table",
+    ),
+    (
+        MessageError("node_id", "error_msg"),
+        "Inter-process message error at node: node_id. error_msg",
+    ),
+    (
+        MissingFileError("file_name"),
+        "Could not find file with name file_name",
+    ),
     (NotImplementedError("notImplemented"), "ERROR: not implemented 'notImplemented'"),
     (
         StateInitNotInValues("a", Some(0), Some(1), {"b", "c"}),
@@ -231,6 +258,13 @@ test_ids: list[str] = [
     "CwpNoEndStatesError",
     "CwpNoParentEdgeError",
     "CwpNoStartStateError",
+    "ExpressionComputationCompatabilityError",
+    "ExpressionNegatorError",
+    "ExpressionRelationCompatabilityError",
+    "ExpressionRelationalNotError",
+    "ExpressionUnrecognizedID",
+    "MessageError",
+    "MissingFileError",
     "NotImplementedError",
     "StateInitNotInValues",
     "StateInitNotInValuesLineCol",
