@@ -3,6 +3,7 @@ from bpmncwpverify.client_cli.clientcli import (
     _verify,
     get_error_message,
     _trigger_lambda,
+    _with_file,
     FileOpenError,
     Error,
     FileError,
@@ -219,3 +220,30 @@ def test_cli_verify_unhandeled_type(mocker):
         cli_verify()
 
     assert exc_info.value.args[0] == "ERROR: unhandled type"
+
+
+def test_with_file_with_failure(mocker):
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli.unsafe_perform_io", return_value="error_str"
+    )
+    mock_not = mocker.patch("bpmncwpverify.client_cli.clientcli.not_")
+    mock_not.return_value = lambda x: True
+
+    result = _with_file(mocker.Mock())
+    assert isinstance(result, Failure)
+    assert isinstance(result.failure(), FileOpenError)
+    assert result.failure().err == "error_str"
+
+
+def test_with_file_with_success(mocker):
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli.unsafe_perform_io",
+        return_value="success_str",
+    )
+
+    mock_not = mocker.patch("bpmncwpverify.client_cli.clientcli.not_")
+    mock_not.return_value = lambda x: False
+
+    result = _with_file(mocker.Mock())
+    assert isinstance(result, Success)
+    assert result.unwrap() == "success_str"
