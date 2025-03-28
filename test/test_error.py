@@ -56,6 +56,10 @@ from bpmncwpverify.core.error import (
 
 test_inputs: list[tuple[Error, str]] = [
     (
+        BpmnFlowIncomingError("node_id"),
+        "Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: node_id.",
+    ),
+    (
         BpmnStructureError("node_id", "error_msg"),
         "BPMN ERROR at node: node_id. error_msg",
     ),
@@ -89,6 +93,7 @@ test_inputs: list[tuple[Error, str]] = [
 ]
 
 test_ids: list[str] = [
+    "BpmnFlowIncomingError",
     "BpmnStructureError",
     "NotImplementedError",
     "StateInitNotInValues",

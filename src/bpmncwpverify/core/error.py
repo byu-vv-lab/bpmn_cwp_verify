@@ -479,8 +479,64 @@ def _get_exception_message(error: Exception) -> str:
 
 def _get_error_message(error: Error) -> str:
     match error:
+        case BpmnFlowIncomingError(node_id=node_id):
+            return f"Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: {node_id}."
+        case BpmnFlowNoIdError(element=element):
+            return f"Flow error: Flow_id does not exist. Occurred at tree element with following attributes: {element.attrib}."
+        case BpmnFlowOutgoingError(node_id=node_id):
+            return f"Flow error: All flow objects other than end events and compensating activities must have an outgoing sequence flow, if the process level includes any start or end events. node: {node_id}"
+        case BpmnFlowStartEventError(node_id=node_id):
+            return f"Flow error: A start event cannot have an incoming sequence flow and cannot have an outgoing message flow. node: {node_id}"
+        case BpmnFlowTypeError(flow_id=flow_id):
+            return f"Flow error: Flow '{flow_id}' is not a sequence flow when it should be."
+        case BpmnGraphConnError():
+            return "Bpmn Process graph error: Process graph is not fully connected."
+        case BpmnInvalidIdError(bpmn_id=bpmn_id):
+            return f"Bpmn id error: the bpmn element with id:{bpmn_id} contains an unsupported character (probably white space)."
+        case BpmnMissingEventsError(start_events=start_events, end_events=end_events):
+            return f"Event error: Start events = {start_events}, End events = {end_events}. Missing required start or end events."
+        case BpmnMsgEndEventError(event_id=event_id):
+            return f"Message flow error: End events cannot have incoming messages. Event ID: {event_id}."
+        case BpmnMsgFlowSamePoolError(msg_id=msg_id):
+            return f"Message flow error: {msg_id} connects nodes in the same pool."
+        case BpmnMsgGatewayError(gateway_type=gateway_type, gateway_id=gateway_id):
+            return f"Gateway error: {gateway_type} gateways cannot have incoming or outgoing messages. Gateway ID: {gateway_id}."
+        case BpmnMsgMissingRefError(msg_id=msg_id):
+            return f"Message flow error: Source ref or target ref is missing for message '{msg_id}'."
+        case BpmnMsgNodeTypeError(msg_id=msg_id):
+            return f"Message flow error: 'From' node and 'To' node of message are not of type Node. Message flow id: {msg_id}."
+        case BpmnMsgSrcError(obj_type=obj_type, node_id=node_id):
+            return f"Message flow source error while visiting {obj_type}. A message flow can only come from specific sources. Node ID: {node_id}."
+        case BpmnMsgStartEventError(node_id=node_id):
+            return f"Message flow error: A start event with incoming message flow must have a Message trigger. node: {node_id}"
+        case BpmnMsgTargetError(obj_type=obj_type, node_id=node_id):
+            return f"Message flow target error while visiting {obj_type}. A message flow can only go to a Message start or intermediate event; Receive, User, or Service task; Subprocess; or black box pool. Node ID: {node_id}."
+        case BpmnNodeTypeError(flow_id=flow_id):
+            return f"Node type error: Source or target node of flow is not of type node. Flow details: {flow_id}."
+        case BpmnSeqFlowEndEventError(event_id=event_id):
+            return f"Sequence flow error: End event '{event_id}' cannot have outgoing sequence flows."
+        case BpmnSeqFlowNoExprError(gateway_id=gateway_id, out_flow_id=out_flow_id):
+            return f"Flow: `{out_flow_id}` does not have an expression. All flows coming out of gateways must have expressions. Gateway id: {gateway_id}"
         case BpmnStructureError(node_id=node_id, error_msg=error_msg):
             return f"BPMN ERROR at node: {node_id}. {error_msg}"
+        case BpmnTaskFlowError(task_id=task_id):
+            return f"Task flow error: Task '{task_id}' should have at least one incoming and one outgoing flow."
+        case CwpEdgeNoParentExprError(edge=edge):
+            return f"CWP ERROR: Expression or parent node not found in edge. Edge details: {edge.attrib}."
+        case CwpEdgeNoStateError(edge=edge):
+            return f"CWP ERROR: Edge does not have a source or a target. Edge details: {edge.attrib}."
+        case CwpFileStructureError(element=element):
+            return f"A {element} element is missing from your cwp file."
+        case CwpGraphConnError():
+            return "CWP ERROR: Graph is not connected."
+        case CwpMultStartStateError(start_states=start_states):
+            return f"CWP ERROR: More than one start state found. Start state IDs: {start_states}."
+        case CwpNoEndStatesError():
+            return "CWP ERROR: No end states found."
+        case CwpNoParentEdgeError(parent_edge=parent_edge):
+            return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
+        case CwpNoStartStateError():
+            return "CWP ERROR: No start states found."
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
             return "EXPR ERROR: sometion of type '{}' cannot be computed with something of type '{}'".format(
                 rtype, ltype
@@ -501,76 +557,12 @@ def _get_error_message(error: Error) -> str:
             return "EXPR ERROR: '{}' is not recognized as a literal or something stored in the symbol table".format(
                 _id
             )
-        case NotImplementedError(function=function):
-            return "ERROR: not implemented '{}'".format(function)
-        case MissingFileError(file_name=file_name):
-            return f"Could not find file with name {file_name}"
         case MessageError(node_id=node_id, error_msg=error_msg):
             return f"Inter-process message error at node: {node_id}. {error_msg}"
-        case BpmnFlowIncomingError(node_id=node_id):
-            return f"Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: {node_id}."
-        case BpmnFlowNoIdError(element=element):
-            return f"Flow error: Flow_id does not exist. Occurred at tree element with following attributes: {element.attrib}."
-        case BpmnFlowOutgoingError(node_id=node_id):
-            return f"Flow error: All flow objects other than end events and compensating activities must have an outgoing sequence flow, if the process level includes any start or end events. node: {node_id}"
-        case BpmnFlowStartEventError(node_id=node_id):
-            return f"Flow error: A start event cannot have an incoming sequence flow and cannot have an outgoing message flow. node: {node_id}"
-        case BpmnFlowTypeError(flow_id=flow_id):
-            return f"Flow error: Flow '{flow_id}' is not a sequence flow when it should be."
-        case BpmnInvalidIdError(bpmn_id=bpmn_id):
-            return f"Bpmn id error: the bpmn element with id:{bpmn_id} contains an unsupported character (probably white space)."
-        case BpmnNodeTypeError(flow_id=flow_id):
-            return f"Node type error: Source or target node of flow is not of type node. Flow details: {flow_id}."
-        case BpmnMsgFlowSamePoolError(msg_id=msg_id):
-            return f"Message flow error: {msg_id} connects nodes in the same pool."
-        case BpmnMsgMissingRefError(msg_id=msg_id):
-            return f"Message flow error: Source ref or target ref is missing for message '{msg_id}'."
-        case BpmnMsgNodeTypeError(msg_id=msg_id):
-            return f"Message flow error: 'From' node and 'To' node of message are not of type Node. Message flow id: {msg_id}."
-        case BpmnMsgTargetError(obj_type=obj_type, node_id=node_id):
-            return f"Message flow target error while visiting {obj_type}. A message flow can only go to a Message start or intermediate event; Receive, User, or Service task; Subprocess; or black box pool. Node ID: {node_id}."
-        case BpmnMsgSrcError(obj_type=obj_type, node_id=node_id):
-            return f"Message flow source error while visiting {obj_type}. A message flow can only come from specific sources. Node ID: {node_id}."
-        case BpmnMsgStartEventError(node_id=node_id):
-            return f"Message flow error: A start event with incoming message flow must have a Message trigger. node: {node_id}"
-        case BpmnMsgEndEventError(event_id=event_id):
-            return f"Message flow error: End events cannot have incoming messages. Event ID: {event_id}."
-        case BpmnMsgGatewayError(gateway_type=gateway_type, gateway_id=gateway_id):
-            return f"Gateway error: {gateway_type} gateways cannot have incoming or outgoing messages. Gateway ID: {gateway_id}."
-        case BpmnSeqFlowEndEventError(event_id=event_id):
-            return f"Sequence flow error: End event '{event_id}' cannot have outgoing sequence flows."
-        case BpmnTaskFlowError(task_id=task_id):
-            return f"Task flow error: Task '{task_id}' should have at least one incoming and one outgoing flow."
-        case BpmnSeqFlowNoExprError(gateway_id=gateway_id, out_flow_id=out_flow_id):
-            return f"Flow: `{out_flow_id}` does not have an expression. All flows coming out of gateways must have expressions. Gateway id: {gateway_id}"
-        case BpmnMissingEventsError(start_events=start_events, end_events=end_events):
-            return f"Event error: Start events = {start_events}, End events = {end_events}. Missing required start or end events."
-        case BpmnGraphConnError():
-            return "Bpmn Process graph error: Process graph is not fully connected."
-        case CwpEdgeNoStateError(edge=edge):
-            return f"CWP ERROR: Edge does not have a source or a target. Edge details: {edge.attrib}."
-        case CwpEdgeNoParentExprError(edge=edge):
-            return f"CWP ERROR: Expression or parent node not found in edge. Edge details: {edge.attrib}."
-        case CwpNoParentEdgeError(parent_edge=parent_edge):
-            return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
-        case CwpMultStartStateError(start_states=start_states):
-            return f"CWP ERROR: More than one start state found. Start state IDs: {start_states}."
-        case CwpNoStartStateError():
-            return "CWP ERROR: No start states found."
-        case CwpFileStructureError(element=element):
-            return f"A {element} element is missing from your cwp file."
-        case CwpNoEndStatesError():
-            return "CWP ERROR: No end states found."
-        case CwpGraphConnError():
-            return "CWP ERROR: Graph is not connected."
-        case SpinCoverageError(coverage_errors=coverage_errors):
-            return "\n".join(
-                [
-                    f"Proctype: {error['proctype']}, File: {error['file']}, Line: {str(error['line'])}, Message: {error["message"]}"
-                    for error in coverage_errors
-                ]
-            )
-
+        case MissingFileError(file_name=file_name):
+            return f"Could not find file with name {file_name}"
+        case NotImplementedError(function=function):
+            return "ERROR: not implemented '{}'".format(function)
         case SpinAssertionError(list_of_error_maps=list_of_error_maps):
             errors = []
             errors.append("Assertion Error:")
@@ -580,6 +572,13 @@ def _get_error_message(error: Error) -> str:
                     f"{idx + 1}: Assertion: {map['assertion']}, Depth info: {map['depth']}"
                 )
             return "\n".join(errors)
+        case SpinCoverageError(coverage_errors=coverage_errors):
+            return "\n".join(
+                [
+                    f"Proctype: {error['proctype']}, File: {error['file']}, Line: {str(error['line'])}, Message: {error['message']}"
+                    for error in coverage_errors
+                ]
+            )
         case SpinInvalidEndStateError(list_of_error_maps=list_of_error_maps):
             errors = []
             errors.append("Invalid end state")
@@ -597,7 +596,6 @@ def _get_error_message(error: Error) -> str:
                 )
             return "\n".join(errors)
         case StateInitNotInValues(id=id, line=line, column=column, values=values):
-            # Convert to a list since Python sets are not stable
             location: str = " "
             if line != Nothing and column != Nothing:
                 location = f" at line {line.unwrap()}:{column.unwrap()} "
@@ -630,6 +628,7 @@ def _get_error_message(error: Error) -> str:
             )
         case TypingNoTypeError(id=id):
             return "TYPING ERROR: literal '{}' has an unknown type".format(id)
+
         case _:
             raise builtins.NotImplementedError
 
