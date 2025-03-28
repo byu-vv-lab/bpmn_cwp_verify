@@ -136,6 +136,42 @@ test_inputs: list[tuple[Error, str]] = [
         BpmnStructureError("node_id", "error_msg"),
         "BPMN ERROR at node: node_id. error_msg",
     ),
+    (
+        BpmnTaskFlowError("task_id"),
+        "Task flow error: Task 'task_id' should have at least one incoming and one outgoing flow.",
+    ),
+    (
+        CwpEdgeNoParentExprError(mock.Mock(attrib="edge_attrib")),
+        "CWP ERROR: Expression or parent node not found in edge. Edge details: edge_attrib.",
+    ),
+    (
+        CwpEdgeNoStateError(mock.Mock(attrib="edge_attrib")),
+        "CWP ERROR: Edge does not have a source or a target. Edge details: edge_attrib.",
+    ),
+    (
+        CwpFileStructureError("element"),
+        "A element element is missing from your cwp file.",
+    ),
+    (
+        CwpGraphConnError(),
+        "CWP ERROR: Graph is not connected.",
+    ),
+    (
+        CwpMultStartStateError(["first", "second"]),
+        "CWP ERROR: More than one start state found. Start state IDs: ['first', 'second'].",
+    ),
+    (
+        CwpNoEndStatesError(),
+        "CWP ERROR: No end states found.",
+    ),
+    (
+        CwpNoParentEdgeError("parent_edge"),
+        "CWP ERROR: Parent edge not found or no parent ID reference. Edge details: parent_edge.",
+    ),
+    (
+        CwpNoStartStateError(),
+        "CWP ERROR: No start states found.",
+    ),
     (NotImplementedError("notImplemented"), "ERROR: not implemented 'notImplemented'"),
     (
         StateInitNotInValues("a", Some(0), Some(1), {"b", "c"}),
@@ -186,6 +222,15 @@ test_ids: list[str] = [
     "BpmnSeqFlowEndEventError",
     "BpmnSeqFlowNoExprError",
     "BpmnStructureError",
+    "BpmnTaskFlowError",
+    "CwpEdgeNoParentExprError",
+    "CwpEdgeNoStateError",
+    "CwpFileStructureError",
+    "CwpGraphConnError",
+    "CwpMultStartStateError",
+    "CwpNoEndStatesError",
+    "CwpNoParentEdgeError",
+    "CwpNoStartStateError",
     "NotImplementedError",
     "StateInitNotInValues",
     "StateInitNotInValuesLineCol",
