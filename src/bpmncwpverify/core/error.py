@@ -11,90 +11,6 @@ class Error:
         pass
 
 
-class BpmnStructureError(Error):
-    __slots__ = ["node_id", "error_msg"]
-
-    def __init__(self, node_id: str, error_msg: str) -> None:
-        super().__init__()
-        self.node_id = node_id
-        self.error_msg = error_msg
-
-
-class ExceptionError(Error):
-    __slots__ = "exception_str"
-
-    def __init__(self, exception_str: str):
-        super().__init__()
-        self.exception_str = exception_str
-
-
-class ExpressionComputationCompatabilityError(Error):
-    __slots__ = ["ltype", "rtype"]
-
-    def __init__(self, ltype: str, rtype: str) -> None:
-        super().__init__()
-        self.ltype = ltype
-        self.rtype = rtype
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionComputationCompatabilityError):
-            return self.ltype == other.ltype and self.rtype == other.rtype
-        return False
-
-
-class ExpressionNegatorError(Error):
-    __slots__ = ["_type"]
-
-    def __init__(self, type: str) -> None:
-        super().__init__()
-        self._type = type
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionNegatorError):
-            return self._type == other._type
-        return False
-
-
-class ExpressionRelationCompatabilityError(Error):
-    __slots__ = ["ltype", "rtype"]
-
-    def __init__(self, ltype: str, rtype: str) -> None:
-        super().__init__()
-        self.ltype = ltype
-        self.rtype = rtype
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionComputationCompatabilityError):
-            return self.ltype == other.ltype and self.rtype == other.rtype
-        return False
-
-
-class ExpressionRelationalNotError(Error):
-    __slots__ = ["_type"]
-
-    def __init__(self, type: str) -> None:
-        super().__init__()
-        self._type = type
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionRelationalNotError):
-            return self._type == other._type
-        return False
-
-
-class ExpressionUnrecognizedID(Error):
-    __slots__ = ["_id"]
-
-    def __init__(self, id: str) -> None:
-        super().__init__()
-        self._id = id
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionUnrecognizedID):
-            return self._id == other._id
-        return False
-
-
 class BpmnFlowIncomingError(Error):
     __slots__ = ["node_id"]
 
@@ -249,6 +165,15 @@ class BpmnSeqFlowNoExprError(Error):
         self.out_flow_id = out_flow_id
 
 
+class BpmnStructureError(Error):
+    __slots__ = ["node_id", "error_msg"]
+
+    def __init__(self, node_id: str, error_msg: str) -> None:
+        super().__init__()
+        self.node_id = node_id
+        self.error_msg = error_msg
+
+
 class BpmnTaskFlowError(Error):
     __slots__ = ["task_id"]
 
@@ -273,6 +198,14 @@ class CwpEdgeNoStateError(Error):
         self.edge = edge
 
 
+class CwpFileStructureError(Error):
+    __slots__ = ["element"]
+
+    def __init__(self, element: str) -> None:
+        super().__init__()
+        self.element = element
+
+
 class CwpGraphConnError(Error):
     def __init__(self) -> None:
         super().__init__()
@@ -284,14 +217,6 @@ class CwpMultStartStateError(Error):
     def __init__(self, start_states: typing.List[str]) -> None:
         super().__init__()
         self.start_states = start_states
-
-
-class CwpFileStructureError(Error):
-    __slots__ = ["element"]
-
-    def __init__(self, element: str) -> None:
-        super().__init__()
-        self.element = element
 
 
 class CwpNoEndStatesError(Error):
@@ -312,20 +237,79 @@ class CwpNoStartStateError(Error):
         super().__init__()
 
 
-class NotImplementedError(Error):
-    __slots__ = ["function"]
+class ExceptionError(Error):
+    __slots__ = "exception_str"
 
-    def __init__(self, function: str) -> None:
+    def __init__(self, exception_str: str):
         super().__init__()
-        self.function = function
+        self.exception_str = exception_str
 
 
-class MissingFileError(Error):
-    __slots__ = ["file_name"]
+class ExpressionComputationCompatabilityError(Error):
+    __slots__ = ["ltype", "rtype"]
 
-    def __init__(self, file_name: str) -> None:
+    def __init__(self, ltype: str, rtype: str) -> None:
         super().__init__()
-        self.file_name = file_name
+        self.ltype = ltype
+        self.rtype = rtype
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionComputationCompatabilityError):
+            return self.ltype == other.ltype and self.rtype == other.rtype
+        return False
+
+
+class ExpressionNegatorError(Error):
+    __slots__ = ["_type"]
+
+    def __init__(self, type: str) -> None:
+        super().__init__()
+        self._type = type
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionNegatorError):
+            return self._type == other._type
+        return False
+
+
+class ExpressionRelationCompatabilityError(Error):
+    __slots__ = ["ltype", "rtype"]
+
+    def __init__(self, ltype: str, rtype: str) -> None:
+        super().__init__()
+        self.ltype = ltype
+        self.rtype = rtype
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionComputationCompatabilityError):
+            return self.ltype == other.ltype and self.rtype == other.rtype
+        return False
+
+
+class ExpressionRelationalNotError(Error):
+    __slots__ = ["_type"]
+
+    def __init__(self, type: str) -> None:
+        super().__init__()
+        self._type = type
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionRelationalNotError):
+            return self._type == other._type
+        return False
+
+
+class ExpressionUnrecognizedID(Error):
+    __slots__ = ["_id"]
+
+    def __init__(self, id: str) -> None:
+        super().__init__()
+        self._id = id
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionUnrecognizedID):
+            return self._id == other._id
+        return False
 
 
 class MessageError(Error):
@@ -337,20 +321,36 @@ class MessageError(Error):
         self.error_msg = error_msg
 
 
+class MissingFileError(Error):
+    __slots__ = ["file_name"]
+
+    def __init__(self, file_name: str) -> None:
+        super().__init__()
+        self.file_name = file_name
+
+
+class NotImplementedError(Error):
+    __slots__ = ["function"]
+
+    def __init__(self, function: str) -> None:
+        super().__init__()
+        self.function = function
+
+
+class SpinAssertionError(Error):
+    __slots__ = ["list_of_error_maps"]
+
+    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
+        super().__init__()
+        self.list_of_error_maps = list_of_error_maps
+
+
 class SpinCoverageError(Error):
     __slots__ = ["coverage_errors"]
 
     def __init__(self, coverage_errors: typing.List[typing.Dict[str, str]]) -> None:
         super().__init__()
         self.coverage_errors = coverage_errors
-
-
-class SpinSyntaxError(Error):
-    __slots__ = ["list_of_error_maps"]
-
-    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
-        super().__init__()
-        self.list_of_error_maps = list_of_error_maps
 
 
 class SpinInvalidEndStateError(Error):
@@ -361,7 +361,7 @@ class SpinInvalidEndStateError(Error):
         self.list_of_error_maps = list_of_error_maps
 
 
-class SpinAssertionError(Error):
+class SpinSyntaxError(Error):
     __slots__ = ["list_of_error_maps"]
 
     def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
@@ -444,6 +444,14 @@ class TypingAssignCompatabilityError(Error):
         return False
 
 
+class TypingNegateBoolError(Error):
+    __slots__ = ["expr_type"]
+
+    def __init__(self, expr_type: str) -> None:
+        super().__init__()
+        self.expr_type = expr_type
+
+
 class TypingNoTypeError(Error):
     __slots__ = ["id"]
 
@@ -455,14 +463,6 @@ class TypingNoTypeError(Error):
         if isinstance(other, TypingNoTypeError):
             return self.id == other.id
         return False
-
-
-class TypingNegateBoolError(Error):
-    __slots__ = ["expr_type"]
-
-    def __init__(self, expr_type: str) -> None:
-        super().__init__()
-        self.expr_type = expr_type
 
 
 class TypingNotNonBoolError(Error):
