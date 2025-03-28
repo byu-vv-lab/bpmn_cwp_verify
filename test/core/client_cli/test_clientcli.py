@@ -9,6 +9,7 @@ from bpmncwpverify.client_cli.clientcli import (
     RequestError,
     HTTPError,
     Outputs,
+    cli_verify,
 )
 from returns.result import Success, Failure
 import sys
@@ -180,3 +181,41 @@ def test_trigger_lambda_success(mocker):
     assert isinstance(returns_response, Outputs)
 
     assert returns_response.promela == "test_good_response"
+
+
+def test_cli_verify_with_verify_success(mocker):
+    mock_outputs = mocker.Mock()
+    mock_outputs.promela = "test_output"
+    return_val = Success(mock_outputs)
+
+    mocker.patch("bpmncwpverify.client_cli.clientcli._verify", return_value=return_val)
+    mock_print = mocker.patch("builtins.print")
+
+    cli_verify()
+
+    mock_print.assert_called_once_with("test_output")
+
+
+def test_cli_verify_with_Failure(mocker):
+    mock_failure = mocker.Mock(spec=Failure)
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli._verify", return_value=mock_failure
+    )
+    mocker.patch(
+        "bpmncwpverify.client_cli.clientcli.get_error_message",
+        return_value="test_message",
+    )
+    mock_print = mocker.patch("builtins.print")
+
+    cli_verify()
+
+    mock_print.assert_called_once_with("test_message")
+
+
+def test_cli_verify_unhandeled_type(mocker):
+    mocker.patch("bpmncwpverify.client_cli.clientcli._verify")
+
+    with pytest.raises(AssertionError) as exc_info:
+        cli_verify()
+
+    assert exc_info.value.args[0] == "ERROR: unhandled type"
