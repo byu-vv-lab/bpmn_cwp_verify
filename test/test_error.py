@@ -69,6 +69,26 @@ test_inputs: list[tuple[Error, str]] = [
         "Flow error: All flow objects other than end events and compensating activities must have an outgoing sequence flow, if the process level includes any start or end events. node: node_id",
     ),
     (
+        BpmnFlowStartEventError("node_id"),
+        "Flow error: A start event cannot have an incoming sequence flow and cannot have an outgoing message flow. node: node_id",
+    ),
+    (
+        BpmnFlowTypeError("flow_id"),
+        "Flow error: Flow 'flow_id' is not a sequence flow when it should be.",
+    ),
+    (
+        BpmnGraphConnError(),
+        "Bpmn Process graph error: Process graph is not fully connected.",
+    ),
+    (
+        BpmnInvalidIdError("bpmn_id"),
+        "Bpmn id error: the bpmn element with id:bpmn_id contains an unsupported character (probably white space).",
+    ),
+    (
+        BpmnMissingEventsError(1, 2),
+        "Event error: Start events = 1, End events = 2. Missing required start or end events.",
+    ),
+    (
         BpmnStructureError("node_id", "error_msg"),
         "BPMN ERROR at node: node_id. error_msg",
     ),
@@ -105,6 +125,11 @@ test_ids: list[str] = [
     "BpmnFlowIncomingError",
     "BpmnFlowNoIdError",
     "BpmnFlowOutgoingError",
+    "BpmnFlowStartEventError",
+    "BpmnFlowTypeError",
+    "BpmnGraphConnError",
+    "BpmnInvalidIdError",
+    "BpmnMissingEventsError",
     "BpmnStructureError",
     "NotImplementedError",
     "StateInitNotInValues",
