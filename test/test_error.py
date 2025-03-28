@@ -89,6 +89,50 @@ test_inputs: list[tuple[Error, str]] = [
         "Event error: Start events = 1, End events = 2. Missing required start or end events.",
     ),
     (
+        BpmnMsgEndEventError("event_id"),
+        "Message flow error: End events cannot have incoming messages. Event ID: event_id.",
+    ),
+    (
+        BpmnMsgFlowSamePoolError("msg_id"),
+        "Message flow error: msg_id connects nodes in the same pool.",
+    ),
+    (
+        BpmnMsgGatewayError("gateway_type", "gateway_id"),
+        "Gateway error: gateway_type gateways cannot have incoming or outgoing messages. Gateway ID: gateway_id.",
+    ),
+    (
+        BpmnMsgMissingRefError("msg_id"),
+        "Message flow error: Source ref or target ref is missing for message 'msg_id'.",
+    ),
+    (
+        BpmnMsgNodeTypeError("msg_id"),
+        "Message flow error: 'From' node and 'To' node of message are not of type Node. Message flow id: msg_id.",
+    ),
+    (
+        BpmnMsgSrcError("obj_type", "node_id"),
+        "Message flow source error while visiting obj_type. A message flow can only come from specific sources. Node ID: node_id.",
+    ),
+    (
+        BpmnMsgStartEventError("node_id"),
+        "Message flow error: A start event with incoming message flow must have a Message trigger. node: node_id",
+    ),
+    (
+        BpmnMsgTargetError("obj_type", "node_id"),
+        "Message flow target error while visiting obj_type. A message flow can only go to a Message start or intermediate event; Receive, User, or Service task; Subprocess; or black box pool. Node ID: node_id.",
+    ),
+    (
+        BpmnNodeTypeError("flow_id"),
+        "Node type error: Source or target node of flow is not of type node. Flow details: flow_id.",
+    ),
+    (
+        BpmnSeqFlowEndEventError("event_id"),
+        "Sequence flow error: End event 'event_id' cannot have outgoing sequence flows.",
+    ),
+    (
+        BpmnSeqFlowNoExprError("gateway_id", "out_flow_id"),
+        "Flow: `out_flow_id` does not have an expression. All flows coming out of gateways must have expressions. Gateway id: gateway_id",
+    ),
+    (
         BpmnStructureError("node_id", "error_msg"),
         "BPMN ERROR at node: node_id. error_msg",
     ),
@@ -130,6 +174,17 @@ test_ids: list[str] = [
     "BpmnGraphConnError",
     "BpmnInvalidIdError",
     "BpmnMissingEventsError",
+    "BpmnMsgEndEventError",
+    "BpmnMsgFlowSamePoolError",
+    "BpmnMsgGatewayError",
+    "BpmnMsgMissingRefError",
+    "BpmnMsgNodeTypeError",
+    "BpmnMsgSrcError",
+    "BpmnMsgStartEventError",
+    "BpmnMsgTargetError",
+    "BpmnNodeTypeError",
+    "BpmnSeqFlowEndEventError",
+    "BpmnSeqFlowNoExprError",
     "BpmnStructureError",
     "NotImplementedError",
     "StateInitNotInValues",
