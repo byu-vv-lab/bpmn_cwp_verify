@@ -1,4 +1,5 @@
 import pytest
+from unittest import mock
 
 from returns.maybe import Some, Nothing
 
@@ -60,6 +61,10 @@ test_inputs: list[tuple[Error, str]] = [
         "Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: node_id.",
     ),
     (
+        BpmnFlowNoIdError(mock.Mock(attrib="test_attrib")),
+        "Flow error: Flow_id does not exist. Occurred at tree element with following attributes: test_attrib.",
+    ),
+    (
         BpmnStructureError("node_id", "error_msg"),
         "BPMN ERROR at node: node_id. error_msg",
     ),
@@ -94,6 +99,7 @@ test_inputs: list[tuple[Error, str]] = [
 
 test_ids: list[str] = [
     "BpmnFlowIncomingError",
+    "BpmnFlowNoIdError",
     "BpmnStructureError",
     "NotImplementedError",
     "StateInitNotInValues",
