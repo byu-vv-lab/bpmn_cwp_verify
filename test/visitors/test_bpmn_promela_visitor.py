@@ -348,7 +348,8 @@ def test_gen_behavior_model(promela_visitor, mocker):
 
     promela_visitor._gen_behavior_model(ctx)
     assert (
-        str(promela_visitor.behaviors) == "inline TEST_BehaviorModel(){\n\tskip\n}\n\n"
+        str(promela_visitor.behaviors)
+        == "inline TEST_BehaviorModel(){\n\tskip\n\tUpdate_State()\n}\n\n"
     )
 
 
