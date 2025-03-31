@@ -201,6 +201,44 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (NotImplementedError("notImplemented"), "ERROR: not implemented 'notImplemented'"),
     (
+        SpinAssertionError(
+            [
+                {"assertion": "test_assertion1", "depth": "test_depth1"},
+                {"assertion": "test_assertion2", "depth": "test_depth2"},
+            ]
+        ),
+        "Assertion Error:\n2 error(s) occurred:\n1: Assertion: test_assertion1, Depth info: test_depth1\n2: Assertion: test_assertion2, Depth info: test_depth2",
+    ),
+    (
+        SpinCoverageError(
+            [
+                {
+                    "proctype": "test_proctype",
+                    "file": "test_file",
+                    "line": "test_line",
+                    "message": "test_message",
+                }
+            ]
+        ),
+        "Proctype: test_proctype, File: test_file, Line: test_line, Message: test_message",
+    ),
+    (
+        SpinInvalidEndStateError([{"info": "test_info1"}, {"info": "test_info2"}]),
+        "Invalid end state\n2 error(s) occurred:\n1: test_info1\n2: test_info2",
+    ),
+    (
+        SpinSyntaxError(
+            [
+                {
+                    "line_number": "1",
+                    "file_path": "test/file/path",
+                    "error_msg": "test_msg",
+                }
+            ]
+        ),
+        "Syntax Error in generated promela:\n1 error(s) occurred:\n1: On line 1 in the file 'test/file/path': test_msg",
+    ),
+    (
         StateInitNotInValues("a", Some(0), Some(1), {"b", "c"}),
         "STATE ERROR: init value 'a' at line 0:1 not in allowed values ['b', 'c']",
     ),
@@ -266,6 +304,10 @@ test_ids: list[str] = [
     "MessageError",
     "MissingFileError",
     "NotImplementedError",
+    "SpinAssertionError",
+    "SpinCoverageError",
+    "SpinInvalidEndStateError",
+    "SpinSyntaxError",
     "StateInitNotInValues",
     "StateInitNotInValuesLineCol",
     "StateMultipleDefinitionError",
