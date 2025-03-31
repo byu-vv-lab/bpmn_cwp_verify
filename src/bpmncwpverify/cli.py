@@ -44,10 +44,6 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
         "bpmn_file",
         help="BPMN workflow file in XML",
     )
-    argument_parser.add_argument(
-        "behavior_file",
-        help="Behavior models file in Promela",
-    )
     return argument_parser
 
 
@@ -82,10 +78,6 @@ def _verify() -> Result["Outputs", Error]:
     )
     if not_(is_successful)(cwp_root):
         return Failure(MissingFileError(cwp_file))
-    behavior_file = args.behavior_file
-    behavior_str = _get_file_contents(behavior_file)
-    if not_(is_successful)(behavior_str):
-        return Failure(MissingFileError(behavior_file))
 
     builder: StateBuilder = StateBuilder()
 
@@ -94,7 +86,6 @@ def _verify() -> Result["Outputs", Error]:
         partial(StateBuilder.with_state_, state_str),
         partial(StateBuilder.with_cwp_, cwp_root),
         partial(StateBuilder.with_bpmn_, bpmn_root),
-        partial(StateBuilder.with_behavior_, behavior_str),
         bind_result(StateBuilder.build_),
     )
 
@@ -114,14 +105,7 @@ def verify() -> None:
             assert False, "ERROR: unhandled type"
 
 
-def generate_stubs() -> None:
-    """Generate behavior stubs for the BPMN workflow"""
-    pass
-
-
-def web_verify(
-    bpmn: str, cwp: str, state: str, behavior: str
-) -> Result["Outputs", Error]:
+def web_verify(bpmn: str, cwp: str, state: str) -> Result["Outputs", Error]:
     bpmn_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(bpmn))
     cwp_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(cwp))
 
@@ -132,7 +116,6 @@ def web_verify(
         partial(StateBuilder.with_state_, IOResult.from_value(state)),
         partial(StateBuilder.with_cwp_, cwp_root),
         partial(StateBuilder.with_bpmn_, bpmn_root),
-        partial(StateBuilder.with_behavior_, IOResult.from_value(behavior)),
         bind_result(StateBuilder.build_),
     )
 
