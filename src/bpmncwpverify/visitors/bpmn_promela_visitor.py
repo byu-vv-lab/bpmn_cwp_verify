@@ -264,7 +264,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         )
         if ctx.behavior:
             p = re.compile("[\n]+")
-            processed_str_list = p.sub("\n", ctx.behavior).split("\n")
+            processed_str_list = p.sub("\n", ctx.behavior).strip().split("\n")
 
             for line in processed_str_list:
                 if line in start_block_key_words:
