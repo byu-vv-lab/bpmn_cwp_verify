@@ -1,16 +1,10 @@
-const enum INIT INIT
-const enum discharge discharge
-const enum expired expired
-const enum homeCare homeCare
-const enum outsideHomeCare outsideHomeCare
-enum sevNeed sevNeed INIT [INIT, homeCare, discharge, expired, outsideHomeCare]
-enum trndSevNeed trndSevNeed INIT [INIT, homeCare, discharge, expired, outsideHomeCare]
+enum all { INIT }
+enum PatientNeed { homeCare, discharge, expired, outsideHomeCare }
+var sevNeed: PatientNeed = INIT
+var trndSevNeed: PatientNeed = INIT
 
-const enum yes yes
-const enum no no
-enum alert alert INIT [INIT, yes, no]
+enum BinDecision = { yes, no }
+var alert: BinDecision = INIT
 
-const enum scheduled scheduled
-const enum unscheduled unscheduled
-const enum now now
-enum examTime examTime INIT [INIT, scheduled, unscheduled, now]
+enum Time { scheduled, unscheduled, now }
+var examTime: Time = INIT
