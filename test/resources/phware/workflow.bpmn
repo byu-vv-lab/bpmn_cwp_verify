@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_07fgnzt" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="12.0.0">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_07fgnzt" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="e7bcff8">
   <bpmn:collaboration id="Collaboration_1cy17wr">
     <bpmn:participant id="Participant_0kylnmw" name="Clinicians" processRef="Process_1rkaxxw" />
     <bpmn:participant id="Participant_1b7yqru" name="AI cloud server" processRef="Process_0qvzd4w" />
@@ -14,6 +14,14 @@
       <bpmn:outgoing>Flow_0l518mv</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:task id="Activity_11icm0p" name="01- Doc-Nurse Examine pt">
+      <bpmn:documentation>    assert(sevNeed != discharge)
+    assert(sevNeed != expired)
+    if
+    :: true -&gt; sevNeed = homeCare
+    :: ((sevNeed == INIT) || (trndSevNeed == outsideHomeCare)) -&gt; sevNeed = outsideHomeCare
+    :: ((sevNeed != INIT) &amp;&amp; (trndSevNeed == homeCare)) -&gt; sevNeed = discharge
+    fi
+    trndSevNeed = sevNeed</bpmn:documentation>
       <bpmn:incoming>Flow_0l518mv</bpmn:incoming>
       <bpmn:incoming>Flow_0jz2w66</bpmn:incoming>
       <bpmn:outgoing>Flow_1vil2qp</bpmn:outgoing>
@@ -50,6 +58,11 @@
       <bpmn:timerEventDefinition id="TimerEventDefinition_1skwubn" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_1f3c6ct" name="07-Doc-Nurse review vitals and exam schedule">
+      <bpmn:documentation>alert = no
+    if
+    :: examTime == scheduled -&gt; examTime = now
+    :: true
+    fi</bpmn:documentation>
       <bpmn:incoming>Flow_0spp0wu</bpmn:incoming>
       <bpmn:outgoing>Flow_09z1r76</bpmn:outgoing>
     </bpmn:task>
@@ -61,6 +74,9 @@
       <bpmn:outgoing>Flow_0emq1yg</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:task id="Activity_05llwq4" name="08b- Scheduler schedule routine exam and inform pt">
+      <bpmn:documentation>if
+        :: true -&gt; examTime = scheduled
+    fi</bpmn:documentation>
       <bpmn:incoming>Flow_1rfqfky</bpmn:incoming>
       <bpmn:incoming>Flow_189nm76</bpmn:incoming>
       <bpmn:outgoing>Flow_0q85pgz</bpmn:outgoing>
@@ -74,6 +90,11 @@
       <bpmn:outgoing>Flow_12k9phr</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:task id="Activity_0pmtxeh" name="07a - Doc-Nurse review alert, vitals, exam schedule and home situation">
+      <bpmn:documentation>alert = no
+    if
+    :: examTime == scheduled -&gt; examTime = now
+    :: true
+    fi</bpmn:documentation>
       <bpmn:incoming>Flow_1arg57d</bpmn:incoming>
       <bpmn:outgoing>Flow_0wumukp</bpmn:outgoing>
     </bpmn:task>
@@ -88,6 +109,13 @@
       <bpmn:incoming>Flow_00vh7e4</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Activity_15twws8" name="03- Doc order ambulatory care or hospital admit">
+      <bpmn:documentation>assert(sevNeed != discharge)
+    assert(sevNeed != expired)
+    if
+    :: true -&gt; sevNeed = expired
+    :: true -&gt; sevNeed = discharge
+    fi
+    trndSevNeed = sevNeed</bpmn:documentation>
       <bpmn:incoming>Flow_1i2f31g</bpmn:incoming>
       <bpmn:outgoing>Flow_0if4pkb</bpmn:outgoing>
     </bpmn:task>
@@ -102,6 +130,9 @@
       <bpmn:messageEventDefinition id="MessageEventDefinition_1d9qbno" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_04tpysh" name="08a- Scheduler set up exam now and inform pt">
+      <bpmn:documentation>if
+        :: true -&gt; examTime = now
+    fi</bpmn:documentation>
       <bpmn:incoming>Flow_0ugiucz</bpmn:incoming>
       <bpmn:incoming>Flow_15bkrk6</bpmn:incoming>
       <bpmn:outgoing>Flow_0jccwa3</bpmn:outgoing>
@@ -138,7 +169,7 @@
       <bpmn:incoming>Flow_0ovofms</bpmn:incoming>
     </bpmn:endEvent>
   </bpmn:process>
-  <bpmn:process id="Process_0qvzd4w">
+  <bpmn:process id="Process_0qvzd4w" isExecutable="false">
     <bpmn:startEvent id="Event_1v0tpdm">
       <bpmn:outgoing>Flow_0ybbjby</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0gshog9" />
@@ -147,13 +178,25 @@
       <bpmn:incoming>Flow_0yuat3o</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Activity_19u2yz3" name="06- PDA analyze vitals">
+      <bpmn:documentation>if
+    :: sevNeed == discharge
+    :: else -&gt;
+        if
+        :: true -&gt; trndSevNeed = homeCare
+        :: true -&gt; trndSevNeed = outsideHomeCare
+            if
+            :: true -&gt; alert = yes
+            :: true -&gt; alert = no
+            fi
+        fi
+    fi</bpmn:documentation>
       <bpmn:incoming>Flow_0ybbjby</bpmn:incoming>
       <bpmn:outgoing>Flow_0yuat3o</bpmn:outgoing>
     </bpmn:task>
     <bpmn:sequenceFlow id="Flow_0ybbjby" sourceRef="Event_1v0tpdm" targetRef="Activity_19u2yz3" />
     <bpmn:sequenceFlow id="Flow_0yuat3o" sourceRef="Activity_19u2yz3" targetRef="Event_0bi07y1" />
   </bpmn:process>
-  <bpmn:process id="Process_1flbpwq">
+  <bpmn:process id="Process_1flbpwq" isExecutable="false">
     <bpmn:startEvent id="Event_0mqix7y" name="Start170">
       <bpmn:outgoing>Flow_06kr7ok</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1c75lp9" />
@@ -163,6 +206,11 @@
       <bpmn:outgoing>Flow_0m1nh56</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_0pl73xy" name="05- Pt or care-giver measure vitals at instructed times">
+      <bpmn:documentation>if
+    :: trndSevNeed == outsideHomeCare -&gt;
+        sevNeed = expired
+    :: true
+    fi</bpmn:documentation>
       <bpmn:incoming>Flow_0m1nh56</bpmn:incoming>
       <bpmn:incoming>Flow_1kexvd1</bpmn:incoming>
       <bpmn:outgoing>Flow_1253ah4</bpmn:outgoing>
