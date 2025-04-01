@@ -1,0 +1,16 @@
+const enum INIT INIT
+const enum discharge discharge
+const enum expired expired
+const enum homeCare homeCare
+const enum outsideHomeCare outsideHomeCare
+enum sevNeed sevNeed INIT [INIT, homeCare, discharge, expired, outsideHomeCare]
+enum trndSevNeed trndSevNeed INIT [INIT, homeCare, discharge, expired, outsideHomeCare]
+
+const enum yes yes
+const enum no no
+enum alert alert INIT [INIT, yes, no]
+
+const enum scheduled scheduled
+const enum unscheduled unscheduled
+const enum now now
+enum examTime examTime INIT [INIT, scheduled, unscheduled, now]
