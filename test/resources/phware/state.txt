@@ -1,10 +1,11 @@
 enum all { INIT }
-enum PatientNeed { homeCare, discharge, expired, outsideHomeCare }
+enum PatientNeed { homeCare discharge expired outsideHomeCare }
+enum BinDecision { yes no }
+enum Time { scheduled unscheduled now }
+
 var sevNeed: PatientNeed = INIT
 var trndSevNeed: PatientNeed = INIT
 
-enum BinDecision = { yes, no }
 var alert: BinDecision = INIT
 
-enum Time { scheduled, unscheduled, now }
 var examTime: Time = INIT

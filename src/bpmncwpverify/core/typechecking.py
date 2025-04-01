@@ -70,7 +70,7 @@ def get_relational_type_result(
 
 
 def get_type_assign(ltype: str, rtype: str) -> Result[str, Error]:
-    if ltype == rtype:
+    if ltype == rtype or rtype == "all":
         return Success(ltype)
     if ltype == BYTE and (rtype == BIT):
         return Success(ltype)
