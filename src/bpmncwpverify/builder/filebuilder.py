@@ -25,7 +25,6 @@ from bpmncwpverify.core.accessmethods.cwpmethods import (
 
 class StateBuilder:
     __slots__ = [
-        "behavior_str",
         "bpmn",
         "bpmn_root",
         "cwp",
@@ -35,7 +34,6 @@ class StateBuilder:
     ]
 
     def __init__(self) -> None:
-        self.behavior_str: Result[str, Error] = Failure(Error())
         self.bpmn: Result[Bpmn, Error] = Failure(Error())
         self.bpmn_root: Result[Element, Error] = Failure(Error())
         self.cwp: Result[Cwp, Error] = Failure(Error())
@@ -80,7 +78,6 @@ class StateBuilder:
         assert is_successful(builder.state)
         assert is_successful(builder.cwp_root)
         assert is_successful(builder.bpmn_root)
-        assert is_successful(builder.behavior_str)
 
         cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
         vars = State.generate_promela((builder.state).unwrap()).unwrap()
@@ -101,10 +98,6 @@ class StateBuilder:
 
         return result
 
-    def with_behavior(self, behavior_str: str) -> "StateBuilder":
-        self.behavior_str = Success(behavior_str)
-        return self
-
     def with_bpmn(self, bpmn: Element) -> "StateBuilder":
         self.bpmn_root = Success(bpmn)
         return self
@@ -120,21 +113,6 @@ class StateBuilder:
     @staticmethod
     def build_(builder: "StateBuilder") -> Result["Outputs", Error | Exception]:
         return builder.build()
-
-    @staticmethod
-    def with_behavior_(
-        behavior_str: IOResultE[str],
-        builder_result: Result["StateBuilder", Error],
-    ) -> Result["StateBuilder", Error]:
-        if not_(is_successful)(builder_result):
-            return builder_result
-        if not_(is_successful)(behavior_str):
-            error = unsafe_perform_io(behavior_str.failure())
-            return Failure(ExceptionError(str(error)))
-
-        bpmn = Success(unsafe_perform_io(behavior_str.unwrap()))
-        builder = builder_result.unwrap()
-        return bpmn.map(builder.with_behavior)
 
     @staticmethod
     def with_bpmn_(

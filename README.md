@@ -53,6 +53,48 @@ The following are steps on how to set up your lambda function so that it can use
   1. Click on the function and scroll down to where it is titled `Layers`
   1. If you already added the layer before, simply click on `Edit` then click on the drop down menu underneath the `Layer Version` section of the table and select the desired version. If you have not added the layer yet to the function, click on `Add layer` then select `Custom layers` from the different options it provides. Then your custom layer should appear from the dropdown menu. Select the layer. Your function is now ready to use the `bpmn_cwp_verify` package
 
+## Current Lambda Code
+```
+import json
+import os
+import sys
+from bpmncwpverify.cli import web_verify
+from returns.pipeline import is_successful
+from returns.result import Result
+
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event["body"])
+        files = body.get("files", [])
+        if not files:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "No files received"})
+            }
+        bpmnData = files[0]
+        cwpData = files[1]
+        stateData = files[2]
+        behaviorData = files[3]
+
+        result : Result = web_verify(bpmnData, cwpData, stateData, behaviorData)
+        if is_successful(result):
+            outputs = result.unwrap()
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"message": outputs.promela})
+            }
+        else:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "Verification failed"})
+            }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }
+```
+
 ## TODO
 
 ### Repository organization and entry points
