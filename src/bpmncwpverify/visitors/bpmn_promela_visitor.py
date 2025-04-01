@@ -1,4 +1,5 @@
 from typing import List, Optional
+import re
 from bpmncwpverify.core.bpmn import (
     BpmnElement,
     Flow,
@@ -256,11 +257,22 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         Writes to the behaviors field to make an inline behavior model for the
         passed element.
         """
+        start_block_key_words = {"if"}
+        end_block_key_words = {"fi"}
         self.behaviors.write_str(
-            f"inline {ctx.element.id}_BehaviorModel(){{", NL_SINGLE, IndentAction.INC
+            f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
         )
         if ctx.behavior:
-            self.behaviors.write_str(ctx.behavior, NL_SINGLE)
+            p = re.compile("[\n]+")
+            processed_str_list = p.sub("\n", ctx.behavior).strip().split("\n")
+
+            for line in processed_str_list:
+                if line in start_block_key_words:
+                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
+                elif line in end_block_key_words:
+                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
+                else:
+                    self.behaviors.write_str(line, NL_SINGLE)
         else:
             self.behaviors.write_str("skip", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
