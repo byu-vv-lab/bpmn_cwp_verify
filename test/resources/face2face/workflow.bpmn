@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1cqtkxl" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="14.0.0">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1cqtkxl" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="e7bcff8">
   <bpmn:collaboration id="Collaboration_02s4ttn">
     <bpmn:participant id="Participant_0glayq8" name="Buyer/Seller" processRef="Process_1xbpt9j" />
   </bpmn:collaboration>
@@ -11,10 +11,18 @@
       <bpmn:outgoing>Flow_13xpfx7</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:task id="Activity_1unsjkg" name="2-Buyer and Seller negotiate terms">
+      <bpmn:documentation>if
+:: true -&gt; terms = agreed
+:: true -&gt; terms = failed
+fi</bpmn:documentation>
       <bpmn:incoming>Flow_1kx5xjv</bpmn:incoming>
       <bpmn:outgoing>Flow_1oezfcg</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1t579ox" name="3-Buyer and Seller negotiate price">
+      <bpmn:documentation>if
+:: true -&gt; paymentOffered = paymentAmount
+:: true -&gt; paymentOffered = belowPaymentAmount
+fi</bpmn:documentation>
       <bpmn:incoming>Flow_13xpfx7</bpmn:incoming>
       <bpmn:outgoing>Flow_14s5onf</bpmn:outgoing>
     </bpmn:task>
@@ -43,10 +51,12 @@
       <bpmn:outgoing>Flow_1y66pph</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:task id="Activity_1qqx4aq" name="7a-Buyer hands cash payment to Seller">
+      <bpmn:documentation>paymentOwner = sellerName</bpmn:documentation>
       <bpmn:incoming>Flow_0jmvvxc</bpmn:incoming>
       <bpmn:outgoing>Flow_0znbe82</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1rfm4sh" name="7b-Seller hands Backpack to Buyer">
+      <bpmn:documentation>backpackOwner = buyerName</bpmn:documentation>
       <bpmn:incoming>Flow_1y66pph</bpmn:incoming>
       <bpmn:outgoing>Flow_1sx1rdt</bpmn:outgoing>
     </bpmn:task>
@@ -62,14 +72,26 @@
       <bpmn:incoming>Flow_0diuub0</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Activity_1bckz5y" name="4-Buyer and Seller repeat price negotiation">
+      <bpmn:documentation>if
+:: true -&gt; paymentOffered = paymentAmount
+:: true -&gt; paymentOffered = belowPaymentAmount
+:: true -&gt; paymentOffered = noRetryPayment
+fi</bpmn:documentation>
       <bpmn:incoming>Flow_0q6dz8p</bpmn:incoming>
       <bpmn:outgoing>Flow_127sd29</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1mktua2" name="5-Buyer and Seller repeat terms negotiation">
+      <bpmn:documentation>if
+:: true -&gt; terms = agreed
+:: true -&gt; terms = failed
+:: true -&gt; terms = noRetry
+fi</bpmn:documentation>
       <bpmn:incoming>Flow_0koz64j</bpmn:incoming>
       <bpmn:outgoing>Flow_00oxr95</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1qm7qck" name="1-Buyer sees desired backpack and meets Seller">
+      <bpmn:documentation>backpackOwner = sellerName
+paymentOwner = buyerName</bpmn:documentation>
       <bpmn:incoming>Flow_0oiwgjd</bpmn:incoming>
       <bpmn:outgoing>Flow_1wl740o</bpmn:outgoing>
     </bpmn:task>
