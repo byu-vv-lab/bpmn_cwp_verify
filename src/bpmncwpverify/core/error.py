@@ -272,6 +272,14 @@ class ExpressionNegatorError(Error):
         return False
 
 
+class ExpressionParseError(Error):
+    __slots__ = ["exception_str"]
+
+    def __init__(self, exception_str: str):
+        super().__init__()
+        self.exception_str = exception_str
+
+
 class ExpressionRelationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -310,6 +318,16 @@ class ExpressionUnrecognizedID(Error):
         if isinstance(other, ExpressionUnrecognizedID):
             return self._id == other._id
         return False
+
+
+class FlowExpressionError(Error):
+    __slots__ = ["flow_id", "expression", "exception_str"]
+
+    def __init__(self, flow_id: str, expression: str, exception_str: str):
+        super().__init__()
+        self.flow_id = flow_id
+        self.expression = expression
+        self.exception_str = exception_str
 
 
 class MessageError(Error):
@@ -545,6 +563,8 @@ def _get_error_message(error: Error) -> str:
             return "EXPR ERROR: sometiong of type '{}' cannot be used with a mathmatical negator".format(
                 _type
             )
+        case ExpressionParseError(exception_str=exception_str):
+            return f"Error while parsing expression: {exception_str}"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
             return "EXPR ERROR: sometion of type '{}' cannot be related with something of type '{}'".format(
                 rtype, ltype
@@ -557,6 +577,10 @@ def _get_error_message(error: Error) -> str:
             return "EXPR ERROR: '{}' is not recognized as a literal or something stored in the symbol table".format(
                 _id
             )
+        case FlowExpressionError(
+            flow_id=flow_id, expression=expression, exception_str=exception_str
+        ):
+            return f"Error occurred while parsing the expression on flow: '{flow_id}' with expression: '{expression}':\n\t'{exception_str}'"
         case MessageError(node_id=node_id, error_msg=error_msg):
             return f"Inter-process message error at node: {node_id}. {error_msg}"
         case MissingFileError(file_name=file_name):
