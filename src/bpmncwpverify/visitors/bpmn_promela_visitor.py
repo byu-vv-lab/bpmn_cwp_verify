@@ -263,8 +263,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
         )
         if ctx.behavior:
-            p = re.compile("[\n]+")
-            processed_str_list = p.sub("\n", ctx.behavior).strip().split("\n")
+            text = re.sub(r"\n+", "\n", ctx.behavior)
+            processed_str_list = [itm.strip() for itm in text.split("\n")]
 
             for line in processed_str_list:
                 if line in start_block_key_words:
