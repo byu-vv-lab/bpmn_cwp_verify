@@ -275,6 +275,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                     self.behaviors.write_str(line, NL_SINGLE)
         else:
             self.behaviors.write_str("skip", NL_SINGLE)
+        # call the cwp
+        self.behaviors.write_str("Update_State()", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
