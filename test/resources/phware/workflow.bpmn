@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_07fgnzt" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="e7bcff8">
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_07fgnzt" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="ef3429c">
   <bpmn:collaboration id="Collaboration_1cy17wr">
     <bpmn:participant id="Participant_0kylnmw" name="Clinicians" processRef="Process_1rkaxxw" />
     <bpmn:participant id="Participant_1b7yqru" name="AI cloud server" processRef="Process_0qvzd4w" />
@@ -148,7 +148,7 @@
     <bpmn:sequenceFlow id="Flow_1rfqfky" name="trndSevNeed&#10;==outsideHomeCare &#38;&#38; examTime == unscheduled" sourceRef="Gateway_16cy5xh" targetRef="Activity_05llwq4" />
     <bpmn:sequenceFlow id="Flow_0q85pgz" name="examTime&#10;!=now" sourceRef="Activity_05llwq4" targetRef="Gateway_1gkv1yl" />
     <bpmn:sequenceFlow id="Flow_0wumukp" sourceRef="Activity_0pmtxeh" targetRef="Gateway_1yy3ulw" />
-    <bpmn:sequenceFlow id="Flow_0ugiucz" name="trndSevNeed&#10;==outsideHomeCare" sourceRef="Gateway_1yy3ulw" targetRef="Activity_04tpysh" />
+    <bpmn:sequenceFlow id="Flow_0ugiucz" name="trndSevNeed ==outsideHomeCare" sourceRef="Gateway_1yy3ulw" targetRef="Activity_04tpysh" />
     <bpmn:sequenceFlow id="Flow_0jccwa3" name="examTime == now" sourceRef="Activity_04tpysh" targetRef="Gateway_1gkv1yl" />
     <bpmn:sequenceFlow id="Flow_189nm76" name="trndSevNeed&#10;==outsideHomeCare &#38;&#38; examTime == unscheduled" sourceRef="Gateway_1yy3ulw" targetRef="Activity_05llwq4" />
     <bpmn:sequenceFlow id="Flow_15bkrk6" name="trndSevNeed&#10;==outsideHomeCare" sourceRef="Gateway_16cy5xh" targetRef="Activity_04tpysh" />
@@ -405,10 +405,10 @@
       <bpmndi:BPMNEdge id="Flow_0mq8ktv_di" bpmnElement="Flow_0mq8ktv">
         <di:waypoint x="860" y="374" />
         <di:waypoint x="860" y="398" />
-        <di:waypoint x="880" y="398" />
-        <di:waypoint x="880" y="421" />
+        <di:waypoint x="880" y="420" />
+        <di:waypoint x="880" y="480" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="864" y="380" width="52" height="14" />
+          <dc:Bounds x="883" y="402" width="53" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_09z1r76_di" bpmnElement="Flow_09z1r76">
@@ -449,7 +449,7 @@
         <di:waypoint x="1035" y="250" />
         <di:waypoint x="1130" y="250" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1039" y="210" width="88" height="40" />
+          <dc:Bounds x="1040" y="210" width="86" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0jccwa3_di" bpmnElement="Flow_0jccwa3">
@@ -589,12 +589,6 @@
         <dc:Bounds x="585" y="895" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="568" y="952" width="84" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="DataStoreReference_1kgsr4w_di" bpmnElement="DataStoreReference_1kgsr4w">
-        <dc:Bounds x="1035" y="905" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1050" y="962" width="21" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_07cfz9u_di" bpmnElement="Event_07cfz9u">
