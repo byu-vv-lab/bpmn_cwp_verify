@@ -115,6 +115,13 @@ class Context:
 
 
 class TokenPositions:
+    """
+    This class is simply a way to separate out the sequence flows and the message
+    flows so that when building the guard in the atomic block, we can make
+    sure that the triggerable event has a token from one of its incoming sequence
+    flows and one of its incoming message flows.
+    """
+
     __slots__ = ["seq_flows", "msg_flows", "standalone"]
 
     def __init__(
@@ -227,7 +234,11 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         Constructs a guard condition for an atomic block in a process.
         The guard checks whether a token exists at the current node, based on incoming flows.
-        Example: (hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1))
+        Example: (hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)).
+        If the element of interest here is a triggerable event, then we make sure that it
+        has a token from one of its incoming sequence flows and one of its incoming message
+        flows.
+        Example: ((hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)) && (hasToken(Node2_From_NodeInOtherProcess))).
         """
         guard = StringManager()
         guard.write_str("(")
@@ -249,7 +260,21 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                     ]
                 )
             )
+
         guard.write_str(")")
+
+        msg_flows = self._get_consume_locations(ctx).msg_flows
+        if msg_flows:
+            guard.write_str(" && (")
+            guard.write_str(
+                " && ".join(
+                    [
+                        f"hasToken({node})"
+                        for node in self._get_consume_locations(ctx).msg_flows
+                    ]
+                )
+            )
+            guard.write_str(")")
         return guard
 
     def _build_atomic_block(self, ctx: Context) -> StringManager:

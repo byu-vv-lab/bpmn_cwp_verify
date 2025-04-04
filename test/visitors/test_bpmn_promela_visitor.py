@@ -295,6 +295,37 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     assert str(guard) == "(hasToken(NODE1_FROM_NODE2) && hasToken(NODE1_FROM_NODE3))"
 
 
+def test_build_guard_with_msg_flow(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.id = "NODE1"
+
+    node2 = mocker.Mock()
+    node2.id = "NODE2"
+
+    node3 = mocker.Mock()
+    node3.id = "NODE3"
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node2
+    flow1.target_node = node1
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node3
+    flow2.target_node = node1
+
+    node1.in_flows = [flow1]
+    node1.in_msgs = [flow2]
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = node1
+    ctx.task_end = False
+    ctx.is_parallel = False
+
+    guard = promela_visitor._build_guard(ctx)
+
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (hasToken(NODE1_FROM_NODE3))"
+
+
 def test_build_atomic_block(promela_visitor, mocker):
     node1 = mocker.Mock()
     node1.id = "NODE1"
