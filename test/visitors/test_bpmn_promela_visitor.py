@@ -5,6 +5,7 @@ from bpmncwpverify.visitors.bpmn_promela_visitor import (
     NL_NONE,
     NL_SINGLE,
     Context,
+    TokenPositions,
 )
 from bpmncwpverify.util.stringmanager import StringManager, IndentAction
 
@@ -179,7 +180,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
 
-    assert promela_visitor._get_consume_locations(ctx) == ["NODE1"]
+    assert promela_visitor._get_consume_locations(ctx).get_all_flows() == ["NODE1"]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -191,7 +192,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node2.in_msgs = [flow2]
     ctx.element = node2
 
-    assert promela_visitor._get_consume_locations(ctx) == [
+    assert promela_visitor._get_consume_locations(ctx).get_all_flows() == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
@@ -374,7 +375,9 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
     mock_var_defs = mocker.Mock()
     promela_visitor.var_defs = mock_var_defs
     mock_get_consume_locations = mocker.patch.object(
-        promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
+        promela_visitor,
+        "_get_consume_locations",
+        return_value=TokenPositions(seq_flows=["VAL1", "VAL2"]),
     )
     node1 = mocker.Mock()
     node1.id = "TEST"

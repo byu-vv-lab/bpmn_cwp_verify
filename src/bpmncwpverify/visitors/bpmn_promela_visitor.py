@@ -114,6 +114,31 @@ class Context:
         return self._element
 
 
+class TokenPositions:
+    __slots__ = ["seq_flows", "msg_flows", "standalone"]
+
+    def __init__(
+        self,
+        seq_flows: Optional[List[str]] = None,
+        msg_flows: Optional[List[str]] = None,
+        standalone: str = "",
+    ) -> None:
+        self.seq_flows = seq_flows if seq_flows is not None else []
+        self.msg_flows = msg_flows if msg_flows is not None else []
+        self.standalone = standalone
+
+        assert ((seq_flows or msg_flows) and not standalone) or (
+            standalone and not (seq_flows or msg_flows)
+        ), "Cannot have seq or msg flows as long as standalone and vice versa."
+
+    def get_all_flows(self) -> List[str]:
+        return (
+            self.seq_flows + self.msg_flows
+            if (self.seq_flows or self.msg_flows)
+            else [self.standalone]
+        )
+
+
 class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     def __init__(self) -> None:
         self.defs = StringManager()
@@ -137,18 +162,23 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             return f"{ctx.element.id}_END"
         return ctx.element.id  # type: ignore
 
-    def _get_consume_locations(self, ctx: Context) -> List[str]:
+    def _get_consume_locations(self, ctx: Context) -> TokenPositions:
         """
         Returns a list of labels representing all incoming flows to a node.
         If there are no incoming flows, the node itself is returned as a label.
         Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
         """
         if not (ctx.element.in_flows or ctx.element.in_msgs) or ctx.task_end:
-            return [self._generate_location_label(ctx)]
-        return [
-            self._generate_location_label(ctx, flow)
-            for flow in ctx.element.in_flows + ctx.element.in_msgs
-        ]
+            return TokenPositions(standalone=self._generate_location_label(ctx))
+        return TokenPositions(
+            seq_flows=[
+                self._generate_location_label(ctx, flow)
+                for flow in ctx.element.in_flows
+            ],
+            msg_flows=[
+                self._generate_location_label(ctx, flow) for flow in ctx.element.in_msgs
+            ],
+        )
 
     def _get_expressions(self, ctx: Context) -> List[str]:
         """
@@ -204,13 +234,19 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         if ctx.is_parallel:
             guard.write_str(
                 " && ".join(
-                    [f"hasToken({loc})" for loc in self._get_consume_locations(ctx)]
+                    [
+                        f"hasToken({loc})"
+                        for loc in self._get_consume_locations(ctx).seq_flows
+                    ]
                 )
             )
         else:
             guard.write_str(
                 " || ".join(
-                    [f"hasToken({node})" for node in self._get_consume_locations(ctx)]
+                    [
+                        f"hasToken({node})"
+                        for node in self._get_consume_locations(ctx).seq_flows
+                    ]
                 )
             )
         guard.write_str(")")
@@ -233,7 +269,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        for location in self._get_consume_locations(ctx):
+        for location in self._get_consume_locations(ctx).get_all_flows():
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
         if ctx.has_option:
@@ -280,7 +316,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx):
+        for var in self._get_consume_locations(ctx).get_all_flows():
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
