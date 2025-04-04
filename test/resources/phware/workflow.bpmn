@@ -52,18 +52,13 @@
       <bpmn:outgoing>Flow_1arg57d</bpmn:outgoing>
       <bpmn:outgoing>Flow_0mq8ktv</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_19rhey4">
-      <bpmn:incoming>Flow_0mq8ktv</bpmn:incoming>
-      <bpmn:outgoing>Flow_0spp0wu</bpmn:outgoing>
-      <bpmn:timerEventDefinition id="TimerEventDefinition_1skwubn" />
-    </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_1f3c6ct" name="07-Doc-Nurse review vitals and exam schedule">
       <bpmn:documentation>alert = no
     if
     :: examTime == scheduled -&gt; examTime = now
     :: true
     fi</bpmn:documentation>
-      <bpmn:incoming>Flow_0spp0wu</bpmn:incoming>
+      <bpmn:incoming>Flow_0mq8ktv</bpmn:incoming>
       <bpmn:outgoing>Flow_09z1r76</bpmn:outgoing>
     </bpmn:task>
     <bpmn:exclusiveGateway id="Gateway_16cy5xh" name="Xor10 exam orders">
@@ -145,17 +140,16 @@
     <bpmn:sequenceFlow id="Flow_0if4pkb" sourceRef="Activity_15twws8" targetRef="Gateway_169v3vp" />
     <bpmn:sequenceFlow id="Flow_0ovofms" name="sevNeed == expired" sourceRef="Gateway_169v3vp" targetRef="Event_0685ddn" />
     <bpmn:sequenceFlow id="Flow_00vh7e4" name="sevNeed == discharge" sourceRef="Gateway_169v3vp" targetRef="Event_0l0nbsa" />
-    <bpmn:sequenceFlow id="Flow_0spp0wu" name="hours delay" sourceRef="Event_19rhey4" targetRef="Activity_1f3c6ct" />
     <bpmn:sequenceFlow id="Flow_18hg8nu" sourceRef="Event_0hqgm9w" targetRef="Gateway_1s4qrvx" />
     <bpmn:sequenceFlow id="Flow_1arg57d" name="alert == yes" sourceRef="Gateway_1s4qrvx" targetRef="Activity_0pmtxeh" />
-    <bpmn:sequenceFlow id="Flow_0mq8ktv" name="alert == no" sourceRef="Gateway_1s4qrvx" targetRef="Event_19rhey4" />
+    <bpmn:sequenceFlow id="Flow_0mq8ktv" name="alert == no" sourceRef="Gateway_1s4qrvx" targetRef="Activity_1f3c6ct" />
     <bpmn:sequenceFlow id="Flow_09z1r76" sourceRef="Activity_1f3c6ct" targetRef="Gateway_16cy5xh" />
     <bpmn:sequenceFlow id="Flow_0n35392" name="trndSevNeed ==outsideHomeCare" sourceRef="Gateway_16cy5xh" targetRef="Event_0hqgm9w" />
     <bpmn:sequenceFlow id="Flow_1rfqfky" name="trndSevNeed&#10;==outsideHomeCare &#38;&#38; examTime == unscheduled" sourceRef="Gateway_16cy5xh" targetRef="Activity_05llwq4" />
     <bpmn:sequenceFlow id="Flow_0q85pgz" name="examTime&#10;!=now" sourceRef="Activity_05llwq4" targetRef="Gateway_1gkv1yl" />
     <bpmn:sequenceFlow id="Flow_0wumukp" sourceRef="Activity_0pmtxeh" targetRef="Gateway_1yy3ulw" />
     <bpmn:sequenceFlow id="Flow_0ugiucz" name="trndSevNeed&#10;==outsideHomeCare" sourceRef="Gateway_1yy3ulw" targetRef="Activity_04tpysh" />
-    <bpmn:sequenceFlow id="Flow_0jccwa3" name="examTime&#10;=now" sourceRef="Activity_04tpysh" targetRef="Gateway_1gkv1yl" />
+    <bpmn:sequenceFlow id="Flow_0jccwa3" name="examTime == now" sourceRef="Activity_04tpysh" targetRef="Gateway_1gkv1yl" />
     <bpmn:sequenceFlow id="Flow_189nm76" name="trndSevNeed&#10;==outsideHomeCare &#38;&#38; examTime == unscheduled" sourceRef="Gateway_1yy3ulw" targetRef="Activity_05llwq4" />
     <bpmn:sequenceFlow id="Flow_15bkrk6" name="trndSevNeed&#10;==outsideHomeCare" sourceRef="Gateway_16cy5xh" targetRef="Activity_04tpysh" />
     <bpmn:sequenceFlow id="Flow_09uqcye" sourceRef="Activity_16mgbz6" targetRef="Event_0hqgm9w" />
@@ -228,7 +222,6 @@
       <bpmn:outgoing>Flow_1kexvd1</bpmn:outgoing>
       <bpmn:outgoing>Flow_0acak9f</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:dataStoreReference id="DataStoreReference_1kgsr4w" name="EHR" />
     <bpmn:endEvent id="Event_07cfz9u" name="End196">
       <bpmn:incoming>Flow_0t07u0i</bpmn:incoming>
     </bpmn:endEvent>
@@ -285,12 +278,6 @@
         <dc:Bounds x="835" y="324" width="50" height="50" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="895" y="342" width="48" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_14s91g3_di" bpmnElement="Event_19rhey4">
-        <dc:Bounds x="862" y="421" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="872" y="529" width="58" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1f3c6ct_di" bpmnElement="Activity_1f3c6ct">
@@ -400,13 +387,6 @@
         <di:waypoint x="478" y="180" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="472" y="146" width="59" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0spp0wu_di" bpmnElement="Flow_0spp0wu">
-        <di:waypoint x="880" y="457" />
-        <di:waypoint x="880" y="480" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="890" y="463" width="58" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_18hg8nu_di" bpmnElement="Flow_18hg8nu">
