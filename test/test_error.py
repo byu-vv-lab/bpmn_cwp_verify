@@ -25,6 +25,7 @@ from bpmncwpverify.core.error import (
     BpmnSeqFlowNoExprError,
     BpmnStructureError,
     BpmnTaskFlowError,
+    BpmnUnrecognizedElement,
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
@@ -140,6 +141,10 @@ test_inputs: list[tuple[Error, str]] = [
     (
         BpmnTaskFlowError("task_id"),
         "Task flow error: Task 'task_id' should have at least one incoming and one outgoing flow.",
+    ),
+    (
+        BpmnUnrecognizedElement("element_name"),
+        "BPMN ERROR: Unrecognized bpmn element type in workflow: element_name",
     ),
     (
         CwpEdgeNoParentExprError(mock.Mock(attrib="edge_attrib")),
@@ -298,6 +303,7 @@ test_ids: list[str] = [
     "BpmnSeqFlowNoExprError",
     "BpmnStructureError",
     "BpmnTaskFlowError",
+    "BpmnUnrecognizedElement",
     "CwpEdgeNoParentExprError",
     "CwpEdgeNoStateError",
     "CwpFileStructureError",
