@@ -6,6 +6,7 @@ from bpmncwpverify.core.error import Error
 from bpmncwpverify.builder.process_builder import ProcessBuilder
 from bpmncwpverify.core.bpmn import Process, get_element_type, BPMN_XML_NAMESPACE
 from returns.pipeline import is_successful
+from returns.functions import not_
 
 
 def from_xml(element: Element, state: State) -> Result["Process", Error]:
@@ -19,6 +20,9 @@ def from_xml(element: Element, state: State) -> Result["Process", Error]:
         tag = sub_element.tag.partition("}")[2]
 
         result = get_element_type(tag)
+        if not_(is_successful)(result):
+            return Failure(result.failure())
+        result = result.unwrap()
 
         class_object = result.from_xml(sub_element)
         builder = builder.with_element(class_object)
