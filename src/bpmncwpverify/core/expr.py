@@ -15,8 +15,8 @@ from bpmncwpverify.core.state import (
 )
 from bpmncwpverify.core.error import (
     Error,
-    ExceptionError,
     ExpressionComputationCompatabilityError,
+    ExpressionParseError,
     ExpressionRelationCompatabilityError,
     ExpressionRelationalNotError,
     ExpressionNegatorError,
@@ -101,7 +101,7 @@ def _parse_expressions(parser: ExprParser) -> Result[ExprParser.StartContext, Er
         return Success(tree)
     except ParseCancellationException as exception:
         msg = str(exception)
-        failure_value = ExceptionError(msg)
+        failure_value = ExpressionParseError(msg)
         return Failure(failure_value)
 
 

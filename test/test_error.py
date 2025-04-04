@@ -25,6 +25,7 @@ from bpmncwpverify.core.error import (
     BpmnSeqFlowNoExprError,
     BpmnStructureError,
     BpmnTaskFlowError,
+    BpmnUnrecognizedElement,
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
@@ -36,9 +37,11 @@ from bpmncwpverify.core.error import (
     Error,
     ExpressionComputationCompatabilityError,
     ExpressionNegatorError,
+    ExpressionParseError,
     ExpressionRelationCompatabilityError,
     ExpressionRelationalNotError,
     ExpressionUnrecognizedID,
+    FlowExpressionError,
     MessageError,
     MissingFileError,
     NotImplementedError,
@@ -140,6 +143,10 @@ test_inputs: list[tuple[Error, str]] = [
         "Task flow error: Task 'task_id' should have at least one incoming and one outgoing flow.",
     ),
     (
+        BpmnUnrecognizedElement("element_name"),
+        "BPMN ERROR: Unrecognized bpmn element type in workflow: element_name",
+    ),
+    (
         CwpEdgeNoParentExprError(mock.Mock(attrib="edge_attrib")),
         "CWP ERROR: Expression or parent node not found in edge. Edge details: edge_attrib.",
     ),
@@ -180,6 +187,10 @@ test_inputs: list[tuple[Error, str]] = [
         "EXPR ERROR: sometiong of type '_type' cannot be used with a mathmatical negator",
     ),
     (
+        ExpressionParseError("exception_str"),
+        "Error while parsing expression: exception_str",
+    ),
+    (
         ExpressionRelationCompatabilityError("ltype", "rtype"),
         "EXPR ERROR: sometion of type 'rtype' cannot be related with something of type 'ltype'",
     ),
@@ -190,6 +201,10 @@ test_inputs: list[tuple[Error, str]] = [
     (
         ExpressionUnrecognizedID("_id"),
         "EXPR ERROR: '_id' is not recognized as a literal or something stored in the symbol table",
+    ),
+    (
+        FlowExpressionError("flow_id", "expression", "exception_str"),
+        "Error occurred while parsing the expression on flow: 'flow_id' with expression: 'expression':\n\t'exception_str'",
     ),
     (
         MessageError("node_id", "error_msg"),
@@ -288,6 +303,7 @@ test_ids: list[str] = [
     "BpmnSeqFlowNoExprError",
     "BpmnStructureError",
     "BpmnTaskFlowError",
+    "BpmnUnrecognizedElement",
     "CwpEdgeNoParentExprError",
     "CwpEdgeNoStateError",
     "CwpFileStructureError",
@@ -298,9 +314,11 @@ test_ids: list[str] = [
     "CwpNoStartStateError",
     "ExpressionComputationCompatabilityError",
     "ExpressionNegatorError",
+    "ExpressionParseError",
     "ExpressionRelationCompatabilityError",
     "ExpressionRelationalNotError",
     "ExpressionUnrecognizedID",
+    "FlowExpressionError",
     "MessageError",
     "MissingFileError",
     "NotImplementedError",

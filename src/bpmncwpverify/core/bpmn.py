@@ -3,6 +3,8 @@ from bpmncwpverify.core.error import (
 )
 
 from typing import List, Dict, Union, TypeVar, Type
+from returns.result import Result, Failure, Success
+from bpmncwpverify.core.error import Error, BpmnUnrecognizedElement
 from xml.etree.ElementTree import Element
 
 
@@ -418,7 +420,7 @@ class Process(BpmnElement):
         visitor.end_visit_process(self)
 
 
-def get_element_type(tag: str) -> Union[type[SequenceFlow], type[Node]]:
+def get_element_type(tag: str) -> Result[Union[type[SequenceFlow], type[Node]], Error]:
     """
     Maps tag name to its respective builder function
 
@@ -441,9 +443,10 @@ def get_element_type(tag: str) -> Union[type[SequenceFlow], type[Node]]:
         mapping.get("task") if "task" in tag.lower() else None
     )
 
-    assert result
+    if not result:
+        return Failure(BpmnUnrecognizedElement(tag))
 
-    return result
+    return Success(result)
 
 
 class Bpmn:
