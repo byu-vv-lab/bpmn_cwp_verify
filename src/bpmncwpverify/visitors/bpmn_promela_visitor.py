@@ -254,40 +254,31 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         flows.
         Example: ((hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)) && (hasToken(Node2_From_NodeInOtherProcess))).
         """
-        guard = StringManager()
-        inner_process_positions = self._get_consume_locations(
-            ctx
-        ).get_in_process_positions()
-        msg_positions = self._get_consume_locations(ctx).msg_flows
+
+        guard: StringManager = StringManager()
+
+        # Store the consume locations to avoid multiple calls.
+        consume_locations: TokenPositions = self._get_consume_locations(ctx)
+        inner_process_positions: List[str] = (
+            consume_locations.get_in_process_positions()
+        )
+        msg_positions: List[str] = consume_locations.msg_flows
 
         if inner_process_positions:
             guard.write_str("(")
+            tokens: List[str] = [f"hasToken({pos})" for pos in inner_process_positions]
             if ctx.is_parallel:
-                guard.write_str(
-                    " && ".join([f"hasToken({loc})" for loc in inner_process_positions])
-                )
+                guard.write_str(" && ".join(tokens))
             else:
-                guard.write_str(
-                    " || ".join(
-                        [f"hasToken({node})" for node in inner_process_positions]
-                    )
-                )
-
+                guard.write_str(" || ".join(tokens))
             guard.write_str(")")
 
         if msg_positions:
-            guard.write_str(" && (") if inner_process_positions else guard.write_str(
-                "("
-            )
-            guard.write_str(
-                " && ".join(
-                    [
-                        f"hasToken({node})"
-                        for node in self._get_consume_locations(ctx).msg_flows
-                    ]
-                )
-            )
+            guard.write_str(" && (" if inner_process_positions else "(")
+            tokens_msg: List[str] = [f"hasToken({pos})" for pos in msg_positions]
+            guard.write_str(" && ".join(tokens_msg))
             guard.write_str(")")
+
         return guard
 
     def _build_atomic_block(self, ctx: Context) -> StringManager:
