@@ -180,7 +180,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
 
-    assert promela_visitor._get_consume_locations(ctx).get_all_flows() == ["NODE1"]
+    assert promela_visitor._get_consume_locations(ctx).get_all_positions() == ["NODE1"]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -192,7 +192,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node2.in_msgs = [flow2]
     ctx.element = node2
 
-    assert promela_visitor._get_consume_locations(ctx).get_all_flows() == [
+    assert promela_visitor._get_consume_locations(ctx).get_all_positions() == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
