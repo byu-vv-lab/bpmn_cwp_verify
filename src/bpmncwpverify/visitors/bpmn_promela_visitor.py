@@ -134,16 +134,30 @@ class TokenPositions:
         self.msg_flows = msg_flows if msg_flows is not None else []
         self.standalone = standalone
 
-        assert ((seq_flows or msg_flows) and not standalone) or (
-            standalone and not (seq_flows or msg_flows)
-        ), "Cannot have seq or msg flows as long as standalone and vice versa."
+        # Ensure that either seq/msg flows are provided or a standalone position, but not both.
+        if (self.seq_flows or self.msg_flows) and self.standalone:
+            raise ValueError(
+                "Cannot have both sequence/message flows and a standalone position."
+            )
+        if not ((self.seq_flows or self.msg_flows) or self.standalone):
+            raise ValueError(
+                "Either sequence/message flows or a standalone position must be provided."
+            )
 
-    def get_all_flows(self) -> List[str]:
+    def get_all_positions(self) -> List[str]:
         return (
             self.seq_flows + self.msg_flows
             if (self.seq_flows or self.msg_flows)
             else [self.standalone]
         )
+
+    def get_in_process_positions(self) -> List[str]:
+        if self.seq_flows:
+            return self.seq_flows
+        elif self.standalone:
+            return [self.standalone]
+        else:
+            return []
 
 
 class PromelaGenVisitor(BpmnVisitor):  # type: ignore
@@ -241,34 +255,30 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         Example: ((hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)) && (hasToken(Node2_From_NodeInOtherProcess))).
         """
         guard = StringManager()
-        seq_flows = self._get_consume_locations(ctx).seq_flows
-        msg_flows = self._get_consume_locations(ctx).msg_flows
+        inner_process_positions = self._get_consume_locations(
+            ctx
+        ).get_in_process_positions()
+        msg_positions = self._get_consume_locations(ctx).msg_flows
 
-        if seq_flows:
+        if inner_process_positions:
             guard.write_str("(")
             if ctx.is_parallel:
                 guard.write_str(
-                    " && ".join(
-                        [
-                            f"hasToken({loc})"
-                            for loc in self._get_consume_locations(ctx).seq_flows
-                        ]
-                    )
+                    " && ".join([f"hasToken({loc})" for loc in inner_process_positions])
                 )
             else:
                 guard.write_str(
                     " || ".join(
-                        [
-                            f"hasToken({node})"
-                            for node in self._get_consume_locations(ctx).seq_flows
-                        ]
+                        [f"hasToken({node})" for node in inner_process_positions]
                     )
                 )
 
             guard.write_str(")")
 
-        if msg_flows:
-            guard.write_str(" && (") if seq_flows else guard.write_str("(")
+        if msg_positions:
+            guard.write_str(" && (") if inner_process_positions else guard.write_str(
+                "("
+            )
             guard.write_str(
                 " && ".join(
                     [
@@ -297,7 +307,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        for location in self._get_consume_locations(ctx).get_all_flows():
+        for location in self._get_consume_locations(ctx).get_all_positions():
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
         if ctx.has_option:
@@ -344,7 +354,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx).get_all_flows():
+        for var in self._get_consume_locations(ctx).get_all_positions():
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
