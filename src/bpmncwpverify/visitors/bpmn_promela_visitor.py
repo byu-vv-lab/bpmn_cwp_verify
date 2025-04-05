@@ -241,31 +241,34 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         Example: ((hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)) && (hasToken(Node2_From_NodeInOtherProcess))).
         """
         guard = StringManager()
-        guard.write_str("(")
-        if ctx.is_parallel:
-            guard.write_str(
-                " && ".join(
-                    [
-                        f"hasToken({loc})"
-                        for loc in self._get_consume_locations(ctx).seq_flows
-                    ]
-                )
-            )
-        else:
-            guard.write_str(
-                " || ".join(
-                    [
-                        f"hasToken({node})"
-                        for node in self._get_consume_locations(ctx).seq_flows
-                    ]
-                )
-            )
-
-        guard.write_str(")")
-
+        seq_flows = self._get_consume_locations(ctx).seq_flows
         msg_flows = self._get_consume_locations(ctx).msg_flows
+
+        if seq_flows:
+            guard.write_str("(")
+            if ctx.is_parallel:
+                guard.write_str(
+                    " && ".join(
+                        [
+                            f"hasToken({loc})"
+                            for loc in self._get_consume_locations(ctx).seq_flows
+                        ]
+                    )
+                )
+            else:
+                guard.write_str(
+                    " || ".join(
+                        [
+                            f"hasToken({node})"
+                            for node in self._get_consume_locations(ctx).seq_flows
+                        ]
+                    )
+                )
+
+            guard.write_str(")")
+
         if msg_flows:
-            guard.write_str(" && (")
+            guard.write_str(" && (") if seq_flows else guard.write_str("(")
             guard.write_str(
                 " && ".join(
                     [
@@ -359,7 +362,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
-        self.promela.write_str(f"putToken({event.id})", NL_SINGLE, IndentAction.NIL)
+        if not event.in_msgs:
+            self.promela.write_str(f"putToken({event.id})", NL_SINGLE, IndentAction.NIL)
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
 
         atomic_block = self._build_atomic_block(context)
