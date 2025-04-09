@@ -226,14 +226,31 @@ class IntermediateEvent(Event):
 
 # Activity classes
 class Task(Node):
-    __slots__ = ["behavior"]
+    __slots__ = ["behavior", "msg_boundary_events"]
     """
     Action that can be acted upon varaible(s)
     """
 
+    class _BoundaryEvent(IntermediateEvent):
+        def __init__(
+            self,
+            id: str,
+            name: str,
+            message_event_definition: str,
+            message_timer_definition: str,
+            type: str,
+        ):
+            super().__init__(
+                id, name, message_event_definition, message_timer_definition, type
+            )
+
     def __init__(self, id: str, name: str, behavior: str) -> None:
         super().__init__(id, name)
         self.behavior = behavior
+        self.msg_boundary_events: List[Task._BoundaryEvent] = []
+
+    def add_boundary_event(self, event: _BoundaryEvent) -> None:
+        self.msg_boundary_events.append(event)
 
     def accept(self, visitor: "BpmnVisitor") -> None:
         result = visitor.visit_task(self)
