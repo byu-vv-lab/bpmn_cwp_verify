@@ -15,11 +15,19 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         # self.start = StringManager()
         self.cwp_states = StringManager()
         self.update_state_inline = StringManager()
+        # mapping sm
         # self.end = StringManager()
 
     def visit_state(self, state: CwpState) -> bool:
         new_str = f"bool {state.name} = false"
         self.cwp_states.write_str(new_str, NL_SINGLE)
+        # for edge in input edges
+        # mappingsm append edge.expression ||
+        # sm append &&
+        # sm append !
+        # for edge in output edges
+        # mappingsm append edge.expression ||
+        # sm append "->"state.name
         return True
 
     def end_visit_state(self, state: CwpState) -> None:
@@ -36,8 +44,12 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
 
         # inside of update state inline will go here
 
+        # start of the if statement
+        # update state inline sm appends mapping function sm
+        # end of if statement
+
         self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
-        # self.update_state_inline.write_str(END_STR, NL_DOUBLE)
+
         pass
 
     def end_visit_edge(self, edge: CwpEdge) -> None:
