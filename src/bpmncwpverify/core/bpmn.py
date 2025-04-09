@@ -231,18 +231,32 @@ class Task(Node):
     Action that can be acted upon varaible(s)
     """
 
-    class _BoundaryEvent(IntermediateEvent):
+    class _BoundaryEvent(Event):
+        __slots__ = ["parent_task"]
+
         def __init__(
             self,
             id: str,
             name: str,
             message_event_definition: str,
             message_timer_definition: str,
-            type: str,
+            parent_task: str,
         ):
             super().__init__(
-                id, name, message_event_definition, message_timer_definition, type
+                id, name, message_event_definition, message_timer_definition
             )
+            self.parent_task = parent_task
+
+        @classmethod
+        def _extract_attributes(cls, element: Element) -> Dict:
+            attributes = super()._extract_attributes(element)
+            attributes["parent_task"] = element.attrib.get("attachedToRef")
+
+            assert attributes[
+                "parent_task"
+            ], f"Boundary Event: {element.attrib.get("id")} has no parent"
+
+            return attributes
 
     def __init__(self, id: str, name: str, behavior: str) -> None:
         super().__init__(id, name)
@@ -452,6 +466,7 @@ def get_element_type(tag: str) -> Union[type[SequenceFlow], type[Node]]:
         "intermediateCatchEvent": IntermediateEvent,
         "intermediateThrowEvent": IntermediateEvent,
         "sequenceFlow": SequenceFlow,
+        "boundaryEvent": Task._BoundaryEvent,
     }
 
     result = mapping.get(tag) or (
