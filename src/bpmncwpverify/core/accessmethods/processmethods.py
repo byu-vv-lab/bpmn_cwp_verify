@@ -30,4 +30,6 @@ def from_xml(element: Element, state: State) -> Result["Process", Error]:
             seq_flow.attrib.get("name", ""),
         )
 
+    builder = builder.with_boundary_events()
+
     return cast(Result[Process, Error], builder.build())

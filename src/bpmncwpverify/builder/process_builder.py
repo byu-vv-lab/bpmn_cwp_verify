@@ -22,7 +22,7 @@ class ProcessBuilder:
         self._process[element.id] = element
         return self
 
-    def connect_boundary_events(self) -> None:
+    def with_boundary_events(self) -> "ProcessBuilder":
         all_items = self._process.all_items()
 
         for bpmn_object in all_items.values():
@@ -39,6 +39,8 @@ class ProcessBuilder:
 
                 task = cast(Task, parent_task)
                 task.add_boundary_event(bpmn_object)
+
+        return self
 
     def with_process_flow(
         self,

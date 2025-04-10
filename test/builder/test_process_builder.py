@@ -103,7 +103,7 @@ def test_build_graph_with_expression_checker(mocker):
     mock_type_check.assert_called_once_with("clean_expression", mock_state)
     assert flow_1.expression == "clean_expression"
 
-    # def connect_boundary_events(self) -> None:
+    # def with_boundary_events(self) -> None:
     #     all_items = self._process.all_items()
 
     #     for bpmn_object in all_items.values():
@@ -148,15 +148,15 @@ def get_pb_task_boundevent(mocker):
     return pb, task, boundary_event
 
 
-def test_connect_boundary_events_valid(get_pb_task_boundevent):
+def test_with_boundary_events_valid(get_pb_task_boundevent):
     pb, task, boundary_event = get_pb_task_boundevent
 
-    pb.connect_boundary_events()
+    pb.with_boundary_events()
 
     task.add_boundary_event.assert_called_once_with(boundary_event)
 
 
-def test_connect_boundary_events_no_parent_task(get_pb_task_boundevent):
+def test_with_boundary_events_no_parent_task(get_pb_task_boundevent):
     pb, _, boundary_event = get_pb_task_boundevent
     all_items_data = {"boundary_event_id": boundary_event}
 
@@ -164,7 +164,7 @@ def test_connect_boundary_events_no_parent_task(get_pb_task_boundevent):
     pb._process.all_items.get.side_effect = lambda x: all_items_data.get(x)
 
     with pytest.raises(AssertionError) as exc_info:
-        pb.connect_boundary_events()
+        pb.with_boundary_events()
 
     assert (
         exc_info.value.args[0]
@@ -172,7 +172,7 @@ def test_connect_boundary_events_no_parent_task(get_pb_task_boundevent):
     )
 
 
-def test_connect_boundary_events_parent_not_task(get_pb_task_boundevent, mocker):
+def test_with_boundary_events_parent_not_task(get_pb_task_boundevent, mocker):
     pb, _, boundary_event = get_pb_task_boundevent
 
     class MyClass:
@@ -185,7 +185,7 @@ def test_connect_boundary_events_parent_not_task(get_pb_task_boundevent, mocker)
     pb._process.all_items.get.side_effect = lambda x: all_items_data.get(x)
 
     with pytest.raises(AssertionError) as exc_info:
-        pb.connect_boundary_events()
+        pb.with_boundary_events()
 
     assert (
         exc_info.value.args[0]
