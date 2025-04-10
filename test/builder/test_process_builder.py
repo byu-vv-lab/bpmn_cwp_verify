@@ -1,6 +1,7 @@
 # type: ignore
+import pytest
 from bpmncwpverify.builder.process_builder import ProcessBuilder
-from bpmncwpverify.core.bpmn import Node, SequenceFlow
+from bpmncwpverify.core.bpmn import Node, SequenceFlow, Task
 from bpmncwpverify.core.state import State
 from returns.result import Success
 
@@ -101,3 +102,92 @@ def test_build_graph_with_expression_checker(mocker):
 
     mock_type_check.assert_called_once_with("clean_expression", mock_state)
     assert flow_1.expression == "clean_expression"
+
+    # def connect_boundary_events(self) -> None:
+    #     all_items = self._process.all_items()
+
+    #     for bpmn_object in all_items.values():
+    #         if isinstance(bpmn_object, Task._BoundaryEvent):
+    #             parent_id = bpmn_object.parent_task
+    #             assert (
+    #                 parent_id in all_items
+    #             ), f"Boundary event '{bpmn_object.id}' references a missing parent task ID: {parent_id}"
+
+    #             parent_task = all_items[parent_id]
+    #             assert isinstance(
+    #                 parent_task, Task
+    #             ), f"Boundary event '{bpmn_object.id}' is attached to non-Task object: {type(parent_task).__name__}"
+
+    #             task = cast(Task, parent_task)
+    #             task.add_boundary_event(bpmn_object)
+
+
+@pytest.fixture
+def get_pb_task_boundevent(mocker):
+    pb = ProcessBuilder("test_id", "test_name", mocker.Mock())
+    pb._process = mocker.MagicMock()
+
+    task_id = "task_id"
+    boundary_event_id = "boundary_event_id"
+
+    task = mocker.Mock(spec=Task)
+    task.boundary_events = []
+    task.id = task_id
+
+    boundary_event = mocker.Mock(spec=Task._BoundaryEvent)
+    boundary_event.parent_task = "task_id"
+    boundary_event.id = boundary_event_id
+
+    all_items_data = {task_id: task, boundary_event_id: boundary_event}
+    all_items = mocker.Mock()
+    all_items.return_value = all_items_data
+    all_items.get.side_effect = lambda x: all_items_data.get(x)
+    pb._process.all_items = all_items
+    pb._process.__getitem__.side_effect = lambda x: all_items_data[x]
+
+    return pb, task, boundary_event
+
+
+def test_connect_boundary_events_valid(get_pb_task_boundevent):
+    pb, task, boundary_event = get_pb_task_boundevent
+
+    pb.connect_boundary_events()
+
+    task.add_boundary_event.assert_called_once_with(boundary_event)
+
+
+def test_connect_boundary_events_no_parent_task(get_pb_task_boundevent):
+    pb, _, boundary_event = get_pb_task_boundevent
+    all_items_data = {"boundary_event_id": boundary_event}
+
+    pb._process.all_items.return_value = all_items_data
+    pb._process.all_items.get.side_effect = lambda x: all_items_data.get(x)
+
+    with pytest.raises(AssertionError) as exc_info:
+        pb.connect_boundary_events()
+
+    assert (
+        exc_info.value.args[0]
+        == "Boundary event 'boundary_event_id' references a missing parent task ID: task_id"
+    )
+
+
+def test_connect_boundary_events_parent_not_task(get_pb_task_boundevent, mocker):
+    pb, _, boundary_event = get_pb_task_boundevent
+
+    class MyClass:
+        pass
+
+    not_task = MyClass()
+    all_items_data = {"boundary_event_id": boundary_event, "task_id": not_task}
+
+    pb._process.all_items.return_value = all_items_data
+    pb._process.all_items.get.side_effect = lambda x: all_items_data.get(x)
+
+    with pytest.raises(AssertionError) as exc_info:
+        pb.connect_boundary_events()
+
+    assert (
+        exc_info.value.args[0]
+        == "Boundary event 'boundary_event_id' is attached to non-Task object: MyClass"
+    )
