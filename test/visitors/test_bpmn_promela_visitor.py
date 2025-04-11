@@ -167,6 +167,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node3.id = "NODE3"
 
     ctx = mocker.Mock(spec=Context)
+    ctx.boundary_events = []
     ctx.element = node1
 
     assert promela_visitor._get_consume_locations(ctx) == ["NODE1"]
@@ -243,6 +244,8 @@ def test_build_guard(promela_visitor, mocker):
     node1.in_msgs = []
 
     ctx = mocker.Mock(spec=Context)
+    ctx.boundary_event_consume_locations = []
+    ctx.boundary_events = []
     ctx.element = node1
     ctx.is_parallel = False
 
@@ -273,6 +276,8 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     node1.in_msgs = []
 
     ctx = mocker.Mock(spec=Context)
+    ctx.boundary_event_consume_locations = []
+    ctx.boundary_events = []
     ctx.element = node1
     ctx.is_parallel = True
 
@@ -313,6 +318,8 @@ def test_build_atomic_block(promela_visitor, mocker):
     node1.out_msgs = []
 
     ctx = mocker.Mock(spec=Context)
+    ctx.boundary_event_consume_locations = []
+    ctx.boundary_events = []
     ctx.element = node1
     ctx.end_event = False
     ctx.is_parallel = False
