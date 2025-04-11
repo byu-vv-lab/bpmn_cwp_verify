@@ -103,24 +103,6 @@ def test_build_graph_with_expression_checker(mocker):
     mock_type_check.assert_called_once_with("clean_expression", mock_state)
     assert flow_1.expression == "clean_expression"
 
-    # def with_boundary_events(self) -> None:
-    #     all_items = self._process.all_items()
-
-    #     for bpmn_object in all_items.values():
-    #         if isinstance(bpmn_object, Task._BoundaryEvent):
-    #             parent_id = bpmn_object.parent_task
-    #             assert (
-    #                 parent_id in all_items
-    #             ), f"Boundary event '{bpmn_object.id}' references a missing parent task ID: {parent_id}"
-
-    #             parent_task = all_items[parent_id]
-    #             assert isinstance(
-    #                 parent_task, Task
-    #             ), f"Boundary event '{bpmn_object.id}' is attached to non-Task object: {type(parent_task).__name__}"
-
-    #             task = cast(Task, parent_task)
-    #             task.add_boundary_event(bpmn_object)
-
 
 @pytest.fixture
 def get_pb_task_boundevent(mocker):
@@ -134,7 +116,7 @@ def get_pb_task_boundevent(mocker):
     task.boundary_events = []
     task.id = task_id
 
-    boundary_event = mocker.Mock(spec=Task._BoundaryEvent)
+    boundary_event = mocker.Mock(spec=Task.BoundaryEvent)
     boundary_event.parent_task = "task_id"
     boundary_event.id = boundary_event_id
 

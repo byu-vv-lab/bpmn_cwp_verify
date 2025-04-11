@@ -72,7 +72,6 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
     def end_visit_process(self, process: Process) -> None:
         # Ensure all items in the process graph are visited
         if set(process.all_items().values()) != self.visited:
-            __import__("pdb").set_trace()
             raise Exception(BpmnGraphConnError())
 
 

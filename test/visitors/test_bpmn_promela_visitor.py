@@ -139,26 +139,17 @@ def test_promela_gen_visitor_initial_state(promela_visitor):
 def test_generate_location_label(promela_visitor, mocker):
     element = mocker.Mock(spec=Task)
     element.id = "TEST"
-    ctx = mocker.Mock(spec=Context)
-    ctx.element = element
     flow_or_message = mocker.Mock()
     flow_or_message.source_node.id = "SRC"
 
-    ret_val = promela_visitor._generate_location_label(ctx, flow_or_message)
+    ret_val = promela_visitor._generate_location_label(element, flow_or_message)
 
     assert ret_val == "TEST_FROM_SRC"
 
-    ctx.task_end = True
-    ret_val = promela_visitor._generate_location_label(ctx)
-
-    assert ret_val == "TEST_END"
-
     element_no_spec = mocker.Mock()
     element_no_spec.id = "TEST"
-    ctx.element = element_no_spec
-    ctx.task_end = False
 
-    ret_val = promela_visitor._generate_location_label(ctx)
+    ret_val = promela_visitor._generate_location_label(element_no_spec)
 
     assert ret_val == "TEST"
 
@@ -177,7 +168,6 @@ def test_get_consume_locations(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.task_end = False
 
     assert promela_visitor._get_consume_locations(ctx) == ["NODE1"]
 
@@ -211,7 +201,6 @@ def test_get_put_locations(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.task_end = False
 
     assert promela_visitor._get_put_locations(ctx) == []
 
@@ -255,7 +244,6 @@ def test_build_guard(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.task_end = False
     ctx.is_parallel = False
 
     guard = promela_visitor._build_guard(ctx)
@@ -286,7 +274,6 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.task_end = False
     ctx.is_parallel = True
 
     guard = promela_visitor._build_guard(ctx)
@@ -328,7 +315,6 @@ def test_build_atomic_block(promela_visitor, mocker):
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
     ctx.end_event = False
-    ctx.task_end = False
     ctx.is_parallel = False
     ctx.has_option = False
 
@@ -415,7 +401,6 @@ def test_build_expr_conditional(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.task_end = False
 
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()
@@ -454,7 +439,6 @@ def test_get_expressions(promela_visitor, mocker):
 
 def test_context_setters(mocker):
     task = mocker.Mock(spec=Task)
-    parallel_gw = mocker.Mock(spec=ParallelGatewayNode)
 
     ctx = Context(task)
 
@@ -466,14 +450,7 @@ def test_context_setters(mocker):
         == "is_parallel can only be set if element is of type ParallelGatewayNode"
     )
 
-    ctx = Context(parallel_gw)
-
-    with pytest.raises(AssertionError) as exc_info:
-        ctx.task_end = True
-
-    assert (
-        exc_info.value.args[0] == "task_end can only be set if element is of type Task"
-    )
+    ctx = Context(mocker.Mock(spec=ParallelGatewayNode))
 
     ctx.is_parallel = True
 
