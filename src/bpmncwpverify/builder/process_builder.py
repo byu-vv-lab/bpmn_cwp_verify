@@ -26,7 +26,7 @@ class ProcessBuilder:
         all_items = self._process.all_items()
 
         for bpmn_object in all_items.values():
-            if isinstance(bpmn_object, Task._BoundaryEvent):
+            if isinstance(bpmn_object, Task.BoundaryEvent):
                 parent_id = bpmn_object.parent_task
                 assert (
                     parent_id in all_items

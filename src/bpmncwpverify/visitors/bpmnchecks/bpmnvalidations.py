@@ -57,6 +57,10 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
         self.visited.add(task)
         return True
 
+    def visit_boundary_event(self, boundary_event: Task.BoundaryEvent) -> bool:
+        self.visited.add(boundary_event)
+        return True
+
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         self.visited.add(gateway)
         return True
@@ -68,6 +72,7 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
     def end_visit_process(self, process: Process) -> None:
         # Ensure all items in the process graph are visited
         if set(process.all_items().values()) != self.visited:
+            __import__("pdb").set_trace()
             raise Exception(BpmnGraphConnError())
 
 
