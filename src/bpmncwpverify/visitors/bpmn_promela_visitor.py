@@ -38,6 +38,7 @@ class Context:
         "_behavior",
         "_end_event",
         "_boundary_events",
+        "_boundary_event_consume_locations",
     ]
 
     def __init__(self, element: Node) -> None:
@@ -48,6 +49,7 @@ class Context:
         self._behavior = ""
         self._end_event = False
         self._boundary_events: List[Task.BoundaryEvent] = []
+        self._boundary_event_consume_locations: List[str] = []
 
     @property
     def has_option(self) -> bool:
@@ -57,6 +59,15 @@ class Context:
     def has_option(self, new_val: bool) -> None:
         assert isinstance(self._element, ExclusiveGatewayNode)
         self._has_option = new_val
+
+    @property
+    def boundary_event_consume_locations(self) -> List[str]:
+        return self._boundary_event_consume_locations
+
+    @boundary_event_consume_locations.setter
+    def boundary_event_consume_locations(self, new_val: List[str]) -> None:
+        assert isinstance(self._element, Task)
+        self._boundary_event_consume_locations = new_val
 
     @property
     def behavior_model(self) -> bool:
@@ -108,7 +119,7 @@ class Context:
         assert isinstance(
             self._element, Task
         ), "Only allowed to set boundary_events on a task."
-        self.boundary_events = new_val
+        self._boundary_events = new_val
 
     @property
     def element(self) -> Node:
@@ -144,6 +155,13 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         if not (ctx.element.in_flows or ctx.element.in_msgs):
             return [self._generate_location_label(ctx.element)]
+
+        if ctx.boundary_events:
+            ctx.boundary_event_consume_locations = [
+                self._generate_location_label(boundary_event, msg_flow)
+                for boundary_event in ctx.boundary_events
+                for msg_flow in boundary_event.in_msgs
+            ]
 
         return [
             self._generate_location_label(ctx.element, flow)
@@ -210,6 +228,15 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                     [f"hasToken({node})" for node in self._get_consume_locations(ctx)]
                 )
             )
+
+        if ctx.boundary_event_consume_locations:
+            guard.write_str(") && (")
+            guard.write_str(
+                " && ".join(
+                    [f"hasToken({loc})" for loc in ctx.boundary_event_consume_locations]
+                )
+            )
+
         guard.write_str(")")
         return guard
 
