@@ -49,7 +49,6 @@ class Context:
         self._behavior = ""
         self._end_event = False
         self._boundary_events: List[Task.BoundaryEvent] = []
-        self._boundary_event_consume_locations: List[str] = []
 
     @property
     def has_option(self) -> bool:
@@ -59,15 +58,6 @@ class Context:
     def has_option(self, new_val: bool) -> None:
         assert isinstance(self._element, ExclusiveGatewayNode)
         self._has_option = new_val
-
-    @property
-    def boundary_event_consume_locations(self) -> List[str]:
-        return self._boundary_event_consume_locations
-
-    @boundary_event_consume_locations.setter
-    def boundary_event_consume_locations(self, new_val: List[str]) -> None:
-        assert isinstance(self._element, Task)
-        self._boundary_event_consume_locations = new_val
 
     @property
     def behavior_model(self) -> bool:
@@ -179,18 +169,50 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         fi
         """
         sm = StringManager()
-        sm.write_str("if", NL_SINGLE, IndentAction.INC)
-        # This zip works because the out_flows is an array, which holds its order
-        for expression, location in zip(
-            self._get_expressions(ctx), self._get_put_locations(ctx)
-        ):
-            sm.write_str(f":: {expression} -> putToken({location})", NL_SINGLE)
+        sm.write_str("if", NL_SINGLE)
+
+        if ctx.has_option:
+            # This zip works because the out_flows is an array, which holds its order
+            for expression, location in zip(
+                self._get_expressions(ctx), self._get_put_locations(ctx.element)
+            ):
+                sm.write_str(f":: {expression} -> putToken({location})", NL_SINGLE)
+        if ctx.boundary_events:
+            __import__("pdb").set_trace()
+            # 1) get all of the put locations [[end_from_boundevent, ...], ...]
+            # 2) get all of the consume locations for each boundevent [[end_from_boundevent, ...]]
+            # (hastoken(boundevent1consume1) || hastoken(boundevent1consume2)) ->
+            #     putToken(element1_from_boundevent1)
+            #     putToken(element2_from_boundevent1)
+            put_locations = [
+                self._get_put_locations(boundary_event)
+                for boundary_event in ctx.boundary_events
+            ]
+            consume_locations = [
+                self._get_consume_locations(boundary_event)
+                for boundary_event in ctx.boundary_events
+            ]
+
+            # We can zip these two together, because it will return a list n = len(ctx.boundary_events)
+            for put_locs, consume_locs in zip(put_locations, consume_locations):
+                sm.write_str(":: (")
+                sm.write_str(
+                    " || ".join(
+                        [f"hasToken({consume_loc})" for consume_loc in consume_locs]
+                    )
+                )
+                sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
+                for consume_loc in consume_locs:
+                    sm.write_str(f"consumeToken({consume_loc})", NL_SINGLE)
+                for put_loc in put_locs:
+                    sm.write_str(f"putToken({put_loc})", NL_SINGLE)
+                sm.write_str("", indent_action=IndentAction.DEC)
 
         sm.write_str(":: atomic{else -> assert false}", NL_SINGLE)
-        sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
+        sm.write_str("fi", NL_SINGLE)
         return sm
 
-    def _get_put_locations(self, ctx: Context) -> List[str]:
+    def _get_put_locations(self, element: Node) -> List[str]:
         """
         Returns a list of labels representing all outgoing flows from a node.
         Each label indicates the target node and the current node as the source.
@@ -198,7 +220,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         return [
             self._generate_location_label(flow.target_node, flow)
-            for flow in ctx.element.out_flows + ctx.element.out_msgs
+            for flow in element.out_flows + element.out_msgs
         ]
 
     def _build_guard(self, ctx: Context) -> StringManager:
@@ -264,10 +286,10 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         for location in self._get_consume_locations(ctx.element):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
-        if ctx.has_option:
+        if ctx.has_option or ctx.boundary_events:
             atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
-            for location in self._get_put_locations(ctx):
+            for location in self._get_put_locations(ctx.element):
                 atomic_block.write_str(f"putToken({location})", NL_SINGLE)
 
         atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
