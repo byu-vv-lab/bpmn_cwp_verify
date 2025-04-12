@@ -352,7 +352,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
 
     promela_visitor._gen_var_defs(ctx)
 
-    mock_get_consume_locations.assert_called_once_with(ctx)
+    mock_get_consume_locations.assert_called_once_with(node1)
 
     mock_var_defs.write_str.assert_has_calls(
         [
@@ -384,6 +384,8 @@ def test_build_expr_conditional(promela_visitor, mocker):
     node1.out_msgs = []
 
     ctx = mocker.Mock(spec=Context)
+    ctx.has_option = True
+    ctx.boundary_events = []
     ctx.element = node1
 
     mock_write_str = mocker.Mock()
@@ -393,11 +395,11 @@ def test_build_expr_conditional(promela_visitor, mocker):
     promela_visitor._build_expr_conditional(ctx)
     mock_write_str.assert_has_calls(
         [
-            mocker.call("if", NL_SINGLE, IndentAction.INC),
+            mocker.call("if", NL_SINGLE),
             mocker.call(":: EXPR1 -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: atomic{else -> assert false}", NL_SINGLE),
-            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
+            mocker.call("fi", NL_SINGLE),
         ]
     )
 
