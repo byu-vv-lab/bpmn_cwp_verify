@@ -178,7 +178,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             ):
                 sm.write_str(f":: {expression} -> putToken({location})", NL_SINGLE)
         if ctx.boundary_events:
-            __import__("pdb").set_trace()
             # 1) get all of the put locations [[end_from_boundevent, ...], ...]
             # 2) get all of the consume locations for each boundevent [[end_from_boundevent, ...]]
             # (hastoken(boundevent1consume1) || hastoken(boundevent1consume2)) ->

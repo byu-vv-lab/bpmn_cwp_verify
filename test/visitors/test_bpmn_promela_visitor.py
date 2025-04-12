@@ -166,11 +166,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    ctx = mocker.Mock(spec=Context)
-    ctx.boundary_events = []
-    ctx.element = node1
-
-    assert promela_visitor._get_consume_locations(ctx) == ["NODE1"]
+    assert promela_visitor._get_consume_locations(node1) == ["NODE1"]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -180,9 +176,8 @@ def test_get_consume_locations(promela_visitor, mocker):
 
     node2.in_flows = [flow1]
     node2.in_msgs = [flow2]
-    ctx.element = node2
 
-    assert promela_visitor._get_consume_locations(ctx) == [
+    assert promela_visitor._get_consume_locations(node2) == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
@@ -200,10 +195,7 @@ def test_get_put_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    ctx = mocker.Mock(spec=Context)
-    ctx.element = node1
-
-    assert promela_visitor._get_put_locations(ctx) == []
+    assert promela_visitor._get_put_locations(node1) == []
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -216,7 +208,7 @@ def test_get_put_locations(promela_visitor, mocker):
     node1.out_flows = [flow1]
     node1.out_msgs = [flow2]
 
-    assert promela_visitor._get_put_locations(ctx) == [
+    assert promela_visitor._get_put_locations(node1) == [
         "NODE2_FROM_NODE1",
         "NODE3_FROM_NODE1",
     ]
@@ -240,18 +232,19 @@ def test_build_guard(promela_visitor, mocker):
 def test_build_guard_with_boundary_events(promela_visitor, mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
-        return_value=["TEST1", "TEST2"],
+        side_effect=lambda x: x,
     )
 
     ctx = mocker.Mock(spec=Context)
-    ctx.boundary_event_consume_locations = ["TEST3", "TEST4"]
+    ctx.element = ["TEST1", "TEST2"]
+    ctx.boundary_events = [["TEST3", "TEST4"]]
     ctx.is_parallel = False
 
     guard = promela_visitor._build_guard(ctx)
 
     assert (
         str(guard)
-        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) && hasToken(TEST4))"
+        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4))"
     )
 
 
@@ -262,7 +255,6 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     )
 
     ctx = mocker.Mock(spec=Context)
-    ctx.boundary_event_consume_locations = []
     ctx.boundary_events = []
     ctx.is_parallel = True
 
