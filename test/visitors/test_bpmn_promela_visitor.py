@@ -404,6 +404,45 @@ def test_build_expr_conditional(promela_visitor, mocker):
     )
 
 
+def test_build_conditional_with_boundary_event(promela_visitor, mocker):
+    mock_sm = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.StringManager")
+    mocker.patch.object(
+        promela_visitor, "_get_consume_locations", side_effect=lambda x: x
+    )
+    mocker.patch.object(
+        promela_visitor, "_get_put_locations", side_effect=lambda x: [x[0][::-1]]
+    )
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.has_option = False
+    ctx.boundary_events = [["TEST1"], ["TEST2"]]
+
+    mock_write_str = mocker.Mock()
+    mock_sm.return_value = mocker.Mock()
+    mock_sm.return_value.write_str = mock_write_str
+
+    promela_visitor._build_expr_conditional(ctx)
+    mock_write_str.assert_has_calls(
+        [
+            mocker.call("if", NL_SINGLE),
+            mocker.call(":: ("),
+            mocker.call("hasToken(TEST1)"),
+            mocker.call(") ->", NL_SINGLE, IndentAction.INC),
+            mocker.call("consumeToken(TEST1)", NL_SINGLE),
+            mocker.call("putToken(1TSET)", NL_SINGLE),
+            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call(":: ("),
+            mocker.call("hasToken(TEST2)"),
+            mocker.call(") ->", NL_SINGLE, IndentAction.INC),
+            mocker.call("consumeToken(TEST2)", NL_SINGLE),
+            mocker.call("putToken(2TSET)", NL_SINGLE),
+            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call(":: atomic{else -> assert false}", 1),
+            mocker.call("fi", NL_SINGLE),
+        ]
+    )
+
+
 def test_get_expressions(promela_visitor, mocker):
     node = mocker.Mock()
 
