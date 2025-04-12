@@ -147,25 +147,18 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             return f"{element.id}_FROM_{flow_or_message.source_node.id}"
         return element.id  # type: ignore
 
-    def _get_consume_locations(self, ctx: Context) -> List[str]:
+    def _get_consume_locations(self, element: Node) -> List[str]:
         """
         Returns a list of labels representing all incoming flows to a node.
         If there are no incoming flows, the node itself is returned as a label.
         Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
         """
-        if not (ctx.element.in_flows or ctx.element.in_msgs):
-            return [self._generate_location_label(ctx.element)]
-
-        if ctx.boundary_events:
-            ctx.boundary_event_consume_locations = [
-                self._generate_location_label(boundary_event, msg_flow)
-                for boundary_event in ctx.boundary_events
-                for msg_flow in boundary_event.in_msgs
-            ]
+        if not (element.in_flows or element.in_msgs):
+            return [self._generate_location_label(element)]
 
         return [
-            self._generate_location_label(ctx.element, flow)
-            for flow in ctx.element.in_flows + ctx.element.in_msgs
+            self._generate_location_label(element, flow)
+            for flow in element.in_flows + element.in_msgs
         ]
 
     def _get_expressions(self, ctx: Context) -> List[str]:
@@ -219,21 +212,32 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         if ctx.is_parallel:
             guard.write_str(
                 " && ".join(
-                    [f"hasToken({loc})" for loc in self._get_consume_locations(ctx)]
+                    [
+                        f"hasToken({loc})"
+                        for loc in self._get_consume_locations(ctx.element)
+                    ]
                 )
             )
         else:
             guard.write_str(
                 " || ".join(
-                    [f"hasToken({node})" for node in self._get_consume_locations(ctx)]
+                    [
+                        f"hasToken({node})"
+                        for node in self._get_consume_locations(ctx.element)
+                    ]
                 )
             )
 
-        if ctx.boundary_event_consume_locations:
+        if ctx.boundary_events:
             guard.write_str(") && (")
+
             guard.write_str(
-                " && ".join(
-                    [f"hasToken({loc})" for loc in ctx.boundary_event_consume_locations]
+                " || ".join(
+                    [
+                        f"hasToken({loc})"
+                        for boundary_event in ctx.boundary_events
+                        for loc in self._get_consume_locations(boundary_event)
+                    ]
                 )
             )
 
@@ -257,7 +261,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        for location in self._get_consume_locations(ctx):
+        for location in self._get_consume_locations(ctx.element):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
         if ctx.has_option:
@@ -303,7 +307,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx):
+        for var in self._get_consume_locations(ctx.element):
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
