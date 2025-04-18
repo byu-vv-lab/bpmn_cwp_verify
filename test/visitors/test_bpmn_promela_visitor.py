@@ -359,7 +359,9 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.behavior = "\n\n\n\nif\n\n\n\n:: true -> test\n\n:: true -> test2\n\nfi\n\n\n"
+    ctx.behavior = (
+        "\n\n\n\nif\n\n\n\n\t\t   :: true -> test\n\n :: true -> test2\n\nfi\n\n\n"
+    )
 
     promela_visitor._gen_behavior_model(ctx)
     assert (
