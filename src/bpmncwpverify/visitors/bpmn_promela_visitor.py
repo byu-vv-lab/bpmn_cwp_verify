@@ -273,6 +273,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                     self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
                 else:
                     self.behaviors.write_str(line, NL_SINGLE)
+            # TODO: add promela state logger logic here
         else:
             self.behaviors.write_str("skip", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
