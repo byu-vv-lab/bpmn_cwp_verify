@@ -1,4 +1,4 @@
-from bpmncwpverify.core.bpmn import Node, Process, SequenceFlow
+from bpmncwpverify.core.bpmn import Node, Process, SequenceFlow, Task
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.error import BpmnStructureError
 from bpmncwpverify.core.state import State
@@ -21,6 +21,26 @@ class ProcessBuilder:
 
     def with_element(self, element: Union[SequenceFlow, Node]) -> "ProcessBuilder":
         self._process[element.id] = element
+        return self
+
+    def with_boundary_events(self) -> "ProcessBuilder":
+        all_items = self._process.all_items()
+
+        for bpmn_object in all_items.values():
+            if isinstance(bpmn_object, Task.BoundaryEvent):
+                parent_id = bpmn_object.parent_task
+                assert (
+                    parent_id in all_items
+                ), f"Boundary event '{bpmn_object.id}' references a missing parent task ID: {parent_id}"
+
+                parent_task = all_items[parent_id]
+                assert isinstance(
+                    parent_task, Task
+                ), f"Boundary event '{bpmn_object.id}' is attached to non-Task object: {type(parent_task).__name__}"
+
+                task = cast(Task, parent_task)
+                task.add_boundary_event(bpmn_object)
+
         return self
 
     def with_process_flow(

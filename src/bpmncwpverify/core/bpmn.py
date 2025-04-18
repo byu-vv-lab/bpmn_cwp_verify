@@ -228,18 +228,56 @@ class IntermediateEvent(Event):
 
 # Activity classes
 class Task(Node):
-    __slots__ = ["behavior"]
+    __slots__ = ["behavior", "msg_boundary_events"]
     """
     Action that can be acted upon varaible(s)
     """
 
+    class BoundaryEvent(Event):
+        __slots__ = ["parent_task"]
+
+        def __init__(
+            self,
+            id: str,
+            name: str,
+            message_event_definition: str,
+            message_timer_definition: str,
+            parent_task: str,
+        ):
+            super().__init__(
+                id, name, message_event_definition, message_timer_definition
+            )
+            self.parent_task = parent_task
+
+        @classmethod
+        def _extract_attributes(cls, element: Element) -> Dict:
+            attributes = super()._extract_attributes(element)
+            attributes["parent_task"] = element.attrib.get("attachedToRef")
+
+            assert attributes[
+                "parent_task"
+            ], f"Boundary Event: {element.attrib.get("id")} has no parent"
+
+            return attributes
+
+        def accept(self, visitor: "BpmnVisitor") -> None:
+            result = visitor.visit_boundary_event(self)
+            self.traverse_outflows_if_result(visitor, result)
+            visitor.end_visit_boundary_event(self)
+
     def __init__(self, id: str, name: str, behavior: str) -> None:
         super().__init__(id, name)
         self.behavior = behavior
+        self.msg_boundary_events: List[Task.BoundaryEvent] = []
+
+    def add_boundary_event(self, event: BoundaryEvent) -> None:
+        self.msg_boundary_events.append(event)
 
     def accept(self, visitor: "BpmnVisitor") -> None:
         result = visitor.visit_task(self)
         self.traverse_outflows_if_result(visitor, result)
+        for boundary_event in self.msg_boundary_events:
+            boundary_event.accept(visitor)
         visitor.end_visit_task(self)
 
     @classmethod
@@ -437,6 +475,7 @@ def get_element_type(tag: str) -> Result[Union[type[SequenceFlow], type[Node]], 
         "intermediateCatchEvent": IntermediateEvent,
         "intermediateThrowEvent": IntermediateEvent,
         "sequenceFlow": SequenceFlow,
+        "boundaryEvent": Task.BoundaryEvent,
     }
 
     result = mapping.get(tag) or (
@@ -529,6 +568,12 @@ class BpmnVisitor:
         return True
 
     def end_visit_task(self, task: Task) -> None:
+        pass
+
+    def visit_boundary_event(self, boundary_event: Task.BoundaryEvent) -> bool:
+        return True
+
+    def end_visit_boundary_event(self, boundary_event: Task.BoundaryEvent) -> None:
         pass
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
