@@ -383,13 +383,13 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_process(self, process: Process) -> bool:
-        self.visit_all(process)
         self.init_proc_contents.write_str(
             f"run {process.id}()", NL_SINGLE, IndentAction.NIL
         )
         self.promela.write_str(
             f"proctype {process.id}() {{", NL_SINGLE, IndentAction.INC
         )
+        self.visit_all(process)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
         return True
 
