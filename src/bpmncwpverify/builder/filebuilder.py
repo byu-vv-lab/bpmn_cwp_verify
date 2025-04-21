@@ -81,10 +81,31 @@ class StateBuilder:
 
         cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
         vars = State.generate_promela((builder.state).unwrap()).unwrap()
+        variableLogger = builder.loggerGenerator(vars)
         workflow = generate_promela((builder.bpmn).unwrap())
 
-        outputs.promela = f"{vars}{cwp}{workflow}"
+        outputs.promela = f"{vars}{cwp}{variableLogger}{workflow}"
         return Success(outputs)
+
+    def loggerGenerator(self, vars: str) -> str:
+        variableNames = self.variableNameExtractor(vars)
+        loggerFunction = "inline stateLogger(){\n"
+        for varName in variableNames:
+            loggerFunction += f'\tprintf("{varName} = %s\\n", {varName})\n'
+        loggerFunction += "}\n"
+        return loggerFunction
+
+    def variableNameExtractor(self, vars: str) -> list[str]:
+        variableNames = []
+        for line in vars.splitlines():
+            if line[0] == "/" or line.startswith("#define"):
+                continue
+            varType, varDecl = line.split(" ", 1)
+            if varDecl[0] == "=":
+                continue
+            varName, rest = varDecl.split(" ", 1)
+            variableNames.append(varName)
+        return variableNames
 
     def build(self) -> Result["Outputs", Error]:
         outputs: Outputs = Outputs("")
