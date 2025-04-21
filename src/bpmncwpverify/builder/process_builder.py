@@ -3,8 +3,9 @@ from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.error import BpmnStructureError
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
+from bpmncwpverify.core.error import Error, FlowExpressionError, get_error_message
 
-from returns.result import Result
+from returns.result import Result, Failure, Success
 from returns.pipeline import is_successful
 from returns.functions import not_
 
@@ -28,7 +29,7 @@ class ProcessBuilder:
         source_ref: str,
         target_ref: str,
         expression: Union[str, None],
-    ) -> "ProcessBuilder":
+    ) -> Result["ProcessBuilder", Error]:
         flow = self._process[flow_id]
         source_node = self._process[source_ref]
         target_node = self._process[target_ref]
@@ -39,8 +40,15 @@ class ProcessBuilder:
 
         if expression:
             result = ExpressionListener.type_check(expression, self._state)
-            if not_(is_successful)(result) or result.unwrap() != "bool":
-                raise Exception(result.failure())
+            if not_(is_successful)(result):
+                return Failure(
+                    FlowExpressionError(
+                        flow_id, expression, get_error_message(result.failure())
+                    )
+                )
+            assert (
+                result.unwrap() == "bool"
+            ), f"Expected Expression type to be bool on flow: {flow_id}"
             flow.expression = expression
 
         flow.source_node = source_node
@@ -48,7 +56,7 @@ class ProcessBuilder:
 
         source_node.add_out_flow(flow)
         target_node.add_in_flow(flow)
-        return self
+        return Success(self)
 
     def build(self) -> Result[Process, BpmnStructureError]:
         return cast(Result, validate_process(self._process))

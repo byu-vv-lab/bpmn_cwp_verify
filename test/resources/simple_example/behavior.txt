@@ -1,9 +1,0 @@
-//Increment_x_END
-inline Increment_x_END_BehaviorModel(){
-    x = x + 1
-}
-
-//End
-inline End_BehaviorModel(){
-    skip
-}

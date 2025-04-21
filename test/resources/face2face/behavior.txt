@@ -1,7 +1,0 @@
-T1 backpackOwner paymentOwner
-T2 terms
-T3 paymentOffered
-T4 paymentOffered
-T5 terms
-T7a paymentOwner
-T7b backpackOwner

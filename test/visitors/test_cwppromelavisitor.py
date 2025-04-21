@@ -5,6 +5,12 @@ from bpmncwpverify.visitors.cwppromelavisitor import (
 )
 import pytest
 
+from bpmncwpverify.util.stringmanager import (
+    NL_SINGLE,
+    NL_DOUBLE,
+    IndentAction,
+)
+
 
 class TestCwpPromelaVisitor:
     @pytest.fixture
@@ -19,7 +25,15 @@ class TestCwpPromelaVisitor:
     def test_end_visit_cwp(self, get_mock_write_str, mocker):
         mock_write_str = get_mock_write_str
         CwpPromelaVisitor().end_visit_cwp(mocker.Mock())
-        mock_write_str.assert_called_once_with(END_STR, 2)
+
+        calls = [
+            mocker.call(END_STR, NL_DOUBLE),
+            mocker.call("inline Update_State() {", NL_SINGLE, IndentAction.INC),
+            mocker.call("}", NL_SINGLE, IndentAction.DEC),
+            # mocker.call(END_STR, NL_DOUBLE),
+        ]
+
+        mock_write_str.assert_has_calls(calls)
 
     def test_visit_state(self, get_mock_write_str, mocker):
         mock_state = mocker.Mock()
