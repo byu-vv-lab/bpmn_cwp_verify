@@ -89,9 +89,20 @@ class StateBuilder:
 
     def loggerGenerator(self, state: State) -> str:
         variableNames = self.variableNameExtractor(state)
-        loggerFunction = "inline stateLogger(){\n"
+        loggerFunction = ""
+        for var in state._vars:
+            if var.type_ in {enum.id for enum in state._enums}:
+                loggerFunction += f"mtype:{var.type_} old_{var.id} = {var.id}\n"
+            else:
+                loggerFunction += f"{var.type_} old_{var.id} = {var.id}\n"
+
+        loggerFunction += "inline stateLogger(){\n"
         for varName in variableNames:
-            loggerFunction += f'\tprintf("{varName} = %s\\n", {varName})\n'
+            loggerFunction += f"\tif\n\t:: {varName} != old_{varName} ->\n"
+            loggerFunction += f'\t\tprintf("{varName} = %s\\n", {varName})\n'
+            loggerFunction += f"\t\told_{varName} = {varName}\n"
+            loggerFunction += "\t:: else -> skip\n"
+            loggerFunction += "\tfi\n"
         loggerFunction += "}\n"
         return loggerFunction
 
