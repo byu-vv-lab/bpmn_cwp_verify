@@ -273,6 +273,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                     self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
                 else:
                     self.behaviors.write_str(line, NL_SINGLE)
+            # TODO: add promela state logger logic here
         else:
             self.behaviors.write_str("skip", NL_SINGLE)
         # call the cwp
@@ -290,7 +291,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     # Visitor Methods
     ####################
     def visit_all(self, element: BpmnElement) -> None:
-        self.promela.write_str(f'printf("ID: {element.id}")', NL_SINGLE)
+        self.promela.write_str(f"printf(ID: {element.id})", NL_SINGLE)
+        self.promela.write_str("stateLogger()", NL_SINGLE)
 
     def visit_start_event(self, event: StartEvent) -> bool:
         self.visit_all(event)
