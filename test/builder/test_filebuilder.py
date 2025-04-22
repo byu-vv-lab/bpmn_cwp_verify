@@ -19,3 +19,16 @@ def test_logger_generator(mocker):
         mocker.call("}", NL_SINGLE, IndentAction.DEC),
     ]
     mock_write_str.assert_has_calls(calls)
+
+
+def test_variable_name_extractor(mocker):
+    vars = [mocker.Mock(id=1), mocker.Mock(id=2)]
+
+    state = mocker.Mock()
+    state._vars = vars
+
+    sb = StateBuilder()
+
+    result = sb.variable_name_extractor(state)
+
+    assert result == [1, 2]
