@@ -38,7 +38,6 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         # inside of update state inline will go here
 
         self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
-        # self.update_state_inline.write_str(END_STR, NL_DOUBLE)
         pass
 
     def end_visit_edge(self, edge: CwpEdge) -> None:

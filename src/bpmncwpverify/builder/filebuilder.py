@@ -21,6 +21,7 @@ from bpmncwpverify.core.accessmethods.cwpmethods import (
     CwpXmlParser,
     generate_cwp_promela,
 )
+from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE, IndentAction
 
 
 class StateBuilder:
@@ -81,21 +82,24 @@ class StateBuilder:
 
         cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
         vars = State.generate_promela((builder.state).unwrap()).unwrap()
-        variableLogger = builder.loggerGenerator((builder.state).unwrap())
+        variableLogger = builder.logger_generator((builder.state).unwrap())
         workflow = generate_promela((builder.bpmn).unwrap())
 
         outputs.promela = f"{vars}{cwp}{variableLogger}{workflow}"
         return Success(outputs)
 
-    def loggerGenerator(self, state: State) -> str:
-        variableNames = self.variableNameExtractor(state)
-        loggerFunction = "inline stateLogger(){\n"
-        for varName in variableNames:
-            loggerFunction += f'\tprintf("{varName} = %s\\n", {varName})\n'
-        loggerFunction += "}\n"
-        return loggerFunction
+    def logger_generator(self, state: State) -> str:
+        logger_function = StringManager()
+        variable_names = self.variable_name_extractor(state)
+        logger_function.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
+        for var_name in variable_names:
+            logger_function.write_str(
+                f'printf("{var_name} = %s\\n", {var_name})', NL_SINGLE
+            )
+        logger_function.write_str("}", NL_SINGLE, IndentAction.DEC)
+        return str(logger_function)
 
-    def variableNameExtractor(self, state: State) -> list[str]:
+    def variable_name_extractor(self, state: State) -> list[str]:
         variableNames = []
         for var in state._vars:
             variableNames.append(var.id)
