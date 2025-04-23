@@ -21,6 +21,7 @@ from bpmncwpverify.core.accessmethods.cwpmethods import (
     CwpXmlParser,
     generate_cwp_promela,
 )
+from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE, IndentAction
 
 
 class StateBuilder:
@@ -81,32 +82,41 @@ class StateBuilder:
 
         cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
         vars = State.generate_promela((builder.state).unwrap()).unwrap()
-        variableLogger = builder.loggerGenerator((builder.state).unwrap())
+        variableLogger = builder.logger_generator((builder.state).unwrap())
         workflow = generate_promela((builder.bpmn).unwrap())
 
         outputs.promela = f"{vars}{cwp}{variableLogger}{workflow}"
         return Success(outputs)
 
-    def loggerGenerator(self, state: State) -> str:
-        variableNames = self.variableNameExtractor(state)
-        loggerFunction = ""
+    def logger_generator(self, state: State) -> str:
+        variableNames = self.variable_name_extractor(state)
+        loggerFunction = StringManager()
         for var in state._vars:
             if var.type_ in {enum.id for enum in state._enums}:
-                loggerFunction += f"mtype:{var.type_} old_{var.id} = {var.id}\n"
+                loggerFunction.write_str(
+                    f"mtype:{var.type_} old_{var.id} = {var.id}", NL_SINGLE
+                )
             else:
-                loggerFunction += f"{var.type_} old_{var.id} = {var.id}\n"
+                loggerFunction.write_str(
+                    f"{var.type_} old_{var.id} = {var.id}", NL_SINGLE
+                )
 
-        loggerFunction += "inline stateLogger(){\n"
+        loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
         for varName in variableNames:
-            loggerFunction += f"\tif\n\t:: {varName} != old_{varName} ->\n"
-            loggerFunction += f'\t\tprintf("{varName} = %s\\n", {varName})\n'
-            loggerFunction += f"\t\told_{varName} = {varName}\n"
-            loggerFunction += "\t:: else -> skip\n"
-            loggerFunction += "\tfi\n"
-        loggerFunction += "}\n"
-        return loggerFunction
+            loggerFunction.write_str("if", NL_SINGLE)
+            loggerFunction.write_str(
+                f":: {varName} != old_{varName} ->", NL_SINGLE, IndentAction.INC
+            )
+            loggerFunction.write_str(
+                f'printf("{varName} = %s\\n", {varName})', NL_SINGLE
+            )
+            loggerFunction.write_str(f"old_{varName} = {varName}", NL_SINGLE)
+            loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+            loggerFunction.write_str("fi", NL_SINGLE)
+        loggerFunction.write_str("}", NL_SINGLE)
+        return str(loggerFunction)
 
-    def variableNameExtractor(self, state: State) -> list[str]:
+    def variable_name_extractor(self, state: State) -> list[str]:
         variableNames = []
         for var in state._vars:
             variableNames.append(var.id)
