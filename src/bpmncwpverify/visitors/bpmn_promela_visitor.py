@@ -261,23 +261,19 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str(
             f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
         )
-        if ctx.behavior:
-            processed_str_list = [
-                line.strip() for line in ctx.behavior.split("\n") if line.strip()
-            ]
+        processed_str_list = [
+            line.strip() for line in ctx.behavior.split("\n") if line.strip()
+        ]
 
-            for line in processed_str_list:
-                if line in start_block_key_words:
-                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
-                elif line in end_block_key_words:
-                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
-                else:
-                    self.behaviors.write_str(line, NL_SINGLE)
-            # TODO: add promela state logger logic here
-        else:
-            self.behaviors.write_str("skip", NL_SINGLE)
-        # call the cwp
-        self.behaviors.write_str("Update_State()", NL_SINGLE)
+        for line in processed_str_list:
+            if line in start_block_key_words:
+                self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
+            elif line in end_block_key_words:
+                self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
+            else:
+                self.behaviors.write_str(line, NL_SINGLE)
+
+        self.behaviors.write_str("updateState()", NL_SINGLE)
         self.behaviors.write_str("stateLogger()", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
