@@ -91,15 +91,6 @@ class StateBuilder:
     def logger_generator(self, state: State) -> str:
         variableNames = self.variable_name_extractor(state)
         loggerFunction = StringManager()
-        for var in state._vars:
-            if var.type_ in {enum.id for enum in state._enums}:
-                loggerFunction.write_str(
-                    f"mtype:{var.type_} old_{var.id} = {var.id}", NL_SINGLE
-                )
-            else:
-                loggerFunction.write_str(
-                    f"{var.type_} old_{var.id} = {var.id}", NL_SINGLE
-                )
 
         loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
         for varName in variableNames:
