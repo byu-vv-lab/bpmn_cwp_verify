@@ -11,11 +11,19 @@ def test_logger_generator(mocker):
     )
 
     sb = StateBuilder()
-    sb.logger_generator(mocker.Mock())
+    state = mocker.Mock(_vars=[])  # TODO: change _vars to not be empty for future tests
+    sb.logger_generator(state)
 
     calls = [
         mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
+        mocker.call("if", NL_SINGLE, IndentAction.INC),
+        mocker.call(
+            ":: test_string != old_test_string ->", NL_SINGLE, IndentAction.INC
+        ),
         mocker.call('printf("test_string = %s\\n", test_string)', NL_SINGLE),
+        mocker.call("old_test_string = test_string", NL_SINGLE),
+        mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
+        mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         mocker.call("}", NL_SINGLE, IndentAction.DEC),
     ]
     mock_write_str.assert_has_calls(calls)

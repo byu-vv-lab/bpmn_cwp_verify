@@ -103,7 +103,7 @@ class StateBuilder:
 
         loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
         for varName in variableNames:
-            loggerFunction.write_str("if", NL_SINGLE)
+            loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
             loggerFunction.write_str(
                 f":: {varName} != old_{varName} ->", NL_SINGLE, IndentAction.INC
             )
@@ -112,8 +112,8 @@ class StateBuilder:
             )
             loggerFunction.write_str(f"old_{varName} = {varName}", NL_SINGLE)
             loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
-            loggerFunction.write_str("fi", NL_SINGLE)
-        loggerFunction.write_str("}", NL_SINGLE)
+            loggerFunction.write_str("fi", NL_SINGLE, IndentAction.DEC)
+        loggerFunction.write_str("}", NL_SINGLE, IndentAction.DEC)
         return str(loggerFunction)
 
     def variable_name_extractor(self, state: State) -> list[str]:
