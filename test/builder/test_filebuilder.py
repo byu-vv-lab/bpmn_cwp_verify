@@ -11,8 +11,15 @@ def test_logger_generator(mocker):
     )
 
     sb = StateBuilder()
-    state = mocker.Mock(_vars=[])  # TODO: change _vars to not be empty for future tests
-    sb.logger_generator(state)
+    state = mocker.Mock()
+
+    mock_val1 = mocker.Mock()
+    mock_val1.name = "test_val1"
+    mock_val2 = mocker.Mock()
+    mock_val2.name = "test_val2"
+
+    cwp = mocker.Mock(states={"_0": mock_val1, "_1": mock_val2})
+    sb.logger_generator(state, cwp)
 
     calls = [
         mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
@@ -22,6 +29,16 @@ def test_logger_generator(mocker):
         ),
         mocker.call('printf("test_string = %s\\n", test_string);', NL_SINGLE),
         mocker.call("old_test_string = test_string", NL_SINGLE),
+        mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
+        mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
+        mocker.call("if", NL_SINGLE, IndentAction.INC),
+        mocker.call(":: test_val1 == true ->", NL_SINGLE, IndentAction.INC),
+        mocker.call('printf("Current state: test_val1\\n");', NL_SINGLE),
+        mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
+        mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
+        mocker.call("if", NL_SINGLE, IndentAction.INC),
+        mocker.call(":: test_val2 == true ->", NL_SINGLE, IndentAction.INC),
+        mocker.call('printf("Current state: test_val2\\n");', NL_SINGLE),
         mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
         mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
         mocker.call("}", NL_SINGLE, IndentAction.DEC),
