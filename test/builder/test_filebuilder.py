@@ -12,7 +12,8 @@ def test_logger_generator(mocker):
 
     sb = StateBuilder()
     state = mocker.Mock(_vars=[])  # TODO: change _vars to not be empty for future tests
-    sb.logger_generator(state)
+    cwp = mocker.Mock(states={})
+    sb.logger_generator(state, cwp)
 
     calls = [
         mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
