@@ -16,27 +16,46 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline = StringManager()
         self.mapping_function = StringManager()
 
+    def _build_mapping_function(self, state: CwpState) -> StringManager:
+        guard = StringManager()
+
+        guard.write_str("(")
+        guard.write_str(
+            " && ".join(
+                [f"{edge.expression}" for edge in state.in_edges]
+                if state.in_edges
+                else ["true"]
+            )
+        )  # ["true"] in case no in edges
+
+        guard.write_str(") && !(")
+
+        guard.write_str(
+            " || ".join(
+                [f"{edge.expression}" for edge in state.out_edges]
+                if state.out_edges
+                else ["false"]
+            )
+        )  # ["false"] in case no out edges
+
+        guard.write_str(")")
+
+        return guard
+
+    def _build_mapping_function_block(self, state: CwpState) -> None:
+        mapping_func = self._build_mapping_function(state)
+
+        self.mapping_function.write_str(":: (")
+        self.mapping_function.write_str(mapping_func)
+        self.mapping_function.write_str(") ->", NL_SINGLE, IndentAction.INC)
+        self.mapping_function.write_str(f"{state.name} = true", NL_SINGLE)
+        self.mapping_function.write_str("", indent_action=IndentAction.DEC)
+
     def visit_state(self, state: CwpState) -> bool:
         new_str = f"bool {state.name} = false"
         self.cwp_states.write_str(new_str, NL_SINGLE)
 
-        # input edges
-        self.mapping_function.write_str("::((")
-        for edge in state.in_edges:
-            self.mapping_function.write_str(f"{edge.expression} && ")
-
-        # ensure the ending in && doesnt break the promela
-        self.mapping_function.write_str("true ")
-
-        self.mapping_function.write_str(") && !(")
-
-        for edge in state.out_edges:
-            self.mapping_function.write_str(f"{edge.expression} ||")
-
-        # ensure the ending in || doesnt break the promela
-        self.mapping_function.write_str("false ")
-
-        self.mapping_function.write_str(f")) -> {state.name} = true", NL_SINGLE)
+        self._build_mapping_function_block(state)
 
         return True
 
@@ -58,7 +77,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
 
         # update state inline sm appends mapping function sm
-        self.update_state_inline.write_str(self.mapping_function, NL_SINGLE)
+        self.update_state_inline.write_str(self.mapping_function)
 
         self.update_state_inline.write_str(":: else -> assert false", NL_SINGLE)
 
