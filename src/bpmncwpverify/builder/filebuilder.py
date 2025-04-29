@@ -82,13 +82,15 @@ class StateBuilder:
 
         cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
         vars = State.generate_promela((builder.state).unwrap()).unwrap()
-        variableLogger = builder.logger_generator((builder.state).unwrap())
+        variableLogger = builder.logger_generator(
+            (builder.state).unwrap(), (builder.cwp).unwrap()
+        )
         workflow = generate_promela((builder.bpmn).unwrap())
 
         outputs.promela = f"{vars}{cwp}{variableLogger}{workflow}"
         return Success(outputs)
 
-    def logger_generator(self, state: State) -> str:
+    def logger_generator(self, state: State, cwp: Cwp) -> str:
         variableNames = self.variable_name_extractor(state)
         loggerFunction = StringManager()
 
@@ -102,6 +104,17 @@ class StateBuilder:
                 f'printf("{varName} = %s\\n", {varName});', NL_SINGLE
             )
             loggerFunction.write_str(f"old_{varName} = {varName}", NL_SINGLE)
+            loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+            loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
+
+        for cwp_state in cwp.states.values():
+            loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
+            loggerFunction.write_str(
+                f":: {cwp_state.name} == true ->", NL_SINGLE, IndentAction.INC
+            )
+            loggerFunction.write_str(
+                f'printf("Current state: {cwp_state.name}\\n");', NL_SINGLE
+            )
             loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
             loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
         loggerFunction.write_str("}", NL_SINGLE, IndentAction.DEC)
