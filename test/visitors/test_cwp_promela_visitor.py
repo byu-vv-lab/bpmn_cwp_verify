@@ -35,10 +35,6 @@ class TestCwpPromelaVisitor:
 
         mock_write_str.assert_has_calls(calls)
 
-    # def test_mapping_function(self, get_mock_write_str, mocker):
-    # mock_write_str = get_mock_write_str
-    # CwpPromelaVisitor().create_update_state_inline(mocker.Mock())
-
     def test_visit_state(self, get_mock_write_str, mocker):
         mock_state = mocker.Mock()
         mock_state.name = "test"
