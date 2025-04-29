@@ -536,3 +536,13 @@ def test_visit_task_with_behavior(promela_visitor, mocker):
 
     promela_visitor.visit_task(mocker.Mock())
     mock_gen_method.assert_called_once_with(mock_context_object)
+
+
+def test_print_element_id(promela_visitor, mocker):
+    sm = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
+    )
+    mock_element = mocker.Mock(id="test_id")
+
+    promela_visitor.print_element_id(mock_element)
+    sm.assert_called_once_with('printf("ID: test_id")', 1)

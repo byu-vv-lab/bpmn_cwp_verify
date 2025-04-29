@@ -287,11 +287,11 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     ####################
     # Visitor Methods
     ####################
-    def visit_all(self, element: BpmnElement) -> None:
-        self.promela.write_str(f"printf(ID: {element.id})", NL_SINGLE)
+    def print_element_id(self, element: BpmnElement) -> None:
+        self.promela.write_str(f'printf("ID: {element.id}")', NL_SINGLE)
 
     def visit_start_event(self, event: StartEvent) -> bool:
-        self.visit_all(event)
+        self.print_element_id(event)
         context = Context(event)
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
@@ -305,7 +305,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
-        self.visit_all(event)
+        self.print_element_id(event)
         context = Context(event)
         context.end_event = True
         self._gen_behavior_model(context)
@@ -317,7 +317,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
-        self.visit_all(event)
+        self.print_element_id(event)
         context = Context(event)
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
@@ -328,7 +328,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_task(self, task: Task) -> bool:
-        self.visit_all(task)
+        self.print_element_id(task)
         context = Context(task)
         context.behavior = task.behavior
         context.task_end = False
@@ -341,7 +341,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def end_visit_task(self, task: Task) -> None:
-        self.visit_all(task)
+        self.print_element_id(task)
         context = Context(task)
         context.task_end = True
         self._gen_var_defs(context)
@@ -350,7 +350,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.promela.write_str(atomic_block)
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
-        self.visit_all(gateway)
+        self.print_element_id(gateway)
         context = Context(gateway)
         context.has_option = True
         context.behavior_model = False
@@ -361,11 +361,11 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
-        self.visit_all(gateway)
+        self.print_element_id(gateway)
         pass
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
-        self.visit_all(gateway)
+        self.print_element_id(gateway)
         context = Context(gateway)
         context.behavior_model = False
         if not gateway.is_fork:
@@ -377,7 +377,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         return True
 
     def visit_message_flow(self, flow: MessageFlow) -> bool:
-        self.visit_all(flow)
+        self.print_element_id(flow)
         return True
 
     def visit_process(self, process: Process) -> bool:
@@ -387,12 +387,12 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.promela.write_str(
             f"proctype {process.id}() {{", NL_SINGLE, IndentAction.INC
         )
-        self.visit_all(process)
+        self.print_element_id(process)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
         return True
 
     def end_visit_process(self, process: Process) -> None:
-        self.visit_all(process)
+        self.print_element_id(process)
         self.promela.write_str("od", NL_SINGLE)
         self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
 
