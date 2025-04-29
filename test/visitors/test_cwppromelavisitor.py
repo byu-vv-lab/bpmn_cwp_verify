@@ -28,9 +28,9 @@ class TestCwpPromelaVisitor:
 
         calls = [
             mocker.call(END_STR, NL_DOUBLE),
-            mocker.call("inline Update_State() {", NL_SINGLE, IndentAction.INC),
+            mocker.call("inline updateState() {", NL_SINGLE, IndentAction.INC),
+            mocker.call("skip", NL_SINGLE),
             mocker.call("}", NL_SINGLE, IndentAction.DEC),
-            # mocker.call(END_STR, NL_DOUBLE),
         ]
 
         mock_write_str.assert_has_calls(calls)

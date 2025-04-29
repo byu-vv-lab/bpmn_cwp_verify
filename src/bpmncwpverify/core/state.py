@@ -776,9 +776,15 @@ class State:
                 str_builder.append(
                     f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
                 )
+                str_builder.append(
+                    f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                )
             else:
                 str_builder.append(
                     f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                )
+                str_builder.append(
+                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
                 )
         return Success("\n".join(str_builder) + "\n\n")
 

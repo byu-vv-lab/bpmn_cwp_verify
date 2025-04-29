@@ -200,7 +200,9 @@ def test_generate_promela_with_full_state(mocker, mock_state):
         "#define MAX_COUNT 10\n"
         "mtype:TestEnum = {START STOP}\n"
         "int state_var = START\n"
-        "int counter = 0\n\n"
+        "int old_state_var = state_var\n"
+        "int counter = 0\n"
+        "int old_counter = counter\n\n"
     )
 
     assert isinstance(result, Success)

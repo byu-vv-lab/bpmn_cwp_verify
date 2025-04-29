@@ -253,3 +253,61 @@ class Test_SymbolTable_build:
         assert not_(is_successful)(result)
         error: Error = result.failure()
         assert expected == error
+
+    # @staticmethod
+    # def generate_promela(state: "State") -> Result[str, Error]:
+    #     str_builder: List[str] = []
+    #     str_builder.append("//**********VARIABLE DECLARATION************//")
+    #     for const_decl in state._consts:
+    #         str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
+    #     for enum_decl in state._enums:
+    #         str_builder.append(
+    #             f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
+    #         )
+    #     for var_decl in state._vars:
+    #         if var_decl.type_ in {enum.id for enum in state._enums}:
+    #             str_builder.append(
+    #                 f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+    #             )
+    #             str_builder.append(
+    #                 f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+    #             )
+    #         else:
+    #             str_builder.append(
+    #                 f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+    #             )
+    #             str_builder.append(
+    #                 f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+    #             )
+    #     return Success("\n".join(str_builder) + "\n\n")
+
+
+def test_generate_promela(mocker):
+    const = mocker.Mock(id="const_id", init=mocker.Mock(value="const_init_val"))
+    enum = mocker.Mock(
+        id="enum_id",
+        values=[mocker.Mock(value="init_val"), mocker.Mock(value="other_val")],
+    )
+    var1 = mocker.Mock(id="var1_id", type_="int", init=mocker.Mock(value="0"))
+    var2 = mocker.Mock(
+        id="var2_id", type_="enum_id", init=mocker.Mock(value="init_val")
+    )
+
+    _consts = [const]
+    _vars = [var1, var2]
+    _enums = [enum]
+
+    state = State(_consts, _enums, _vars)
+
+    result = State.generate_promela(state)
+
+    expected = (
+        "//**********VARIABLE DECLARATION************//\n"
+        "#define const_id const_init_val\n"
+        "mtype:enum_id = {init_val other_val}\n"
+        "int var1_id = 0\n"
+        "int old_var1_id = var1_id\n"
+        "mtype:enum_id var2_id = init_val\n"
+        "mtype:enum_id old_var2_id = var2_id\n\n"
+    )
+    assert result.unwrap() == expected

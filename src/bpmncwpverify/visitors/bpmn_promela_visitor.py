@@ -261,23 +261,20 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str(
             f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
         )
-        if ctx.behavior:
-            processed_str_list = [
-                line.strip() for line in ctx.behavior.split("\n") if line.strip()
-            ]
+        processed_str_list = [
+            line.strip() for line in ctx.behavior.split("\n") if line.strip()
+        ]
 
-            for line in processed_str_list:
-                if line in start_block_key_words:
-                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
-                elif line in end_block_key_words:
-                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
-                else:
-                    self.behaviors.write_str(line, NL_SINGLE)
-            # TODO: add promela state logger logic here
-        else:
-            self.behaviors.write_str("skip", NL_SINGLE)
-        # call the cwp
-        self.behaviors.write_str("Update_State()", NL_SINGLE)
+        for line in processed_str_list:
+            if line in start_block_key_words:
+                self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
+            elif line in end_block_key_words:
+                self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
+            else:
+                self.behaviors.write_str(line, NL_SINGLE)
+
+        self.behaviors.write_str("updateState()", NL_SINGLE)
+        self.behaviors.write_str("stateLogger()", NL_SINGLE)
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
@@ -292,7 +289,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     ####################
     def visit_all(self, element: BpmnElement) -> None:
         self.promela.write_str(f"printf(ID: {element.id})", NL_SINGLE)
-        self.promela.write_str("stateLogger()", NL_SINGLE)
 
     def visit_start_event(self, event: StartEvent) -> bool:
         self.visit_all(event)
