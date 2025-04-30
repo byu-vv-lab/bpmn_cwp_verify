@@ -7,6 +7,7 @@ from bpmncwpverify.core.error import (
     SpinAssertionError,
     SpinCoverageError,
 )
+from bpmncwpverify.core.counterexample import CounterExample
 import subprocess
 import re
 from returns.pipeline import flow, is_successful
@@ -108,4 +109,9 @@ class SpinOutput:
         )
         if is_successful(result):
             return Success(CoverageReport())
-        return Failure(result.failure())
+        counterExample = CounterExample.generate_counterexample(  # noqa: F841
+            file_path, result.failure()
+        )
+        return Failure(
+            result.failure()
+        )  # return error that takes counterexample as arg
