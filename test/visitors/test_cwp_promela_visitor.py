@@ -82,3 +82,51 @@ class TestCwpPromelaVisitor:
         ]
 
         mock_write_str.assert_has_calls(calls)
+
+    def test_build_mapping_function(self, get_mock_write_str, mocker):
+        mock_write_str = get_mock_write_str
+
+        mock_state = mocker.Mock()
+        mock_state.in_edges = [
+            mocker.Mock(expression="in_edge1"),
+            mocker.Mock(expression="in_edge2"),
+        ]
+        mock_state.out_edges = [
+            mocker.Mock(expression="out_edge1"),
+            mocker.Mock(expression="out_edge2"),
+        ]
+        visitor = CwpPromelaVisitor()
+
+        visitor._build_mapping_function(mock_state)
+
+        calls = [
+            mocker.call("("),
+            mocker.call("in_edge1 && in_edge2"),
+            mocker.call(") && !("),
+            mocker.call("out_edge1 || out_edge2"),
+            mocker.call(")"),
+        ]
+
+        mock_write_str.assert_has_calls(calls)
+
+    def test_build_mapping_function_no_in_or_out_edges(
+        self, get_mock_write_str, mocker
+    ):
+        mock_write_str = get_mock_write_str
+
+        mock_state = mocker.Mock()
+        mock_state.in_edges = []
+        mock_state.out_edges = []
+        visitor = CwpPromelaVisitor()
+
+        visitor._build_mapping_function(mock_state)
+
+        calls = [
+            mocker.call("("),
+            mocker.call("true"),
+            mocker.call(") && !("),
+            mocker.call("false"),
+            mocker.call(")"),
+        ]
+
+        mock_write_str.assert_has_calls(calls)
