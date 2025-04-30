@@ -25,8 +25,12 @@ class TestCwpPromelaVisitor:
     def test_create_update_state_inline(self, get_mock_write_str, mocker):
         mock_write_str = get_mock_write_str
         cpv = CwpPromelaVisitor()
+
+        mocker.patch.object(cpv, "build_XOR_block", return_value="test_val")
+
         mapping_function = mocker.Mock()
         cpv.mapping_function = mapping_function
+
         cpv.create_update_state_inline()
 
         calls = [
@@ -34,7 +38,8 @@ class TestCwpPromelaVisitor:
             mocker.call("if", NL_SINGLE, IndentAction.INC),
             mocker.call(mapping_function),
             mocker.call(":: else -> assert false", NL_SINGLE),
-            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
+            mocker.call("fi", NL_DOUBLE, IndentAction.DEC),
+            mocker.call("test_val"),
             mocker.call("}", NL_SINGLE, IndentAction.DEC),
         ]
 
