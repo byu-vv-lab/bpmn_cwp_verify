@@ -137,3 +137,26 @@ class TestCwpPromelaVisitor:
         ]
 
         mock_write_str.assert_has_calls(calls)
+
+    def test_build_XOR_block(self, get_mock_write_str, mocker):
+        mock_write_str = get_mock_write_str
+
+        visitor = CwpPromelaVisitor()
+        visitor.list_of_cwp_states = ["state1", "state2", "state3"]
+
+        visitor.build_XOR_block()
+
+        calls = [
+            mocker.call(
+                "// Verification of properties 1 & 2 (verifying that we are always in one state and only one state)",
+                NL_SINGLE,
+            ),
+            mocker.call("int sumOfActiveStates = "),
+            mocker.call("state1 + state2 + state3", NL_DOUBLE),
+            mocker.call("if", NL_SINGLE, IndentAction.INC),
+            mocker.call(":: (sumOfActiveStates != 1) -> assert false", NL_SINGLE),
+            mocker.call(":: else -> skip", NL_SINGLE),
+            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
+        ]
+
+        mock_write_str.assert_has_calls(calls)
