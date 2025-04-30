@@ -58,3 +58,27 @@ class TestCwpPromelaVisitor:
         mock_write_str = get_mock_write_str
         CwpPromelaVisitor().visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
+
+    def test_build_mapping_function_block(self, get_mock_write_str, mocker):
+        mock_write_str = get_mock_write_str
+
+        mock_state = mocker.Mock()
+        mock_state.name = "test_name"
+        visitor = CwpPromelaVisitor()
+
+        mock_build_mapping_function = mocker.patch.object(
+            visitor, "_build_mapping_function", return_value="test_val"
+        )
+        visitor._build_mapping_function_block(mock_state)
+
+        mock_build_mapping_function.assert_called_once()
+
+        calls = [
+            mocker.call(":: ("),
+            mocker.call("test_val"),
+            mocker.call(") ->", NL_SINGLE, IndentAction.INC),
+            mocker.call("test_name = true", NL_SINGLE),
+            mocker.call("", indent_action=IndentAction.DEC),
+        ]
+
+        mock_write_str.assert_has_calls(calls)
