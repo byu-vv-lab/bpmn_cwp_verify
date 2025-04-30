@@ -68,10 +68,8 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
     def create_update_state_inline(
         self,
     ) -> None:
-        new_str = "inline Update_State() {"
+        new_str = "inline updateState() {"
         self.update_state_inline.write_str(new_str, NL_SINGLE, IndentAction.INC)
-
-        # inside of update state inline will go here
 
         # start of the if statement
         self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
@@ -85,7 +83,6 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DEC)
 
         self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
-        pass
 
     def end_visit_edge(self, edge: CwpEdge) -> None:
         pass
@@ -97,7 +94,6 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
     def end_visit_cwp(self, model: Cwp) -> None:
         self.cwp_states.write_str(END_STR, NL_DOUBLE)
         self.create_update_state_inline()
-        pass
 
     def __repr__(self) -> str:
         return f"{self.cwp_states}{self.update_state_inline}"
