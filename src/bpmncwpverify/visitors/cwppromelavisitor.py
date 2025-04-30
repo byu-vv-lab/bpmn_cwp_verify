@@ -15,6 +15,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.cwp_states = StringManager()
         self.update_state_inline = StringManager()
         self.mapping_function = StringManager()
+        self.list_of_cwp_states: list[str] = []
 
     def _build_mapping_function(self, state: CwpState) -> StringManager:
         guard = StringManager()
@@ -51,7 +52,32 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.mapping_function.write_str(f"{state.name} = true", NL_SINGLE)
         self.mapping_function.write_str("", indent_action=IndentAction.DEC)
 
+    def build_XOR_block(self) -> StringManager:
+        nWayXor = StringManager()
+        nWayXor.write_str("sumOfActiveStates = ")
+
+        for state in self.list_of_cwp_states:
+            nWayXor.write_str(f"{state} +")
+        nWayXor.write_str("0", NL_SINGLE)
+
+        nWayXor.write_str("if", NL_SINGLE, IndentAction.INC)
+
+        nWayXor.write_str(":: (sumOfActiveStates == 1)-> print(success)", NL_SINGLE)
+
+        nWayXor.write_str(
+            ":: (sumOfActiveStates < 1)-> Assert(false)", NL_SINGLE
+        )  # fail prop 2
+
+        nWayXor.write_str(
+            ":: (sumOfActiveStates > 1)-> Assert(false)", NL_SINGLE, IndentAction.DEC
+        )
+
+        nWayXor.write_str("fi", NL_SINGLE)
+
+        return nWayXor
+
     def visit_state(self, state: CwpState) -> bool:
+        self.list_of_cwp_states.append(state.name)
         new_str = f"bool {state.name} = false"
         self.cwp_states.write_str(new_str, NL_SINGLE)
 
@@ -83,6 +109,8 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DEC)
 
         self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
+
+        self.update_state_inline.write_str(self.build_XOR_block(), NL_SINGLE)
 
     def end_visit_edge(self, edge: CwpEdge) -> None:
         pass
