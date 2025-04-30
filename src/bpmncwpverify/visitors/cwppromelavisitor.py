@@ -54,25 +54,22 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
 
     def build_XOR_block(self) -> StringManager:
         nWayXor = StringManager()
-        nWayXor.write_str("sumOfActiveStates = ")
+        nWayXor.write_str(
+            "// Verification of properties 1 & 2 (verifying that we are always in one state and only one state)",
+            NL_SINGLE,
+        )
+        nWayXor.write_str("int sumOfActiveStates = ")
 
-        for state in self.list_of_cwp_states:
-            nWayXor.write_str(f"{state} +")
-        nWayXor.write_str("0", NL_SINGLE)
+        nWayXor.write_str(
+            " + ".join([state for state in self.list_of_cwp_states]), NL_DOUBLE
+        )
 
         nWayXor.write_str("if", NL_SINGLE, IndentAction.INC)
 
-        nWayXor.write_str(":: (sumOfActiveStates == 1)-> print(success)", NL_SINGLE)
+        nWayXor.write_str(":: (sumOfActiveStates != 1) -> assert false", NL_SINGLE)
+        nWayXor.write_str(":: else -> skip", NL_SINGLE)
 
-        nWayXor.write_str(
-            ":: (sumOfActiveStates < 1)-> Assert(false)", NL_SINGLE
-        )  # fail prop 2
-
-        nWayXor.write_str(
-            ":: (sumOfActiveStates > 1)-> Assert(false)", NL_SINGLE, IndentAction.DEC
-        )
-
-        nWayXor.write_str("fi", NL_SINGLE)
+        nWayXor.write_str("fi", NL_SINGLE, IndentAction.DEC)
 
         return nWayXor
 
@@ -97,20 +94,17 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         new_str = "inline updateState() {"
         self.update_state_inline.write_str(new_str, NL_SINGLE, IndentAction.INC)
 
-        # start of the if statement
         self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
 
-        # update state inline sm appends mapping function sm
         self.update_state_inline.write_str(self.mapping_function)
 
         self.update_state_inline.write_str(":: else -> assert false", NL_SINGLE)
 
-        # end of if statement
-        self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DEC)
+        self.update_state_inline.write_str("fi", NL_DOUBLE, IndentAction.DEC)
+
+        self.update_state_inline.write_str(self.build_XOR_block())
 
         self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
-
-        self.update_state_inline.write_str(self.build_XOR_block(), NL_SINGLE)
 
     def end_visit_edge(self, edge: CwpEdge) -> None:
         pass
