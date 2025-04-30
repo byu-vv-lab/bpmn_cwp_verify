@@ -61,7 +61,9 @@ class CwpXmlParser:
         state: State,
     ) -> None:
         for itm in all_items:
-            style = itm.get("style")
+            style = itm.get(
+                "style"
+            )  # TODO: if edge does not have expression, then throw error
             if style and "edgeLabel" in style:
                 parent = itm.get("parent")
                 expression = itm.get("value")
