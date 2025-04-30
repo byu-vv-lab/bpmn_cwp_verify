@@ -56,7 +56,9 @@ class TestCwpPromelaVisitor:
         mock_state = mocker.Mock()
         mock_state.name = "test"
         mock_write_str = get_mock_write_str
-        CwpPromelaVisitor().visit_state(mock_state)
+        visitor = CwpPromelaVisitor()
+        mocker.patch.object(visitor, "_build_mapping_function_block")
+        visitor.visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
 
     def test_build_mapping_function_block(self, get_mock_write_str, mocker):
