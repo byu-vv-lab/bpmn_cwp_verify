@@ -95,6 +95,7 @@ class StateBuilder:
         loggerFunction = StringManager()
 
         loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
+        loggerFunction.write_str('printf("Changed Vars: ");', NL_SINGLE)
         for varName in variableNames:
             loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
             loggerFunction.write_str(
@@ -106,6 +107,7 @@ class StateBuilder:
             loggerFunction.write_str(f"old_{varName} = {varName}", NL_SINGLE)
             loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
             loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
+        loggerFunction.write_str('printf("END CHANGED VARS");', NL_SINGLE)
 
         for cwp_state in cwp.states.values():
             loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
