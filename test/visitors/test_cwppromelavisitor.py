@@ -160,3 +160,28 @@ class TestCwpPromelaVisitor:
         ]
 
         mock_write_str.assert_has_calls(calls)
+
+    def test_build_proper_path_block(self, get_mock_write_str, mocker):
+        mock_state = mocker.Mock()
+        mock_state.name = "node1"
+
+        mock_edge1 = mocker.Mock()
+        mock_edge1.dest.name = "node2"
+
+        mock_edge2 = mocker.Mock()
+        mock_edge2.dest.name = "node3"
+
+        mock_state.out_edges = [mock_edge1, mock_edge2]
+
+        mock_write_str = get_mock_write_str
+
+        visitor = CwpPromelaVisitor()
+
+        visitor._build_proper_path_block(mock_state)
+
+        calls = [
+            mocker.call(":: node1 && node2_prime", NL_SINGLE),
+            mocker.call(":: node1 && node3_prime", NL_SINGLE),
+        ]
+
+        mock_write_str.assert_has_calls(calls)
