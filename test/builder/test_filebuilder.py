@@ -23,6 +23,7 @@ def test_logger_generator(mocker):
 
     calls = [
         mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
+        mocker.call('printf("Changed Vars: ");', NL_SINGLE),
         mocker.call("if", NL_SINGLE, IndentAction.INC),
         mocker.call(
             ":: test_string != old_test_string ->", NL_SINGLE, IndentAction.INC
@@ -31,6 +32,7 @@ def test_logger_generator(mocker):
         mocker.call("old_test_string = test_string", NL_SINGLE),
         mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
         mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
+        mocker.call('printf("END CHANGED VARS");', NL_SINGLE),
         mocker.call("if", NL_SINGLE, IndentAction.INC),
         mocker.call(":: test_val1 == true ->", NL_SINGLE, IndentAction.INC),
         mocker.call('printf("Current state: test_val1\\n");', NL_SINGLE),
