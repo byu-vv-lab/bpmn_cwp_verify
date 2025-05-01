@@ -53,6 +53,10 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         )
 
     def _build_proper_path_block(self, state: CwpState) -> None:
+        # start state catcher
+        if len(state.in_edges) <= 0:
+            self.proper_path_block.write_str(f"::{state.name}{PRIME_SUFFIX}", NL_SINGLE)
+
         for out_edge in state.out_edges:
             self.proper_path_block.write_str(
                 f":: {state.name} && {out_edge.dest.name}{PRIME_SUFFIX}", NL_SINGLE
