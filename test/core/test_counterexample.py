@@ -1,4 +1,10 @@
-from bpmncwpverify.core.counterexample import CounterExample
+from bpmncwpverify.core.counterexample import CounterExample, NL_SINGLE
+import pytest
+
+
+@pytest.fixture
+def get_mock_write_str(mocker):
+    return mocker.patch("bpmncwpverify.util.stringmanager.StringManager.write_str")
 
 
 def test_generate_counter_example(mocker):
@@ -16,5 +22,22 @@ def test_generate_counter_example(mocker):
     mock_filter_spin_trace.assert_called_once_with("test_str")
 
 
-def test_filter_spin_trace(mocker):
-    pass
+def test_filter_spin_trace(get_mock_write_str, mocker):
+    mock_write_str = get_mock_write_str
+
+    spin_trace_string = mocker.Mock()
+    spin_trace_string.splitlines.return_value = [
+        "test string",
+        "with random words and",
+        "spin:",
+        "this text is pointless",
+    ]
+
+    CounterExample.filter_spin_trace(spin_trace_string)
+
+    calls = [
+        mocker.call("test string", NL_SINGLE),
+        mocker.call("with random words and", NL_SINGLE),
+    ]
+
+    mock_write_str.assert_has_calls(calls)

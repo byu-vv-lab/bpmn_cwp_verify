@@ -1,4 +1,5 @@
 from bpmncwpverify.core.error import Error
+from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE
 
 import subprocess
 
@@ -41,10 +42,10 @@ class CounterExample:
         Filter the spin trace string and return a string.
         """
         lines = spin_trace_string.splitlines()
-        filtered_str = ""
+        filtered_str = StringManager()
         for line in lines:
             if line.startswith("spin:"):
                 break
             else:
-                filtered_str += line + "\n"
-        return filtered_str
+                filtered_str.write_str(line, NL_SINGLE)
+        return str(filtered_str)
