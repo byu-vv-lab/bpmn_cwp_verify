@@ -14,7 +14,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
     def __init__(self) -> None:
         self.cwp_states = StringManager()
         self.update_state_inline = StringManager()
-        self.mapping_function = StringManager()
+        self.prime_vars = StringManager()
         self.list_of_cwp_states: list[str] = []
 
     def _build_mapping_function(self, state: CwpState) -> StringManager:
@@ -43,14 +43,11 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
 
         return guard
 
-    def _build_mapping_function_block(self, state: CwpState) -> None:
+    def _build_prime_var(self, state: CwpState) -> None:
         mapping_func = self._build_mapping_function(state)
-
-        self.mapping_function.write_str(":: (")
-        self.mapping_function.write_str(mapping_func)
-        self.mapping_function.write_str(") ->", NL_SINGLE, IndentAction.INC)
-        self.mapping_function.write_str(f"{state.name} = true", NL_SINGLE)
-        self.mapping_function.write_str("", indent_action=IndentAction.DEC)
+        self.prime_vars.write_str(
+            f"bool {state.name} = {mapping_func}_prime", NL_SINGLE
+        )
 
     def build_XOR_block(self) -> StringManager:
         nWayXor = StringManager()
@@ -78,7 +75,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         new_str = f"bool {state.name} = false"
         self.cwp_states.write_str(new_str, NL_SINGLE)
 
-        self._build_mapping_function_block(state)
+        self._build_prime_var(state)
 
         return True
 
@@ -94,13 +91,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         new_str = "inline updateState() {"
         self.update_state_inline.write_str(new_str, NL_SINGLE, IndentAction.INC)
 
-        self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
-
-        self.update_state_inline.write_str(self.mapping_function)
-
-        self.update_state_inline.write_str(":: else -> assert false", NL_SINGLE)
-
-        self.update_state_inline.write_str("fi", NL_DOUBLE, IndentAction.DEC)
+        self.update_state_inline.write_str(self.prime_vars)
 
         self.update_state_inline.write_str(self.build_XOR_block())
 
