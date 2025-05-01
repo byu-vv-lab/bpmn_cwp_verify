@@ -29,13 +29,19 @@ class TestCwpPromelaVisitor:
         mocker.patch.object(cpv, "build_XOR_block", return_value="test_val")
 
         prime_vars = mocker.Mock()
+        proper_path_block = mocker.Mock()
         cpv.prime_vars = prime_vars
+        cpv.proper_path_block = proper_path_block
 
         cpv.create_update_state_inline()
 
         calls = [
             mocker.call("inline updateState() {", NL_SINGLE, IndentAction.INC),
             mocker.call(prime_vars),
+            mocker.call("if", NL_SINGLE, IndentAction.INC),
+            mocker.call(proper_path_block),
+            mocker.call(":: else -> assert false", NL_SINGLE),
+            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
             mocker.call("test_val"),
             mocker.call("}", NL_SINGLE, IndentAction.DEC),
         ]
@@ -60,6 +66,7 @@ class TestCwpPromelaVisitor:
         mock_write_str = get_mock_write_str
         visitor = CwpPromelaVisitor()
         mocker.patch.object(visitor, "_build_prime_var")
+        mocker.patch.object(visitor, "_build_proper_path_block")
         visitor.visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
 

@@ -15,6 +15,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.cwp_states = StringManager()
         self.update_state_inline = StringManager()
         self.prime_vars = StringManager()
+        self.proper_path_block = StringManager()
         self.list_of_cwp_states: list[str] = []
 
     def _build_mapping_function(self, state: CwpState) -> StringManager:
@@ -49,6 +50,12 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
             f"bool {state.name}_prime = {mapping_func}", NL_SINGLE
         )
 
+    def _build_proper_path_block(self, state: CwpState) -> None:
+        for out_edge in state.out_edges:
+            self.proper_path_block.write_str(
+                f":: {state.name} && {out_edge.dest.name}_prime", NL_SINGLE
+            )
+
     def build_XOR_block(self) -> StringManager:
         nWayXor = StringManager()
         nWayXor.write_str(
@@ -76,6 +83,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.cwp_states.write_str(new_str, NL_SINGLE)
 
         self._build_prime_var(state)
+        self._build_proper_path_block(state)
 
         return True
 
@@ -92,6 +100,14 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline.write_str(new_str, NL_SINGLE, IndentAction.INC)
 
         self.update_state_inline.write_str(self.prime_vars)
+
+        self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
+
+        self.update_state_inline.write_str(self.proper_path_block)
+
+        self.update_state_inline.write_str(":: else -> assert false", NL_SINGLE)
+
+        self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DEC)
 
         self.update_state_inline.write_str(self.build_XOR_block())
 
