@@ -1,4 +1,5 @@
 from bpmncwpverify.core.error import Error
+from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE
 
 import subprocess
 
@@ -28,7 +29,23 @@ class CounterExample:
         """
         Generate a counterexample from the given file path and error.
         """
-        spin_trace_string = subprocess.run(  # noqa: F841
+        spin_trace_string = subprocess.run(
             ["spin", "-t", file_path], capture_output=True, text=True
         ).stdout
+        filtered_str = CounterExample.filter_spin_trace(spin_trace_string)  # noqa: F841
+
         return CounterExample([], error)
+
+    @staticmethod
+    def filter_spin_trace(spin_trace_string: str) -> str:
+        """
+        Filter the spin trace string and return a string.
+        """
+        lines = spin_trace_string.splitlines()
+        filtered_str = StringManager()
+        for line in lines:
+            if line.startswith("spin:"):
+                break
+            else:
+                filtered_str.write_str(line, NL_SINGLE)
+        return str(filtered_str)
