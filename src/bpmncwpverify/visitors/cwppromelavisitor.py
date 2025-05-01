@@ -46,7 +46,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
     def _build_prime_var(self, state: CwpState) -> None:
         mapping_func = self._build_mapping_function(state)
         self.prime_vars.write_str(
-            f"bool {state.name} = {mapping_func}_prime", NL_SINGLE
+            f"bool {state.name}_prime = {mapping_func}", NL_SINGLE
         )
 
     def build_XOR_block(self) -> StringManager:

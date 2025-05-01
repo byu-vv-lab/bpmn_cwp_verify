@@ -28,17 +28,14 @@ class TestCwpPromelaVisitor:
 
         mocker.patch.object(cpv, "build_XOR_block", return_value="test_val")
 
-        mapping_function = mocker.Mock()
-        cpv.mapping_function = mapping_function
+        prime_vars = mocker.Mock()
+        cpv.prime_vars = prime_vars
 
         cpv.create_update_state_inline()
 
         calls = [
             mocker.call("inline updateState() {", NL_SINGLE, IndentAction.INC),
-            mocker.call("if", NL_SINGLE, IndentAction.INC),
-            mocker.call(mapping_function),
-            mocker.call(":: else -> assert false", NL_SINGLE),
-            mocker.call("fi", NL_DOUBLE, IndentAction.DEC),
+            mocker.call(prime_vars),
             mocker.call("test_val"),
             mocker.call("}", NL_SINGLE, IndentAction.DEC),
         ]
@@ -62,11 +59,11 @@ class TestCwpPromelaVisitor:
         mock_state.name = "test"
         mock_write_str = get_mock_write_str
         visitor = CwpPromelaVisitor()
-        mocker.patch.object(visitor, "_build_mapping_function_block")
+        mocker.patch.object(visitor, "_build_prime_var")
         visitor.visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
 
-    def test_build_mapping_function_block(self, get_mock_write_str, mocker):
+    def test_build_prime_var(self, get_mock_write_str, mocker):
         mock_write_str = get_mock_write_str
 
         mock_state = mocker.Mock()
@@ -76,16 +73,12 @@ class TestCwpPromelaVisitor:
         mock_build_mapping_function = mocker.patch.object(
             visitor, "_build_mapping_function", return_value="test_val"
         )
-        visitor._build_mapping_function_block(mock_state)
+        visitor._build_prime_var(mock_state)
 
         mock_build_mapping_function.assert_called_once()
 
         calls = [
-            mocker.call(":: ("),
-            mocker.call("test_val"),
-            mocker.call(") ->", NL_SINGLE, IndentAction.INC),
-            mocker.call("test_name = true", NL_SINGLE),
-            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call("bool test_name_prime = test_val", NL_SINGLE),
         ]
 
         mock_write_str.assert_has_calls(calls)
