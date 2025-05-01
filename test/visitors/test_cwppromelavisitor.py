@@ -30,8 +30,10 @@ class TestCwpPromelaVisitor:
 
         prime_vars = mocker.Mock()
         proper_path_block = mocker.Mock()
+        var_reassignment = mocker.Mock()
         cpv.prime_vars = prime_vars
         cpv.proper_path_block = proper_path_block
+        cpv.var_reassignment = var_reassignment
 
         cpv.create_update_state_inline()
 
@@ -42,6 +44,7 @@ class TestCwpPromelaVisitor:
             mocker.call(proper_path_block),
             mocker.call(":: else -> assert false", NL_SINGLE),
             mocker.call("fi", NL_SINGLE, IndentAction.DEC),
+            mocker.call(var_reassignment),
             mocker.call("test_val"),
             mocker.call("}", NL_SINGLE, IndentAction.DEC),
         ]
@@ -67,6 +70,7 @@ class TestCwpPromelaVisitor:
         visitor = CwpPromelaVisitor()
         mocker.patch.object(visitor, "_build_prime_var")
         mocker.patch.object(visitor, "_build_proper_path_block")
+        mocker.patch.object(visitor, "_reassign_vars_to_primes")
         visitor.visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
 
@@ -185,3 +189,12 @@ class TestCwpPromelaVisitor:
         ]
 
         mock_write_str.assert_has_calls(calls)
+
+    def test_reassign_vars_to_primes(self, get_mock_write_str, mocker):
+        mock_write_str = get_mock_write_str
+
+        mock_state = mocker.Mock()
+        mock_state.name = "test_name"
+        CwpPromelaVisitor()._reassign_vars_to_primes(mock_state)
+
+        mock_write_str.assert_called_once_with("test_name = test_name_prime", NL_SINGLE)

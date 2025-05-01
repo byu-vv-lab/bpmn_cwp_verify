@@ -8,6 +8,7 @@ from bpmncwpverify.util.stringmanager import (
 
 START_STR = "//**********CWP VARIABLE DECLARATION************//"
 END_STR = "//**********************************************//"
+PRIME_SUFFIX = "_prime"
 
 
 class CwpPromelaVisitor(CwpVisitor):  # type: ignore
@@ -16,6 +17,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline = StringManager()
         self.prime_vars = StringManager()
         self.proper_path_block = StringManager()
+        self.var_reassignment = StringManager()
         self.list_of_cwp_states: list[str] = []
 
     def _build_mapping_function(self, state: CwpState) -> StringManager:
@@ -47,14 +49,19 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
     def _build_prime_var(self, state: CwpState) -> None:
         mapping_func = self._build_mapping_function(state)
         self.prime_vars.write_str(
-            f"bool {state.name}_prime = {mapping_func}", NL_SINGLE
+            f"bool {state.name}{PRIME_SUFFIX} = {mapping_func}", NL_SINGLE
         )
 
     def _build_proper_path_block(self, state: CwpState) -> None:
         for out_edge in state.out_edges:
             self.proper_path_block.write_str(
-                f":: {state.name} && {out_edge.dest.name}_prime", NL_SINGLE
+                f":: {state.name} && {out_edge.dest.name}{PRIME_SUFFIX}", NL_SINGLE
             )
+
+    def _reassign_vars_to_primes(self, state: CwpState) -> None:
+        self.var_reassignment.write_str(
+            f"{state.name} = {state.name}{PRIME_SUFFIX}", NL_SINGLE
+        )
 
     def build_XOR_block(self) -> StringManager:
         nWayXor = StringManager()
@@ -84,6 +91,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
 
         self._build_prime_var(state)
         self._build_proper_path_block(state)
+        self._reassign_vars_to_primes(state)
 
         return True
 
@@ -108,6 +116,8 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         self.update_state_inline.write_str(":: else -> assert false", NL_SINGLE)
 
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DEC)
+
+        self.update_state_inline.write_str(self.var_reassignment)
 
         self.update_state_inline.write_str(self.build_XOR_block())
 
