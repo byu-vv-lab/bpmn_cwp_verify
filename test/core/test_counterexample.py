@@ -1,4 +1,5 @@
 from bpmncwpverify.core.counterexample import CounterExample, NL_SINGLE
+from bpmncwpverify.core.error import Error
 import pytest
 
 
@@ -17,7 +18,9 @@ def test_generate_counter_example(mocker):
         "bpmncwpverify.core.counterexample.CounterExample.filter_spin_trace"
     )
 
-    CounterExample.generate_counterexample(mocker.Mock(), mocker.Mock())
+    CounterExample.generate_counterexample(
+        mocker.Mock(), mocker.MagicMock(__name__="test")
+    )
 
     mock_filter_spin_trace.assert_called_once_with("test_str")
 
@@ -41,3 +44,15 @@ def test_filter_spin_trace(get_mock_write_str, mocker):
     ]
 
     mock_write_str.assert_has_calls(calls)
+
+
+def test_counterexample_constructor(mocker):
+    class SubError(Error):
+        pass
+
+    error_trace = mocker.Mock()
+
+    ce = CounterExample([error_trace], SubError)
+
+    assert ce.trace_steps == [error_trace]
+    assert ce.error == "SubError"
