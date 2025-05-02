@@ -99,7 +99,7 @@ def test_has_uncovered_states(mocker):
                 (1 of 7 states)
     """
     spin_obj = SpinOutput()
-    result = spin_obj._check_coverage_errors(spin_output)
+    result = spin_obj._check_coverage_errors("", spin_output)
     assert isinstance(result, Failure)
 
     errors = result.failure().coverage_errors
@@ -133,41 +133,40 @@ def test_has_uncovered_states(mocker):
 
 def test_has_no_uncovered_states(mocker):
     spin_output = """
+    Full statespace search for:
+            never claim             - (none specified)
+            assertion violations    +
+            cycle checks            - (disabled by -DSAFETY)
+            invalid end states      +
 
-Full statespace search for:
-        never claim             - (none specified)
-        assertion violations    +
-        cycle checks            - (disabled by -DSAFETY)
-        invalid end states      +
+    State-vector 20 byte, depth reached 6, errors: 0
+            7 states, stored
+            0 states, matched
+            7 transitions (= stored+matched)
+            0 atomic steps
+    hash conflicts:         0 (resolved)
 
-State-vector 20 byte, depth reached 6, errors: 0
-        7 states, stored
-        0 states, matched
-        7 transitions (= stored+matched)
-        0 atomic steps
-hash conflicts:         0 (resolved)
+    Stats on memory usage (in Megabytes):
+        0.000       equivalent memory usage for states (stored*(State-vector + overhead))
+        0.292       actual memory usage for states
+    128.000       memory used for hash table (-w24)
+        0.534       memory used for DFS stack (-m10000)
+    128.730       total actual memory usage
 
-Stats on memory usage (in Megabytes):
-    0.000       equivalent memory usage for states (stored*(State-vector + overhead))
-    0.292       actual memory usage for states
-128.000       memory used for hash table (-w24)
-    0.534       memory used for DFS stack (-m10000)
-128.730       total actual memory usage
-
-unreached in proctype test
-        (0 of 7 states)
-unreached in init
-        (0 of 3 states)
-unreached in claim never_0
-        test.pml:20, state 7, "-end-"
-        (1 of 7 states)
-unreached in claim never_1
-        test.pml:28, state 7, "-end-"
-        (1 of 7 states)
+    unreached in proctype test
+            (0 of 7 states)
+    unreached in init
+            (0 of 3 states)
+    unreached in claim never_0
+            test.pml:20, state 7, "-end-"
+            (1 of 7 states)
+    unreached in claim never_1
+            test.pml:28, state 7, "-end-"
+            (1 of 7 states)
     """
 
     spin_obj = SpinOutput()
-    result = spin_obj._check_coverage_errors(spin_output)
+    result = spin_obj._check_coverage_errors("", spin_output)
     assert isinstance(result, Success)
 
 
@@ -188,7 +187,7 @@ def test_check_invalid_end_state(mocker):
                 invalid end states      +
     """
 
-    result = spin_output._check_invalid_end_state(s)
+    result = spin_output._check_invalid_end_state("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -209,7 +208,7 @@ def test_check_invalid_end_state_none(mocker):
         ...
     """
 
-    result = spin_output._check_invalid_end_state(s)
+    result = spin_output._check_invalid_end_state("", s)
 
     assert isinstance(result, Success)
 
@@ -234,7 +233,7 @@ def test_check_assertion_violation(mocker):
                 1 states, stored
     """
 
-    result = spin_output._check_assertion_violation(s)
+    result = spin_output._check_assertion_violation("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -255,12 +254,13 @@ def test_check_assertion_violation_none(mocker):
         ...
     """
 
-    result = spin_output._check_assertion_violation(s)
+    result = spin_output._check_assertion_violation("", s)
 
     assert isinstance(result, Success)
 
 
 def test_get_spin_output_no_errors(mocker):
+    file_path = "test file path"
     test_spin_output = "test spin output"
     mock_run = mocker.Mock()
     mock_run.stdout = test_spin_output
@@ -282,12 +282,12 @@ def test_get_spin_output_no_errors(mocker):
         return_value=Success(test_spin_output),
     )
 
-    result = SpinOutput.get_spin_output(test_spin_output)
+    result = SpinOutput.get_spin_output(file_path)
     assert is_successful(result)
     mock_stx_error.assert_called_once_with(test_spin_output)
-    mock_invalid_end_state_error.assert_called_once_with(test_spin_output)
-    mock_assertion_error.assert_called_once_with(test_spin_output)
-    mock_coverage_errors.assert_called_once_with(test_spin_output)
+    mock_invalid_end_state_error.assert_called_once_with(file_path, test_spin_output)
+    mock_assertion_error.assert_called_once_with(file_path, test_spin_output)
+    mock_coverage_errors.assert_called_once_with(file_path, test_spin_output)
 
 
 def test_get_spin_output_with_errors(mocker):
