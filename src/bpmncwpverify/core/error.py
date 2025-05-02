@@ -363,27 +363,48 @@ class NotImplementedError(Error):
         self.function = function
 
 
-class SpinAssertionError(Error):
+class CounterExampleError(Error):
+    __slots__ = ["counter_example"]
+
+    def __init__(self, counter_example: str) -> None:
+        super().__init__()
+        self.counter_example = counter_example
+
+    def get_counter_example(self) -> str:
+        return self.counter_example
+
+
+class SpinAssertionError(CounterExampleError):
     __slots__ = ["list_of_error_maps"]
 
-    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
-        super().__init__()
+    def __init__(
+        self,
+        counter_example: str,
+        list_of_error_maps: typing.List[typing.Dict[str, str]],
+    ):
+        super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
 
 
-class SpinCoverageError(Error):
+class SpinCoverageError(CounterExampleError):
     __slots__ = ["coverage_errors"]
 
-    def __init__(self, coverage_errors: typing.List[typing.Dict[str, str]]) -> None:
-        super().__init__()
+    def __init__(
+        self, counter_example: str, coverage_errors: typing.List[typing.Dict[str, str]]
+    ) -> None:
+        super().__init__(counter_example)
         self.coverage_errors = coverage_errors
 
 
-class SpinInvalidEndStateError(Error):
+class SpinInvalidEndStateError(CounterExampleError):
     __slots__ = ["list_of_error_maps"]
 
-    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
-        super().__init__()
+    def __init__(
+        self,
+        counter_example: str,
+        list_of_error_maps: typing.List[typing.Dict[str, str]],
+    ):
+        super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
 
 

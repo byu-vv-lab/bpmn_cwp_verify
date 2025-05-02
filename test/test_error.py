@@ -26,6 +26,7 @@ from bpmncwpverify.core.error import (
     BpmnStructureError,
     BpmnTaskFlowError,
     BpmnUnrecognizedElement,
+    CounterExampleError,
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
@@ -217,15 +218,17 @@ test_inputs: list[tuple[Error, str]] = [
     (NotImplementedError("notImplemented"), "ERROR: not implemented 'notImplemented'"),
     (
         SpinAssertionError(
+            "",
             [
                 {"assertion": "test_assertion1", "depth": "test_depth1"},
                 {"assertion": "test_assertion2", "depth": "test_depth2"},
-            ]
+            ],
         ),
         "Assertion Error:\n2 error(s) occurred:\n1: Assertion: test_assertion1, Depth info: test_depth1\n2: Assertion: test_assertion2, Depth info: test_depth2",
     ),
     (
         SpinCoverageError(
+            "",
             [
                 {
                     "proctype": "test_proctype",
@@ -233,12 +236,12 @@ test_inputs: list[tuple[Error, str]] = [
                     "line": "test_line",
                     "message": "test_message",
                 }
-            ]
+            ],
         ),
         "Proctype: test_proctype, File: test_file, Line: test_line, Message: test_message",
     ),
     (
-        SpinInvalidEndStateError([{"info": "test_info1"}, {"info": "test_info2"}]),
+        SpinInvalidEndStateError("", [{"info": "test_info1"}, {"info": "test_info2"}]),
         "Invalid end state\n2 error(s) occurred:\n1: test_info1\n2: test_info2",
     ),
     (
@@ -354,3 +357,11 @@ def test_given_error_when_get_error_message_then_message_equals_expected(
 
     # then
     assert expected == result
+
+
+def test_constructor_and_get_counter_example():
+    cee = CounterExampleError("test_counter_example")
+
+    assert cee.counter_example == "test_counter_example"
+
+    assert cee.get_counter_example() == "test_counter_example"
