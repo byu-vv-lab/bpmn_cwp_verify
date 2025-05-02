@@ -14,7 +14,7 @@ def test_check_syntax_errors(mocker):
     spin: test/resources/simple_example/valid_output.pml:116, Error: missing '}' ?
     """
 
-    result = spin_output._check_syntax_errors(s)
+    result = spin_output._check_syntax_errors("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -48,7 +48,7 @@ def test_check_syntax_errors_none(mocker):
         ...
     """
 
-    result = spin_output._check_syntax_errors(s)
+    result = spin_output._check_syntax_errors("", s)
 
     assert isinstance(result, Success)
 
@@ -284,7 +284,7 @@ def test_get_spin_output_no_errors(mocker):
 
     result = SpinOutput.get_spin_output(file_path)
     assert is_successful(result)
-    mock_stx_error.assert_called_once_with(test_spin_output)
+    mock_stx_error.assert_called_once_with(file_path, test_spin_output)
     mock_invalid_end_state_error.assert_called_once_with(file_path, test_spin_output)
     mock_assertion_error.assert_called_once_with(file_path, test_spin_output)
     mock_coverage_errors.assert_called_once_with(file_path, test_spin_output)
@@ -297,7 +297,7 @@ def test_get_spin_output_with_errors(mocker):
     mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_run)
     mock_stx_error = mocker.patch(
         "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Failure("Error"),
+        return_value=Failure(mocker.Mock()),
     )
     mock_invalid_end_state_error = mocker.patch(
         "bpmncwpverify.core.spin.SpinOutput._check_invalid_end_state",
@@ -310,6 +310,7 @@ def test_get_spin_output_with_errors(mocker):
 
     result = SpinOutput.get_spin_output(test_spin_output)
     assert not_(is_successful)(result)
-    mock_stx_error.assert_called_once_with(test_spin_output)
+
+    mock_stx_error.assert_called_once_with("test spin output", test_spin_output)
     mock_invalid_end_state_error.assert_not_called()
     mock_assertion_error.assert_not_called()

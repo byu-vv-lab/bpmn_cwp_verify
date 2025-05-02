@@ -408,11 +408,15 @@ class SpinInvalidEndStateError(CounterExampleError):
         self.list_of_error_maps = list_of_error_maps
 
 
-class SpinSyntaxError(Error):
+class SpinSyntaxError(CounterExampleError):
     __slots__ = ["list_of_error_maps"]
 
-    def __init__(self, list_of_error_maps: typing.List[typing.Dict[str, str]]):
-        super().__init__()
+    def __init__(
+        self,
+        counter_example: str,
+        list_of_error_maps: typing.List[typing.Dict[str, str]],
+    ):
+        super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
 
 

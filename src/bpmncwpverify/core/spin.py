@@ -1,6 +1,7 @@
 from returns.result import Result, Success, Failure
 from typing import Dict, List
 from bpmncwpverify.core.error import (
+    CounterExampleError,
     Error,
     SpinSyntaxError,
     SpinInvalidEndStateError,
@@ -59,17 +60,23 @@ class SpinOutput:
             Failure(SpinAssertionError("", errors)) if errors else Success(spin_msg)
         )  # TODO: replace empty str here with counter_example once counter_example is str
 
-    def _check_syntax_errors(self, spin_msg: str) -> Result[str, Error]:
+    def _check_syntax_errors(
+        self, file_path: str, spin_msg: str
+    ) -> Result[str, CounterExampleError]:
         errors = self._get_re_matches(
             r"spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)",
             spin_msg,
         )
 
-        return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
+        counter_example = CounterExample.generate_counterexample(  # noqa: F841
+            file_path, SpinAssertionError
+        )
+
+        return Failure(SpinSyntaxError("", errors)) if errors else Success(spin_msg)
 
     def _check_coverage_errors(
         self, file_path: str, spin_msg: str
-    ) -> Result[str, Error]:
+    ) -> Result[str, CounterExampleError]:
         # Regular expression to match proctype and init blocks, excluding never claims
         block_pattern = re.compile(
             r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+(?!\s+unreached))+)"
@@ -117,16 +124,16 @@ class SpinOutput:
         )
 
     @staticmethod
-    def get_spin_output(file_path: str) -> Result[CoverageReport, Error]:
+    def get_spin_output(file_path: str) -> Result[CoverageReport, str]:
         spin_run_string = subprocess.run(
             ["spin", "-run", "-noclaim", file_path], capture_output=True, text=True
         ).stdout
 
         spin_output = SpinOutput()
 
-        result: Result[str, Error] = flow(
+        result: Result[str, CounterExampleError] = flow(
             spin_run_string,
-            spin_output._check_syntax_errors,
+            partial(spin_output._check_syntax_errors, file_path),
             bind_result(partial(spin_output._check_invalid_end_state, file_path)),
             bind_result(partial(spin_output._check_assertion_violation, file_path)),
             bind_result(partial(spin_output._check_coverage_errors, file_path)),
@@ -136,5 +143,5 @@ class SpinOutput:
             return Success(CoverageReport(spin_run_string))
 
         return Failure(
-            result.failure()
+            result.failure().get_counter_example()
         )  # return error that takes counterexample as arg

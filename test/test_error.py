@@ -246,13 +246,14 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         SpinSyntaxError(
+            "",
             [
                 {
                     "line_number": "1",
                     "file_path": "test/file/path",
                     "error_msg": "test_msg",
                 }
-            ]
+            ],
         ),
         "Syntax Error in generated promela:\n1 error(s) occurred:\n1: On line 1 in the file 'test/file/path': test_msg",
     ),
