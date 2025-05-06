@@ -5,9 +5,16 @@ from returns.result import Failure, Success
 
 from returns.pipeline import is_successful
 from returns.functions import not_
+import pytest
 
 
-def test_check_syntax_errors(mocker):
+@pytest.fixture
+def mock_generate_counter_example(mocker):
+    mocker.patch("bpmncwpverify.core.spin.CounterExample.generate_counterexample")
+
+
+def test_check_syntax_errors(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = SpinOutput()
     s = """
     spin: test/resources/simple_example/valid_output.pml:55, Error: syntax error    saw ''}' = 125'
@@ -34,7 +41,8 @@ def test_check_syntax_errors(mocker):
     assert result.list_of_error_maps[1]["error_msg"] == "missing '}' ?"
 
 
-def test_check_syntax_errors_none(mocker):
+def test_check_syntax_errors_none(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = SpinOutput()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
@@ -53,7 +61,8 @@ def test_check_syntax_errors_none(mocker):
     assert isinstance(result, Success)
 
 
-def test_has_uncovered_states(mocker):
+def test_has_uncovered_states(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = """
 
         Full statespace search for:
@@ -131,7 +140,8 @@ def test_has_uncovered_states(mocker):
     assert errors[5]["message"] == '"INIT_TEST2"'
 
 
-def test_has_no_uncovered_states(mocker):
+def test_has_no_uncovered_states(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = """
     Full statespace search for:
             never claim             - (none specified)
@@ -170,7 +180,8 @@ def test_has_no_uncovered_states(mocker):
     assert isinstance(result, Success)
 
 
-def test_check_invalid_end_state(mocker):
+def test_check_invalid_end_state(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = SpinOutput()
     s = """
         pan:1: invalid end state (at depth -1)
@@ -194,7 +205,8 @@ def test_check_invalid_end_state(mocker):
     assert result.list_of_error_maps[0]["info"] == "at depth -1"
 
 
-def test_check_invalid_end_state_none(mocker):
+def test_check_invalid_end_state_none(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = SpinOutput()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
@@ -213,7 +225,8 @@ def test_check_invalid_end_state_none(mocker):
     assert isinstance(result, Success)
 
 
-def test_check_assertion_violation(mocker):
+def test_check_assertion_violation(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = SpinOutput()
     s = """
         pan:1: assertion violated (_nr_pr==3) (at depth 0)
@@ -240,7 +253,8 @@ def test_check_assertion_violation(mocker):
     assert result.list_of_error_maps[0]["assertion"] == "_nr_pr==3"
 
 
-def test_check_assertion_violation_none(mocker):
+def test_check_assertion_violation_none(mock_generate_counter_example):
+    mock_generate_counter_example
     spin_output = SpinOutput()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
@@ -259,7 +273,8 @@ def test_check_assertion_violation_none(mocker):
     assert isinstance(result, Success)
 
 
-def test_get_spin_output_no_errors(mocker):
+def test_get_spin_output_no_errors(mock_generate_counter_example, mocker):
+    mock_generate_counter_example
     file_path = "test file path"
     test_spin_output = "test spin output"
     mock_run = mocker.Mock()
@@ -290,7 +305,8 @@ def test_get_spin_output_no_errors(mocker):
     mock_coverage_errors.assert_called_once_with(file_path, test_spin_output)
 
 
-def test_get_spin_output_with_errors(mocker):
+def test_get_spin_output_with_errors(mock_generate_counter_example, mocker):
+    mock_generate_counter_example
     test_spin_output = "test spin output"
     mock_run = mocker.Mock()
     mock_run.stdout = test_spin_output
