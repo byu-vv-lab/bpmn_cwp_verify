@@ -53,12 +53,6 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         )
 
     def _build_proper_path_block(self, state: CwpState) -> None:
-        if not state.in_edges:
-            # Handles the case of the start state
-            self.proper_path_block.write_str(
-                f":: {state.name}{PRIME_SUFFIX}", NL_SINGLE
-            )
-
         for out_edge in state.out_edges:
             self.proper_path_block.write_str(
                 f":: {state.name} && {out_edge.dest.name}{PRIME_SUFFIX}", NL_SINGLE
@@ -91,13 +85,14 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
         return nWayXor
 
     def visit_state(self, state: CwpState) -> bool:
-        self.list_of_cwp_states.append(state.name)
-        new_str = f"bool {state.name} = false"
-        self.cwp_states.write_str(new_str, NL_SINGLE)
+        if state.in_edges:
+            self.list_of_cwp_states.append(state.name)
+            new_str = f"bool {state.name} = false"
+            self.cwp_states.write_str(new_str, NL_SINGLE)
 
-        self._build_prime_var(state)
-        self._build_proper_path_block(state)
-        self._reassign_vars_to_primes(state)
+            self._build_prime_var(state)
+            self._build_proper_path_block(state)
+            self._reassign_vars_to_primes(state)
 
         return True
 
