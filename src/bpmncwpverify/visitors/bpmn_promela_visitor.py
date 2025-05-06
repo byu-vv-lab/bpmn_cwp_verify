@@ -173,7 +173,9 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         for expression, location in zip(
             self._get_expressions(ctx), self._get_put_locations(ctx)
         ):
-            sm.write_str(f":: {expression} -> putToken({location})", NL_SINGLE)
+            sm.write_str(
+                f":: {expression.replace("\n", "")} -> putToken({location})", NL_SINGLE
+            )
 
         sm.write_str(":: atomic{else -> assert false}", NL_SINGLE)
         sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
@@ -296,7 +298,9 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
-        self.promela.write_str(f"putToken({event.id})", NL_SINGLE, IndentAction.NIL)
+        for loc in self._get_consume_locations(context):
+            self.promela.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
+
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
 
         atomic_block = self._build_atomic_block(context)
