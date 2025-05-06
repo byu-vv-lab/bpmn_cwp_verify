@@ -406,7 +406,7 @@ def test_build_expr_conditional(promela_visitor, mocker):
     flow1, flow2 = mocker.Mock(), mocker.Mock()
     flow1.source_node = node1
     flow1.target_node = node2
-    flow1.expression = "EXPR1"
+    flow1.expression = "EXPR1\n==test_val"
 
     flow2.source_node = node1
     flow2.target_node = node3
@@ -427,7 +427,7 @@ def test_build_expr_conditional(promela_visitor, mocker):
     mock_write_str.assert_has_calls(
         [
             mocker.call("if", NL_SINGLE, IndentAction.INC),
-            mocker.call(":: EXPR1 -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
+            mocker.call(":: EXPR1==test_val -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: atomic{else -> assert false}", NL_SINGLE),
             mocker.call("fi", NL_SINGLE, IndentAction.DEC),

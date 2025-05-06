@@ -173,7 +173,9 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         for expression, location in zip(
             self._get_expressions(ctx), self._get_put_locations(ctx)
         ):
-            sm.write_str(f":: {expression} -> putToken({location})", NL_SINGLE)
+            sm.write_str(
+                f":: {expression.replace("\n", "")} -> putToken({location})", NL_SINGLE
+            )
 
         sm.write_str(":: atomic{else -> assert false}", NL_SINGLE)
         sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
