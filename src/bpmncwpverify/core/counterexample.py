@@ -1,5 +1,6 @@
 from bpmncwpverify.core.error import Error
 from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE
+from typing import Type
 
 import subprocess
 
@@ -20,12 +21,14 @@ class CounterExample:
     Class to represent a counterexample.
     """
 
-    def __init__(self, trace_steps: list[ErrorTrace], error: Error):
+    def __init__(self, trace_steps: list[ErrorTrace], error: Type["Error"]):
         self.trace_steps = trace_steps
-        self.error = error
+        self.error = error.__name__
 
     @staticmethod
-    def generate_counterexample(file_path: str, error: Error) -> "CounterExample":
+    def generate_counterexample(
+        file_path: str, error: Type["Error"]
+    ) -> "CounterExample":
         """
         Generate a counterexample from the given file path and error.
         """
