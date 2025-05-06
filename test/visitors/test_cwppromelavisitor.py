@@ -203,11 +203,7 @@ class TestCwpPromelaVisitor:
 
         visitor._build_proper_path_block(mock_state)
 
-        calls = [
-            mocker.call(":: node1_prime", NL_SINGLE),
-        ]
-
-        mock_write_str.assert_has_calls(calls)
+        mock_write_str.assert_not_called()
 
     def test_reassign_vars_to_primes(self, get_mock_write_str, mocker):
         mock_write_str = get_mock_write_str
