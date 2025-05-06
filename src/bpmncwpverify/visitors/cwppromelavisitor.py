@@ -93,6 +93,10 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
             self._build_prime_var(state)
             self._build_proper_path_block(state)
             self._reassign_vars_to_primes(state)
+        else:
+            self.cwp_states.write_str(f"bool {state.name} = true", NL_SINGLE)
+            self._build_proper_path_block(state)
+            self.var_reassignment.write_str(f"{state.name} = false", NL_SINGLE)
 
         return True
 
