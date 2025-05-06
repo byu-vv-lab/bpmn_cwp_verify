@@ -84,12 +84,23 @@ class CounterExample:
             if lines[line_index].startswith("ID:"):
                 id = lines[line_index].split(" ", 1)[1].strip()
                 line_index += 1
+                assert line_index < len(
+                    lines
+                ), "line_index should never be out of bounds"
                 if lines[line_index].startswith("Changed vars:"):
                     line_index += 1
+                    assert line_index < len(
+                        lines
+                    ), "line_index should never be out of bounds"
                     while not lines[line_index].startswith("Current state:"):
                         changed_vars.append(lines[line_index].strip())
                         line_index += 1
-                    while lines[line_index].startswith("Current state:"):
+                        assert line_index < len(
+                            lines
+                        ), "line_index should never be out of bounds"
+                    while line_index < len(lines) and lines[line_index].startswith(
+                        "Current state:"
+                    ):
                         curr_cwp_state.append(
                             lines[line_index].split(" ", 2)[2].strip()
                         )
