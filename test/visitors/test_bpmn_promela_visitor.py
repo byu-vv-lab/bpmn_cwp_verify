@@ -482,6 +482,43 @@ def test_context_setters(mocker):
     assert ctx.is_parallel
 
 
+def test_visit_start_state(promela_visitor, mocker):
+    visitor = promela_visitor
+
+    mock_context_class = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.Context"
+    )
+    mock_context_object = mocker.Mock()
+    mock_context_class.return_value = mock_context_object
+
+    mock_print_el = mocker.patch.object(visitor, "print_element_id")
+    mock_gen_behavior_model = mocker.patch.object(visitor, "_gen_behavior_model")
+    mock_gen_var_defs = mocker.patch.object(visitor, "_gen_var_defs")
+    mock_atomic_block = mocker.patch.object(
+        visitor, "_build_atomic_block", return_value="atomic_block"
+    )
+    mock_sm = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
+    )
+    mocker.patch.object(visitor, "_get_consume_locations", return_value=["test_loc"])
+
+    mock_start_event = mocker.Mock()
+    visitor.visit_start_event(mock_start_event)
+
+    mock_print_el.assert_called_once_with(mock_start_event)
+    mock_context_class.assert_called_once_with(mock_start_event)
+    mock_gen_behavior_model.assert_called_once_with(mock_context_object)
+
+    calls = [
+        mocker.call("putToken(test_loc)", NL_SINGLE, IndentAction.NIL),
+        mocker.call("do", NL_SINGLE, IndentAction.NIL),
+        mocker.call("atomic_block"),
+    ]
+    mock_sm.assert_has_calls(calls)
+    mock_atomic_block.assert_called_once_with(mock_context_object)
+    mock_gen_var_defs.assert_called_once_with(mock_context_object)
+
+
 def test_visit_parallel_gateway(promela_visitor, mocker):
     mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
     mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "_gen_var_defs")
