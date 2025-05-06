@@ -10,7 +10,9 @@ import pytest
 
 @pytest.fixture
 def mock_generate_counter_example(mocker):
-    mocker.patch("bpmncwpverify.core.spin.CounterExample.generate_counterexample")
+    mocker.patch(
+        "bpmncwpverify.core.spin.CounterExample.to_json", return_value="test_json"
+    )
 
 
 def test_check_syntax_errors(mock_generate_counter_example):
@@ -25,6 +27,7 @@ def test_check_syntax_errors(mock_generate_counter_example):
 
     assert isinstance(result, Failure)
     result = result.failure()
+    assert result.get_counter_example() == "test_json"
     assert (
         result.list_of_error_maps[0]["file_path"]
         == "test/resources/simple_example/valid_output.pml"
@@ -111,6 +114,7 @@ def test_has_uncovered_states(mock_generate_counter_example):
     result = spin_obj._check_coverage_errors("", spin_output)
     assert isinstance(result, Failure)
 
+    assert result.failure().get_counter_example() == "test_json"
     errors = result.failure().coverage_errors
     assert errors[0]["proctype"] == "testproc"
     assert errors[0]["file"] == "test.pml"
@@ -202,6 +206,7 @@ def test_check_invalid_end_state(mock_generate_counter_example):
 
     assert isinstance(result, Failure)
     result = result.failure()
+    assert result.get_counter_example() == "test_json"
     assert result.list_of_error_maps[0]["info"] == "at depth -1"
 
 
@@ -250,6 +255,7 @@ def test_check_assertion_violation(mock_generate_counter_example):
 
     assert isinstance(result, Failure)
     result = result.failure()
+    assert result.get_counter_example() == "test_json"
     assert result.list_of_error_maps[0]["assertion"] == "_nr_pr==3"
 
 
