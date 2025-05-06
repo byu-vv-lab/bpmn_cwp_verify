@@ -102,7 +102,7 @@ class StateBuilder:
                 f":: {varName} != old_{varName} ->", NL_SINGLE, IndentAction.INC
             )
             loggerFunction.write_str(
-                f'printf("{varName} = %s\\n", {varName});', NL_SINGLE
+                f'printf("{varName} = %e\\n", {varName});', NL_SINGLE
             )
             loggerFunction.write_str(f"old_{varName} = {varName}", NL_SINGLE)
             loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
