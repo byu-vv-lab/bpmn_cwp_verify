@@ -1,5 +1,4 @@
 from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
-import pytest
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
     PromelaGenVisitor,
     NL_NONE,
@@ -7,6 +6,10 @@ from bpmncwpverify.visitors.bpmn_promela_visitor import (
     Context,
 )
 from bpmncwpverify.util.stringmanager import StringManager, IndentAction
+
+from unittest.mock import call
+
+import pytest
 
 
 @pytest.fixture
@@ -349,7 +352,7 @@ def test_gen_behavior_model(promela_visitor, mocker):
     promela_visitor._gen_behavior_model(ctx)
     assert (
         str(promela_visitor.behaviors)
-        == "inline TEST_BehaviorModel() {\n\tupdateState()\n\tstateLogger()\n}\n\n"
+        == "inline TEST_BehaviorModel() {\n\tupdateState()\n}\n\n"
     )
 
 
@@ -366,7 +369,7 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
     promela_visitor._gen_behavior_model(ctx)
     assert (
         str(promela_visitor.behaviors)
-        == "inline TEST_BehaviorModel() {\n\tif\n\t\t:: true -> test\n\t\t:: true -> test2\n\tfi\n\tupdateState()\n\tstateLogger()\n}\n\n"
+        == "inline TEST_BehaviorModel() {\n\tif\n\t\t:: true -> test\n\t\t:: true -> test2\n\tfi\n\tupdateState()\n}\n\n"
     )
 
 
@@ -545,4 +548,4 @@ def test_print_element_id(promela_visitor, mocker):
     mock_element = mocker.Mock(id="test_id")
 
     promela_visitor.print_element_id(mock_element)
-    sm.assert_called_once_with('printf("ID: test_id")', 1)
+    sm.assert_has_calls([call('printf("ID: test_id\\n")', 1), call("stateLogger()", 1)])
