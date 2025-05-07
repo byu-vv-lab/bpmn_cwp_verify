@@ -58,6 +58,15 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
                 f":: {state.name} && {out_edge.dest.name}{PRIME_SUFFIX}", NL_SINGLE
             )
 
+    def _add_stationary_state(self, state: CwpState) -> None:
+        """
+        Allows the state to remain the same. We don't always need to be moving
+        through an edge.
+        """
+        self.proper_path_block.write_str(
+            f":: {state.name} && {state.name}{PRIME_SUFFIX}", NL_SINGLE
+        )
+
     def _reassign_vars_to_primes(self, state: CwpState) -> None:
         self.var_reassignment.write_str(
             f"{state.name} = {state.name}{PRIME_SUFFIX}", NL_SINGLE
@@ -92,6 +101,7 @@ class CwpPromelaVisitor(CwpVisitor):  # type: ignore
 
             self._build_prime_var(state)
             self._build_proper_path_block(state)
+            self._add_stationary_state(state)
             self._reassign_vars_to_primes(state)
         else:
             self.cwp_states.write_str(f"bool {state.name} = true", NL_SINGLE)
