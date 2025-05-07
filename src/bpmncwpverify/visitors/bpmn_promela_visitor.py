@@ -31,33 +31,23 @@ NL_DOUBLE = 2
 class Context:
     __slots__ = [
         "_element",
-        "_task_end",
         "_is_parallel",
         "_behavior_model",
         "_has_option",
         "_behavior",
         "_end_event",
+        "_boundary_events",
+        "_boundary_event_consume_locations",
     ]
 
     def __init__(self, element: Node) -> None:
         self._element = element
-        self._task_end = False
         self._is_parallel = False
         self._has_option = False
         self._behavior_model = True
         self._behavior = ""
         self._end_event = False
-
-    @property
-    def task_end(self) -> bool:
-        return self._task_end
-
-    @task_end.setter
-    def task_end(self, new_val: bool) -> None:
-        assert isinstance(
-            self._element, Task
-        ), "task_end can only be set if element is of type Task"
-        self._task_end = new_val
+        self._boundary_events: List[Task.BoundaryEvent] = []
 
     @property
     def has_option(self) -> bool:
@@ -110,6 +100,17 @@ class Context:
         self._end_event = new_val
 
     @property
+    def boundary_events(self) -> List[Task.BoundaryEvent]:
+        return self._boundary_events
+
+    @boundary_events.setter
+    def boundary_events(self, new_val: List[Task.BoundaryEvent]) -> None:
+        assert isinstance(
+            self._element, Task
+        ), "Only allowed to set boundary_events on a task."
+        self._boundary_events = new_val
+
+    @property
     def element(self) -> Node:
         return self._element
 
@@ -123,7 +124,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.promela = StringManager()
 
     def _generate_location_label(
-        self, ctx: Context, flow_or_message: Optional[Flow] = None
+        self, element: Node, flow_or_message: Optional[Flow] = None
     ) -> str:
         """
         Should only be called from _get_consume_locations and _get_put_locations.
@@ -132,22 +133,21 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         (e.g., 'Node1_FROM_Start'). If the node is a Task, the label ends with '_END'.
         """
         if flow_or_message:
-            return f"{ctx.element.id}_FROM_{flow_or_message.source_node.id}"
-        if ctx.task_end:
-            return f"{ctx.element.id}_END"
-        return ctx.element.id  # type: ignore
+            return f"{element.id}_FROM_{flow_or_message.source_node.id}"
+        return element.id  # type: ignore
 
-    def _get_consume_locations(self, ctx: Context) -> List[str]:
+    def _get_consume_locations(self, element: Node) -> List[str]:
         """
         Returns a list of labels representing all incoming flows to a node.
         If there are no incoming flows, the node itself is returned as a label.
         Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
         """
-        if not (ctx.element.in_flows or ctx.element.in_msgs) or ctx.task_end:
-            return [self._generate_location_label(ctx)]
+        if not (element.in_flows or element.in_msgs):
+            return [self._generate_location_label(element)]
+
         return [
-            self._generate_location_label(ctx, flow)
-            for flow in ctx.element.in_flows + ctx.element.in_msgs
+            self._generate_location_label(element, flow)
+            for flow in element.in_flows + element.in_msgs
         ]
 
     def _get_expressions(self, ctx: Context) -> List[str]:
@@ -168,32 +168,61 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         fi
         """
         sm = StringManager()
-        sm.write_str("if", NL_SINGLE, IndentAction.INC)
-        # This zip works because the out_flows is an array, which holds its order
-        for expression, location in zip(
-            self._get_expressions(ctx), self._get_put_locations(ctx)
-        ):
-            sm.write_str(
-                f":: {expression.replace("\n", "")} -> putToken({location})", NL_SINGLE
-            )
+        sm.write_str("if", NL_SINGLE)
+
+        if ctx.has_option:
+            # This zip works because the out_flows is an array, which holds its order
+            for expression, location in zip(
+                self._get_expressions(ctx), self._get_put_locations(ctx.element)
+            ):
+                sm.write_str(
+                    f":: {expression.replace("\n", "")} -> putToken({location})",
+                    NL_SINGLE,
+                )
+        if ctx.boundary_events:
+            # 1) get all of the put locations [[end_from_boundevent, ...], ...]
+            # 2) get all of the consume locations for each boundevent [[end_from_boundevent, ...]]
+            # (hastoken(boundevent1consume1) || hastoken(boundevent1consume2)) ->
+            #     putToken(element1_from_boundevent1)
+            #     putToken(element2_from_boundevent1)
+            put_locations = [
+                self._get_put_locations(boundary_event)
+                for boundary_event in ctx.boundary_events
+            ]
+            consume_locations = [
+                self._get_consume_locations(boundary_event)
+                for boundary_event in ctx.boundary_events
+            ]
+
+            # We can zip these two together, because it will return a list n = len(ctx.boundary_events)
+            for put_locs, consume_locs in zip(put_locations, consume_locations):
+                sm.write_str(":: (")
+                sm.write_str(
+                    " || ".join(
+                        [f"hasToken({consume_loc})" for consume_loc in consume_locs]
+                    )
+                )
+                sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
+                for consume_loc in consume_locs:
+                    sm.write_str(f"consumeToken({consume_loc})", NL_SINGLE)
+                for put_loc in put_locs:
+                    sm.write_str(f"putToken({put_loc})", NL_SINGLE)
+                sm.write_str("", indent_action=IndentAction.DEC)
 
         sm.write_str(":: atomic{else -> assert false}", NL_SINGLE)
-        sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
+        sm.write_str("fi", NL_SINGLE)
         return sm
 
-    def _get_put_locations(self, ctx: Context) -> List[str]:
+    def _get_put_locations(self, element: Node) -> List[str]:
         """
         Returns a list of labels representing all outgoing flows from a node.
         Each label indicates the target node and the current node as the source.
         Example: ['Node2_FROM_Node1']
         """
-        if ctx.task_end:
-            return [self._generate_location_label(ctx)]
-        else:
-            return [
-                self._generate_location_label(Context(flow.target_node), flow)
-                for flow in ctx.element.out_flows + ctx.element.out_msgs
-            ]
+        return [
+            self._generate_location_label(flow.target_node, flow)
+            for flow in element.out_flows + element.out_msgs
+        ]
 
     def _build_guard(self, ctx: Context) -> StringManager:
         """
@@ -206,15 +235,35 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         if ctx.is_parallel:
             guard.write_str(
                 " && ".join(
-                    [f"hasToken({loc})" for loc in self._get_consume_locations(ctx)]
+                    [
+                        f"hasToken({loc})"
+                        for loc in self._get_consume_locations(ctx.element)
+                    ]
                 )
             )
         else:
             guard.write_str(
                 " || ".join(
-                    [f"hasToken({node})" for node in self._get_consume_locations(ctx)]
+                    [
+                        f"hasToken({node})"
+                        for node in self._get_consume_locations(ctx.element)
+                    ]
                 )
             )
+
+        if ctx.boundary_events:
+            guard.write_str(") && (")
+
+            guard.write_str(
+                " || ".join(
+                    [
+                        f"hasToken({loc})"
+                        for boundary_event in ctx.boundary_events
+                        for loc in self._get_consume_locations(boundary_event)
+                    ]
+                )
+            )
+
         guard.write_str(")")
         return guard
 
@@ -235,13 +284,13 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        for location in self._get_consume_locations(ctx):
+        for location in self._get_consume_locations(ctx.element):
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
-        if ctx.has_option:
+        if ctx.has_option or ctx.boundary_events:
             atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
-            for location in self._get_put_locations(ctx):
+            for location in self._get_put_locations(ctx.element):
                 atomic_block.write_str(f"putToken({location})", NL_SINGLE)
 
         atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
@@ -279,7 +328,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx):
+        for var in self._get_consume_locations(ctx.element):
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
@@ -298,7 +347,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
-        for loc in self._get_consume_locations(context):
+        for loc in self._get_consume_locations(context.element):
             self.promela.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
 
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
@@ -335,7 +384,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.print_element_id(task)
         context = Context(task)
         context.behavior = task.behavior
-        context.task_end = False
+        context.boundary_events = task.msg_boundary_events
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
@@ -343,15 +392,6 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
         self.promela.write_str(atomic_block)
         return True
-
-    def end_visit_task(self, task: Task) -> None:
-        self.print_element_id(task)
-        context = Context(task)
-        context.task_end = True
-        self._gen_var_defs(context)
-
-        atomic_block = self._build_atomic_block(context)
-        self.promela.write_str(atomic_block)
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         self.print_element_id(gateway)

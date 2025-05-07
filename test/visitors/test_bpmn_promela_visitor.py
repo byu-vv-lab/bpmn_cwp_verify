@@ -142,26 +142,17 @@ def test_promela_gen_visitor_initial_state(promela_visitor):
 def test_generate_location_label(promela_visitor, mocker):
     element = mocker.Mock(spec=Task)
     element.id = "TEST"
-    ctx = mocker.Mock(spec=Context)
-    ctx.element = element
     flow_or_message = mocker.Mock()
     flow_or_message.source_node.id = "SRC"
 
-    ret_val = promela_visitor._generate_location_label(ctx, flow_or_message)
+    ret_val = promela_visitor._generate_location_label(element, flow_or_message)
 
     assert ret_val == "TEST_FROM_SRC"
 
-    ctx.task_end = True
-    ret_val = promela_visitor._generate_location_label(ctx)
-
-    assert ret_val == "TEST_END"
-
     element_no_spec = mocker.Mock()
     element_no_spec.id = "TEST"
-    ctx.element = element_no_spec
-    ctx.task_end = False
 
-    ret_val = promela_visitor._generate_location_label(ctx)
+    ret_val = promela_visitor._generate_location_label(element_no_spec)
 
     assert ret_val == "TEST"
 
@@ -178,11 +169,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    ctx = mocker.Mock(spec=Context)
-    ctx.element = node1
-    ctx.task_end = False
-
-    assert promela_visitor._get_consume_locations(ctx) == ["NODE1"]
+    assert promela_visitor._get_consume_locations(node1) == ["NODE1"]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -192,9 +179,8 @@ def test_get_consume_locations(promela_visitor, mocker):
 
     node2.in_flows = [flow1]
     node2.in_msgs = [flow2]
-    ctx.element = node2
 
-    assert promela_visitor._get_consume_locations(ctx) == [
+    assert promela_visitor._get_consume_locations(node2) == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
@@ -212,11 +198,7 @@ def test_get_put_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    ctx = mocker.Mock(spec=Context)
-    ctx.element = node1
-    ctx.task_end = False
-
-    assert promela_visitor._get_put_locations(ctx) == []
+    assert promela_visitor._get_put_locations(node1) == []
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -229,72 +211,59 @@ def test_get_put_locations(promela_visitor, mocker):
     node1.out_flows = [flow1]
     node1.out_msgs = [flow2]
 
-    assert promela_visitor._get_put_locations(ctx) == [
+    assert promela_visitor._get_put_locations(node1) == [
         "NODE2_FROM_NODE1",
         "NODE3_FROM_NODE1",
     ]
 
 
 def test_build_guard(promela_visitor, mocker):
-    node1 = mocker.Mock()
-    node1.id = "NODE1"
-
-    node2 = mocker.Mock()
-    node2.id = "NODE2"
-
-    node3 = mocker.Mock()
-    node3.id = "NODE3"
-
-    flow1 = mocker.Mock()
-    flow1.source_node = node2
-    flow1.target_node = node1
-
-    flow2 = mocker.Mock()
-    flow2.source_node = node3
-    flow2.target_node = node1
-
-    node1.in_flows = [flow1, flow2]
-    node1.in_msgs = []
-
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
+        return_value=["TEST1", "TEST2"],
+    )
     ctx = mocker.Mock(spec=Context)
-    ctx.element = node1
-    ctx.task_end = False
+    ctx.boundary_event_consume_locations = []
+    ctx.boundary_events = []
     ctx.is_parallel = False
 
     guard = promela_visitor._build_guard(ctx)
 
-    assert str(guard) == "(hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))"
+    assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))"
+
+
+def test_build_guard_with_boundary_events(promela_visitor, mocker):
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
+        side_effect=lambda x: x,
+    )
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = ["TEST1", "TEST2"]
+    ctx.boundary_events = [["TEST3", "TEST4"]]
+    ctx.is_parallel = False
+
+    guard = promela_visitor._build_guard(ctx)
+
+    assert (
+        str(guard)
+        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4))"
+    )
 
 
 def test_build_guard_with_parallel_gw(promela_visitor, mocker):
-    node1 = mocker.Mock()
-    node1.id = "NODE1"
-
-    node2 = mocker.Mock()
-    node2.id = "NODE2"
-
-    node3 = mocker.Mock()
-    node3.id = "NODE3"
-
-    flow1 = mocker.Mock()
-    flow1.source_node = node2
-    flow1.target_node = node1
-
-    flow2 = mocker.Mock()
-    flow2.source_node = node3
-    flow2.target_node = node1
-
-    node1.in_flows = [flow1, flow2]
-    node1.in_msgs = []
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
+        return_value=["TEST1", "TEST2"],
+    )
 
     ctx = mocker.Mock(spec=Context)
-    ctx.element = node1
-    ctx.task_end = False
+    ctx.boundary_events = []
     ctx.is_parallel = True
 
     guard = promela_visitor._build_guard(ctx)
 
-    assert str(guard) == "(hasToken(NODE1_FROM_NODE2) && hasToken(NODE1_FROM_NODE3))"
+    assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))"
 
 
 def test_build_atomic_block(promela_visitor, mocker):
@@ -329,9 +298,10 @@ def test_build_atomic_block(promela_visitor, mocker):
     node1.out_msgs = []
 
     ctx = mocker.Mock(spec=Context)
+    ctx.boundary_event_consume_locations = []
+    ctx.boundary_events = []
     ctx.element = node1
     ctx.end_event = False
-    ctx.task_end = False
     ctx.is_parallel = False
     ctx.has_option = False
 
@@ -387,7 +357,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
 
     promela_visitor._gen_var_defs(ctx)
 
-    mock_get_consume_locations.assert_called_once_with(ctx)
+    mock_get_consume_locations.assert_called_once_with(node1)
 
     mock_var_defs.write_str.assert_has_calls(
         [
@@ -419,8 +389,9 @@ def test_build_expr_conditional(promela_visitor, mocker):
     node1.out_msgs = []
 
     ctx = mocker.Mock(spec=Context)
+    ctx.has_option = True
+    ctx.boundary_events = []
     ctx.element = node1
-    ctx.task_end = False
 
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()
@@ -429,11 +400,50 @@ def test_build_expr_conditional(promela_visitor, mocker):
     promela_visitor._build_expr_conditional(ctx)
     mock_write_str.assert_has_calls(
         [
-            mocker.call("if", NL_SINGLE, IndentAction.INC),
-            mocker.call(":: EXPR1==test_val -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
+            mocker.call("if", NL_SINGLE),
+            mocker.call(":: EXPR1 -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: atomic{else -> assert false}", NL_SINGLE),
-            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
+            mocker.call("fi", NL_SINGLE),
+        ]
+    )
+
+
+def test_build_conditional_with_boundary_event(promela_visitor, mocker):
+    mock_sm = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.StringManager")
+    mocker.patch.object(
+        promela_visitor, "_get_consume_locations", side_effect=lambda x: x
+    )
+    mocker.patch.object(
+        promela_visitor, "_get_put_locations", side_effect=lambda x: [x[0][::-1]]
+    )
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.has_option = False
+    ctx.boundary_events = [["TEST1"], ["TEST2"]]
+
+    mock_write_str = mocker.Mock()
+    mock_sm.return_value = mocker.Mock()
+    mock_sm.return_value.write_str = mock_write_str
+
+    promela_visitor._build_expr_conditional(ctx)
+    mock_write_str.assert_has_calls(
+        [
+            mocker.call("if", NL_SINGLE),
+            mocker.call(":: ("),
+            mocker.call("hasToken(TEST1)"),
+            mocker.call(") ->", NL_SINGLE, IndentAction.INC),
+            mocker.call("consumeToken(TEST1)", NL_SINGLE),
+            mocker.call("putToken(1TSET)", NL_SINGLE),
+            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call(":: ("),
+            mocker.call("hasToken(TEST2)"),
+            mocker.call(") ->", NL_SINGLE, IndentAction.INC),
+            mocker.call("consumeToken(TEST2)", NL_SINGLE),
+            mocker.call("putToken(2TSET)", NL_SINGLE),
+            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call(":: atomic{else -> assert false}", 1),
+            mocker.call("fi", NL_SINGLE),
         ]
     )
 
@@ -459,7 +469,6 @@ def test_get_expressions(promela_visitor, mocker):
 
 def test_context_setters(mocker):
     task = mocker.Mock(spec=Task)
-    parallel_gw = mocker.Mock(spec=ParallelGatewayNode)
 
     ctx = Context(task)
 
@@ -471,14 +480,7 @@ def test_context_setters(mocker):
         == "is_parallel can only be set if element is of type ParallelGatewayNode"
     )
 
-    ctx = Context(parallel_gw)
-
-    with pytest.raises(AssertionError) as exc_info:
-        ctx.task_end = True
-
-    assert (
-        exc_info.value.args[0] == "task_end can only be set if element is of type Task"
-    )
+    ctx = Context(mocker.Mock(spec=ParallelGatewayNode))
 
     ctx.is_parallel = True
 
