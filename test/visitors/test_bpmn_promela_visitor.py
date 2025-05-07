@@ -401,7 +401,7 @@ def test_build_expr_conditional(promela_visitor, mocker):
     mock_write_str.assert_has_calls(
         [
             mocker.call("if", NL_SINGLE),
-            mocker.call(":: EXPR1 -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
+            mocker.call(":: EXPR1==test_val -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: atomic{else -> assert false}", NL_SINGLE),
             mocker.call("fi", NL_SINGLE),
