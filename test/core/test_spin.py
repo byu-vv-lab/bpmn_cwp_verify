@@ -15,8 +15,9 @@ def mock_generate_counter_example(mocker):
     )
 
 
-def test_check_syntax_errors(mock_generate_counter_example):
+def test_check_syntax_errors(mock_generate_counter_example, mocker):
     mock_generate_counter_example
+    mocker.patch("bpmncwpverify.core.counterexample.CounterExample.filter_spin_trace")
     spin_output = SpinOutput()
     s = """
     spin: test/resources/simple_example/valid_output.pml:55, Error: syntax error    saw ''}' = 125'
@@ -64,8 +65,9 @@ def test_check_syntax_errors_none(mock_generate_counter_example):
     assert isinstance(result, Success)
 
 
-def test_has_uncovered_states(mock_generate_counter_example):
+def test_has_uncovered_states(mock_generate_counter_example, mocker):
     mock_generate_counter_example
+    mocker.patch("bpmncwpverify.core.counterexample.CounterExample.filter_spin_trace")
     spin_output = """
 
         Full statespace search for:
@@ -184,8 +186,9 @@ def test_has_no_uncovered_states(mock_generate_counter_example):
     assert isinstance(result, Success)
 
 
-def test_check_invalid_end_state(mock_generate_counter_example):
+def test_check_invalid_end_state(mock_generate_counter_example, mocker):
     mock_generate_counter_example
+    mocker.patch("bpmncwpverify.core.counterexample.CounterExample.filter_spin_trace")
     spin_output = SpinOutput()
     s = """
         pan:1: invalid end state (at depth -1)
@@ -230,8 +233,9 @@ def test_check_invalid_end_state_none(mock_generate_counter_example):
     assert isinstance(result, Success)
 
 
-def test_check_assertion_violation(mock_generate_counter_example):
+def test_check_assertion_violation(mock_generate_counter_example, mocker):
     mock_generate_counter_example
+    mocker.patch("bpmncwpverify.core.counterexample.CounterExample.filter_spin_trace")
     spin_output = SpinOutput()
     s = """
         pan:1: assertion violated (_nr_pr==3) (at depth 0)
