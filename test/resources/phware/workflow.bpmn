@@ -18,8 +18,8 @@
     assert(sevNeed != expired)
     if
     :: true -&gt; sevNeed = homeCare
-    :: ((sevNeed == INIT) || (trndSevNeed == outsideHomeCare)) -&gt; sevNeed = outsideHomeCare
-    :: ((sevNeed != INIT) &amp;&amp; (trndSevNeed == homeCare)) -&gt; sevNeed = discharge
+    :: ((sevNeed == patientNeedInit) || (trndSevNeed == outsideHomeCare)) -&gt; sevNeed = outsideHomeCare
+    :: ((sevNeed != patientNeedInit) &amp;&amp; (trndSevNeed == homeCare)) -&gt; sevNeed = discharge
     fi
     trndSevNeed = sevNeed</bpmn:documentation>
       <bpmn:incoming>Flow_0l518mv</bpmn:incoming>
