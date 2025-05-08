@@ -35,12 +35,12 @@ class SpinOutput:
     ) -> Result[str, Error]:
         errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
 
-        counter_example = CounterExample.generate_counterexample(  # noqa: F841
+        counter_example = CounterExample.generate_counterexample(
             file_path, SpinAssertionError
         )
 
         return (
-            Failure(SpinInvalidEndStateError("", errors))
+            Failure(SpinInvalidEndStateError(counter_example.to_json(), errors))
             if errors
             else Success(spin_msg)
         )
@@ -52,13 +52,15 @@ class SpinOutput:
             r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)", spin_msg
         )
 
-        counter_example = CounterExample.generate_counterexample(  # noqa: F841
+        counter_example = CounterExample.generate_counterexample(
             file_path, SpinAssertionError
         )
 
         return (
-            Failure(SpinAssertionError("", errors)) if errors else Success(spin_msg)
-        )  # TODO: replace empty str here with counter_example once counter_example is str
+            Failure(SpinAssertionError(counter_example.to_json(), errors))
+            if errors
+            else Success(spin_msg)
+        )
 
     def _check_syntax_errors(
         self, file_path: str, spin_msg: str
@@ -68,11 +70,15 @@ class SpinOutput:
             spin_msg,
         )
 
-        counter_example = CounterExample.generate_counterexample(  # noqa: F841
+        counter_example = CounterExample.generate_counterexample(
             file_path, SpinAssertionError
         )
 
-        return Failure(SpinSyntaxError("", errors)) if errors else Success(spin_msg)
+        return (
+            Failure(SpinSyntaxError(counter_example.to_json(), errors))
+            if errors
+            else Success(spin_msg)
+        )
 
     def _check_coverage_errors(
         self, file_path: str, spin_msg: str
@@ -113,12 +119,12 @@ class SpinOutput:
                     }
                 )
 
-        counter_example = CounterExample.generate_counterexample(  # noqa: F841
+        counter_example = CounterExample.generate_counterexample(
             file_path, SpinAssertionError
         )
 
         return (
-            Failure(SpinCoverageError("", detailed_errors))
+            Failure(SpinCoverageError(counter_example.to_json(), detailed_errors))
             if detailed_errors
             else Success(spin_msg)
         )
