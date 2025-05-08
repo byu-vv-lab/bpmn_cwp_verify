@@ -4,6 +4,7 @@ from bpmncwpverify.visitors.bpmn_promela_visitor import (
     NL_NONE,
     NL_SINGLE,
     Context,
+    TokenPositions,
 )
 from bpmncwpverify.util.stringmanager import StringManager, IndentAction
 
@@ -169,7 +170,13 @@ def test_get_consume_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    assert promela_visitor._get_consume_locations(node1) == ["NODE1"]
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = node1
+    ctx.task_end = False
+
+    assert promela_visitor._get_consume_locations(ctx.element).get_all_positions() == [
+        "NODE1"
+    ]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -180,7 +187,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node2.in_flows = [flow1]
     node2.in_msgs = [flow2]
 
-    assert promela_visitor._get_consume_locations(node2) == [
+    assert promela_visitor._get_consume_locations(node2).get_all_positions() == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
@@ -266,6 +273,37 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))"
 
 
+def test_build_guard_with_msg_flow(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.id = "NODE1"
+
+    node2 = mocker.Mock()
+    node2.id = "NODE2"
+
+    node3 = mocker.Mock()
+    node3.id = "NODE3"
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node2
+    flow1.target_node = node1
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node3
+    flow2.target_node = node1
+
+    node1.in_flows = [flow1]
+    node1.in_msgs = [flow2]
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = node1
+    ctx.task_end = False
+    ctx.is_parallel = False
+
+    guard = promela_visitor._build_guard(ctx)
+
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (hasToken(NODE1_FROM_NODE3))"
+
+
 def test_build_atomic_block(promela_visitor, mocker):
     node1 = mocker.Mock()
     node1.id = "NODE1"
@@ -347,7 +385,9 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
     mock_var_defs = mocker.Mock()
     promela_visitor.var_defs = mock_var_defs
     mock_get_consume_locations = mocker.patch.object(
-        promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
+        promela_visitor,
+        "_get_consume_locations",
+        return_value=TokenPositions(seq_flows=["VAL1", "VAL2"]),
     )
     node1 = mocker.Mock()
     node1.id = "TEST"
