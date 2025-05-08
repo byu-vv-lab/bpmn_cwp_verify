@@ -275,7 +275,7 @@ def test_build_guard_with_boundary_events(mocker):
 def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
-        return_value=["TEST1", "TEST2"],
+        return_value=TokenPositions(seq_flows=["TEST1", "TEST2"]),
     )
 
     ctx = mocker.Mock(spec=Context)
@@ -312,6 +312,7 @@ def test_build_guard_with_msg_flow(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
     ctx.is_parallel = False
+    ctx.boundary_events = []
 
     guard = promela_visitor._build_guard(ctx)
 
@@ -469,12 +470,17 @@ def test_build_conditional_with_boundary_event(promela_visitor, mocker):
         promela_visitor, "_get_consume_locations", side_effect=lambda x: x
     )
     mocker.patch.object(
-        promela_visitor, "_get_put_locations", side_effect=lambda x: [x[0][::-1]]
+        promela_visitor,
+        "_get_put_locations",
+        side_effect=lambda x: [x.get_all_positions()[0][::-1]],
     )
 
     ctx = mocker.Mock(spec=Context)
     ctx.has_option = False
-    ctx.boundary_events = [["TEST1"], ["TEST2"]]
+    ctx.boundary_events = [
+        TokenPositions(seq_flows=["TEST1"]),
+        TokenPositions(seq_flows=["TEST2"]),
+    ]
 
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()
@@ -559,7 +565,11 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_sm = mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
     )
-    mocker.patch.object(visitor, "_get_consume_locations", return_value=["test_loc"])
+    mocker.patch.object(
+        visitor,
+        "_get_consume_locations",
+        return_value=TokenPositions(seq_flows=["test_loc"]),
+    )
 
     mock_start_event = mocker.Mock()
     visitor.visit_start_event(mock_start_event)
