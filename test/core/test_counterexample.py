@@ -56,3 +56,12 @@ def test_counterexample_constructor(mocker):
 
     assert ce.trace_steps == [error_trace]
     assert ce.error == "SubError"
+
+
+def test_counterexample_extract_steps():
+    test_string = """ID: test_id\nChanged vars:\ntest_var1\ntest_var2\nCurrent state: test_state1"""
+    steps = CounterExample.extract_steps(test_string)
+    assert len(steps) == 1
+    assert steps[0].id == "test_id"
+    assert steps[0].changed_vars == ["test_var1", "test_var2"]
+    assert steps[0].curr_cwp_state == ["test_state1"]
