@@ -227,7 +227,7 @@ def test_get_put_locations(promela_visitor, mocker):
 def test_build_guard(promela_visitor, mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
-        return_value=["TEST1", "TEST2"],
+        return_value=TokenPositions(seq_flows=["TEST1", "TEST2"]),
     )
     ctx = mocker.Mock(spec=Context)
     ctx.boundary_event_consume_locations = []
@@ -239,22 +239,36 @@ def test_build_guard(promela_visitor, mocker):
     assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))"
 
 
-def test_build_guard_with_boundary_events(promela_visitor, mocker):
+def test_build_guard_with_boundary_events(mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
         side_effect=lambda x: x,
     )
 
     ctx = mocker.Mock(spec=Context)
-    ctx.element = ["TEST1", "TEST2"]
-    ctx.boundary_events = [["TEST3", "TEST4"]]
+    ctx.element = TokenPositions(seq_flows=["TEST1", "TEST2"])
+    ctx.boundary_events = [
+        TokenPositions(seq_flows=["TEST3", "TEST4"])
+    ]  # Represents one boundary event
     ctx.is_parallel = False
 
-    guard = promela_visitor._build_guard(ctx)
+    guard = PromelaGenVisitor()._build_guard(ctx)
 
     assert (
         str(guard)
         == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4))"
+    )
+
+    ctx.boundary_events = [
+        TokenPositions(seq_flows=["TEST3", "TEST4"]),
+        TokenPositions(seq_flows=["TEST5"]),
+    ]  # Represents 2 boundary events
+
+    guard = PromelaGenVisitor()._build_guard(ctx)
+
+    assert (
+        str(guard)
+        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4) || hasToken(TEST5))"  # TODO:  make it so that every boundary event is conjuncted (i.e (hasToken(TEST3) || hasToken(TEST4)) && (hasToken(TEST5))))
     )
 
 
