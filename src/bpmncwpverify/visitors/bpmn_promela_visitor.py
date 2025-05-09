@@ -115,6 +115,52 @@ class Context:
         return self._element
 
 
+class TokenPositions:
+    """
+    This class is simply a way to separate out the sequence flows and the message
+    flows so that when building the guard in the atomic block, we can make
+    sure that the triggerable event has a token from one of its incoming sequence
+    flows and one of its incoming message flows.
+    """
+
+    __slots__ = ["seq_flows", "msg_flows", "standalone"]
+
+    def __init__(
+        self,
+        seq_flows: Optional[List[str]] = None,
+        msg_flows: Optional[List[str]] = None,
+        standalone: str = "",
+    ) -> None:
+        self.seq_flows = seq_flows if seq_flows is not None else []
+        self.msg_flows = msg_flows if msg_flows is not None else []
+        self.standalone = standalone
+
+        # Ensure that either seq/msg flows are provided or a standalone position, but not both.
+        if (self.seq_flows or self.msg_flows) and self.standalone:
+            raise ValueError(
+                "Cannot have both sequence/message flows and a standalone position."
+            )
+        if not ((self.seq_flows or self.msg_flows) or self.standalone):
+            raise ValueError(
+                "Either sequence/message flows or a standalone position must be provided."
+            )
+
+    def get_all_positions(self) -> List[str]:
+        return (
+            self.seq_flows + self.msg_flows
+            if (self.seq_flows or self.msg_flows)
+            else [self.standalone]
+        )
+
+    def get_in_process_positions(self) -> List[str]:
+        if self.seq_flows:
+            return self.seq_flows
+        elif self.standalone:
+            return [self.standalone]
+        else:
+            return []
+
+
 class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     def __init__(self) -> None:
         self.defs = StringManager()
@@ -136,19 +182,23 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             return f"{element.id}_FROM_{flow_or_message.source_node.id}"
         return element.id  # type: ignore
 
-    def _get_consume_locations(self, element: Node) -> List[str]:
+    def _get_consume_locations(self, element: Node) -> TokenPositions:
         """
         Returns a list of labels representing all incoming flows to a node.
         If there are no incoming flows, the node itself is returned as a label.
         Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
         """
         if not (element.in_flows or element.in_msgs):
-            return [self._generate_location_label(element)]
-
-        return [
-            self._generate_location_label(element, flow)
-            for flow in element.in_flows + element.in_msgs
-        ]
+            return TokenPositions(standalone=self._generate_location_label(element))
+        return TokenPositions(
+            seq_flows=[
+                self._generate_location_label(element, flow)
+                for flow in element.in_flows
+            ],
+            msg_flows=[
+                self._generate_location_label(element, flow) for flow in element.in_msgs
+            ],
+        )
 
     def _get_expressions(self, ctx: Context) -> List[str]:
         """
@@ -190,7 +240,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
                 for boundary_event in ctx.boundary_events
             ]
             consume_locations = [
-                self._get_consume_locations(boundary_event)
+                self._get_consume_locations(boundary_event).get_all_positions()
                 for boundary_event in ctx.boundary_events
             ]
 
@@ -228,43 +278,53 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         Constructs a guard condition for an atomic block in a process.
         The guard checks whether a token exists at the current node, based on incoming flows.
-        Example: (hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1))
+        Example: (hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)).
+        If the element of interest here is a triggerable event, then we make sure that it
+        has a token from one of its incoming sequence flows and one of its incoming message
+        flows.
+        Example: ((hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)) && (hasToken(Node2_From_NodeInOtherProcess))).
         """
-        guard = StringManager()
-        guard.write_str("(")
-        if ctx.is_parallel:
-            guard.write_str(
-                " && ".join(
-                    [
-                        f"hasToken({loc})"
-                        for loc in self._get_consume_locations(ctx.element)
-                    ]
-                )
-            )
-        else:
-            guard.write_str(
-                " || ".join(
-                    [
-                        f"hasToken({node})"
-                        for node in self._get_consume_locations(ctx.element)
-                    ]
-                )
-            )
+
+        guard: StringManager = StringManager()
+
+        # Store the consume locations to avoid multiple calls.
+        consume_locations: TokenPositions = self._get_consume_locations(ctx.element)
+        inner_process_positions: List[str] = (
+            consume_locations.get_in_process_positions()
+        )
+        msg_positions: List[str] = consume_locations.msg_flows
+
+        if inner_process_positions:
+            guard.write_str("(")
+            tokens: List[str] = [f"hasToken({pos})" for pos in inner_process_positions]
+            if ctx.is_parallel:
+                guard.write_str(" && ".join(tokens))
+            else:
+                guard.write_str(" || ".join(tokens))
+            guard.write_str(")")
+
+        if msg_positions:
+            guard.write_str(" && (" if inner_process_positions else "(")
+            tokens_msg: List[str] = [f"hasToken({pos})" for pos in msg_positions]
+            guard.write_str(" && ".join(tokens_msg))
+            guard.write_str(")")
 
         if ctx.boundary_events:
-            guard.write_str(") && (")
+            guard.write_str(" && (")
 
             guard.write_str(
                 " || ".join(
                     [
                         f"hasToken({loc})"
                         for boundary_event in ctx.boundary_events
-                        for loc in self._get_consume_locations(boundary_event)
+                        for loc in self._get_consume_locations(
+                            boundary_event
+                        ).get_all_positions()
                     ]
                 )
             )
+            guard.write_str(")")
 
-        guard.write_str(")")
         return guard
 
     def _build_atomic_block(self, ctx: Context) -> StringManager:
@@ -284,7 +344,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        for location in self._get_consume_locations(ctx.element):
+        for location in self._get_consume_locations(ctx.element).get_all_positions():
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
         if ctx.has_option or ctx.boundary_events:
@@ -328,7 +388,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx.element):
+        for var in self._get_consume_locations(ctx.element).get_all_positions():
             self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
@@ -347,7 +407,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
-        for loc in self._get_consume_locations(context.element):
+        for loc in self._get_consume_locations(event).get_all_positions():
             self.promela.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
 
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)

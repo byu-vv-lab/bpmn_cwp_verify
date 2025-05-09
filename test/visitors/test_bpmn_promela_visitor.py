@@ -4,6 +4,7 @@ from bpmncwpverify.visitors.bpmn_promela_visitor import (
     NL_NONE,
     NL_SINGLE,
     Context,
+    TokenPositions,
 )
 from bpmncwpverify.util.stringmanager import StringManager, IndentAction
 
@@ -169,7 +170,13 @@ def test_get_consume_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    assert promela_visitor._get_consume_locations(node1) == ["NODE1"]
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = node1
+    ctx.task_end = False
+
+    assert promela_visitor._get_consume_locations(ctx.element).get_all_positions() == [
+        "NODE1"
+    ]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -180,7 +187,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node2.in_flows = [flow1]
     node2.in_msgs = [flow2]
 
-    assert promela_visitor._get_consume_locations(node2) == [
+    assert promela_visitor._get_consume_locations(node2).get_all_positions() == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
@@ -220,7 +227,7 @@ def test_get_put_locations(promela_visitor, mocker):
 def test_build_guard(promela_visitor, mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
-        return_value=["TEST1", "TEST2"],
+        return_value=TokenPositions(seq_flows=["TEST1", "TEST2"]),
     )
     ctx = mocker.Mock(spec=Context)
     ctx.boundary_event_consume_locations = []
@@ -232,29 +239,43 @@ def test_build_guard(promela_visitor, mocker):
     assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))"
 
 
-def test_build_guard_with_boundary_events(promela_visitor, mocker):
+def test_build_guard_with_boundary_events(mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
         side_effect=lambda x: x,
     )
 
     ctx = mocker.Mock(spec=Context)
-    ctx.element = ["TEST1", "TEST2"]
-    ctx.boundary_events = [["TEST3", "TEST4"]]
+    ctx.element = TokenPositions(seq_flows=["TEST1", "TEST2"])
+    ctx.boundary_events = [
+        TokenPositions(seq_flows=["TEST3", "TEST4"])
+    ]  # Represents one boundary event
     ctx.is_parallel = False
 
-    guard = promela_visitor._build_guard(ctx)
+    guard = PromelaGenVisitor()._build_guard(ctx)
 
     assert (
         str(guard)
         == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4))"
     )
 
+    ctx.boundary_events = [
+        TokenPositions(seq_flows=["TEST3", "TEST4"]),
+        TokenPositions(seq_flows=["TEST5"]),
+    ]  # Represents 2 boundary events
+
+    guard = PromelaGenVisitor()._build_guard(ctx)
+
+    assert (
+        str(guard)
+        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4) || hasToken(TEST5))"  # TODO:  make it so that every boundary event is conjuncted (i.e (hasToken(TEST3) || hasToken(TEST4)) && (hasToken(TEST5))))
+    )
+
 
 def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
-        return_value=["TEST1", "TEST2"],
+        return_value=TokenPositions(seq_flows=["TEST1", "TEST2"]),
     )
 
     ctx = mocker.Mock(spec=Context)
@@ -264,6 +285,38 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     guard = promela_visitor._build_guard(ctx)
 
     assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))"
+
+
+def test_build_guard_with_msg_flow(promela_visitor, mocker):
+    node1 = mocker.Mock()
+    node1.id = "NODE1"
+
+    node2 = mocker.Mock()
+    node2.id = "NODE2"
+
+    node3 = mocker.Mock()
+    node3.id = "NODE3"
+
+    flow1 = mocker.Mock()
+    flow1.source_node = node2
+    flow1.target_node = node1
+
+    flow2 = mocker.Mock()
+    flow2.source_node = node3
+    flow2.target_node = node1
+
+    node1.in_flows = [flow1]
+    node1.in_msgs = [flow2]
+
+    ctx = mocker.Mock(spec=Context)
+    ctx.element = node1
+    ctx.task_end = False
+    ctx.is_parallel = False
+    ctx.boundary_events = []
+
+    guard = promela_visitor._build_guard(ctx)
+
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (hasToken(NODE1_FROM_NODE3))"
 
 
 def test_build_atomic_block(promela_visitor, mocker):
@@ -347,7 +400,9 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
     mock_var_defs = mocker.Mock()
     promela_visitor.var_defs = mock_var_defs
     mock_get_consume_locations = mocker.patch.object(
-        promela_visitor, "_get_consume_locations", return_value=["VAL1", "VAL2"]
+        promela_visitor,
+        "_get_consume_locations",
+        return_value=TokenPositions(seq_flows=["VAL1", "VAL2"]),
     )
     node1 = mocker.Mock()
     node1.id = "TEST"
@@ -415,12 +470,17 @@ def test_build_conditional_with_boundary_event(promela_visitor, mocker):
         promela_visitor, "_get_consume_locations", side_effect=lambda x: x
     )
     mocker.patch.object(
-        promela_visitor, "_get_put_locations", side_effect=lambda x: [x[0][::-1]]
+        promela_visitor,
+        "_get_put_locations",
+        side_effect=lambda x: [x.get_all_positions()[0][::-1]],
     )
 
     ctx = mocker.Mock(spec=Context)
     ctx.has_option = False
-    ctx.boundary_events = [["TEST1"], ["TEST2"]]
+    ctx.boundary_events = [
+        TokenPositions(seq_flows=["TEST1"]),
+        TokenPositions(seq_flows=["TEST2"]),
+    ]
 
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()
@@ -505,7 +565,11 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_sm = mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
     )
-    mocker.patch.object(visitor, "_get_consume_locations", return_value=["test_loc"])
+    mocker.patch.object(
+        visitor,
+        "_get_consume_locations",
+        return_value=TokenPositions(seq_flows=["test_loc"]),
+    )
 
     mock_start_event = mocker.Mock()
     visitor.visit_start_event(mock_start_event)
