@@ -71,6 +71,7 @@ class TestCwpPromelaVisitor:
         mocker.patch.object(visitor, "_build_prime_var")
         mocker.patch.object(visitor, "_build_proper_path_block")
         mocker.patch.object(visitor, "_reassign_vars_to_primes")
+        mocker.patch.object(visitor, "_add_stationary_state")
         visitor.visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
 
@@ -213,3 +214,14 @@ class TestCwpPromelaVisitor:
         CwpPromelaVisitor()._reassign_vars_to_primes(mock_state)
 
         mock_write_str.assert_called_once_with("test_name = test_name_prime", NL_SINGLE)
+
+    def test_add_stationary_state(self, get_mock_write_str, mocker):
+        mock_write_str = get_mock_write_str
+
+        mock_state = mocker.Mock()
+        mock_state.name = "test_name"
+
+        CwpPromelaVisitor()._add_stationary_state(mock_state)
+        mock_write_str.assert_called_once_with(
+            ":: test_name && test_name_prime", NL_SINGLE
+        )
