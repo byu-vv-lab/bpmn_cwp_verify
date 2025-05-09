@@ -14,6 +14,7 @@ import re
 from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
 from returns.curry import partial
+import os
 
 
 class CoverageReport:
@@ -131,8 +132,13 @@ class SpinOutput:
 
     @staticmethod
     def get_spin_output(file_path: str) -> Result[CoverageReport, str]:
+        file_dir = os.path.dirname(file_path)
+
         spin_run_string = subprocess.run(
-            ["spin", "-run", "-noclaim", file_path], capture_output=True, text=True
+            ["spin", "-run", "-noclaim", os.path.basename(file_path)],
+            capture_output=True,
+            text=True,
+            cwd=file_dir,  # This ensures the .trail is written in the same directory as file_path
         ).stdout
 
         spin_output = SpinOutput()
