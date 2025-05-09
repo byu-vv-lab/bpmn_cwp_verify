@@ -16,6 +16,8 @@ from typing import TextIO, cast
 from bpmncwpverify.core.error import Error, MissingFileError, get_error_message
 from bpmncwpverify.core.spin import SpinOutput, CoverageReport
 
+OUTPUT_FILE = "/tmp/verification.pml"
+
 
 def element_tree_from_string(input: str) -> Element:
     return cast(Element, ElementTree.fromstring(input))  # type: ignore[unused-ignore]
@@ -106,10 +108,10 @@ def verify() -> None:
 
     match result:
         case Success(o):
-            with open("/tmp/verification.pml", "w") as f:
+            with open(OUTPUT_FILE, "w") as f:
                 f.write(o.promela)
             spin_output: Result[CoverageReport, str] = SpinOutput.get_spin_output(
-                "/tmp/verification.pml"
+                OUTPUT_FILE
             )
             if not_(is_successful)(spin_output):
                 print(spin_output.failure())
