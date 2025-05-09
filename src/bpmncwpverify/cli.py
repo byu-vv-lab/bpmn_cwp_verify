@@ -1,6 +1,7 @@
 import argparse
 from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
+import os
 
 from bpmncwpverify.builder.filebuilder import StateBuilder, Outputs
 from returns.io import impure_safe, IOResult, IOResultE
@@ -15,8 +16,11 @@ from typing import TextIO, cast
 
 from bpmncwpverify.core.error import Error, MissingFileError, get_error_message
 from bpmncwpverify.core.spin import SpinOutput, CoverageReport
+<<<<<<< HEAD
 
 OUTPUT_FILE = "/tmp/verification.pml"
+=======
+>>>>>>> 9d47312 (Call get_spin_output from _verify)
 
 
 def element_tree_from_string(input: str) -> Element:
