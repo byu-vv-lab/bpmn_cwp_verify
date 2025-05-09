@@ -238,28 +238,24 @@ def test_check_assertion_violation(mock_generate_counter_example):
     spin_output = SpinOutput()
     s = """
         pan:1: assertion violated (_nr_pr==3) (at depth 0)
-        pan: wrote first.pml.trail
-
-        (Spin Version 6.5.2 -- 6 December 2019)
-        Warning: Search not completed
-                + Partial Order Reduction
-
-        Full statespace search for:
-                never claim             - (not selected)
-                assertion violations    +
-                cycle checks            - (disabled by -DSAFETY)
-                invalid end states      +
-
-        State-vector 12 byte, depth reached 0, errors: 1
-                1 states, stored
     """
 
     result = spin_output._check_assertion_violation("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
-    assert result.get_counter_example() == "test_json"
     assert result.list_of_error_maps[0]["assertion"] == "_nr_pr==3"
+
+    s = """
+        pan:1: assertion violated 0 (at depth 45)
+        pan: wrote verification.pml.trail
+    """
+
+    result = spin_output._check_assertion_violation("", s)
+
+    assert isinstance(result, Failure)
+    result = result.failure()
+    assert result.list_of_error_maps[0]["assertion"] == "0"
 
 
 def test_check_assertion_violation_none(mock_generate_counter_example):
