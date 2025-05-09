@@ -1,7 +1,6 @@
 import argparse
 from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
-import os
 
 from bpmncwpverify.builder.filebuilder import StateBuilder, Outputs
 from returns.io import impure_safe, IOResult, IOResultE
@@ -107,12 +106,10 @@ def verify() -> None:
 
     match result:
         case Success(o):
-            if not os.path.exists("tmp"):
-                os.makedirs("tmp")
-            with open("./tmp/verification.pml", "w") as f:
+            with open("/tmp/verification.pml", "w") as f:
                 f.write(o.promela)
             spin_output: Result[CoverageReport, str] = SpinOutput.get_spin_output(
-                "./tmp/verification.pml"
+                "/tmp/verification.pml"
             )
             if not_(is_successful)(spin_output):
                 print(spin_output.failure())
