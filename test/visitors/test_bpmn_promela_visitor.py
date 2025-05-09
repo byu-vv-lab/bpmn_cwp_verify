@@ -8,8 +8,6 @@ from bpmncwpverify.visitors.bpmn_promela_visitor import (
 )
 from bpmncwpverify.util.stringmanager import StringManager, IndentAction
 
-from unittest.mock import call
-
 import pytest
 
 
@@ -360,7 +358,7 @@ def test_build_atomic_block(promela_visitor, mocker):
 
     atomic_block = promela_visitor._build_atomic_block(ctx)
 
-    expected_output = ":: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n"
+    expected_output = ':: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tprintf("ID: NODE1\\n")\n\tNODE1_BehaviorModel()\n\tstateLogger()\n\td_step {\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n'
     assert str(atomic_block) == expected_output
 
 
@@ -562,7 +560,6 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_context_object = mocker.Mock()
     mock_context_class.return_value = mock_context_object
 
-    mock_print_el = mocker.patch.object(visitor, "print_element_id")
     mock_gen_behavior_model = mocker.patch.object(visitor, "_gen_behavior_model")
     mock_gen_var_defs = mocker.patch.object(visitor, "_gen_var_defs")
     mock_atomic_block = mocker.patch.object(
@@ -580,7 +577,6 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_start_event = mocker.Mock()
     visitor.visit_start_event(mock_start_event)
 
-    mock_print_el.assert_called_once_with(mock_start_event)
     mock_context_class.assert_called_once_with(mock_start_event)
     mock_gen_behavior_model.assert_called_once_with(mock_context_object)
 
@@ -648,13 +644,3 @@ def test_visit_task_with_behavior(promela_visitor, mocker):
 
     promela_visitor.visit_task(mocker.Mock())
     mock_gen_method.assert_called_once_with(mock_context_object)
-
-
-def test_print_element_id(promela_visitor, mocker):
-    sm = mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
-    )
-    mock_element = mocker.Mock(id="test_id")
-
-    promela_visitor.print_element_id(mock_element)
-    sm.assert_has_calls([call('printf("ID: test_id\\n")', 1), call("stateLogger()", 1)])
