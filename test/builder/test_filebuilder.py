@@ -22,7 +22,8 @@ def test_logger_generator(mocker):
     sb.logger_generator(state, cwp)
 
     calls = [
-        mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
+        mocker.call("inline stateLogger(id){", NL_SINGLE, IndentAction.INC),
+        mocker.call('printf("ID: %e\\n", id)', NL_SINGLE),
         mocker.call('printf("Changed Vars: \\n");', NL_SINGLE),
         mocker.call("if", NL_SINGLE, IndentAction.INC),
         mocker.call(
