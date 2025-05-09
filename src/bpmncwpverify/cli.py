@@ -1,7 +1,6 @@
 import argparse
 from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
-import os
 
 from bpmncwpverify.builder.filebuilder import StateBuilder, Outputs
 from returns.io import impure_safe, IOResult, IOResultE

@@ -151,7 +151,6 @@ class SpinOutput:
             bind_result(partial(spin_output._check_coverage_errors, file_path)),
         )
 
-        __import__("pdb").set_trace()
         if is_successful(result):
             return Success(CoverageReport(spin_run_string))
 
