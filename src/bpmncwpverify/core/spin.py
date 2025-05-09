@@ -49,7 +49,7 @@ class SpinOutput:
         self, file_path: str, spin_msg: str
     ) -> Result[str, Error]:
         errors = self._get_re_matches(
-            r"assertion violated \((?P<assertion>.*)\) \((?P<depth>.*)\)", spin_msg
+            r"assertion violated \(?(?P<assertion>[^\s)]*)\)? (?P<depth>.*)", spin_msg
         )
 
         counter_example = CounterExample.generate_counterexample(
@@ -145,6 +145,7 @@ class SpinOutput:
             bind_result(partial(spin_output._check_coverage_errors, file_path)),
         )
 
+        __import__("pdb").set_trace()
         if is_successful(result):
             return Success(CoverageReport(spin_run_string))
 
