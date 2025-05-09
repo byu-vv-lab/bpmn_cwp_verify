@@ -108,5 +108,7 @@ class CounterExample:
                             lines[line_index].split(" ", 2)[2].strip()
                         )
                         line_index += 1
-            steps.append(ErrorTrace(id, changed_vars, curr_cwp_state))
+                steps.append(ErrorTrace(id, changed_vars, curr_cwp_state))
+            else:
+                line_index += 1
         return steps
