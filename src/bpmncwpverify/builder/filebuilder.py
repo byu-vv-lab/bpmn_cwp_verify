@@ -94,7 +94,8 @@ class StateBuilder:
         variableNames = self.variable_name_extractor(state)
         loggerFunction = StringManager()
 
-        loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
+        loggerFunction.write_str("inline stateLogger(id){", NL_SINGLE, IndentAction.INC)
+        loggerFunction.write_str('printf("ID: %e\\n", id)', NL_SINGLE)
         loggerFunction.write_str('printf("Changed Vars: \\n");', NL_SINGLE)
         for varName in variableNames:
             loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)

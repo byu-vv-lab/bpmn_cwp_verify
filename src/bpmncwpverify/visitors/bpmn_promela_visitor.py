@@ -338,8 +338,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
     # Visitor Methods
     ####################
     def print_element_id(self, element: BpmnElement) -> None:
-        self.promela.write_str(f'printf("ID: {element.id}\\n")', NL_SINGLE)
-        self.promela.write_str("stateLogger()", NL_SINGLE)
+        self.promela.write_str(f"stateLogger({element.name})", NL_SINGLE)
 
     def visit_start_event(self, event: StartEvent) -> bool:
         self.print_element_id(event)
