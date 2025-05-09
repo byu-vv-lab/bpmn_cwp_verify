@@ -584,7 +584,7 @@ def test_print_element_id(promela_visitor, mocker):
     sm = mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
     )
-    mock_element = mocker.Mock(id="test_id")
+    mock_element = mocker.Mock(id="test_id", name="test_name")
 
     promela_visitor.print_element_id(mock_element)
-    sm.assert_has_calls([call('printf("ID: test_id\\n")', 1), call("stateLogger()", 1)])
+    sm.assert_has_calls([call(f"stateLogger({mock_element.name})", 1)])
