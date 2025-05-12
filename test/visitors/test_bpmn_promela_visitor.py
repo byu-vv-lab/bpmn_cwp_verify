@@ -364,7 +364,8 @@ def test_build_atomic_block(promela_visitor, mocker):
     assert str(atomic_block) == expected_output
 
 
-def test_gen_behavior_model(promela_visitor, mocker):
+def test_gen_behavior_model(mocker):
+    pv1 = PromelaGenVisitor()
     node1 = mocker.Mock()
     node1.id = "TEST"
 
@@ -372,10 +373,15 @@ def test_gen_behavior_model(promela_visitor, mocker):
     ctx.element = node1
     ctx.behavior = ""
 
-    promela_visitor._gen_behavior_model(ctx)
+    pv1._gen_behavior_model(ctx)
+    assert str(pv1.behaviors) == "inline TEST_BehaviorModel() {\n\tskip\n}\n\n"
+
+    pv2 = PromelaGenVisitor()
+    ctx.behavior = "content"
+    pv2._gen_behavior_model(ctx)
     assert (
-        str(promela_visitor.behaviors)
-        == "inline TEST_BehaviorModel() {\n\tupdateState()\n}\n\n"
+        str(pv2.behaviors)
+        == "inline TEST_BehaviorModel() {\n\tcontent\n\tupdateState()\n}\n\n"
     )
 
 
