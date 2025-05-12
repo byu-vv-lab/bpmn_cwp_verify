@@ -14,6 +14,9 @@ from returns.functions import not_
 from typing import TextIO, cast
 
 from bpmncwpverify.core.error import Error, MissingFileError, get_error_message
+from bpmncwpverify.core.spin import SpinOutput, CoverageReport
+
+OUTPUT_FILE = "/tmp/verification.pml"
 
 
 def element_tree_from_string(input: str) -> Element:
@@ -92,12 +95,28 @@ def _verify() -> Result["Outputs", Error]:
     return result
 
 
+# add a flag to get promela
+# 1) call promela_generation > file.pml
+# 2) call get_spin_output
+# 3) put file in /tmp
+# 4) returns either counter example or coverage report
+# use error interface instead of .get_counter_example()
+
+
 def verify() -> None:
     result: Result[Outputs, Error] = _verify()
 
     match result:
         case Success(o):
-            print(o.promela)
+            with open(OUTPUT_FILE, "w") as f:
+                f.write(o.promela)
+            spin_output: Result[CoverageReport, str] = SpinOutput.get_spin_output(
+                OUTPUT_FILE
+            )
+            if not_(is_successful)(spin_output):
+                print(spin_output.failure())
+            else:
+                print(spin_output.unwrap().full_spin_output)
         case Failure(e):
             msg = get_error_message(e)
             print(msg)
