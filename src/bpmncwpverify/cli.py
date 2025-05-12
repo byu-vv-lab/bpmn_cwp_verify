@@ -15,11 +15,8 @@ from typing import TextIO, cast
 
 from bpmncwpverify.core.error import Error, MissingFileError, get_error_message
 from bpmncwpverify.core.spin import SpinOutput, CoverageReport
-<<<<<<< HEAD
 
 OUTPUT_FILE = "/tmp/verification.pml"
-=======
->>>>>>> 9d47312 (Call get_spin_output from _verify)
 
 
 def element_tree_from_string(input: str) -> Element:
