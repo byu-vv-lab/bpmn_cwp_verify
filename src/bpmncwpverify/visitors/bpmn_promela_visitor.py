@@ -339,11 +339,13 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
-        atomic_block.write_str(f'printf("ID: {ctx.element.id}\\n")', NL_SINGLE)
         if ctx.behavior_model:
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
-            atomic_block.write_str("stateLogger()", NL_SINGLE)
+
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
+
+        atomic_block.write_str(f'printf("ID: {ctx.element.id}\\n")', NL_SINGLE)
+        atomic_block.write_str("stateLogger()", NL_SINGLE)
 
         for location in self._get_consume_locations(ctx.element).get_all_positions():
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
@@ -410,6 +412,8 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
 
         for loc in self._get_consume_locations(event).get_all_positions():
             self.promela.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
+        # Close the d_step from the `visit_process`
+        self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
 
         self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
 
@@ -485,6 +489,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         self.promela.write_str(
             f"proctype {process.id}() {{", NL_SINGLE, IndentAction.INC
         )
+        self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
         self.promela.write_str(f'printf("ID: {process.id}\\n")', NL_SINGLE)
         self.promela.write_str("stateLogger()", NL_SINGLE)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
