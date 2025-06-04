@@ -6,7 +6,7 @@ from typing import cast
 
 from bpmncwpverify.antlr.ExprListener import ExprListener
 from bpmncwpverify.antlr.ExprLexer import ExprLexer
-from bpmncwpverify.antlr.ExprParser import ExprParser
+from bpmncwpverify.antlr.ExprParser import ExprParser  # type: ignore[attr-defined]
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.state import (
     State,
@@ -105,7 +105,7 @@ def _parse_expressions(parser: ExprParser) -> Result[ExprParser.StartContext, Er
         return Failure(failure_value)
 
 
-class ExpressionListener(ExprListener):  # type: ignore[misc]
+class ExpressionListener(ExprListener):
     """
     Verifies expressions
     Contains interface used to interact with other classes outside of expression checking functionality

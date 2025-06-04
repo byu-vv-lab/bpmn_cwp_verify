@@ -37,7 +37,7 @@ from bpmncwpverify.core.error import (
 from returns.result import Result, Success, Failure
 
 
-class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
+class ProcessConnectivityVisitor(BpmnVisitor):
     def __init__(self) -> None:
         self.visited: Set[BpmnElement] = set()
 
@@ -75,7 +75,7 @@ class ProcessConnectivityVisitor(BpmnVisitor):  # type: ignore
             raise Exception(BpmnGraphConnError())
 
 
-class ValidateSeqFlowVisitor(BpmnVisitor):  # type: ignore
+class ValidateSeqFlowVisitor(BpmnVisitor):
     def _validate_out_flows(self, gateway: GatewayNode) -> None:
         for out_flow in gateway.out_flows:
             if not out_flow.expression:
@@ -96,7 +96,7 @@ class ValidateSeqFlowVisitor(BpmnVisitor):  # type: ignore
         return True
 
 
-class ValidateMsgsVisitor(BpmnVisitor):  # type: ignore
+class ValidateMsgsVisitor(BpmnVisitor):
     def _ensure_in_messages(self, node: Event, obj_type: str) -> None:
         if node.in_msgs:
             if not node.message_event_definition:
@@ -136,7 +136,7 @@ class ValidateMsgsVisitor(BpmnVisitor):  # type: ignore
         return True
 
 
-class ValidateBpmnIncomingFlows(BpmnVisitor):  # type: ignore
+class ValidateBpmnIncomingFlows(BpmnVisitor):
     def _check_in_flows(self, element: Node) -> bool:
         if not element.in_flows:
             raise Exception(BpmnFlowIncomingError(element.id))
@@ -158,7 +158,7 @@ class ValidateBpmnIncomingFlows(BpmnVisitor):  # type: ignore
         return self._check_in_flows(gateway)
 
 
-class ValidateBpmnOutgoingFlows(BpmnVisitor):  # type: ignore
+class ValidateBpmnOutgoingFlows(BpmnVisitor):
     def _check_out_flows(self, element: Node) -> bool:
         if not element.out_flows:
             raise Exception(BpmnFlowOutgoingError(element.id))
@@ -180,7 +180,7 @@ class ValidateBpmnOutgoingFlows(BpmnVisitor):  # type: ignore
         return self._check_out_flows(gateway)
 
 
-class ValidateStartEventFlows(BpmnVisitor):  # type: ignore
+class ValidateStartEventFlows(BpmnVisitor):
     def visit_start_event(self, event: StartEvent) -> bool:
         if event.in_flows:
             raise Exception(BpmnFlowStartEventError(event.id))
@@ -191,7 +191,7 @@ class ValidateStartEventFlows(BpmnVisitor):  # type: ignore
         return False
 
 
-class SetFlowLeafs(BpmnVisitor):  # type: ignore
+class SetFlowLeafs(BpmnVisitor):
     def __init__(self) -> None:
         self.visited: Set[BpmnElement] = set()
 
@@ -229,7 +229,7 @@ class SetFlowLeafs(BpmnVisitor):  # type: ignore
         return self.process_flow(flow)
 
 
-class ValidateIdVisitor(BpmnVisitor):  # type: ignore
+class ValidateIdVisitor(BpmnVisitor):
     def _is_id_valid(self, item: BpmnElement) -> bool:
         return bool(re.fullmatch(r"[\w_-]+", item.id))
 

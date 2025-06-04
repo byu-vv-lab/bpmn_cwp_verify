@@ -11,7 +11,7 @@ END_STR = "//**********************************************//"
 PRIME_SUFFIX = "_prime"
 
 
-class CwpPromelaVisitor(CwpVisitor):  # type: ignore
+class CwpPromelaVisitor(CwpVisitor):
     def __init__(self) -> None:
         self.cwp_states = StringManager()
         self.update_state_inline = StringManager()

@@ -11,11 +11,11 @@ from returns.pointfree import bind_result
 from returns.functions import not_
 from returns.curry import partial
 
-from typing import Any, List, cast, Iterable
+from typing import Any, List, cast, Iterable, Protocol
 
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
-from bpmncwpverify.antlr.StateParser import StateParser
+from bpmncwpverify.antlr.StateParser import StateParser  # type: ignore[attr-defined]
 
 from bpmncwpverify.core import typechecking
 
@@ -25,6 +25,10 @@ from bpmncwpverify.core.error import (
     StateMultipleDefinitionError,
     StateSyntaxError,
 )
+
+
+class HasText(Protocol):
+    def getText(self) -> str | None: ...
 
 
 def antlr_id_set_context_get_children(
@@ -64,11 +68,12 @@ def antlr_get_terminal_node_impl(node: TerminalNode | None) -> TerminalNodeImpl:
     Args:
         ctx (TerminalNode | None): The node to check if it is a leaf node
     """
+    assert node is not None
     assert isinstance(node, TerminalNodeImpl)
     return node
 
 
-def antlr_get_text(node: TerminalNodeImpl | StateParser.TypeContext) -> str:
+def antlr_get_text(node: HasText) -> str:
     """
     Returns the text within the node
 
@@ -76,7 +81,7 @@ def antlr_get_text(node: TerminalNodeImpl | StateParser.TypeContext) -> str:
         ctx (TerminalNodeImpl | StateParser.TypeContext): The node to retrieve the text
     """
     text: str | None = node.getText()
-    assert isinstance(text, str)
+    assert text is not None
     return text
 
 
@@ -89,7 +94,7 @@ def antlr_get_type_from_type_context(
     Args:
         ctx (StateParser.Const_var_declContext | StateParser.Var_declContext): The node to retrieve the type
     """
-    type_context: Any = ctx.type_()
+    type_context = cast(StateParser.TypeContext, ctx.type_())
     assert isinstance(type_context, StateParser.TypeContext)
     return antlr_get_text(type_context)
 
@@ -409,7 +414,7 @@ class State:
 
     __slots__ = ["_consts", "_enums", "_id2type", "_vars"]
 
-    class _Listener(StateListener):  # type: ignore[misc]
+    class _Listener(StateListener):
         """
         Adds variables to lists stored in StateBuilder object
         """
@@ -842,6 +847,10 @@ class State:
         id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
 
         return Success(self)
+
+    @property
+    def vars(self) -> list[VarDecl]:
+        return self._vars
 
     def get_type(self, id: str) -> Result[str, Error]:
         """

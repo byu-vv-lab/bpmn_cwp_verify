@@ -78,12 +78,12 @@ class CounterExample:
         Extract trace steps from the filtered string.
         """
         lines = filtered_str.splitlines()
-        steps = []
+        steps: list[ErrorTrace] = []
         line_index = 0
         while line_index < len(lines):
             id = ""
-            changed_vars = []
-            curr_cwp_state = []
+            changed_vars: list[str] = []
+            curr_cwp_state: list[str] = []
             if lines[line_index].startswith("ID:"):
                 id = lines[line_index].split(" ", 1)[1].strip()
                 line_index += 1

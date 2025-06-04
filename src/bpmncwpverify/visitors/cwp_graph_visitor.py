@@ -3,7 +3,7 @@ from bpmncwpverify.core.cwp import CwpVisitor, CwpState, CwpEdge
 from bpmncwpverify.visitors.bpmn_graph_visitor import dot_edge, dot_node
 
 
-class CwpGraphVizVisitor(CwpVisitor):  # type: ignore
+class CwpGraphVizVisitor(CwpVisitor):
     def __init__(self) -> None:
         self.dot = graphviz.Digraph(comment="cwp graph")
 

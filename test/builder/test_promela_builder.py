@@ -1,16 +1,16 @@
-from bpmncwpverify.builder.filebuilder import StateBuilder
+from bpmncwpverify.builder.promela_builder import PromelaBuilder
 from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction
 
 
 def test_logger_generator(mocker):
     mocker.patch.object(
-        StateBuilder, "variable_name_extractor", return_value=["test_string"]
+        PromelaBuilder, "variable_name_extractor", return_value=["test_string"]
     )
     mock_write_str = mocker.patch(
-        "bpmncwpverify.builder.filebuilder.StringManager.write_str"
+        "bpmncwpverify.builder.promela_builder.StringManager.write_str"
     )
 
-    sb = StateBuilder()
+    sb = PromelaBuilder()
     state = mocker.Mock()
 
     mock_val1 = mocker.Mock()
@@ -51,9 +51,9 @@ def test_variable_name_extractor(mocker):
     vars = [mocker.Mock(id=1), mocker.Mock(id=2)]
 
     state = mocker.Mock()
-    state._vars = vars
+    state.vars = vars
 
-    sb = StateBuilder()
+    sb = PromelaBuilder()
 
     result = sb.variable_name_extractor(state)
 

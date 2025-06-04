@@ -1,6 +1,5 @@
 from bpmncwpverify.core.bpmn import Node, Process, SequenceFlow, Task
 from bpmncwpverify.core.expr import ExpressionListener
-from bpmncwpverify.core.error import BpmnStructureError
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
 from bpmncwpverify.core.error import Error, FlowExpressionError, get_error_message
@@ -9,7 +8,7 @@ from returns.result import Result, Failure, Success
 from returns.pipeline import is_successful
 from returns.functions import not_
 
-from typing import Union, cast
+from typing import Union
 
 
 class ProcessBuilder:
@@ -38,8 +37,7 @@ class ProcessBuilder:
                     parent_task, Task
                 ), f"Boundary event '{bpmn_object.id}' is attached to non-Task object: {type(parent_task).__name__}"
 
-                task = cast(Task, parent_task)
-                task.add_boundary_event(bpmn_object)
+                parent_task.add_boundary_event(bpmn_object)
 
         return self
 
@@ -78,5 +76,5 @@ class ProcessBuilder:
         target_node.add_in_flow(flow)
         return Success(self)
 
-    def build(self) -> Result[Process, BpmnStructureError]:
-        return cast(Result, validate_process(self._process))
+    def build(self) -> Result[Process, Error]:
+        return validate_process(self._process)

@@ -21,7 +21,7 @@ def dot_edge(graph: graphviz.Digraph, src: str, dst: str, label: str) -> None:
     graph.edge(src, dst, label=label)  # type: ignore[unused-ignore]
 
 
-class GraphVizVisitor(BpmnVisitor):  # type: ignore[misc]
+class GraphVizVisitor(BpmnVisitor):
     def __init__(self, process_number: int) -> None:
         self.dot = graphviz.Digraph(comment="Process graph {}".format(process_number))
 
