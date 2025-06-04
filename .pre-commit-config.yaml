@@ -51,7 +51,7 @@ repos:
         language: system
         types: [python]
         args: ["--config-file=pyproject.toml"]
-        exclude: ^(test/|src/bpmncwpverify/antlr/|original/)
+        exclude: ^(test/|src/bpmncwpverify/antlr/)
 -   repo: local
     hooks:
     -   id: pyright
