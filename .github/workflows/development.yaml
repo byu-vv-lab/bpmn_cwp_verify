@@ -33,6 +33,31 @@ jobs:
         python -m pip install --upgrade pip
         pip install --editable ".[dev]"
         python -c "import returns.contrib.mypy.returns_plugin"
+    - name: Configure pyrightconfig.json with site-packages path
+      run: |
+        SITE_PACKAGES=$(python -c "import site; print(site.getsitepackages()[0])")
+        cat > pyrightconfig.json <<EOF
+        {
+          "typeCheckingMode": "strict",
+          "pythonVersion": "3.12",
+          "include": ["src"],
+          "exclude": [
+            "original",
+            "src/bpmncwpverify/antlr",
+            "test",
+            "**/__pycache__",
+            "**/.venv",
+            "**/.mypy_cache",
+            "**/build",
+            "**/dist"
+          ],
+          "reportUnknownArgumentType": false,
+          "extraPaths": [
+            "src",
+            "$SITE_PACKAGES"
+          ]
+        }
+        EOF
     - name: Pre-commit
       uses: pre-commit/action@v3.0.1
     - name: Test pass-off
