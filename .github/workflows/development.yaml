@@ -42,7 +42,6 @@ jobs:
           "pythonVersion": "3.12",
           "include": ["src"],
           "exclude": [
-            "original",
             "src/bpmncwpverify/antlr",
             "test",
             "**/__pycache__",
