@@ -3,7 +3,7 @@ from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
 
 from bpmncwpverify.builder.promela_builder import PromelaBuilder
-from returns.io import impure_safe, IOResult, IOResultE
+from returns.io import impure_safe, IOResultE, IOSuccess, IOFailure
 from returns.curry import partial
 from returns.pipeline import managed, flow
 from returns.pointfree import bind_result
@@ -20,7 +20,7 @@ OUTPUT_FILE = "/tmp/verification.pml"
 
 
 def element_tree_from_string(input: str) -> Element:
-    return cast(Element, ElementTree.fromstring(input))  # type: ignore[unused-ignore]
+    return cast(Element, ElementTree.fromstring(input))  # pyright: ignore[reportUnknownMemberType]
 
 
 def _close_file(
@@ -50,12 +50,20 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
     return argument_parser
 
 
-def _get_file_contents(name: str) -> IOResultE[str]:
-    return flow(
+def _get_file_contents(name: str) -> Result[str, Error]:
+    io_result: IOResultE[str] = flow(
         name,
-        impure_safe(lambda filename: open(filename, "r")),  # type: ignore[unused-ignore]
+        impure_safe(lambda filename: open(filename, "r")),  # pyright: ignore[reportUnknownLambdaType,reportCallIssue,reportArgumentType]
         managed(_read_file, _close_file),
     )
+
+    match io_result:
+        case IOSuccess(Success(value)):
+            return Success(value)
+        case IOFailure(_):
+            return Failure(MissingFileError(name))
+        case _:
+            return Failure(MissingFileError(name))  # fallback for safety
 
 
 def _read_file(file_obj: TextIO) -> IOResultE[str]:
@@ -65,22 +73,15 @@ def _read_file(file_obj: TextIO) -> IOResultE[str]:
 def _verify() -> Result[str, Error]:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
+
     state_file = args.state_file
     state_str = _get_file_contents(state_file)
-    if not_(is_successful)(state_str):
-        return Failure(MissingFileError(state_file))
+
     bpmn_file = args.bpmn_file
-    bpmn_root: IOResultE[Element] = _get_file_contents(bpmn_file).map(
-        element_tree_from_string
-    )
-    if not_(is_successful)(bpmn_root):
-        return Failure(MissingFileError(bpmn_file))
+    bpmn_root = _get_file_contents(bpmn_file).map(element_tree_from_string)
+
     cwp_file = args.cwp_file
-    cwp_root: IOResultE[Element] = _get_file_contents(cwp_file).map(
-        element_tree_from_string
-    )
-    if not_(is_successful)(cwp_root):
-        return Failure(MissingFileError(cwp_file))
+    cwp_root = _get_file_contents(cwp_file).map(element_tree_from_string)
 
     builder: PromelaBuilder = PromelaBuilder()
 
@@ -125,14 +126,16 @@ def verify() -> None:
 
 
 def web_verify(bpmn: str, cwp: str, state: str) -> Result[str, Error]:
-    bpmn_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(bpmn))
-    cwp_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(cwp))
+    bpmn_root: Result[Element, Error] = Result.from_value(
+        element_tree_from_string(bpmn)
+    )
+    cwp_root: Result[Element, Error] = Result.from_value(element_tree_from_string(cwp))
 
     builder: PromelaBuilder = PromelaBuilder()
 
     result: Result[str, Error] = flow(
         Success(builder),
-        partial(PromelaBuilder.with_state_, IOResult.from_value(state)),
+        partial(PromelaBuilder.with_state_, Result.from_value(state)),
         partial(PromelaBuilder.with_cwp_, cwp_root),
         partial(PromelaBuilder.with_bpmn_, bpmn_root),
         bind_result(PromelaBuilder.build_),
