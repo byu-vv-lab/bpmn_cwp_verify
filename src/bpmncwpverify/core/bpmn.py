@@ -2,7 +2,7 @@ from bpmncwpverify.core.error import (
     BpmnStructureError,
 )
 
-from typing import List, Dict, Union, TypeVar, Type
+from typing import List, Dict, Union, TypeVar, Type, Any
 from returns.result import Result, Failure, Success
 from bpmncwpverify.core.error import Error, BpmnUnrecognizedElement
 from xml.etree.ElementTree import Element
@@ -43,7 +43,7 @@ class BpmnElement:
         return cls(id, name, **subclass_attrs)
 
     @classmethod
-    def _extract_attributes(cls, element: Element) -> dict:
+    def _extract_attributes(cls, element: Element) -> dict[str, Any]:
         """
         Method for subclasses to add additional attributes to from_xml method
         """
@@ -151,7 +151,7 @@ class Event(Node):
         self.message_timer_definition = message_timer_definition
 
     @classmethod
-    def _extract_attributes(cls, element: Element) -> dict:
+    def _extract_attributes(cls, element: Element) -> dict[str, Any]:
         attributes = super()._extract_attributes(element)
         message_event = element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE)
         attributes["message_event_definition"] = (
@@ -217,7 +217,7 @@ class IntermediateEvent(Event):
         visitor.end_visit_intermediate_event(self)
 
     @classmethod
-    def _extract_attributes(cls, element: Element) -> dict:
+    def _extract_attributes(cls, element: Element) -> dict[str, Any]:
         attributes = super()._extract_attributes(element)
         tag = element.tag.partition("}")[2]
         type = "catch" if "Catch" in tag else "throw" if "Throw" in tag else "send"
@@ -250,7 +250,7 @@ class Task(Node):
             self.parent_task = parent_task
 
         @classmethod
-        def _extract_attributes(cls, element: Element) -> Dict:
+        def _extract_attributes(cls, element: Element) -> dict[str, Any]:
             attributes = super()._extract_attributes(element)
             attributes["parent_task"] = element.attrib.get("attachedToRef")
 
@@ -281,7 +281,7 @@ class Task(Node):
         visitor.end_visit_task(self)
 
     @classmethod
-    def _extract_attributes(cls, element: Element) -> dict:
+    def _extract_attributes(cls, element: Element) -> dict[str, Any]:
         attributes = super()._extract_attributes(element)
         behavior = element.find("bpmn:documentation", BPMN_XML_NAMESPACE)
         attributes["behavior"] = (

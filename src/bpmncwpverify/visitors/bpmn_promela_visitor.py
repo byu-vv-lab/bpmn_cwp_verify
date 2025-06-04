@@ -160,7 +160,7 @@ class TokenPositions:
             return []
 
 
-class PromelaGenVisitor(BpmnVisitor):  # type: ignore
+class PromelaGenVisitor(BpmnVisitor):
     def __init__(self) -> None:
         self.defs = StringManager()
         self.var_defs = StringManager()
@@ -179,7 +179,7 @@ class PromelaGenVisitor(BpmnVisitor):  # type: ignore
         """
         if flow_or_message:
             return f"{element.id}_FROM_{flow_or_message.source_node.id}"
-        return element.id  # type: ignore
+        return element.id
 
     def _get_consume_locations(self, element: Node) -> TokenPositions:
         """

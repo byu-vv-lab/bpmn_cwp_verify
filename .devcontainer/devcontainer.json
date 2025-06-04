@@ -35,12 +35,11 @@
                 "mypy.configFile": "${workspaceFolder}/pyproject.toml",
                 "mypy.path": "/home/vscode/.local/bin/mypy",
                 "python.analysis.extraPaths": [
+                    "${workspaceFolder}/src",
                     "/home/vscode/.local/lib/python3.12/site-packages"
                 ],
-                "python.analysis.typeCheckingMode": "strict",
-                "python.analysis.diagnosticSeverityOverrides": {
-                    "reportUnknownArgumentType": "none"
-                }
+                "python.languageServer": "Pylance",
+                "python.analysis.diagnosticMode": "workspace"
             },
             "extensions": ["mike-lischke.vscode-antlr4", "ms-python.mypy-type-checker", "charliermarsh.ruff", "peacekeeper228.spin-promela"]
         }

@@ -57,7 +57,7 @@ def from_xml(root: Element, state: State) -> Result["Bpmn", Error]:
 
             bpmn_builder = bpmn_builder.with_message(message, source_ref, target_ref)
 
-    return cast(Result[Bpmn, Error], bpmn_builder.build())
+    return bpmn_builder.build()
 
 
 def generate_graph_viz(bpmn: Bpmn) -> None:

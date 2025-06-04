@@ -112,8 +112,8 @@ def test_givin_good_files_when_verify_then_output_promela(capsys):
     # then
     assert is_successful(result)
     outputs = result.unwrap()
-    assert outputs.promela is not None
-    assert outputs.promela != ""
+    assert outputs is not None
+    assert outputs != ""
 
 
 def test_good_input_webverify_output_promela():
@@ -139,8 +139,8 @@ def test_good_input_webverify_output_promela():
     # then
     assert is_successful(result)
     outputs = result.unwrap()
-    assert outputs.promela is not None
-    assert outputs.promela != ""
+    assert outputs is not None
+    assert outputs != ""
 
 
 def test_bad_input_webverify_output_error():

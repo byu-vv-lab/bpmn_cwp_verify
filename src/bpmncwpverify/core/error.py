@@ -623,7 +623,7 @@ def _get_error_message(error: Error) -> str:
         case NotImplementedError(function=function):
             return "ERROR: not implemented '{}'".format(function)
         case SpinAssertionError(list_of_error_maps=list_of_error_maps):
-            errors = []
+            errors: list[str] = []
             errors.append("Assertion Error:")
             errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
             for idx, map in enumerate(list_of_error_maps):

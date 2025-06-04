@@ -2,7 +2,7 @@ import argparse
 from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
 
-from bpmncwpverify.builder.filebuilder import StateBuilder, Outputs
+from bpmncwpverify.builder.promela_builder import PromelaBuilder
 from returns.io import impure_safe, IOResult, IOResultE
 from returns.curry import partial
 from returns.pipeline import managed, flow
@@ -62,7 +62,7 @@ def _read_file(file_obj: TextIO) -> IOResultE[str]:
     return impure_safe(file_obj.read)()
 
 
-def _verify() -> Result["Outputs", Error]:
+def _verify() -> Result[str, Error]:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
     state_file = args.state_file
@@ -82,14 +82,14 @@ def _verify() -> Result["Outputs", Error]:
     if not_(is_successful)(cwp_root):
         return Failure(MissingFileError(cwp_file))
 
-    builder: StateBuilder = StateBuilder()
+    builder: PromelaBuilder = PromelaBuilder()
 
-    result: Result["Outputs", Error] = flow(
+    result: Result[str, Error] = flow(
         Success(builder),
-        partial(StateBuilder.with_state_, state_str),
-        partial(StateBuilder.with_cwp_, cwp_root),
-        partial(StateBuilder.with_bpmn_, bpmn_root),
-        bind_result(StateBuilder.build_),
+        partial(PromelaBuilder.with_state_, state_str),
+        partial(PromelaBuilder.with_cwp_, cwp_root),
+        partial(PromelaBuilder.with_bpmn_, bpmn_root),
+        bind_result(PromelaBuilder.build_),
     )
 
     return result
@@ -104,12 +104,12 @@ def _verify() -> Result["Outputs", Error]:
 
 
 def verify() -> None:
-    result: Result[Outputs, Error] = _verify()
+    result: Result[str, Error] = _verify()
 
     match result:
-        case Success(o):
+        case Success(promela):
             with open(OUTPUT_FILE, "w") as f:
-                f.write(o.promela)
+                f.write(promela)
             spin_output: Result[CoverageReport, str] = SpinOutput.get_spin_output(
                 OUTPUT_FILE
             )
@@ -124,18 +124,18 @@ def verify() -> None:
             assert False, "ERROR: unhandled type"
 
 
-def web_verify(bpmn: str, cwp: str, state: str) -> Result["Outputs", Error]:
+def web_verify(bpmn: str, cwp: str, state: str) -> Result[str, Error]:
     bpmn_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(bpmn))
     cwp_root: IOResultE[Element] = IOResult.from_value(element_tree_from_string(cwp))
 
-    builder: StateBuilder = StateBuilder()
+    builder: PromelaBuilder = PromelaBuilder()
 
-    result: Result["Outputs", Error] = flow(
+    result: Result[str, Error] = flow(
         Success(builder),
-        partial(StateBuilder.with_state_, IOResult.from_value(state)),
-        partial(StateBuilder.with_cwp_, cwp_root),
-        partial(StateBuilder.with_bpmn_, bpmn_root),
-        bind_result(StateBuilder.build_),
+        partial(PromelaBuilder.with_state_, IOResult.from_value(state)),
+        partial(PromelaBuilder.with_cwp_, cwp_root),
+        partial(PromelaBuilder.with_bpmn_, bpmn_root),
+        bind_result(PromelaBuilder.build_),
     )
 
     return result

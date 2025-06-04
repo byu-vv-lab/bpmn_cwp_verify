@@ -2,12 +2,10 @@ from xml.etree.ElementTree import Element
 
 from returns.unsafe import unsafe_perform_io
 from returns.io import IOResultE
-from returns.curry import partial
 from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
 from returns.result import Result, Success, Failure
 from returns.functions import not_
-
 
 from bpmncwpverify.core.error import Error, ExceptionError
 from bpmncwpverify.core.state import State
@@ -24,7 +22,7 @@ from bpmncwpverify.core.accessmethods.cwpmethods import (
 from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE, IndentAction
 
 
-class StateBuilder:
+class PromelaBuilder:
     __slots__ = [
         "bpmn",
         "bpmn_root",
@@ -43,7 +41,7 @@ class StateBuilder:
         self.state: Result[State, Error] = Failure(Error())
 
     @staticmethod
-    def _build_bpmn(builder: "StateBuilder") -> Result["StateBuilder", Error]:
+    def _build_bpmn(builder: "PromelaBuilder") -> Result["PromelaBuilder", Error]:
         assert is_successful(builder.state) and is_successful(builder.bpmn_root)
         builder.bpmn = bpmn_from_xml(builder.bpmn_root.unwrap(), builder.state.unwrap())
         if not_(is_successful)(builder.bpmn):
@@ -52,7 +50,7 @@ class StateBuilder:
             return Success(builder)
 
     @staticmethod
-    def _build_cwp(builder: "StateBuilder") -> Result["StateBuilder", Error]:
+    def _build_cwp(builder: "PromelaBuilder") -> Result["PromelaBuilder", Error]:
         assert is_successful(builder.state)
         assert is_successful(builder.cwp_root)
         builder.cwp = CwpXmlParser.from_xml(
@@ -64,7 +62,7 @@ class StateBuilder:
             return Success(builder)
 
     @staticmethod
-    def _build_state(builder: "StateBuilder") -> Result["StateBuilder", Error]:
+    def _build_state(builder: "PromelaBuilder") -> Result["PromelaBuilder", Error]:
         assert is_successful(builder.state_str)
         builder.state = State.from_str(builder.state_str.unwrap())
         if not_(is_successful)(builder.state):
@@ -73,9 +71,7 @@ class StateBuilder:
             return Success(builder)
 
     @staticmethod
-    def build_promela(
-        outputs: "Outputs", builder: "StateBuilder"
-    ) -> Result["Outputs", Error]:
+    def build_promela(builder: "PromelaBuilder") -> Result[str, Error]:
         assert is_successful(builder.state)
         assert is_successful(builder.cwp_root)
         assert is_successful(builder.bpmn_root)
@@ -87,8 +83,8 @@ class StateBuilder:
         )
         workflow = generate_promela((builder.bpmn).unwrap())
 
-        outputs.promela = f"{vars}{cwp}{variableLogger}{workflow}"
-        return Success(outputs)
+        promela = f"{vars}{cwp}{variableLogger}{workflow}"
+        return Success(promela)
 
     def logger_generator(self, state: State, cwp: Cwp) -> str:
         variableNames = self.variable_name_extractor(state)
@@ -122,44 +118,43 @@ class StateBuilder:
         return str(loggerFunction)
 
     def variable_name_extractor(self, state: State) -> list[str]:
-        variableNames = []
-        for var in state._vars:
+        variableNames: list[str] = []
+        for var in state.vars:
             variableNames.append(var.id)
         return variableNames
 
-    def build(self) -> Result["Outputs", Error]:
-        outputs: Outputs = Outputs("")
-        result: Result["Outputs", Error] = flow(
+    def build(self) -> Result[str, Error]:
+        result: Result[str, Error] = flow(
             Success(self),
-            bind_result(StateBuilder._build_state),
-            bind_result(StateBuilder._build_cwp),
-            bind_result(StateBuilder._build_bpmn),
-            bind_result(partial(StateBuilder.build_promela, outputs)),
+            bind_result(PromelaBuilder._build_state),
+            bind_result(PromelaBuilder._build_cwp),
+            bind_result(PromelaBuilder._build_bpmn),
+            bind_result(PromelaBuilder.build_promela),
         )
 
         return result
 
-    def with_bpmn(self, bpmn: Element) -> "StateBuilder":
+    def with_bpmn(self, bpmn: Element) -> "PromelaBuilder":
         self.bpmn_root = Success(bpmn)
         return self
 
-    def with_cwp(self, cwp: Element) -> "StateBuilder":
+    def with_cwp(self, cwp: Element) -> "PromelaBuilder":
         self.cwp_root = Success(cwp)
         return self
 
-    def with_state(self, state: str) -> "StateBuilder":
+    def with_state(self, state: str) -> "PromelaBuilder":
         self.state_str = Success(state)
         return self
 
     @staticmethod
-    def build_(builder: "StateBuilder") -> Result["Outputs", Error | Exception]:
+    def build_(builder: "PromelaBuilder") -> Result[str, Error]:
         return builder.build()
 
     @staticmethod
     def with_bpmn_(
         bpmn_root: IOResultE[Element],
-        builder_result: Result["StateBuilder", Error],
-    ) -> Result["StateBuilder", Error]:
+        builder_result: Result["PromelaBuilder", Error],
+    ) -> Result["PromelaBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(bpmn_root):
@@ -173,8 +168,8 @@ class StateBuilder:
     @staticmethod
     def with_cwp_(
         cwp_root: IOResultE[Element],
-        builder_result: Result["StateBuilder", Error],
-    ) -> Result["StateBuilder", Error]:
+        builder_result: Result["PromelaBuilder", Error],
+    ) -> Result["PromelaBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(cwp_root):
@@ -187,8 +182,8 @@ class StateBuilder:
 
     @staticmethod
     def with_state_(
-        state_str: IOResultE[str], builder_result: Result["StateBuilder", Error]
-    ) -> Result["StateBuilder", Error]:
+        state_str: IOResultE[str], builder_result: Result["PromelaBuilder", Error]
+    ) -> Result["PromelaBuilder", Error]:
         if not_(is_successful)(builder_result):
             return builder_result
         if not_(is_successful)(state_str):

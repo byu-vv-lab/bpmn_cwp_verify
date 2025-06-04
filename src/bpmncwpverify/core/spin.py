@@ -1,12 +1,12 @@
 from returns.result import Result, Success, Failure
 from typing import Dict, List
 from bpmncwpverify.core.error import (
-    CounterExampleError,
     Error,
     SpinSyntaxError,
     SpinInvalidEndStateError,
     SpinAssertionError,
     SpinCoverageError,
+    get_error_message,
 )
 from bpmncwpverify.core.counterexample import CounterExample
 import subprocess
@@ -63,9 +63,7 @@ class SpinOutput:
             else Success(spin_msg)
         )
 
-    def _check_syntax_errors(
-        self, file_path: str, spin_msg: str
-    ) -> Result[str, CounterExampleError]:
+    def _check_syntax_errors(self, file_path: str, spin_msg: str) -> Result[str, Error]:
         errors = self._get_re_matches(
             r"spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)",
             spin_msg,
@@ -83,7 +81,7 @@ class SpinOutput:
 
     def _check_coverage_errors(
         self, file_path: str, spin_msg: str
-    ) -> Result[str, CounterExampleError]:
+    ) -> Result[str, Error]:
         # Regular expression to match proctype and init blocks, excluding never claims
         block_pattern = re.compile(
             r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+(?!\s+unreached))+)"
@@ -143,7 +141,7 @@ class SpinOutput:
 
         spin_output = SpinOutput()
 
-        result: Result[str, CounterExampleError] = flow(
+        result: Result[str, Error] = flow(
             spin_run_string,
             partial(spin_output._check_syntax_errors, file_path),
             bind_result(partial(spin_output._check_invalid_end_state, file_path)),
@@ -154,6 +152,6 @@ class SpinOutput:
         if is_successful(result):
             return Success(CoverageReport(spin_run_string))
 
-        return Failure(
-            result.failure().get_counter_example()
-        )  # return error that takes counterexample as arg
+        error: Error = result.failure()
+        msg: str = get_error_message(error)
+        return Failure(msg)

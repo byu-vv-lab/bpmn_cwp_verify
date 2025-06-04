@@ -6,7 +6,7 @@ from returns.io import impure_safe, IOResultE
 from returns.pipeline import managed, flow
 from returns.result import ResultE, Result, Success, Failure
 from typing import TextIO
-import requests  # type: ignore
+import requests
 from returns.unsafe import unsafe_perform_io
 
 LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"
