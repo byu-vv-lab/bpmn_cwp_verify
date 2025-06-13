@@ -1,33 +1,25 @@
 import argparse
-from defusedxml import ElementTree
 from xml.etree.ElementTree import Element
 
-from bpmncwpverify.builder.promela_builder import PromelaBuilder
-from returns.io import impure_safe, IOResultE, IOSuccess, IOFailure
-from returns.curry import partial
-from returns.pipeline import managed, flow
-from returns.pointfree import bind_result
-from returns.result import ResultE, Result, Success, Failure
-from returns.pipeline import is_successful
 from returns.functions import not_
+from returns.io import IOFailure, IOResult, IOSuccess
+from returns.pipeline import is_successful
+from returns.result import Result
+from returns.unsafe import unsafe_perform_io
 
-from typing import TextIO, cast
-
-from bpmncwpverify.core.error import Error, MissingFileError, get_error_message
-from bpmncwpverify.core.spin import SpinOutput, CoverageReport
+from bpmncwpverify.builder.promela_builder import PromelaBuilder
+from bpmncwpverify.core.error import Error, get_error_message
+from bpmncwpverify.core.spin import (
+    SpinVerificationReport,
+    SpinVerificationReportBuilder,
+)
+from bpmncwpverify.util.file import (
+    element_tree_from_string,
+    read_file_as_string,
+    read_file_as_xml,
+)
 
 OUTPUT_FILE = "/tmp/verification.pml"
-
-
-def element_tree_from_string(input: str) -> Element:
-    return cast(Element, ElementTree.fromstring(input))  # pyright: ignore[reportUnknownMemberType]
-
-
-def _close_file(
-    file_obj: TextIO,
-    file_contents: ResultE[str],
-) -> IOResultE[None]:
-    return impure_safe(file_obj.close)()
 
 
 def _get_argument_parser() -> "argparse.ArgumentParser":
@@ -50,95 +42,67 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
     return argument_parser
 
 
-def _get_file_contents(name: str) -> Result[str, Error]:
-    io_result: IOResultE[str] = flow(
-        name,
-        impure_safe(lambda filename: open(filename, "r")),  # pyright: ignore[reportUnknownLambdaType,reportCallIssue,reportArgumentType]
-        managed(_read_file, _close_file),
+def _build_from_inputs(
+    state: str,
+    cwp: Element,
+    bpmn: Element,
+) -> IOResult[SpinVerificationReport, Error]:
+    promela_result: Result[str, Error] = (
+        PromelaBuilder().with_state(state).with_cwp(cwp).with_bpmn(bpmn).build()
     )
 
-    match io_result:
-        case IOSuccess(Success(value)):
-            return Success(value)
-        case IOFailure(_):
-            return Failure(MissingFileError(name))
-        case _:
-            return Failure(MissingFileError(name))  # fallback for safety
+    if is_successful(promela_result):
+        spin_verification_report_builder: SpinVerificationReportBuilder = (
+            SpinVerificationReportBuilder()
+        )
+        result: IOResult[SpinVerificationReport, Error] = IOSuccess(
+            promela_result.unwrap()
+        ).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda promela: spin_verification_report_builder.with_file_name(OUTPUT_FILE)
+            .with_promela(promela)
+            .with_spin_cli_args(["-run", "-noclaim"])
+            .build()
+        )
+        return result
+
+    return IOFailure(promela_result.failure())
 
 
-def _read_file(file_obj: TextIO) -> IOResultE[str]:
-    return impure_safe(file_obj.read)()
-
-
-def _verify() -> Result[str, Error]:
-    argument_parser = _get_argument_parser()
-    args = argument_parser.parse_args()
-
-    state_file = args.state_file
-    state_str = _get_file_contents(state_file)
-
-    bpmn_file = args.bpmn_file
-    bpmn_root = _get_file_contents(bpmn_file).map(element_tree_from_string)
-
-    cwp_file = args.cwp_file
-    cwp_root = _get_file_contents(cwp_file).map(element_tree_from_string)
-
-    builder: PromelaBuilder = PromelaBuilder()
-
-    result: Result[str, Error] = flow(
-        Success(builder),
-        partial(PromelaBuilder.with_state_, state_str),
-        partial(PromelaBuilder.with_cwp_, cwp_root),
-        partial(PromelaBuilder.with_bpmn_, bpmn_root),
-        bind_result(PromelaBuilder.build_),
+def verify_result(
+    state_file: str, cwp_file: str, bpmn_file: str
+) -> IOResult[SpinVerificationReport, Error]:
+    result: IOResult[SpinVerificationReport, Error] = read_file_as_string(
+        state_file
+    ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: read_file_as_xml(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: read_file_as_xml(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn: _build_from_inputs(state, cwp, bpmn)
+            )
+        )
     )
-
     return result
-
-
-# add a flag to get promela
-# 1) call promela_generation > file.pml
-# 2) call get_spin_output
-# 3) put file in /tmp
-# 4) returns either counter example or coverage report
-# use error interface instead of .get_counter_example()
 
 
 def verify() -> None:
-    result: Result[str, Error] = _verify()
+    argument_parser = _get_argument_parser()
+    args = argument_parser.parse_args()
 
-    match result:
-        case Success(promela):
-            with open(OUTPUT_FILE, "w") as f:
-                f.write(promela)
-            spin_output: Result[CoverageReport, str] = SpinOutput.get_spin_output(
-                OUTPUT_FILE
-            )
-            if not_(is_successful)(spin_output):
-                print(spin_output.failure())
-            else:
-                print(spin_output.unwrap().full_spin_output)
-        case Failure(e):
-            msg = get_error_message(e)
-            print(msg)
-        case _:
-            assert False, "ERROR: unhandled type"
+    result = verify_result(args.state_file, args.cwp_file, args.bpmn_file)
 
+    if not_(is_successful)(result):
+        error: Error = unsafe_perform_io(result.failure())
+        print(get_error_message(error))
+        return
 
-def web_verify(bpmn: str, cwp: str, state: str) -> Result[str, Error]:
-    bpmn_root: Result[Element, Error] = Result.from_value(
-        element_tree_from_string(bpmn)
+    spin_verification_report: SpinVerificationReport = unsafe_perform_io(
+        result.unwrap()
     )
-    cwp_root: Result[Element, Error] = Result.from_value(element_tree_from_string(cwp))
+    print(spin_verification_report.spin_report)
 
-    builder: PromelaBuilder = PromelaBuilder()
 
-    result: Result[str, Error] = flow(
-        Success(builder),
-        partial(PromelaBuilder.with_state_, Result.from_value(state)),
-        partial(PromelaBuilder.with_cwp_, cwp_root),
-        partial(PromelaBuilder.with_bpmn_, bpmn_root),
-        bind_result(PromelaBuilder.build_),
-    )
-
-    return result
+def web_verify(
+    state: str, cwp: str, bpmn: str
+) -> IOResult[SpinVerificationReport, Error]:
+    bpmn_root = element_tree_from_string(bpmn)
+    cwp_root = element_tree_from_string(cwp)
+    return _build_from_inputs(state, cwp_root, bpmn_root)

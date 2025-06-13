@@ -1,11 +1,9 @@
 # type: ignore
 
-from bpmncwpverify.core.spin import SpinOutput
+import pytest
 from returns.result import Failure, Success
 
-from returns.pipeline import is_successful
-from returns.functions import not_
-import pytest
+from bpmncwpverify.core.spin import SpinOutputParser
 
 
 @pytest.fixture
@@ -20,13 +18,13 @@ def mock_generate_counter_example(mocker):
 
 def test_check_syntax_errors(mock_generate_counter_example):
     mock_generate_counter_example
-    spin_output = SpinOutput()
+    spin_output = SpinOutputParser()
     s = """
     spin: test/resources/simple_example/valid_output.pml:55, Error: syntax error    saw ''}' = 125'
     spin: test/resources/simple_example/valid_output.pml:116, Error: missing '}' ?
     """
 
-    result = spin_output._check_syntax_errors("", s)
+    result = spin_output.check_syntax_errors("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -49,7 +47,7 @@ def test_check_syntax_errors(mock_generate_counter_example):
 
 def test_check_syntax_errors_none(mock_generate_counter_example):
     mock_generate_counter_example
-    spin_output = SpinOutput()
+    spin_output = SpinOutputParser()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -62,7 +60,7 @@ def test_check_syntax_errors_none(mock_generate_counter_example):
         ...
     """
 
-    result = spin_output._check_syntax_errors("", s)
+    result = spin_output.check_syntax_errors("", s)
 
     assert isinstance(result, Success)
 
@@ -113,8 +111,8 @@ def test_has_uncovered_states(mock_generate_counter_example):
                 test.pml:28, state 7, "-end-"
                 (1 of 7 states)
     """
-    spin_obj = SpinOutput()
-    result = spin_obj._check_coverage_errors("", spin_output)
+    spin_obj = SpinOutputParser()
+    result = spin_obj.check_coverage_errors("", spin_output)
     assert isinstance(result, Failure)
 
     assert result.failure().get_counter_example() == "test_json"
@@ -182,14 +180,14 @@ def test_has_no_uncovered_states(mock_generate_counter_example):
             (1 of 7 states)
     """
 
-    spin_obj = SpinOutput()
-    result = spin_obj._check_coverage_errors("", spin_output)
+    spin_obj = SpinOutputParser()
+    result = spin_obj.check_coverage_errors("", spin_output)
     assert isinstance(result, Success)
 
 
 def test_check_invalid_end_state(mock_generate_counter_example):
     mock_generate_counter_example
-    spin_output = SpinOutput()
+    spin_output = SpinOutputParser()
     s = """
         pan:1: invalid end state (at depth -1)
         pan: wrote first.pml.trail
@@ -205,7 +203,7 @@ def test_check_invalid_end_state(mock_generate_counter_example):
                 invalid end states      +
     """
 
-    result = spin_output._check_invalid_end_state("", s)
+    result = spin_output.check_invalid_end_state("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -215,7 +213,7 @@ def test_check_invalid_end_state(mock_generate_counter_example):
 
 def test_check_invalid_end_state_none(mock_generate_counter_example):
     mock_generate_counter_example
-    spin_output = SpinOutput()
+    spin_output = SpinOutputParser()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -228,19 +226,19 @@ def test_check_invalid_end_state_none(mock_generate_counter_example):
         ...
     """
 
-    result = spin_output._check_invalid_end_state("", s)
+    result = spin_output.check_invalid_end_state("", s)
 
     assert isinstance(result, Success)
 
 
 def test_check_assertion_violation(mock_generate_counter_example):
     mock_generate_counter_example
-    spin_output = SpinOutput()
+    spin_output = SpinOutputParser()
     s = """
         pan:1: assertion violated (_nr_pr==3) (at depth 0)
     """
 
-    result = spin_output._check_assertion_violation("", s)
+    result = spin_output.check_assertion_violation("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -251,7 +249,7 @@ def test_check_assertion_violation(mock_generate_counter_example):
         pan: wrote verification.pml.trail
     """
 
-    result = spin_output._check_assertion_violation("", s)
+    result = spin_output.check_assertion_violation("", s)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -260,7 +258,7 @@ def test_check_assertion_violation(mock_generate_counter_example):
 
 def test_check_assertion_violation_none(mock_generate_counter_example):
     mock_generate_counter_example
-    spin_output = SpinOutput()
+    spin_output = SpinOutputParser()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -273,65 +271,6 @@ def test_check_assertion_violation_none(mock_generate_counter_example):
         ...
     """
 
-    result = spin_output._check_assertion_violation("", s)
+    result = spin_output.check_assertion_violation("", s)
 
     assert isinstance(result, Success)
-
-
-def test_get_spin_output_no_errors(mock_generate_counter_example, mocker):
-    mock_generate_counter_example
-    file_path = "test file path"
-    test_spin_output = "test spin output"
-    mock_run = mocker.Mock()
-    mock_run.stdout = test_spin_output
-    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_run)
-    mock_stx_error = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Success(test_spin_output),
-    )
-    mock_invalid_end_state_error = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_invalid_end_state",
-        return_value=Success(test_spin_output),
-    )
-    mock_assertion_error = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_assertion_violation",
-        return_value=Success(test_spin_output),
-    )
-    mock_coverage_errors = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_coverage_errors",
-        return_value=Success(test_spin_output),
-    )
-
-    result = SpinOutput.get_spin_output(file_path)
-    assert is_successful(result)
-    mock_stx_error.assert_called_once_with(file_path, test_spin_output)
-    mock_invalid_end_state_error.assert_called_once_with(file_path, test_spin_output)
-    mock_assertion_error.assert_called_once_with(file_path, test_spin_output)
-    mock_coverage_errors.assert_called_once_with(file_path, test_spin_output)
-
-
-def test_get_spin_output_with_errors(mock_generate_counter_example, mocker):
-    mock_generate_counter_example
-    test_spin_output = "test spin output"
-    mock_run = mocker.Mock()
-    mock_run.stdout = test_spin_output
-    mocker.patch("bpmncwpverify.core.spin.subprocess.run", return_value=mock_run)
-    mock_stx_error = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_syntax_errors",
-        return_value=Failure(mocker.Mock()),
-    )
-    mock_invalid_end_state_error = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_invalid_end_state",
-        return_value=Success(test_spin_output),
-    )
-    mock_assertion_error = mocker.patch(
-        "bpmncwpverify.core.spin.SpinOutput._check_assertion_violation",
-        return_value=Success(test_spin_output),
-    )
-
-    result = SpinOutput.get_spin_output(test_spin_output)
-    assert not_(is_successful)(result)
-
-    mock_stx_error.assert_called_once_with("test spin output", test_spin_output)
-    mock_invalid_end_state_error.assert_not_called()
-    mock_assertion_error.assert_not_called()

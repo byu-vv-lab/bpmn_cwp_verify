@@ -1,7 +1,7 @@
-import pytest
 from unittest import mock
 
-from returns.maybe import Some, Nothing
+import pytest
+from returns.maybe import Nothing, Some
 
 from bpmncwpverify.core.error import (
     BpmnFlowIncomingError,
@@ -39,13 +39,14 @@ from bpmncwpverify.core.error import (
     ExpressionComputationCompatabilityError,
     ExpressionNegatorError,
     ExpressionParseError,
-    ExpressionRelationCompatabilityError,
     ExpressionRelationalNotError,
+    ExpressionRelationCompatabilityError,
     ExpressionUnrecognizedID,
     FlowExpressionError,
     MessageError,
     MissingFileError,
     NotImplementedError,
+    NotInitializedError,
     SpinAssertionError,
     SpinCoverageError,
     SpinInvalidEndStateError,
@@ -53,8 +54,10 @@ from bpmncwpverify.core.error import (
     StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
+    SubProcessRunError,
     TypingAssignCompatabilityError,
     TypingNoTypeError,
+    WriteFileError,
     get_error_message,
 )
 
@@ -226,6 +229,7 @@ test_inputs: list[tuple[Error, str]] = [
         ),
         "Assertion Error:\n2 error(s) occurred:\n1: Assertion: test_assertion1, Depth info: test_depth1\n2: Assertion: test_assertion2, Depth info: test_depth2",
     ),
+    (NotInitializedError("x"), "ERROR: 'x' is not initialized"),
     (
         SpinCoverageError(
             "",
@@ -282,7 +286,9 @@ test_inputs: list[tuple[Error, str]] = [
         TypingAssignCompatabilityError("enum", "int"),
         "TYPING ERROR: something of type 'int' cannot by assigned to something of type 'enum'",
     ),
+    (SubProcessRunError("proc"), "ERROR: failed to run 'proc'"),
     (TypingNoTypeError("a"), "TYPING ERROR: literal 'a' has an unknown type"),
+    (WriteFileError("a"), "WRITE FILE ERROR: 'a'"),
 ]
 
 test_ids: list[str] = [
@@ -326,6 +332,7 @@ test_ids: list[str] = [
     "MessageError",
     "MissingFileError",
     "NotImplementedError",
+    "NotInitializedError",
     "SpinAssertionError",
     "SpinCoverageError",
     "SpinInvalidEndStateError",
@@ -336,8 +343,10 @@ test_ids: list[str] = [
     "StateMultipleDefinitionErrorLineCol",
     "StateMultipleDefinitionErrorLineColPrevLinePrevCol",
     "StateSyntaxError",
+    "SubprocessRunError",
     "TypeingAssignCompatabilityError",
     "TypingNoTypeError",
+    "WriteFileError",
 ]
 
 
