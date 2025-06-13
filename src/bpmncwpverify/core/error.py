@@ -1,6 +1,6 @@
 # TODO: create a "match" function on Failure(Error) and create standard error messaging.
-import typing
 import builtins
+import typing
 from xml.etree.ElementTree import Element
 
 from returns.maybe import Maybe, Nothing
@@ -363,6 +363,14 @@ class NotImplementedError(Error):
         self.function = function
 
 
+class NotInitializedError(Error):
+    __slots__ = ["var_name"]
+
+    def __init__(self, var_name: str):
+        super().__init__()
+        self.var_name = var_name
+
+
 class CounterExampleError(Error):
     __slots__ = ["counter_example"]
 
@@ -481,6 +489,14 @@ class StateSyntaxError(Error):
         super().__init__()
 
 
+class SubProcessRunError(Error):
+    __slots__ = "process_name"
+
+    def __init__(self, process_name: str) -> None:
+        super().__init__()
+        self.process_name = process_name
+
+
 class TypingAssignCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -522,6 +538,14 @@ class TypingNotNonBoolError(Error):
     def __init__(self, expr_type: str) -> None:
         super().__init__()
         self.expr_type = expr_type
+
+
+class WriteFileError(Error):
+    __slots__ = ["msg"]
+
+    def __init__(self, msg: str):
+        super().__init__()
+        self.msg = msg
 
 
 def _get_exception_message(error: Exception) -> str:
@@ -622,6 +646,8 @@ def _get_error_message(error: Error) -> str:
             return f"Could not find file with name {file_name}"
         case NotImplementedError(function=function):
             return "ERROR: not implemented '{}'".format(function)
+        case NotInitializedError(var_name=var_name):
+            return "ERROR: '{}' is not initialized".format(var_name)
         case SpinAssertionError(list_of_error_maps=list_of_error_maps):
             errors: list[str] = []
             errors.append("Assertion Error:")
@@ -681,12 +707,16 @@ def _get_error_message(error: Error) -> str:
             )
         case StateSyntaxError(msg=msg):
             return "STATE SYNTAX ERROR: {}".format(msg)
+        case SubProcessRunError(process_name=process_name):
+            return "ERROR: failed to run '{}'".format(process_name)
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
             return "TYPING ERROR: something of type '{}' cannot by assigned to something of type '{}'".format(
                 rtype, ltype
             )
         case TypingNoTypeError(id=id):
             return "TYPING ERROR: literal '{}' has an unknown type".format(id)
+        case WriteFileError(msg=msg):
+            return "WRITE FILE ERROR: '{}'".format(msg)
 
         case _:
             raise builtins.NotImplementedError

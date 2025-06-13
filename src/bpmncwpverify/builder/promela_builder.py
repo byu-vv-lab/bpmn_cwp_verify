@@ -1,23 +1,25 @@
 from xml.etree.ElementTree import Element
 
+from returns.functions import not_
 from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
-from returns.result import Result, Success, Failure
-from returns.functions import not_
+from returns.result import Failure, Result, Success
 
-from bpmncwpverify.core.error import Error
-from bpmncwpverify.core.state import State
-from bpmncwpverify.core.cwp import Cwp
-from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.accessmethods.bpmnmethods import (
     from_xml as bpmn_from_xml,
+)
+from bpmncwpverify.core.accessmethods.bpmnmethods import (
     generate_promela,
 )
 from bpmncwpverify.core.accessmethods.cwpmethods import (
     CwpXmlParser,
     generate_cwp_promela,
 )
-from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE, IndentAction
+from bpmncwpverify.core.bpmn import Bpmn
+from bpmncwpverify.core.cwp import Cwp
+from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.state import State
+from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction, StringManager
 
 
 class PromelaBuilder:
@@ -143,36 +145,6 @@ class PromelaBuilder:
     def with_state(self, state: str) -> "PromelaBuilder":
         self.state_str = Success(state)
         return self
-
-    @staticmethod
-    def build_(builder: "PromelaBuilder") -> Result[str, Error]:
-        return builder.build()
-
-    @staticmethod
-    def with_bpmn_(
-        bpmn_root: Result[Element, Error],
-        builder_result: Result["PromelaBuilder", Error],
-    ) -> Result["PromelaBuilder", Error]:
-        return builder_result.bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda builder: bpmn_root.map(lambda bpmn: builder.with_bpmn(bpmn))
-        )
-
-    @staticmethod
-    def with_cwp_(
-        cwp_root: Result[Element, Error],
-        builder_result: Result["PromelaBuilder", Error],
-    ) -> Result["PromelaBuilder", Error]:
-        return builder_result.bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda builder: cwp_root.map(lambda cwp: builder.with_cwp(cwp))
-        )
-
-    @staticmethod
-    def with_state_(
-        state_str: Result[str, Error], builder_result: Result["PromelaBuilder", Error]
-    ) -> Result["PromelaBuilder", Error]:
-        return builder_result.bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda builder: state_str.map(lambda state: builder.with_state(state))
-        )
 
 
 class Outputs:

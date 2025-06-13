@@ -1,13 +1,15 @@
 # type: ignore
-import pytest
 import sys
-from bpmncwpverify.core.state import State
-from returns.pipeline import is_successful
-from returns.functions import not_
-from returns.result import Success
 
-from bpmncwpverify.cli import _verify, web_verify
-from bpmncwpverify.core.error import MissingFileError, StateSyntaxError
+import pytest
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Success
+from returns.unsafe import unsafe_perform_io
+
+from bpmncwpverify.cli import verify_result, web_verify
+from bpmncwpverify.core.error import Error, MissingFileError, StateSyntaxError
+from bpmncwpverify.core.state import State
 
 
 @pytest.fixture
@@ -20,7 +22,7 @@ def mock_state(mocker):
     return state
 
 
-def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
+def test_givin_bad_state_file_path_when_get_promela_then_io_error(capsys):
     # given
     test_args = [
         "verify",
@@ -31,15 +33,16 @@ def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = _verify()
+    result = verify_result(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
-    assert isinstance(result.failure(), MissingFileError)
-    assert result.failure().file_name == "state.txt"
+    error: Error = unsafe_perform_io(result.failure())
+    assert isinstance(error, MissingFileError)
+    assert error.file_name == "state.txt"
 
 
-def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
+def test_givin_bad_cwp_file_path_when_get_promela_then_io_error(capsys):
     # given
     test_args = [
         "verify",
@@ -50,15 +53,16 @@ def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = _verify()
+    result = verify_result(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
-    assert isinstance(result.failure(), MissingFileError)
-    assert result.failure().file_name == "test_cwp.xml"
+    error: Error = unsafe_perform_io(result.failure())
+    assert isinstance(error, MissingFileError)
+    assert error.file_name == "test_cwp.xml"
 
 
-def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
+def test_givin_bad_bpmn_file_path_when_get_promela_then_io_error(capsys):
     # given
     test_args = [
         "verify",
@@ -69,15 +73,16 @@ def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = _verify()
+    result = verify_result(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
-    assert isinstance(result.failure(), MissingFileError)
-    assert result.failure().file_name == "test_bpmn.bpmn"
+    error: Error = unsafe_perform_io(result.failure())
+    assert isinstance(error, MissingFileError)
+    assert error.file_name == "test_bpmn.bpmn"
 
 
-def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
+def test_givin_bad_state_file_when_get_promela_then_state_errror(capsys):
     # given
     test_args = [
         "verify",
@@ -88,15 +93,15 @@ def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
     sys.argv = test_args
 
     # when
-    result = _verify()
+    result = verify_result(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
-    error = result.failure()
+    error: Error = unsafe_perform_io(result.failure())
     assert isinstance(error, StateSyntaxError)
 
 
-def test_givin_good_files_when_verify_then_output_promela(capsys):
+def test_givin_good_files_when_get_promela_then_output_promela(capsys):
     # given
     test_args = [
         "verify",
@@ -107,7 +112,7 @@ def test_givin_good_files_when_verify_then_output_promela(capsys):
     sys.argv = test_args
 
     # when
-    result = _verify()
+    result = verify_result(test_args[1], test_args[2], test_args[3])
 
     # then
     assert is_successful(result)
@@ -134,7 +139,7 @@ def test_good_input_webverify_output_promela():
             state += line
 
     # when
-    result = web_verify(bpmn, cwp, state)
+    result = web_verify(state, cwp, bpmn)
 
     # then
     assert is_successful(result)
@@ -160,11 +165,11 @@ def test_bad_input_webverify_output_error():
         for line in state_file:
             state += line
     # when
-    result = web_verify(bpmn, cwp, state)
+    result = web_verify(state, cwp, bpmn)
 
     # then
     assert not_(is_successful)(result)
-    error = result.failure()
+    error = unsafe_perform_io(result.failure())
     assert isinstance(error, StateSyntaxError)
 
 
@@ -221,7 +226,7 @@ def test_generate_promela_with_only_constants(mocker, mock_state):
     result = State.generate_promela(mock_state)
 
     expected_output = (
-        "//**********VARIABLE DECLARATION************//\n" "#define BUFFER_SIZE 256\n\n"
+        "//**********VARIABLE DECLARATION************//\n#define BUFFER_SIZE 256\n\n"
     )
 
     assert isinstance(result, Success)

@@ -12,12 +12,12 @@ repos:
     -   id: check-added-large-files
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.4.5
+    rev: v0.11.12
     hooks:
     -   id: ruff
         name: ruff
         description: "Run 'ruff' for extremely fast Python linting"
-        entry: ruff check --force-exclude
+        entry: ruff check --fix --force-exclude
         language: python
         types_or: [python, pyi]
         args: []

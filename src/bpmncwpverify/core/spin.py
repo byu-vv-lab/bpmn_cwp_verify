@@ -1,28 +1,120 @@
-from returns.result import Result, Success, Failure
+import os
+import re
+import subprocess
 from typing import Dict, List
+
+from returns.io import IOFailure, IOResult, IOSuccess, impure_safe
+from returns.pipeline import flow
+from returns.result import Failure, Result, Success
+
+from bpmncwpverify.core.counterexample import CounterExample
 from bpmncwpverify.core.error import (
     Error,
-    SpinSyntaxError,
-    SpinInvalidEndStateError,
+    NotInitializedError,
     SpinAssertionError,
     SpinCoverageError,
-    get_error_message,
+    SpinInvalidEndStateError,
+    SpinSyntaxError,
+    SubProcessRunError,
 )
-from bpmncwpverify.core.counterexample import CounterExample
-import subprocess
-import re
-from returns.pipeline import flow, is_successful
-from returns.pointfree import bind_result
-from returns.curry import partial
-import os
+from bpmncwpverify.util.file import write_file_contents
 
 
-class CoverageReport:
-    def __init__(self, full_spin_output: str) -> None:
-        self.full_spin_output = full_spin_output
+def _process_spin_output(file_path: str, spin_report: str) -> IOResult[None, Error]:
+    spin_parser: SpinOutputParser = SpinOutputParser()
+    return flow(
+        spin_parser.check_syntax_errors(file_path, spin_report),
+        lambda _: spin_parser.check_invalid_end_state(file_path, spin_report),  # pyright: ignore[reportUnknownLambdaType]
+        lambda _: spin_parser.check_coverage_errors(file_path, spin_report),  # pyright: ignore[reportUnknownLambdaType]
+        lambda _: spin_parser.check_assertion_violation(file_path, spin_report),  # pyright: ignore[reportUnknownLambdaType]
+        lambda _: IOSuccess(None),  # pyright: ignore[reportUnknownLambdaType]
+    )
 
 
-class SpinOutput:
+def _run_spin(
+    promela: str, file_path: str, cli_args: list[str]
+) -> IOResult["SpinVerificationReport", Error]:
+    file_name: str = os.path.basename(file_path)
+    file_dir: str = os.path.dirname(file_path)
+
+    def spin() -> IOResult[str, Error]:
+        def spin_subprocess() -> str:
+            return subprocess.run(
+                ["spin"] + cli_args + [file_name],
+                capture_output=True,
+                text=True,
+                cwd=file_dir,
+            ).stdout
+
+        return impure_safe(spin_subprocess)().alt(lambda _: SubProcessRunError("spin"))
+
+    spin_result: IOResult[str, Error] = write_file_contents(promela, file_path).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda _: spin()
+    )
+
+    result: IOResult[SpinVerificationReport, Error] = spin_result.bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda spin_report: _process_spin_output(file_path, spin_report).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda _: IOSuccess(
+                SpinVerificationReport(file_path, promela, cli_args, spin_report)
+            )
+        )
+    )
+
+    return result
+
+
+class SpinVerificationReport:
+    __slots__ = ["file_path", "promela", "spin_cli_args", "spin_report"]
+
+    def __init__(
+        self, file_path: str, promela: str, spin_cli_args: list[str], spin_report: str
+    ) -> None:
+        self.file_path = file_path
+        self.promela = promela
+        self.spin_cli_args = spin_cli_args
+        self.spin_report = spin_report
+
+
+class SpinVerificationReportBuilder:
+    __slots__ = ["file_path", "promela", "spin_cli_args"]
+
+    def __init__(self) -> None:
+        self.file_path: IOResult[str, Error] = IOFailure(
+            NotInitializedError("SpinVerificationReportBuilder.filename")
+        )
+        self.promela: IOResult[str, Error] = IOFailure(
+            NotInitializedError("SpinVerificationReportBuilder.promela")
+        )
+        self.spin_cli_args: IOResult[list[str], Error] = IOFailure(
+            NotInitializedError("SpinVerificationReportBuilder.spin_cli_args")
+        )
+
+    def build(self) -> IOResult[SpinVerificationReport, Error]:
+        spin_result: IOResult[SpinVerificationReport, Error] = self.promela.bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda promela: self.file_path.bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda filename: self.spin_cli_args.bind(  # pyright: ignore[reportUnknownMemberType]
+                    lambda cli_args: _run_spin(promela, filename, cli_args)
+                )
+            )
+        )
+        return spin_result
+
+    def with_promela(self, promela: str) -> "SpinVerificationReportBuilder":
+        self.promela = IOSuccess(promela)
+        return self
+
+    def with_file_name(self, filename: str) -> "SpinVerificationReportBuilder":
+        self.file_path = IOSuccess(filename)
+        return self
+
+    def with_spin_cli_args(
+        self, spin_cli_args: list[str]
+    ) -> "SpinVerificationReportBuilder":
+        self.spin_cli_args = IOSuccess(spin_cli_args)
+        return self
+
+
+class SpinOutputParser:
     def _get_re_matches(self, regex: str, spin_msg: str) -> List[Dict[str, str]]:
         r = re.compile(regex)
 
@@ -31,24 +123,24 @@ class SpinOutput:
             for t in r.finditer(spin_msg)
         ]
 
-    def _check_invalid_end_state(
+    def check_invalid_end_state(
         self, file_path: str, spin_msg: str
-    ) -> Result[str, Error]:
+    ) -> Result[None, Error]:
         errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
 
         counter_example = CounterExample.generate_counterexample(
-            file_path, SpinAssertionError
+            file_path, SpinInvalidEndStateError
         )
 
         return (
             Failure(SpinInvalidEndStateError(counter_example.to_json(), errors))
             if errors
-            else Success(spin_msg)
+            else Success(None)
         )
 
-    def _check_assertion_violation(
+    def check_assertion_violation(
         self, file_path: str, spin_msg: str
-    ) -> Result[str, Error]:
+    ) -> Result[None, Error]:
         errors = self._get_re_matches(
             r"assertion violated \(?(?P<assertion>[^\s)]*)\)? (?P<depth>.*)", spin_msg
         )
@@ -60,10 +152,10 @@ class SpinOutput:
         return (
             Failure(SpinAssertionError(counter_example.to_json(), errors))
             if errors
-            else Success(spin_msg)
+            else Success(None)
         )
 
-    def _check_syntax_errors(self, file_path: str, spin_msg: str) -> Result[str, Error]:
+    def check_syntax_errors(self, file_path: str, spin_msg: str) -> Result[str, Error]:
         errors = self._get_re_matches(
             r"spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)",
             spin_msg,
@@ -79,9 +171,9 @@ class SpinOutput:
             else Success(spin_msg)
         )
 
-    def _check_coverage_errors(
+    def check_coverage_errors(
         self, file_path: str, spin_msg: str
-    ) -> Result[str, Error]:
+    ) -> Result[None, Error]:
         # Regular expression to match proctype and init blocks, excluding never claims
         block_pattern = re.compile(
             r"unreached in (?:proctype (?P<proctype>\w+)|(?P<init>init))\n(?P<body>(?:\s+[^\n]+(?!\s+unreached))+)"
@@ -125,33 +217,33 @@ class SpinOutput:
         return (
             Failure(SpinCoverageError(counter_example.to_json(), detailed_errors))
             if detailed_errors
-            else Success(spin_msg)
+            else Success(None)
         )
 
-    @staticmethod
-    def get_spin_output(file_path: str) -> Result[CoverageReport, str]:
-        file_dir = os.path.dirname(file_path)
+    # @staticmethod
+    # def get_spin_output(file_path: str) -> Result[SpinVerificationReport, str]:
+    #     file_dir = os.path.dirname(file_path)
 
-        spin_run_string = subprocess.run(
-            ["spin", "-run", "-noclaim", os.path.basename(file_path)],
-            capture_output=True,
-            text=True,
-            cwd=file_dir,  # This ensures the .trail is written in the same directory as file_path
-        ).stdout
+    #     spin_run_string = subprocess.run(
+    #         ["spin", "-run", "-noclaim", os.path.basename(file_path)],
+    #         capture_output=True,
+    #         text=True,
+    #         cwd=file_dir,  # This ensures the .trail is written in the same directory as file_path
+    #     ).stdout
 
-        spin_output = SpinOutput()
+    #     spin_output = SpinOutputParser()
 
-        result: Result[str, Error] = flow(
-            spin_run_string,
-            partial(spin_output._check_syntax_errors, file_path),
-            bind_result(partial(spin_output._check_invalid_end_state, file_path)),
-            bind_result(partial(spin_output._check_assertion_violation, file_path)),
-            bind_result(partial(spin_output._check_coverage_errors, file_path)),
-        )
+    #     result: Result[str, Error] = flow(
+    #         spin_run_string,
+    #         partial(spin_output.check_syntax_errors, file_path),
+    #         bind_result(partial(spin_output.check_invalid_end_state, file_path)),
+    #         bind_result(partial(spin_output.check_assertion_violation, file_path)),
+    #         bind_result(partial(spin_output.check_coverage_errors, file_path)),
+    #     )
 
-        if is_successful(result):
-            return Success(CoverageReport(spin_run_string))
+    #     if is_successful(result):
+    #         return Success(SpinVerificationReport(spin_run_string))
 
-        error: Error = result.failure()
-        msg: str = get_error_message(error)
-        return Failure(msg)
+    #     error: Error = result.failure()
+    #     msg: str = get_error_message(error)
+    #     return Failure(msg)
