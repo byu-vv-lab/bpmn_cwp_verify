@@ -1,5 +1,5 @@
-from typing import List, Union
 from enum import Enum
+from typing import List, Union
 
 NL_NONE = 0
 NL_SINGLE = 1

@@ -1,6 +1,7 @@
-from bpmncwpverify.core.counterexample import CounterExample, NL_SINGLE
-from bpmncwpverify.core.error import Error
 import pytest
+
+from bpmncwpverify.core.counterexample import NL_SINGLE, CounterExample
+from bpmncwpverify.core.error import Error
 
 
 @pytest.fixture

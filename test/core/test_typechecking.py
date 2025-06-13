@@ -1,16 +1,14 @@
 # type: ignore
+import pytest
 from returns.result import Failure, Success
 
-import pytest
-
-from bpmncwpverify.core.error import TypingNoTypeError, TypingAssignCompatabilityError
-
+from bpmncwpverify.core.error import TypingAssignCompatabilityError, TypingNoTypeError
 from bpmncwpverify.core.typechecking import (
     BIT,
     BOOL,
     BYTE,
-    SHORT,
     INT,
+    SHORT,
     get_type_assign,
     get_type_literal,
 )

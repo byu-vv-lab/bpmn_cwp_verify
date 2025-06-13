@@ -1,5 +1,6 @@
 import graphviz
-from bpmncwpverify.core.cwp import CwpVisitor, CwpState, CwpEdge
+
+from bpmncwpverify.core.cwp import CwpEdge, CwpState, CwpVisitor
 from bpmncwpverify.visitors.bpmn_graph_visitor import dot_edge, dot_node
 
 

@@ -1,6 +1,8 @@
-from bpmncwpverify.core.state import State
-from bpmncwpverify.visitors.cwp_connectivity_visitor import CwpConnectivityVisitor
-from returns.result import Result, Success, Failure
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Failure, Result, Success
+
+from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpMultStartStateError,
     CwpNoEndStatesError,
@@ -8,10 +10,9 @@ from bpmncwpverify.core.error import (
     CwpNoStartStateError,
     Error,
 )
-from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.expr import ExpressionListener
-from returns.pipeline import is_successful
-from returns.functions import not_
+from bpmncwpverify.core.state import State
+from bpmncwpverify.visitors.cwp_connectivity_visitor import CwpConnectivityVisitor
 
 
 class CwpBuilder:

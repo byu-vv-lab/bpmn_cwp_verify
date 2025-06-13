@@ -1,12 +1,13 @@
+import pytest
+from returns.functions import not_
+from returns.pipeline import is_successful
+
 from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.error import (
-    CwpFileStructureError,
-    CwpEdgeNoStateError,
     CwpEdgeNoParentExprError,
+    CwpEdgeNoStateError,
+    CwpFileStructureError,
 )
-import pytest
-from returns.pipeline import is_successful
-from returns.functions import not_
 
 
 class TestCwpXmlParser:

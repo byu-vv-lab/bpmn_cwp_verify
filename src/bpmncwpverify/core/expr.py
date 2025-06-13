@@ -1,35 +1,32 @@
+from typing import Any, List, cast
+
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
-from antlr4.error.ErrorStrategy import ParseCancellationException
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
+from antlr4.error.ErrorStrategy import ParseCancellationException
+from returns.curry import partial
+from returns.functions import not_
+from returns.pipeline import flow, is_successful
+from returns.pointfree import bind_result
+from returns.result import Failure, Result, Success
 
-from typing import cast
-
-from bpmncwpverify.antlr.ExprListener import ExprListener
 from bpmncwpverify.antlr.ExprLexer import ExprLexer
+from bpmncwpverify.antlr.ExprListener import ExprListener
 from bpmncwpverify.antlr.ExprParser import ExprParser  # type: ignore[attr-defined]
 from bpmncwpverify.core import typechecking
+from bpmncwpverify.core.error import (
+    Error,
+    ExpressionComputationCompatabilityError,
+    ExpressionNegatorError,
+    ExpressionParseError,
+    ExpressionRelationalNotError,
+    ExpressionRelationCompatabilityError,
+    ExpressionUnrecognizedID,
+)
 from bpmncwpverify.core.state import (
     State,
     antlr_get_terminal_node_impl,
     antlr_get_text,
 )
-from bpmncwpverify.core.error import (
-    Error,
-    ExpressionComputationCompatabilityError,
-    ExpressionParseError,
-    ExpressionRelationCompatabilityError,
-    ExpressionRelationalNotError,
-    ExpressionNegatorError,
-    ExpressionUnrecognizedID,
-)
-
-from returns.result import Failure, Result, Success
-from returns.pipeline import flow, is_successful
-from returns.pointfree import bind_result
-from returns.curry import partial
-from returns.functions import not_
-
-from typing import Any, List
 
 
 class ThrowingErrorListener(ErrorListener):  # type: ignore[misc]

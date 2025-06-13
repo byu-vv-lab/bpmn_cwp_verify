@@ -1,9 +1,9 @@
-from bpmncwpverify.core.error import Error
-from bpmncwpverify.util.stringmanager import StringManager, NL_SINGLE
-from typing import Type
-
 import json
 import subprocess
+from typing import Type
+
+from bpmncwpverify.core.error import Error
+from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
 
 class ErrorTrace:
@@ -87,20 +87,20 @@ class CounterExample:
             if lines[line_index].startswith("ID:"):
                 id = lines[line_index].split(" ", 1)[1].strip()
                 line_index += 1
-                assert line_index < len(
-                    lines
-                ), "line_index should never be out of bounds"
+                assert line_index < len(lines), (
+                    "line_index should never be out of bounds"
+                )
                 if lines[line_index].startswith("Changed vars:"):
                     line_index += 1
-                    assert line_index < len(
-                        lines
-                    ), "line_index should never be out of bounds"
+                    assert line_index < len(lines), (
+                        "line_index should never be out of bounds"
+                    )
                     while not lines[line_index].startswith("Current state:"):
                         changed_vars.append(lines[line_index].strip())
                         line_index += 1
-                        assert line_index < len(
-                            lines
-                        ), "line_index should never be out of bounds"
+                        assert line_index < len(lines), (
+                            "line_index should never be out of bounds"
+                        )
                     while line_index < len(lines) and lines[line_index].startswith(
                         "Current state:"
                     ):

@@ -1,17 +1,6 @@
 # type: ignore
-from bpmncwpverify.core.error import (
-    BpmnFlowIncomingError,
-    BpmnFlowOutgoingError,
-    BpmnGraphConnError,
-    BpmnMissingEventsError,
-    BpmnMsgStartEventError,
-    BpmnSeqFlowEndEventError,
-    BpmnFlowStartEventError,
-    BpmnSeqFlowNoExprError,
-    BpmnTaskFlowError,
-    BpmnInvalidIdError,
-)
 import pytest
+
 from bpmncwpverify.core.bpmn import (
     EndEvent,
     ExclusiveGatewayNode,
@@ -19,14 +8,26 @@ from bpmncwpverify.core.bpmn import (
     StartEvent,
     Task,
 )
+from bpmncwpverify.core.error import (
+    BpmnFlowIncomingError,
+    BpmnFlowOutgoingError,
+    BpmnFlowStartEventError,
+    BpmnGraphConnError,
+    BpmnInvalidIdError,
+    BpmnMissingEventsError,
+    BpmnMsgStartEventError,
+    BpmnSeqFlowEndEventError,
+    BpmnSeqFlowNoExprError,
+    BpmnTaskFlowError,
+)
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     ProcessConnectivityVisitor,
     ValidateBpmnIncomingFlows,
     ValidateBpmnOutgoingFlows,
+    ValidateIdVisitor,
+    ValidateSeqFlowVisitor,
     ValidateStartEventFlows,
     validate_start_end_events,
-    ValidateSeqFlowVisitor,
-    ValidateIdVisitor,
 )
 
 
