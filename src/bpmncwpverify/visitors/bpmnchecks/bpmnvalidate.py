@@ -1,3 +1,7 @@
+from returns.pipeline import flow
+from returns.pointfree import bind_result
+from returns.result import Failure, Result, Success
+
 from bpmncwpverify.core.bpmn import Bpmn, Process
 from bpmncwpverify.core.error import BpmnMsgFlowSamePoolError, Error
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
@@ -6,16 +10,13 @@ from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
 from bpmncwpverify.visitors.bpmnchecks.checkmethods import (
     check_connectivity,
     set_leaf_flows,
+    validate_bpmn_ids,
     validate_bpmn_incoming_flows,
     validate_bpmn_outgoing_flows,
-    validate_start_event_flows,
-    validate_bpmn_ids,
     validate_msgs,
     validate_seq_flows,
+    validate_start_event_flows,
 )
-from returns.result import Result, Failure, Success
-from returns.pipeline import flow
-from returns.pointfree import bind_result
 
 
 def validate_bpmn(bpmn: Bpmn) -> Result[Bpmn, Error]:

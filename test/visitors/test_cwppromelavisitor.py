@@ -1,14 +1,14 @@
-from bpmncwpverify.visitors.cwppromelavisitor import (
-    CwpPromelaVisitor,
-    START_STR,
-    END_STR,
-)
 import pytest
 
 from bpmncwpverify.util.stringmanager import (
-    NL_SINGLE,
     NL_DOUBLE,
+    NL_SINGLE,
     IndentAction,
+)
+from bpmncwpverify.visitors.cwppromelavisitor import (
+    END_STR,
+    START_STR,
+    CwpPromelaVisitor,
 )
 
 

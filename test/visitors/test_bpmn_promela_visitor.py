@@ -1,14 +1,14 @@
+import pytest
+
 from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
+from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
-    PromelaGenVisitor,
     NL_NONE,
     NL_SINGLE,
     Context,
+    PromelaGenVisitor,
     TokenPositions,
 )
-from bpmncwpverify.util.stringmanager import StringManager, IndentAction
-
-import pytest
 
 
 @pytest.fixture

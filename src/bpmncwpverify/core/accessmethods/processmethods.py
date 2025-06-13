@@ -1,18 +1,20 @@
-from xml.etree.ElementTree import Element
 from typing import Union
-from bpmncwpverify.core.state import State
-from returns.result import Result, Failure
-from bpmncwpverify.core.error import Error
+from xml.etree.ElementTree import Element
+
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Failure, Result
+
 from bpmncwpverify.builder.process_builder import ProcessBuilder
 from bpmncwpverify.core.bpmn import (
-    Process,
-    get_element_type,
     BPMN_XML_NAMESPACE,
-    SequenceFlow,
     Node,
+    Process,
+    SequenceFlow,
+    get_element_type,
 )
-from returns.pipeline import is_successful
-from returns.functions import not_
+from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.state import State
 
 
 def from_xml(element: Element, state: State) -> Result["Process", Error]:

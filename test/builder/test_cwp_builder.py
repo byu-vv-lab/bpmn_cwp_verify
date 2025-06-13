@@ -1,15 +1,15 @@
 # type: ignore
+import pytest
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Success
+
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpNoParentEdgeError,
     CwpNoStartStateError,
 )
-from returns.result import Success
-import pytest
-
-from returns.pipeline import is_successful
-from returns.functions import not_
 
 
 @pytest.fixture

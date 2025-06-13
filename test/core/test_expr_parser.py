@@ -1,13 +1,11 @@
 # type: ignore
-from antlr4.error.ErrorStrategy import ParseCancellationException
-
-from bpmncwpverify.core.expr import _get_parser
+from typing import Iterable
 
 import pytest
-
+from antlr4.error.ErrorStrategy import ParseCancellationException
 from returns.pipeline import is_successful
 
-from typing import Iterable
+from bpmncwpverify.core.expr import _get_parser
 
 
 @pytest.fixture(scope="module")

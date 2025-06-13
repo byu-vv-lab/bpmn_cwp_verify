@@ -1,9 +1,10 @@
-from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
-from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 from returns.result import Result
+
+from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Node, Process
 from bpmncwpverify.core.error import (
     Error,
 )
+from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 
 
 class BpmnBuilder:

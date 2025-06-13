@@ -1,6 +1,8 @@
 # type: ignore
-import pytest
 from xml.etree.ElementTree import Element
+
+import pytest
+
 from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
 from bpmncwpverify.core.bpmn import Node
 

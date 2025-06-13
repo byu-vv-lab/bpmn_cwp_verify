@@ -1,21 +1,21 @@
-from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
-from bpmncwpverify.core.accessmethods.processmethods import from_xml as process_from_xml
-from bpmncwpverify.core.bpmn import (
-    Bpmn,
-    BPMN_XML_NAMESPACE,
-    MessageFlow,
-)
-from bpmncwpverify.core.error import Error
-from bpmncwpverify.core.state import State
-from bpmncwpverify.visitors.bpmn_promela_visitor import PromelaGenVisitor
-from bpmncwpverify.visitors.bpmn_graph_visitor import GraphVizVisitor
+from typing import cast
+from xml.etree.ElementTree import Element
 
 from returns.functions import not_
 from returns.pipeline import is_successful
 from returns.result import Result
 
-from typing import cast
-from xml.etree.ElementTree import Element
+from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
+from bpmncwpverify.core.accessmethods.processmethods import from_xml as process_from_xml
+from bpmncwpverify.core.bpmn import (
+    BPMN_XML_NAMESPACE,
+    Bpmn,
+    MessageFlow,
+)
+from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.state import State
+from bpmncwpverify.visitors.bpmn_graph_visitor import GraphVizVisitor
+from bpmncwpverify.visitors.bpmn_promela_visitor import PromelaGenVisitor
 
 
 def generate_promela(bpmn: Bpmn) -> str:

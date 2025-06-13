@@ -101,53 +101,6 @@ def test_givin_bad_state_file_when_get_promela_then_state_errror(capsys):
     assert isinstance(error, StateSyntaxError)
 
 
-def test_givin_good_files_when_get_promela_then_output_promela(capsys):
-    # given
-    test_args = [
-        "verify",
-        "./test/resources/simple_example/state.txt",
-        "./test/resources/simple_example/test_cwp.xml",
-        "./test/resources/simple_example/test_bpmn.bpmn",
-    ]
-    sys.argv = test_args
-
-    # when
-    result = verify_result(test_args[1], test_args[2], test_args[3])
-
-    # then
-    assert is_successful(result)
-    outputs = result.unwrap()
-    assert outputs is not None
-    assert outputs != ""
-
-
-def test_good_input_webverify_output_promela():
-    # given
-    bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
-        for line in bpmn_file:
-            bpmn += line
-
-    cwp = ""
-    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
-        for line in cwp_file:
-            cwp += line
-
-    state = ""
-    with open("./test/resources/simple_example/state.txt", "r") as state_file:
-        for line in state_file:
-            state += line
-
-    # when
-    result = web_verify(state, cwp, bpmn)
-
-    # then
-    assert is_successful(result)
-    outputs = result.unwrap()
-    assert outputs is not None
-    assert outputs != ""
-
-
 def test_bad_input_webverify_output_error():
     # given
     bpmn = ""

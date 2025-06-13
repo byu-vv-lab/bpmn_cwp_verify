@@ -1,14 +1,14 @@
+from typing import Union
+
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Failure, Result, Success
+
 from bpmncwpverify.core.bpmn import Node, Process, SequenceFlow, Task
+from bpmncwpverify.core.error import Error, FlowExpressionError, get_error_message
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
-from bpmncwpverify.core.error import Error, FlowExpressionError, get_error_message
-
-from returns.result import Result, Failure, Success
-from returns.pipeline import is_successful
-from returns.functions import not_
-
-from typing import Union
 
 
 class ProcessBuilder:
@@ -28,14 +28,14 @@ class ProcessBuilder:
         for bpmn_object in all_items.values():
             if isinstance(bpmn_object, Task.BoundaryEvent):
                 parent_id = bpmn_object.parent_task
-                assert (
-                    parent_id in all_items
-                ), f"Boundary event '{bpmn_object.id}' references a missing parent task ID: {parent_id}"
+                assert parent_id in all_items, (
+                    f"Boundary event '{bpmn_object.id}' references a missing parent task ID: {parent_id}"
+                )
 
                 parent_task = all_items[parent_id]
-                assert isinstance(
-                    parent_task, Task
-                ), f"Boundary event '{bpmn_object.id}' is attached to non-Task object: {type(parent_task).__name__}"
+                assert isinstance(parent_task, Task), (
+                    f"Boundary event '{bpmn_object.id}' is attached to non-Task object: {type(parent_task).__name__}"
+                )
 
                 parent_task.add_boundary_event(bpmn_object)
 
@@ -64,9 +64,9 @@ class ProcessBuilder:
                         flow_id, expression, get_error_message(result.failure())
                     )
                 )
-            assert (
-                result.unwrap() == "bool"
-            ), f"Expected Expression type to be bool on flow: {flow_id}"
+            assert result.unwrap() == "bool", (
+                f"Expected Expression type to be bool on flow: {flow_id}"
+            )
             flow.expression = expression
 
         flow.source_node = source_node

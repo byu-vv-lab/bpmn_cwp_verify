@@ -1,5 +1,6 @@
 # type: ignore
 import pytest
+
 from bpmncwpverify.core.error import BpmnMsgFlowSamePoolError
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 

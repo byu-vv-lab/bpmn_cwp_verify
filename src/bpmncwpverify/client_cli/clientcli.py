@@ -1,12 +1,12 @@
 import argparse
 import builtins
-from returns.pipeline import is_successful
-from returns.functions import not_
-from returns.io import impure_safe, IOResultE
-from returns.pipeline import managed, flow
-from returns.result import ResultE, Result, Success, Failure
 from typing import TextIO
+
 import requests
+from returns.functions import not_
+from returns.io import IOResultE, impure_safe
+from returns.pipeline import flow, is_successful, managed
+from returns.result import Failure, Result, ResultE, Success
 from returns.unsafe import unsafe_perform_io
 
 LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"

@@ -1,6 +1,6 @@
+import re
 from typing import Dict, List, Optional
 from xml.etree.ElementTree import Element
-import re
 
 
 class Cwp:

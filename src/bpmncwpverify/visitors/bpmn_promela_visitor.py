@@ -1,19 +1,20 @@
 from typing import List, Optional
+
 from bpmncwpverify.core.bpmn import (
-    Flow,
-    Node,
-    StartEvent,
-    EndEvent,
-    IntermediateEvent,
-    Task,
-    MessageFlow,
-    ParallelGatewayNode,
-    ExclusiveGatewayNode,
-    BpmnVisitor,
-    Process,
     Bpmn,
+    BpmnVisitor,
+    EndEvent,
+    ExclusiveGatewayNode,
+    Flow,
+    IntermediateEvent,
+    MessageFlow,
+    Node,
+    ParallelGatewayNode,
+    Process,
+    StartEvent,
+    Task,
 )
-from bpmncwpverify.util.stringmanager import StringManager, IndentAction
+from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 
 ##############
 # Constants
@@ -71,9 +72,9 @@ class Context:
 
     @is_parallel.setter
     def is_parallel(self, new_val: bool) -> None:
-        assert isinstance(
-            self._element, ParallelGatewayNode
-        ), "is_parallel can only be set if element is of type ParallelGatewayNode"
+        assert isinstance(self._element, ParallelGatewayNode), (
+            "is_parallel can only be set if element is of type ParallelGatewayNode"
+        )
         self._is_parallel = new_val
 
     @property
@@ -82,9 +83,9 @@ class Context:
 
     @behavior.setter
     def behavior(self, new_val: str) -> None:
-        assert isinstance(
-            self._element, Task
-        ), "only tasks can have a behavior associated with them."
+        assert isinstance(self._element, Task), (
+            "only tasks can have a behavior associated with them."
+        )
         self._behavior = new_val
 
     @property
@@ -93,9 +94,9 @@ class Context:
 
     @end_event.setter
     def end_event(self, new_val: bool) -> None:
-        assert isinstance(
-            self._element, EndEvent
-        ), "end_event can only be set if element is of type EndEvent"
+        assert isinstance(self._element, EndEvent), (
+            "end_event can only be set if element is of type EndEvent"
+        )
         self._end_event = new_val
 
     @property
@@ -104,9 +105,9 @@ class Context:
 
     @boundary_events.setter
     def boundary_events(self, new_val: List[Task.BoundaryEvent]) -> None:
-        assert isinstance(
-            self._element, Task
-        ), "Only allowed to set boundary_events on a task."
+        assert isinstance(self._element, Task), (
+            "Only allowed to set boundary_events on a task."
+        )
         self._boundary_events = new_val
 
     @property
@@ -225,7 +226,7 @@ class PromelaGenVisitor(BpmnVisitor):
                 self._get_expressions(ctx), self._get_put_locations(ctx.element)
             ):
                 sm.write_str(
-                    f":: {expression.replace("\n", "")} -> putToken({location})",
+                    f":: {expression.replace('\n', '')} -> putToken({location})",
                     NL_SINGLE,
                 )
         if ctx.boundary_events:
