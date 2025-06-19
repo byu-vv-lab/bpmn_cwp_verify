@@ -328,6 +328,30 @@ class ExpressionUnrecognizedID(Error):
         return False
 
 
+class FileReadFileError(Error):
+    __slots__ = ["msg"]
+
+    def __init__(self, msg: str) -> None:
+        super().__init__()
+        self.msg = msg
+
+
+class FileWriteFileError(Error):
+    __slots__ = ["msg"]
+
+    def __init__(self, msg: str):
+        super().__init__()
+        self.msg = msg
+
+
+class FileXmlParseError(Error):
+    __slots__ = ["msg"]
+
+    def __init__(self, msg: str):
+        super().__init__()
+        self.msg = msg
+
+
 class FlowExpressionError(Error):
     __slots__ = ["flow_id", "expression", "exception_str"]
 
@@ -345,14 +369,6 @@ class MessageError(Error):
         super().__init__()
         self.node_id = node_id
         self.error_msg = error_msg
-
-
-class MissingFileError(Error):
-    __slots__ = ["file_name"]
-
-    def __init__(self, file_name: str) -> None:
-        super().__init__()
-        self.file_name = file_name
 
 
 class NotImplementedError(Error):
@@ -540,14 +556,6 @@ class TypingNotNonBoolError(Error):
         self.expr_type = expr_type
 
 
-class WriteFileError(Error):
-    __slots__ = ["msg"]
-
-    def __init__(self, msg: str):
-        super().__init__()
-        self.msg = msg
-
-
 def _get_exception_message(error: Exception) -> str:
     return "ERROR: {0} ({1})".format(type(error), error)
 
@@ -636,14 +644,18 @@ def _get_error_message(error: Error) -> str:
             return "EXPR ERROR: '{}' is not recognized as a literal or something stored in the symbol table".format(
                 _id
             )
+        case FileReadFileError(msg=msg):
+            return "FILE ERROR: '{}'".format(msg)
+        case FileWriteFileError(msg=msg):
+            return "FILE ERROR: '{}'".format(msg)
+        case FileXmlParseError(msg=msg):
+            return "FILE ERROR: '{}'".format(msg)
         case FlowExpressionError(
             flow_id=flow_id, expression=expression, exception_str=exception_str
         ):
             return f"Error occurred while parsing the expression on flow: '{flow_id}' with expression: '{expression}':\n\t'{exception_str}'"
         case MessageError(node_id=node_id, error_msg=error_msg):
             return f"Inter-process message error at node: {node_id}. {error_msg}"
-        case MissingFileError(file_name=file_name):
-            return f"Could not find file with name {file_name}"
         case NotImplementedError(function=function):
             return "ERROR: not implemented '{}'".format(function)
         case NotInitializedError(var_name=var_name):
@@ -715,8 +727,6 @@ def _get_error_message(error: Error) -> str:
             )
         case TypingNoTypeError(id=id):
             return "TYPING ERROR: literal '{}' has an unknown type".format(id)
-        case WriteFileError(msg=msg):
-            return "WRITE FILE ERROR: '{}'".format(msg)
 
         case _:
             raise builtins.NotImplementedError
