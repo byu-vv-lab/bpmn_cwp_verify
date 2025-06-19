@@ -245,14 +245,6 @@ class CwpNoStartStateError(Error):
         super().__init__()
 
 
-class ExceptionError(Error):
-    __slots__ = "exception_str"
-
-    def __init__(self, exception_str: str):
-        super().__init__()
-        self.exception_str = exception_str
-
-
 class ExpressionComputationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -556,11 +548,7 @@ class TypingNotNonBoolError(Error):
         self.expr_type = expr_type
 
 
-def _get_exception_message(error: Exception) -> str:
-    return "ERROR: {0} ({1})".format(type(error), error)
-
-
-def _get_error_message(error: Error) -> str:
+def get_error_message(error: Error) -> str:
     match error:
         case BpmnFlowIncomingError(node_id=node_id):
             return f"Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: {node_id}."
@@ -730,11 +718,3 @@ def _get_error_message(error: Error) -> str:
 
         case _:
             raise builtins.NotImplementedError
-
-
-def get_error_message(error: Error | Exception) -> str:
-    match error:
-        case Exception():
-            return _get_exception_message(error)
-        case Error():
-            return _get_error_message(error)
