@@ -1,3 +1,4 @@
+# type: ignore
 import pytest
 
 from bpmncwpverify.util.stringmanager import (
@@ -5,7 +6,7 @@ from bpmncwpverify.util.stringmanager import (
     NL_SINGLE,
     IndentAction,
 )
-from bpmncwpverify.visitors.cwppromelavisitor import (
+from bpmncwpverify.visitors.cwp_promela_visitor import (
     END_STR,
     START_STR,
     CwpPromelaVisitor,

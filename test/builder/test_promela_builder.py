@@ -1,3 +1,4 @@
+# type: ignore
 from bpmncwpverify.builder.promela_builder import PromelaBuilder
 from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction
 

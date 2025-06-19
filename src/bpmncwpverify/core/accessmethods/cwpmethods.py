@@ -14,7 +14,7 @@ from bpmncwpverify.core.error import (
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
-from bpmncwpverify.visitors.cwppromelavisitor import CwpPromelaVisitor
+from bpmncwpverify.visitors.cwp_promela_visitor import CwpPromelaVisitor
 
 
 class CwpXmlParser:
