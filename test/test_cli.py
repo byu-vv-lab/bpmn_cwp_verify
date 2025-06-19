@@ -1,4 +1,5 @@
 # type: ignore
+import os
 import sys
 
 import pytest
@@ -98,6 +99,7 @@ def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
     assert isinstance(error, StateSyntaxError)
 
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="No SPIN on GitHub CI/CD")
 def test_givin_good_files_when_verify_then_success(capsys):
     # given
     test_args = [
@@ -118,6 +120,7 @@ def test_givin_good_files_when_verify_then_success(capsys):
     assert outputs != ""
 
 
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="No SPIN on GitHub CI/CD")
 def test_given_good_input_when_webverify_then_success():
     # given
     bpmn = ""
