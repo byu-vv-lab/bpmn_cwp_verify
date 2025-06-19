@@ -24,7 +24,7 @@ OUTPUT_FILE = "/tmp/verification.pml"
 
 def _get_argument_parser() -> "argparse.ArgumentParser":
     argument_parser = argparse.ArgumentParser(
-        description="Verify the BPMN is a safe substitution for the CWP given the state"
+        description="Verify the BPMN as a safe substitution for the CWP given the state"
     )
 
     argument_parser.add_argument(
@@ -42,7 +42,7 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
     return argument_parser
 
 
-def _build_from_inputs(
+def _verify_with_spin(
     state: str,
     cwp: Element,
     bpmn: Element,
@@ -68,7 +68,7 @@ def _build_from_inputs(
     return IOFailure(promela_result.failure())
 
 
-def verify_result(
+def verify_with_spin(
     state_file: str, cwp_file: str, bpmn_file: str
 ) -> IOResult[SpinVerificationReport, Error]:
     result: IOResult[SpinVerificationReport, Error] = read_file_as_string(
@@ -76,7 +76,7 @@ def verify_result(
     ).bind(  # pyright: ignore[reportUnknownMemberType]
         lambda state: read_file_as_xml(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda cwp: read_file_as_xml(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
-                lambda bpmn: _build_from_inputs(state, cwp, bpmn)
+                lambda bpmn: _verify_with_spin(state, cwp, bpmn)
             )
         )
     )
@@ -87,7 +87,7 @@ def verify() -> None:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
 
-    result = verify_result(args.state_file, args.cwp_file, args.bpmn_file)
+    result = verify_with_spin(args.state_file, args.cwp_file, args.bpmn_file)
 
     if not_(is_successful)(result):
         error: Error = unsafe_perform_io(result.failure())
@@ -101,8 +101,13 @@ def verify() -> None:
 
 
 def web_verify(
-    state: str, cwp: str, bpmn: str
+    state: str, cwp_str: str, bpmn_str: str
 ) -> IOResult[SpinVerificationReport, Error]:
-    bpmn_root = element_tree_from_string(bpmn)
-    cwp_root = element_tree_from_string(cwp)
-    return _build_from_inputs(state, cwp_root, bpmn_root)
+    result: IOResult[SpinVerificationReport, Error] = element_tree_from_string(
+        cwp_str
+    ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda cwp: element_tree_from_string(bpmn_str).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda bpmn: _verify_with_spin(state, cwp, bpmn)
+        )
+    )
+    return result

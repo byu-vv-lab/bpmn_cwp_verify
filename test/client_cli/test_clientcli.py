@@ -1,21 +1,24 @@
 # type: ignore
+import sys
+
+import pytest
+from requests.exceptions import HTTPError as httperr
+from requests.exceptions import RequestException
+from returns.result import Failure, Success
+
 from bpmncwpverify.client_cli.clientcli import (
-    _verify,
-    get_error_message,
-    _trigger_lambda,
-    _with_file,
-    FileOpenError,
     Error,
     FileError,
-    RequestError,
+    FileOpenError,
     HTTPError,
     Outputs,
+    RequestError,
+    _trigger_lambda,
+    _verify,
+    _with_file,
     cli_verify,
+    get_error_message,
 )
-from returns.result import Success, Failure
-import sys
-import pytest
-from requests.exceptions import RequestException, HTTPError as httperr
 
 
 def test_givin_good_state_expect_good_response(mocker):

@@ -1,8 +1,9 @@
 # type: ignore
-from bpmncwpverify.visitors.cwp_connectivity_visitor import CwpConnectivityVisitor
-from bpmncwpverify.core.cwp import Cwp, CwpState, CwpEdge
-from bpmncwpverify.core.error import CwpGraphConnError
 import pytest
+
+from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
+from bpmncwpverify.core.error import CwpGraphConnError
+from bpmncwpverify.visitors.cwp_connectivity_visitor import CwpConnectivityVisitor
 
 
 @pytest.fixture

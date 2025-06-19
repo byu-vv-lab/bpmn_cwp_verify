@@ -1,17 +1,16 @@
 # type: ignore
-from bpmncwpverify.core.expr import ExpressionListener
-from bpmncwpverify.core.state import State
+import pytest
+from returns.pipeline import is_successful
+
 from bpmncwpverify.core.error import (
     ExpressionComputationCompatabilityError,
     ExpressionNegatorError,
-    ExpressionRelationCompatabilityError,
     ExpressionRelationalNotError,
+    ExpressionRelationCompatabilityError,
     ExpressionUnrecognizedID,
 )
-
-from returns.pipeline import is_successful
-
-import pytest
+from bpmncwpverify.core.expr import ExpressionListener
+from bpmncwpverify.core.state import State
 
 
 @pytest.mark.parametrize(

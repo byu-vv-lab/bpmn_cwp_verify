@@ -1,28 +1,25 @@
 # type: ignore
-import pytest
-
-from antlr4.error.ErrorStrategy import ParseCancellationException
-from returns.pipeline import is_successful
-from returns.result import Result
-from returns.functions import not_
-from returns.maybe import Some
-
+import re
 from typing import Iterable
 
+import pytest
+from antlr4.error.ErrorStrategy import ParseCancellationException
+from returns.functions import not_
+from returns.maybe import Some
+from returns.pipeline import is_successful
+from returns.result import Result
+
 from bpmncwpverify.antlr.StateParser import StateParser
+from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
-    StateSyntaxError,
     StateInitNotInValues,
     StateMultipleDefinitionError,
-    TypingNoTypeError,
+    StateSyntaxError,
     TypingAssignCompatabilityError,
+    TypingNoTypeError,
 )
-
-from bpmncwpverify.core.state import _get_parser, _parse_state, State
-from bpmncwpverify.core import typechecking
-
-import re
+from bpmncwpverify.core.state import State, _get_parser, _parse_state
 
 
 @pytest.fixture(scope="module")

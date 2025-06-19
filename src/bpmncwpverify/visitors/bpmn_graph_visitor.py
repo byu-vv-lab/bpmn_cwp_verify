@@ -1,15 +1,16 @@
 import graphviz
+
 from bpmncwpverify.core.bpmn import (
-    StartEvent,
+    Bpmn,
+    BpmnVisitor,
     EndEvent,
+    ExclusiveGatewayNode,
     IntermediateEvent,
-    Task,
-    SequenceFlow,
     MessageFlow,
     ParallelGatewayNode,
-    ExclusiveGatewayNode,
-    BpmnVisitor,
-    Bpmn,
+    SequenceFlow,
+    StartEvent,
+    Task,
 )
 
 

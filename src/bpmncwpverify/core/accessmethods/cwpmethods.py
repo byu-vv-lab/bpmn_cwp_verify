@@ -1,16 +1,18 @@
 from typing import List
 from xml.etree.ElementTree import Element
-from bpmncwpverify.core.expr import ExpressionListener
-from bpmncwpverify.core.state import State
-from returns.result import Result, Failure
+
+from returns.result import Failure, Result
+
+from bpmncwpverify.builder.cwp_builder import CwpBuilder
+from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
     Error,
 )
-from bpmncwpverify.core.cwp import Cwp, CwpState, CwpEdge
-from bpmncwpverify.builder.cwp_builder import CwpBuilder
+from bpmncwpverify.core.expr import ExpressionListener
+from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 from bpmncwpverify.visitors.cwppromelavisitor import CwpPromelaVisitor
 

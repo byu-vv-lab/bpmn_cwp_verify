@@ -1,27 +1,31 @@
-from typing import Set
 import re
+from typing import Set
+
+from returns.result import Failure, Result, Success
+
 from bpmncwpverify.core.bpmn import (
     BpmnElement,
     BpmnVisitor,
+    EndEvent,
+    Event,
+    ExclusiveGatewayNode,
     Flow,
     GatewayNode,
+    IntermediateEvent,
     MessageFlow,
     Node,
+    ParallelGatewayNode,
     Process,
     SequenceFlow,
     StartEvent,
-    EndEvent,
-    Event,
-    IntermediateEvent,
     Task,
-    ExclusiveGatewayNode,
-    ParallelGatewayNode,
 )
 from bpmncwpverify.core.error import (
     BpmnFlowIncomingError,
     BpmnFlowOutgoingError,
     BpmnFlowStartEventError,
     BpmnGraphConnError,
+    BpmnInvalidIdError,
     BpmnMissingEventsError,
     BpmnMsgEndEventError,
     BpmnMsgGatewayError,
@@ -31,10 +35,8 @@ from bpmncwpverify.core.error import (
     BpmnSeqFlowEndEventError,
     BpmnSeqFlowNoExprError,
     BpmnTaskFlowError,
-    BpmnInvalidIdError,
     Error,
 )
-from returns.result import Result, Success, Failure
 
 
 class ProcessConnectivityVisitor(BpmnVisitor):

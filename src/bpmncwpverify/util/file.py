@@ -6,7 +6,12 @@ from returns.io import IOResult, IOResultE, impure_safe
 from returns.pipeline import flow, managed
 from returns.result import ResultE
 
-from bpmncwpverify.core.error import Error, MissingFileError, WriteFileError
+from bpmncwpverify.core.error import (
+    Error,
+    FileReadFileError,
+    FileWriteFileError,
+    FileXmlParseError,
+)
 
 
 def _close_file(
@@ -23,10 +28,10 @@ def _read_file_contents(name: str) -> IOResult[str, Error]:
         managed(_read_file, _close_file),
     )
 
-    def exception_to_missing_file_error(_: Exception) -> Error:
-        return MissingFileError(name)
+    def _exception_to_read_file_error(exc: Exception) -> Error:
+        return FileReadFileError(str(exc))
 
-    return io_result.alt(exception_to_missing_file_error)
+    return io_result.alt(_exception_to_read_file_error)
 
 
 def _open_file_for_reading(filename: str) -> TextIO:
@@ -45,8 +50,16 @@ def _write_file(file_obj: TextIO, contents: str) -> IOResultE[None]:
     return impure_safe(file_obj.write)(contents).map(lambda _: None)
 
 
-def element_tree_from_string(input: str) -> Element:
-    return cast(Element, ElementTree.fromstring(input))  # pyright: ignore[reportUnknownMemberType]
+def element_tree_from_string(input: str) -> IOResult[Element, Error]:
+    def _element_tree_from_string(input: str) -> Element:
+        return cast(Element, ElementTree.fromstring(input))  # pyright: ignore[reportUnknownMemberType]
+
+    def _exception_to_xml_parsing_error(exc: Exception) -> Error:
+        return FileXmlParseError(str(exc))
+
+    return (impure_safe(_element_tree_from_string)(input)).alt(
+        lambda exc: _exception_to_xml_parsing_error(exc)
+    )
 
 
 def read_file_as_string(path: str) -> IOResult[str, Error]:
@@ -54,7 +67,7 @@ def read_file_as_string(path: str) -> IOResult[str, Error]:
 
 
 def read_file_as_xml(path: str) -> IOResult[Element, Error]:
-    return _read_file_contents(path).map(element_tree_from_string)
+    return _read_file_contents(path).bind(element_tree_from_string)  # pyright: ignore[reportUnknownMemberType]
 
 
 def write_file_contents(contents: str, path: str) -> IOResult[None, Error]:
@@ -65,4 +78,4 @@ def write_file_contents(contents: str, path: str) -> IOResult[None, Error]:
         lambda result: result.map(lambda _: None),  # pyright: ignore[reportOptionalCall, reportUnknownLambdaType]
     )
 
-    return result.alt(lambda exc: WriteFileError(str(exc)))
+    return result.alt(lambda exc: FileWriteFileError(str(exc)))

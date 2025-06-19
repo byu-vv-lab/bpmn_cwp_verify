@@ -7,8 +7,8 @@ from returns.pipeline import is_successful
 from returns.result import Success
 from returns.unsafe import unsafe_perform_io
 
-from bpmncwpverify.cli import verify_result, web_verify
-from bpmncwpverify.core.error import Error, MissingFileError, StateSyntaxError
+from bpmncwpverify.cli import verify_with_spin, web_verify
+from bpmncwpverify.core.error import Error, FileReadFileError, StateSyntaxError
 from bpmncwpverify.core.state import State
 
 
@@ -22,7 +22,7 @@ def mock_state(mocker):
     return state
 
 
-def test_givin_bad_state_file_path_when_get_promela_then_io_error(capsys):
+def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
@@ -33,16 +33,15 @@ def test_givin_bad_state_file_path_when_get_promela_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_result(test_args[1], test_args[2], test_args[3])
+    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
     error: Error = unsafe_perform_io(result.failure())
-    assert isinstance(error, MissingFileError)
-    assert error.file_name == "state.txt"
+    assert isinstance(error, FileReadFileError)
 
 
-def test_givin_bad_cwp_file_path_when_get_promela_then_io_error(capsys):
+def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
@@ -53,16 +52,15 @@ def test_givin_bad_cwp_file_path_when_get_promela_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_result(test_args[1], test_args[2], test_args[3])
+    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
     error: Error = unsafe_perform_io(result.failure())
-    assert isinstance(error, MissingFileError)
-    assert error.file_name == "test_cwp.xml"
+    assert isinstance(error, FileReadFileError)
 
 
-def test_givin_bad_bpmn_file_path_when_get_promela_then_io_error(capsys):
+def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
     # given
     test_args = [
         "verify",
@@ -73,16 +71,15 @@ def test_givin_bad_bpmn_file_path_when_get_promela_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_result(test_args[1], test_args[2], test_args[3])
+    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
     error: Error = unsafe_perform_io(result.failure())
-    assert isinstance(error, MissingFileError)
-    assert error.file_name == "test_bpmn.bpmn"
+    assert isinstance(error, FileReadFileError)
 
 
-def test_givin_bad_state_file_when_get_promela_then_state_errror(capsys):
+def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
     # given
     test_args = [
         "verify",
@@ -93,7 +90,7 @@ def test_givin_bad_state_file_when_get_promela_then_state_errror(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_result(test_args[1], test_args[2], test_args[3])
+    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
@@ -101,7 +98,7 @@ def test_givin_bad_state_file_when_get_promela_then_state_errror(capsys):
     assert isinstance(error, StateSyntaxError)
 
 
-def test_givin_good_files_when_get_promela_then_output_promela(capsys):
+def test_givin_good_files_when_verify_then_success(capsys):
     # given
     test_args = [
         "verify",
@@ -112,7 +109,7 @@ def test_givin_good_files_when_get_promela_then_output_promela(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_result(test_args[1], test_args[2], test_args[3])
+    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
 
     # then
     assert is_successful(result)
@@ -121,7 +118,7 @@ def test_givin_good_files_when_get_promela_then_output_promela(capsys):
     assert outputs != ""
 
 
-def test_good_input_webverify_output_promela():
+def test_given_good_input_when_webverify_then_success():
     # given
     bpmn = ""
     with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
@@ -143,12 +140,9 @@ def test_good_input_webverify_output_promela():
 
     # then
     assert is_successful(result)
-    outputs = result.unwrap()
-    assert outputs is not None
-    assert outputs != ""
 
 
-def test_bad_input_webverify_output_error():
+def test_given_bad_input_when_webverify_then_failure():
     # given
     bpmn = ""
     with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:

@@ -1,3 +1,5 @@
+from returns.result import Failure, Result, Success
+
 from bpmncwpverify.core.bpmn import BpmnVisitor, Process
 from bpmncwpverify.core.error import Error
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
@@ -5,12 +7,11 @@ from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import (
     SetFlowLeafs,
     ValidateBpmnIncomingFlows,
     ValidateBpmnOutgoingFlows,
+    ValidateIdVisitor,
     ValidateMsgsVisitor,
     ValidateSeqFlowVisitor,
     ValidateStartEventFlows,
-    ValidateIdVisitor,
 )
-from returns.result import Result, Success, Failure
 
 
 def validate_process_with_visitor(

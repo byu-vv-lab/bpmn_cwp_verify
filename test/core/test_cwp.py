@@ -1,18 +1,19 @@
 # type: ignore
 from xml.etree.ElementTree import Element, SubElement
 
+import pytest
+from returns.functions import not_
+from returns.pipeline import is_successful
+
+from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
+from bpmncwpverify.core.cwp import CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpMultStartStateError,
     CwpNoEndStatesError,
     CwpNoStartStateError,
     Error,
 )
-from returns.functions import not_
 from bpmncwpverify.core.state import State
-from returns.pipeline import is_successful
-from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
-from bpmncwpverify.core.cwp import CwpEdge, CwpState
-import pytest
 
 
 def get_root_mx_root():

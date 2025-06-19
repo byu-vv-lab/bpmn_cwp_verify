@@ -1,24 +1,21 @@
+from typing import Any, Iterable, List, Protocol, cast
+
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
 from antlr4.error.ErrorStrategy import ParseCancellationException
 from antlr4.Token import Token
 from antlr4.tree.Tree import TerminalNode, TerminalNodeImpl
-
+from returns.curry import partial
+from returns.functions import not_
 from returns.maybe import Maybe, Nothing, Some
-from returns.result import Failure, Result, Success
 from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
-from returns.functions import not_
-from returns.curry import partial
-
-from typing import Any, List, cast, Iterable, Protocol
+from returns.result import Failure, Result, Success
 
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
 from bpmncwpverify.antlr.StateParser import StateParser  # type: ignore[attr-defined]
-
 from bpmncwpverify.core import typechecking
-
 from bpmncwpverify.core.error import (
     Error,
     StateInitNotInValues,

@@ -1,9 +1,10 @@
 # type: ignore
 import pytest
+from returns.result import Success
+
 from bpmncwpverify.builder.process_builder import ProcessBuilder
 from bpmncwpverify.core.bpmn import Node, SequenceFlow, Task
 from bpmncwpverify.core.state import State
-from returns.result import Success
 
 
 def test_add_element(mocker):

@@ -1,9 +1,9 @@
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState, CwpVisitor
 from bpmncwpverify.util.stringmanager import (
-    StringManager,
-    NL_SINGLE,
     NL_DOUBLE,
+    NL_SINGLE,
     IndentAction,
+    StringManager,
 )
 
 START_STR = "//**********CWP VARIABLE DECLARATION************//"

@@ -42,9 +42,11 @@ from bpmncwpverify.core.error import (
     ExpressionRelationalNotError,
     ExpressionRelationCompatabilityError,
     ExpressionUnrecognizedID,
+    FileReadFileError,
+    FileWriteFileError,
+    FileXmlParseError,
     FlowExpressionError,
     MessageError,
-    MissingFileError,
     NotImplementedError,
     NotInitializedError,
     SpinAssertionError,
@@ -57,7 +59,6 @@ from bpmncwpverify.core.error import (
     SubProcessRunError,
     TypingAssignCompatabilityError,
     TypingNoTypeError,
-    WriteFileError,
     get_error_message,
 )
 
@@ -207,16 +208,18 @@ test_inputs: list[tuple[Error, str]] = [
         "EXPR ERROR: '_id' is not recognized as a literal or something stored in the symbol table",
     ),
     (
+        FileReadFileError("file_name"),
+        "FILE ERROR: 'file_name'",
+    ),
+    (FileWriteFileError("a"), "FILE ERROR: 'a'"),
+    (FileXmlParseError("a"), "FILE ERROR: 'a'"),
+    (
         FlowExpressionError("flow_id", "expression", "exception_str"),
         "Error occurred while parsing the expression on flow: 'flow_id' with expression: 'expression':\n\t'exception_str'",
     ),
     (
         MessageError("node_id", "error_msg"),
         "Inter-process message error at node: node_id. error_msg",
-    ),
-    (
-        MissingFileError("file_name"),
-        "Could not find file with name file_name",
     ),
     (NotImplementedError("notImplemented"), "ERROR: not implemented 'notImplemented'"),
     (
@@ -288,7 +291,6 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (SubProcessRunError("proc"), "ERROR: failed to run 'proc'"),
     (TypingNoTypeError("a"), "TYPING ERROR: literal 'a' has an unknown type"),
-    (WriteFileError("a"), "WRITE FILE ERROR: 'a'"),
 ]
 
 test_ids: list[str] = [
@@ -328,9 +330,11 @@ test_ids: list[str] = [
     "ExpressionRelationCompatabilityError",
     "ExpressionRelationalNotError",
     "ExpressionUnrecognizedID",
+    "FileReadFileError",
+    "FileWriteFileError",
+    "FileXmlParseError",
     "FlowExpressionError",
     "MessageError",
-    "MissingFileError",
     "NotImplementedError",
     "NotInitializedError",
     "SpinAssertionError",
@@ -346,7 +350,6 @@ test_ids: list[str] = [
     "SubprocessRunError",
     "TypeingAssignCompatabilityError",
     "TypingNoTypeError",
-    "WriteFileError",
 ]
 
 

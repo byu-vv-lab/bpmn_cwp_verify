@@ -1,4 +1,7 @@
 # type: ignore
+import pytest
+
+from bpmncwpverify.core.bpmn import Node
 from bpmncwpverify.core.error import (
     BpmnMsgEndEventError,
     BpmnMsgGatewayError,
@@ -6,8 +9,6 @@ from bpmncwpverify.core.error import (
     BpmnMsgTargetError,
 )
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidations import ValidateMsgsVisitor
-import pytest
-from bpmncwpverify.core.bpmn import Node
 
 
 def test_ensure_in_and_out_messages(mocker):

@@ -1,12 +1,13 @@
-from bpmncwpverify.core.error import (
-    BpmnStructureError,
-)
-
-from typing import List, Dict, Union, TypeVar, Type, Any
-from returns.result import Result, Failure, Success
-from bpmncwpverify.core.error import Error, BpmnUnrecognizedElement
+from typing import Any, Dict, List, Type, TypeVar, Union
 from xml.etree.ElementTree import Element
 
+from returns.result import Failure, Result, Success
+
+from bpmncwpverify.core.error import (
+    BpmnStructureError,
+    BpmnUnrecognizedElement,
+    Error,
+)
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
@@ -254,9 +255,9 @@ class Task(Node):
             attributes = super()._extract_attributes(element)
             attributes["parent_task"] = element.attrib.get("attachedToRef")
 
-            assert attributes[
-                "parent_task"
-            ], f"Boundary Event: {element.attrib.get("id")} has no parent"
+            assert attributes["parent_task"], (
+                f"Boundary Event: {element.attrib.get('id')} has no parent"
+            )
 
             return attributes
 
