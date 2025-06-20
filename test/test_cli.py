@@ -5,10 +5,9 @@ import sys
 import pytest
 from returns.functions import not_
 from returns.pipeline import is_successful
-from returns.result import Success
 from returns.unsafe import unsafe_perform_io
 
-from bpmncwpverify.cli import verify_with_spin, web_verify
+from bpmncwpverify.cli import cli_verify, web_verify
 from bpmncwpverify.core.error import Error, FileReadFileError, StateSyntaxError
 from bpmncwpverify.core.state import State
 
@@ -34,7 +33,7 @@ def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
+    result = cli_verify(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
@@ -53,7 +52,7 @@ def test_givin_bad_cwp_file_path_when_verify_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
+    result = cli_verify(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
@@ -72,7 +71,7 @@ def test_givin_bad_bpmn_file_path_when_verify_then_io_error(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
+    result = cli_verify(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
@@ -91,7 +90,7 @@ def test_givin_bad_state_file_when_verify_then_state_errror(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
+    result = cli_verify(test_args[1], test_args[2], test_args[3])
 
     # then
     assert not_(is_successful)(result)
@@ -111,7 +110,7 @@ def test_givin_good_files_when_verify_then_success(capsys):
     sys.argv = test_args
 
     # when
-    result = verify_with_spin(test_args[1], test_args[2], test_args[3])
+    result = cli_verify(test_args[1], test_args[2], test_args[3])
 
     # then
     assert is_successful(result)
@@ -207,8 +206,7 @@ def test_generate_promela_with_full_state(mocker, mock_state):
         "int old_counter = counter\n\n"
     )
 
-    assert isinstance(result, Success)
-    assert result.unwrap() == expected_output
+    assert result == expected_output
 
 
 def test_generate_promela_with_only_constants(mocker, mock_state):
@@ -226,8 +224,7 @@ def test_generate_promela_with_only_constants(mocker, mock_state):
         "//**********VARIABLE DECLARATION************//\n#define BUFFER_SIZE 256\n\n"
     )
 
-    assert isinstance(result, Success)
-    assert result.unwrap() == expected_output
+    assert result == expected_output
 
 
 def test_generate_promela_with_only_enums(mocker, mock_state):
@@ -249,8 +246,7 @@ def test_generate_promela_with_only_enums(mocker, mock_state):
         "mtype:TestEnum = {IDLE RUNNING}\n\n"
     )
 
-    assert isinstance(result, Success)
-    assert result.unwrap() == expected_output
+    assert result == expected_output
 
 
 def test_generate_promela_with_empty_state(mock_state):
@@ -260,5 +256,4 @@ def test_generate_promela_with_empty_state(mock_state):
 
     expected_output = "//**********VARIABLE DECLARATION************//\n\n"
 
-    assert isinstance(result, Success)
-    assert result.unwrap() == expected_output
+    assert result == expected_output

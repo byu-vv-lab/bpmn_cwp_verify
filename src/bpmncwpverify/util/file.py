@@ -66,10 +66,6 @@ def read_file_as_string(path: str) -> IOResult[str, Error]:
     return _read_file_contents(path)
 
 
-def read_file_as_xml(path: str) -> IOResult[Element, Error]:
-    return _read_file_contents(path).bind(element_tree_from_string)  # pyright: ignore[reportUnknownMemberType]
-
-
 def write_file_contents(contents: str, path: str) -> IOResult[None, Error]:
     result: IOResultE[None] = flow(
         path,

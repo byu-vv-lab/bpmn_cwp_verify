@@ -2,24 +2,22 @@ import argparse
 from xml.etree.ElementTree import Element
 
 from returns.functions import not_
-from returns.io import IOFailure, IOResult, IOSuccess
+from returns.io import IOResult
 from returns.pipeline import is_successful
-from returns.result import Result
 from returns.unsafe import unsafe_perform_io
 
-from bpmncwpverify.builder.promela_builder import PromelaBuilder
+from bpmncwpverify.core.accessmethods import bpmnmethods
+from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.error import Error, get_error_message
 from bpmncwpverify.core.spin import (
     SpinVerificationReport,
-    SpinVerificationReportBuilder,
+    verify_with_spin,
 )
+from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import (
     element_tree_from_string,
     read_file_as_string,
-    read_file_as_xml,
 )
-
-OUTPUT_FILE = "/tmp/verification.pml"
 
 
 def _get_argument_parser() -> "argparse.ArgumentParser":
@@ -43,42 +41,45 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
 
 
 def _verify_with_spin(
-    state: str,
-    cwp: Element,
-    bpmn: Element,
+    state_str: str,
+    cwp_xml: Element,
+    bpmn_xml: Element,
 ) -> IOResult[SpinVerificationReport, Error]:
-    promela_result: Result[str, Error] = (
-        PromelaBuilder().with_state(state).with_cwp(cwp).with_bpmn(bpmn).build()
+    result: IOResult[SpinVerificationReport, Error] = IOResult.from_result(
+        State.from_str(state_str)
+    ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: IOResult.from_result(CwpXmlParser.from_xml(cwp_xml, state)).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: IOResult.from_result(
+                bpmnmethods.from_xml(bpmn_xml, state)
+            ).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn: verify_with_spin(state, cwp, bpmn)
+            )
+        )
     )
 
-    if is_successful(promela_result):
-        spin_verification_report_builder: SpinVerificationReportBuilder = (
-            SpinVerificationReportBuilder()
-        )
-        result: IOResult[SpinVerificationReport, Error] = IOSuccess(
-            promela_result.unwrap()
-        ).bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda promela: spin_verification_report_builder.with_file_name(OUTPUT_FILE)
-            .with_promela(promela)
-            .with_spin_cli_args(["-run", "-noclaim"])
-            .build()
-        )
-        return result
-
-    return IOFailure(promela_result.failure())
+    return result
 
 
-def verify_with_spin(
+def _verify_with_spin_from_files(
     state_file: str, cwp_file: str, bpmn_file: str
 ) -> IOResult[SpinVerificationReport, Error]:
     result: IOResult[SpinVerificationReport, Error] = read_file_as_string(
         state_file
     ).bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda state: read_file_as_xml(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda cwp: read_file_as_xml(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
-                lambda bpmn: _verify_with_spin(state, cwp, bpmn)
+        lambda state: read_file_as_string(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: read_file_as_string(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn: web_verify(state, cwp, bpmn)
             )
         )
+    )
+    return result
+
+
+def cli_verify(
+    state_file: str, cwp_file: str, bpmn_file: str
+) -> IOResult[SpinVerificationReport, Error]:
+    result: IOResult[SpinVerificationReport, Error] = _verify_with_spin_from_files(
+        state_file, cwp_file, bpmn_file
     )
     return result
 
@@ -87,7 +88,7 @@ def verify() -> None:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
 
-    result = verify_with_spin(args.state_file, args.cwp_file, args.bpmn_file)
+    result = cli_verify(args.state_file, args.cwp_file, args.bpmn_file)
 
     if not_(is_successful)(result):
         error: Error = unsafe_perform_io(result.failure())

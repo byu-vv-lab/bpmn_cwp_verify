@@ -14,7 +14,6 @@ from bpmncwpverify.core.error import (
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
-from bpmncwpverify.visitors.cwp_promela_visitor import CwpPromelaVisitor
 
 
 class CwpXmlParser:
@@ -102,11 +101,3 @@ def generate_graph_viz(cwp: Cwp) -> None:
     cwp.accept(graph_viz_visitor)
 
     graph_viz_visitor.dot.render("graphs/cwp_graph.gv", format="png")  # type: ignore[unused-ignore]
-
-
-def generate_cwp_promela(cwp: Cwp, state: State) -> str:
-    ltl_visitor = CwpPromelaVisitor()
-
-    cwp.accept(ltl_visitor)
-
-    return str(ltl_visitor)

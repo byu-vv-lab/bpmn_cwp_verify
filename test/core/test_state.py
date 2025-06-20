@@ -307,4 +307,4 @@ def test_generate_promela(mocker):
         "mtype:enum_id var2_id = init_val\n"
         "mtype:enum_id old_var2_id = var2_id\n\n"
     )
-    assert result.unwrap() == expected
+    assert result == expected
