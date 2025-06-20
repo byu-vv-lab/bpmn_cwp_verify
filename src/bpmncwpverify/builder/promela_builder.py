@@ -1,149 +1,114 @@
-from xml.etree.ElementTree import Element
-
-from returns.functions import not_
-from returns.pipeline import flow, is_successful
-from returns.pointfree import bind_result
 from returns.result import Failure, Result, Success
 
-from bpmncwpverify.core.accessmethods.bpmnmethods import (
-    from_xml as bpmn_from_xml,
-)
-from bpmncwpverify.core.accessmethods.bpmnmethods import (
-    generate_promela,
-)
-from bpmncwpverify.core.accessmethods.cwpmethods import (
-    CwpXmlParser,
-    generate_cwp_promela,
-)
 from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.cwp import Cwp
-from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.error import Error, NotInitializedError
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction, StringManager
+from bpmncwpverify.visitors.bpmn_promela_visitor import PromelaGenVisitor
+from bpmncwpverify.visitors.cwp_promela_visitor import CwpPromelaVisitor
+
+
+def _generate_bpmn_promela(bpmn: Bpmn) -> str:
+    promela_visitor = PromelaGenVisitor()
+    bpmn.accept(promela_visitor)
+    return str(promela_visitor)
+
+
+def _generate_cwp_promela(cwp: Cwp, state: State) -> str:
+    ltl_visitor = CwpPromelaVisitor()
+    cwp.accept(ltl_visitor)
+    return str(ltl_visitor)
+
+
+def _generate_logger(state: State, cwp: Cwp) -> str:
+    var_names = _get_variable_names(state)
+    loggerFunction = StringManager()
+
+    loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
+    loggerFunction.write_str('printf("Changed Vars: \\n");', NL_SINGLE)
+    for name in var_names:
+        loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
+        loggerFunction.write_str(
+            f":: {name} != old_{name} ->", NL_SINGLE, IndentAction.INC
+        )
+        loggerFunction.write_str(f'printf("{name} = %e\\n", {name});', NL_SINGLE)
+        loggerFunction.write_str(f"old_{name} = {name}", NL_SINGLE)
+        loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+        loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
+
+    for cwp_state in cwp.states.values():
+        loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
+        loggerFunction.write_str(
+            f":: {cwp_state.name} == true ->", NL_SINGLE, IndentAction.INC
+        )
+        loggerFunction.write_str(
+            f'printf("Current state: {cwp_state.name}\\n");', NL_SINGLE
+        )
+        loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+        loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
+    loggerFunction.write_str("}", NL_SINGLE, IndentAction.DEC)
+    return str(loggerFunction)
+
+
+def _generate_promela(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
+    cwp_pml = _generate_cwp_promela(cwp, state)
+    vars_pml = _generate_state_promela(state)
+    logger_pml = _generate_logger(state, cwp)
+    bpmn_pml = _generate_bpmn_promela(bpmn)
+    pml = f"{vars_pml}{cwp_pml}{logger_pml}{bpmn_pml}"
+    return Success(pml)
+
+
+def _generate_state_promela(state: State) -> str:
+    return State.generate_promela(state)
+
+
+def _get_variable_names(state: State) -> list[str]:
+    variableNames: list[str] = []
+    for var in state.vars:
+        variableNames.append(var.id)
+    return variableNames
 
 
 class PromelaBuilder:
     __slots__ = [
         "bpmn",
-        "bpmn_root",
         "cwp",
-        "cwp_root",
-        "state_str",
         "state",
     ]
 
     def __init__(self) -> None:
-        self.bpmn: Result[Bpmn, Error] = Failure(Error())
-        self.bpmn_root: Result[Element, Error] = Failure(Error())
-        self.cwp: Result[Cwp, Error] = Failure(Error())
-        self.cwp_root: Result[Element, Error] = Failure(Error())
-        self.state_str: Result[str, Error] = Failure(Error())
-        self.state: Result[State, Error] = Failure(Error())
-
-    @staticmethod
-    def _build_bpmn(builder: "PromelaBuilder") -> Result["PromelaBuilder", Error]:
-        assert is_successful(builder.state) and is_successful(builder.bpmn_root)
-        builder.bpmn = bpmn_from_xml(builder.bpmn_root.unwrap(), builder.state.unwrap())
-        if not_(is_successful)(builder.bpmn):
-            return Failure(builder.bpmn.failure())
-        else:
-            return Success(builder)
-
-    @staticmethod
-    def _build_cwp(builder: "PromelaBuilder") -> Result["PromelaBuilder", Error]:
-        assert is_successful(builder.state)
-        assert is_successful(builder.cwp_root)
-        builder.cwp = CwpXmlParser.from_xml(
-            builder.cwp_root.unwrap(), builder.state.unwrap()
+        self.bpmn: Result[Bpmn, Error] = Failure(
+            NotInitializedError("PromelaBulider.bpmn")
         )
-        if not_(is_successful)(builder.cwp):
-            return Failure(builder.cwp.failure())
-        else:
-            return Success(builder)
-
-    @staticmethod
-    def _build_state(builder: "PromelaBuilder") -> Result["PromelaBuilder", Error]:
-        assert is_successful(builder.state_str)
-        builder.state = State.from_str(builder.state_str.unwrap())
-        if not_(is_successful)(builder.state):
-            return Failure(builder.state.failure())
-        else:
-            return Success(builder)
-
-    @staticmethod
-    def build_promela(builder: "PromelaBuilder") -> Result[str, Error]:
-        assert is_successful(builder.state)
-        assert is_successful(builder.cwp_root)
-        assert is_successful(builder.bpmn_root)
-
-        cwp = generate_cwp_promela((builder.cwp).unwrap(), (builder.state).unwrap())
-        vars = State.generate_promela((builder.state).unwrap()).unwrap()
-        variableLogger = builder.logger_generator(
-            (builder.state).unwrap(), (builder.cwp).unwrap()
+        self.cwp: Result[Cwp, Error] = Failure(
+            NotInitializedError("PromelaBulider.cwp")
         )
-        workflow = generate_promela((builder.bpmn).unwrap())
-
-        promela = f"{vars}{cwp}{variableLogger}{workflow}"
-        return Success(promela)
-
-    def logger_generator(self, state: State, cwp: Cwp) -> str:
-        variableNames = self.variable_name_extractor(state)
-        loggerFunction = StringManager()
-
-        loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
-        loggerFunction.write_str('printf("Changed Vars: \\n");', NL_SINGLE)
-        for varName in variableNames:
-            loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
-            loggerFunction.write_str(
-                f":: {varName} != old_{varName} ->", NL_SINGLE, IndentAction.INC
-            )
-            loggerFunction.write_str(
-                f'printf("{varName} = %e\\n", {varName});', NL_SINGLE
-            )
-            loggerFunction.write_str(f"old_{varName} = {varName}", NL_SINGLE)
-            loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
-            loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
-
-        for cwp_state in cwp.states.values():
-            loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
-            loggerFunction.write_str(
-                f":: {cwp_state.name} == true ->", NL_SINGLE, IndentAction.INC
-            )
-            loggerFunction.write_str(
-                f'printf("Current state: {cwp_state.name}\\n");', NL_SINGLE
-            )
-            loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
-            loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
-        loggerFunction.write_str("}", NL_SINGLE, IndentAction.DEC)
-        return str(loggerFunction)
-
-    def variable_name_extractor(self, state: State) -> list[str]:
-        variableNames: list[str] = []
-        for var in state.vars:
-            variableNames.append(var.id)
-        return variableNames
+        self.state: Result[State, Error] = Failure(
+            NotInitializedError("PromelaBulider.state")
+        )
 
     def build(self) -> Result[str, Error]:
-        result: Result[str, Error] = flow(
-            Success(self),
-            bind_result(PromelaBuilder._build_state),
-            bind_result(PromelaBuilder._build_cwp),
-            bind_result(PromelaBuilder._build_bpmn),
-            bind_result(PromelaBuilder.build_promela),
+        result: Result[str, Error] = self.state.bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda state: self.cwp.bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda cwp: self.bpmn.bind(  # pyright: ignore[reportUnknownMemberType]
+                    lambda bpmn: _generate_promela(state, cwp, bpmn)
+                )
+            )
         )
-
         return result
 
-    def with_bpmn(self, bpmn: Element) -> "PromelaBuilder":
-        self.bpmn_root = Success(bpmn)
+    def with_bpmn(self, bpmn: Bpmn) -> "PromelaBuilder":
+        self.bpmn = Success(bpmn)
         return self
 
-    def with_cwp(self, cwp: Element) -> "PromelaBuilder":
-        self.cwp_root = Success(cwp)
+    def with_cwp(self, cwp: Cwp) -> "PromelaBuilder":
+        self.cwp = Success(cwp)
         return self
 
-    def with_state(self, state: str) -> "PromelaBuilder":
-        self.state_str = Success(state)
+    def with_state(self, state: State) -> "PromelaBuilder":
+        self.state = Success(state)
         return self
 
 

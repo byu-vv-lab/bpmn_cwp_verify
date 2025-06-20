@@ -764,7 +764,7 @@ class State:
         return result
 
     @staticmethod
-    def generate_promela(state: "State") -> Result[str, Error]:
+    def generate_promela(state: "State") -> str:
         str_builder: List[str] = []
         str_builder.append("//**********VARIABLE DECLARATION************//")
         for const_decl in state._consts:
@@ -788,7 +788,7 @@ class State:
                 str_builder.append(
                     f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
                 )
-        return Success("\n".join(str_builder) + "\n\n")
+        return "\n".join(str_builder) + "\n\n"
 
     def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result["State", Error]:
         """

@@ -7,7 +7,10 @@ from returns.io import IOFailure, IOResult, IOSuccess, impure_safe
 from returns.pipeline import flow
 from returns.result import Failure, Result, Success
 
+from bpmncwpverify.builder.promela_builder import PromelaBuilder
+from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.counterexample import CounterExample
+from bpmncwpverify.core.cwp import Cwp
 from bpmncwpverify.core.error import (
     Error,
     NotInitializedError,
@@ -17,6 +20,7 @@ from bpmncwpverify.core.error import (
     SpinSyntaxError,
     SubProcessRunError,
 )
+from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import write_file_contents
 
 
@@ -220,30 +224,24 @@ class SpinOutputParser:
             else Success(None)
         )
 
-    # @staticmethod
-    # def get_spin_output(file_path: str) -> Result[SpinVerificationReport, str]:
-    #     file_dir = os.path.dirname(file_path)
 
-    #     spin_run_string = subprocess.run(
-    #         ["spin", "-run", "-noclaim", os.path.basename(file_path)],
-    #         capture_output=True,
-    #         text=True,
-    #         cwd=file_dir,  # This ensures the .trail is written in the same directory as file_path
-    #     ).stdout
+def verify_with_spin(
+    state: State,
+    cwp: Cwp,
+    bpmn: Bpmn,
+) -> IOResult[SpinVerificationReport, Error]:
+    promela_result: Result[str, Error] = (
+        PromelaBuilder().with_state(state).with_cwp(cwp).with_bpmn(bpmn).build()
+    )
+    OUTPUT_FILE = "/tmp/verification.pml"
 
-    #     spin_output = SpinOutputParser()
-
-    #     result: Result[str, Error] = flow(
-    #         spin_run_string,
-    #         partial(spin_output.check_syntax_errors, file_path),
-    #         bind_result(partial(spin_output.check_invalid_end_state, file_path)),
-    #         bind_result(partial(spin_output.check_assertion_violation, file_path)),
-    #         bind_result(partial(spin_output.check_coverage_errors, file_path)),
-    #     )
-
-    #     if is_successful(result):
-    #         return Success(SpinVerificationReport(spin_run_string))
-
-    #     error: Error = result.failure()
-    #     msg: str = get_error_message(error)
-    #     return Failure(msg)
+    spin_verification_report_builder: SpinVerificationReportBuilder = (
+        SpinVerificationReportBuilder()
+    )
+    result = IOResult.from_result(promela_result).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda promela: spin_verification_report_builder.with_file_name(OUTPUT_FILE)
+        .with_promela(promela)
+        .with_spin_cli_args(["-run", "-noclaim"])
+        .build()
+    )
+    return result

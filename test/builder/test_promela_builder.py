@@ -1,17 +1,25 @@
 # type: ignore
-from bpmncwpverify.builder.promela_builder import PromelaBuilder
+from bpmncwpverify.builder.promela_builder import (
+    _generate_logger,
+    _get_variable_names,
+)
 from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction
 
 
 def test_logger_generator(mocker):
-    mocker.patch.object(
-        PromelaBuilder, "variable_name_extractor", return_value=["test_string"]
+    # mocker.patch.object(
+    #     PromelaBuilder, "variable_name_extractor", return_value=["test_string"]
+    # )
+
+    mocker.patch(
+        "bpmncwpverify.builder.promela_builder._get_variable_names",
+        return_value=["test_string"],
     )
+
     mock_write_str = mocker.patch(
         "bpmncwpverify.builder.promela_builder.StringManager.write_str"
     )
 
-    sb = PromelaBuilder()
     state = mocker.Mock()
 
     mock_val1 = mocker.Mock()
@@ -20,7 +28,7 @@ def test_logger_generator(mocker):
     mock_val2.name = "test_val2"
 
     cwp = mocker.Mock(states={"_0": mock_val1, "_1": mock_val2})
-    sb.logger_generator(state, cwp)
+    _generate_logger(state, cwp)
 
     calls = [
         mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
@@ -54,8 +62,6 @@ def test_variable_name_extractor(mocker):
     state = mocker.Mock()
     state.vars = vars
 
-    sb = PromelaBuilder()
-
-    result = sb.variable_name_extractor(state)
+    result = _get_variable_names(state)
 
     assert result == [1, 2]
