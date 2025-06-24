@@ -5,12 +5,11 @@ from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
 from antlr4.error.ErrorStrategy import ParseCancellationException
 from antlr4.Token import Token
 from antlr4.tree.Tree import TerminalNode, TerminalNodeImpl
-from returns.curry import partial
 from returns.functions import not_
 from returns.maybe import Maybe, Nothing, Some
 from returns.pipeline import flow, is_successful
 from returns.pointfree import bind_result
-from returns.result import Failure, Result, Success
+from returns.result import Failure, Result, Success, safe
 
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
@@ -18,6 +17,7 @@ from bpmncwpverify.antlr.StateParser import StateParser  # type: ignore[attr-def
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
+    StateAntlrWalkerError,
     StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
@@ -160,13 +160,10 @@ def _parse_state(parser: StateParser) -> Result[StateParser.StateContext, Error]
     Args:
         parser (StateParser): Parser that will make sure tree is valid
     """
-    try:
-        tree: StateParser.StateContext = parser.state()
-        return Success(tree)
-    except ParseCancellationException as exception:
-        msg = str(exception)
-        failure_value = StateSyntaxError(msg)
-        return Failure(failure_value)
+    result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(  # type: ignore[no-untyped-call]
+        lambda exc: StateSyntaxError(str(exc))
+    )
+    return result
 
 
 class DeclLoc:
@@ -400,7 +397,7 @@ class StateBuilder:
         Create a State object with the given lists of variables stored within itself
         """
         state = State(self._consts, self._enums, self._vars)
-        return State.type_check(state)
+        return state.type_check()
 
 
 class State:
@@ -416,15 +413,14 @@ class State:
         Adds variables to lists stored in StateBuilder object
         """
 
-        __slots__ = ["state_builder", "error"]
+        __slots__ = ["state_builder"]
 
         def __init__(self) -> None:
             """
             Initialize _Listener object
             """
             super().__init__()
-            self.state_builder: "StateBuilder" = StateBuilder()
-            self.error: Maybe[Error] = Nothing
+            self.state_builder: Result["StateBuilder", Error] = Success(StateBuilder())
 
         @staticmethod
         def _get_id(id_node: TerminalNodeImpl) -> str:
@@ -461,12 +457,20 @@ class State:
             Args:
                 ctx (Maybe[StateParser.Id_setContext]): Node that contains a list of children to get values from
             """
-            if ctx == Nothing:
-                return list()
-            return [
-                State._Listener._get_value_decl(i)
-                for i in antlr_id_set_context_get_children(ctx.unwrap())
-            ]
+
+            def get_value_decls(
+                ctx: StateParser.Id_setContext,
+            ) -> list[AllowedValueDecl]:
+                return [
+                    State._Listener._get_value_decl(i)
+                    for i in antlr_id_set_context_get_children(ctx)
+                ]
+
+            init_list: list[AllowedValueDecl] = list()
+            result: list[AllowedValueDecl] = ctx.bind_optional(
+                get_value_decls
+            ).or_else_call(lambda: init_list)
+            return result
 
         def exitEnum_type_decl(self, ctx: StateParser.Enum_type_declContext) -> None:
             """
@@ -475,18 +479,23 @@ class State:
             Args:
                 ctx (StateParser.Enum_type_declContext): Enum variable to add
             """
-            node = antlr_get_terminal_node_impl(ctx.ID())
-            symbol: Token = node.getSymbol()
-            id: str = State._Listener._get_id(node)
-            id_line = Some(cast(int, symbol.line))
-            id_col = Some(cast(int, symbol.column))
 
-            values: list[AllowedValueDecl] = State._Listener._get_values(
-                antlr_get_id_set_context(ctx.id_set()),
+            def get_enum_type_decl() -> EnumDecl:
+                node = antlr_get_terminal_node_impl(ctx.ID())
+                symbol: Token = node.getSymbol()
+                id: str = State._Listener._get_id(node)
+                id_line = Some(cast(int, symbol.line))
+                id_col = Some(cast(int, symbol.column))
+
+                values: list[AllowedValueDecl] = State._Listener._get_values(
+                    antlr_get_id_set_context(ctx.id_set()),
+                )
+
+                return EnumDecl(id, values, id_line, id_col)
+
+            self.state_builder = self.state_builder.map(
+                lambda builder: builder.with_enum_type_decl(get_enum_type_decl())
             )
-
-            enum_decl = EnumDecl(id, values, id_line, id_col)
-            self.state_builder.with_enum_type_decl(enum_decl)
 
         def exitConst_var_decl(self, ctx: StateParser.Const_var_declContext) -> None:
             """
@@ -495,24 +504,29 @@ class State:
             Args:
                 ctx (StateParser.Const_var_declContext): Const variable to add
             """
-            node = antlr_get_terminal_node_impl(ctx.ID(0))
-            symbol: Token = node.getSymbol()
-            id = State._Listener._get_id(node)
-            id_line = Some(cast(int, symbol.line))
-            id_col = Some(cast(int, symbol.column))
 
-            type_: str = antlr_get_type_from_type_context(ctx)
+            def get_const_var_decl() -> ConstDecl:
+                node = antlr_get_terminal_node_impl(ctx.ID(0))
+                symbol: Token = node.getSymbol()
+                id = State._Listener._get_id(node)
+                id_line = Some(cast(int, symbol.line))
+                id_col = Some(cast(int, symbol.column))
 
-            node = antlr_get_terminal_node_impl(ctx.ID(1))
-            symbol = node.getSymbol()
-            init = AllowedValueDecl(
-                antlr_get_text(node),
-                Some(cast(int, symbol.line)),
-                Some(cast(int, symbol.column)),
+                type_: str = antlr_get_type_from_type_context(ctx)
+
+                node = antlr_get_terminal_node_impl(ctx.ID(1))
+                symbol = node.getSymbol()
+                init = AllowedValueDecl(
+                    antlr_get_text(node),
+                    Some(cast(int, symbol.line)),
+                    Some(cast(int, symbol.column)),
+                )
+
+                return ConstDecl(id, type_, init, id_line, id_col)
+
+            self.state_builder = self.state_builder.map(
+                lambda builder: builder.with_const_decl(get_const_var_decl())
             )
-
-            const_decl = ConstDecl(id, type_, init, id_line, id_col)
-            self.state_builder.with_const_decl(const_decl)
 
         def exitVar_decl(self, ctx: StateParser.Var_declContext) -> None:
             """
@@ -521,31 +535,32 @@ class State:
             Args:
                 ctx (StateParser.Var_declContext): Var variable to add
             """
-            node = antlr_get_terminal_node_impl(ctx.ID(0))
-            symbol: Token = node.getSymbol()
-            id: str = State._Listener._get_id(node)
-            id_line = Some(cast(int, symbol.line))
-            id_col = Some(cast(int, symbol.column))
 
-            type_: str = antlr_get_type_from_type_context(ctx)
+            def get_var_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
+                node = antlr_get_terminal_node_impl(ctx.ID(0))
+                symbol: Token = node.getSymbol()
+                id: str = State._Listener._get_id(node)
+                id_line = Some(cast(int, symbol.line))
+                id_col = Some(cast(int, symbol.column))
 
-            node = antlr_get_terminal_node_impl(ctx.ID(1))
-            symbol = node.getSymbol()
-            init: AllowedValueDecl = AllowedValueDecl(
-                antlr_get_text(node),
-                Some(cast(int, symbol.line)),
-                Some(cast(int, symbol.column)),
-            )
+                type_: str = antlr_get_type_from_type_context(ctx)
 
-            values: list[AllowedValueDecl] = State._Listener._get_values(
-                antlr_get_id_set_context(ctx.id_set()),
-            )
+                node = antlr_get_terminal_node_impl(ctx.ID(1))
+                symbol = node.getSymbol()
+                init: AllowedValueDecl = AllowedValueDecl(
+                    antlr_get_text(node),
+                    Some(cast(int, symbol.line)),
+                    Some(cast(int, symbol.column)),
+                )
 
-            var_decl = VarDecl.var_decl(id, type_, init, values, id_line, id_col)
-            if not_(is_successful)(var_decl):
-                self.error = Some(var_decl.failure())
-                raise Exception()
-            self.state_builder.with_var_decl(var_decl.unwrap())
+                values: list[AllowedValueDecl] = State._Listener._get_values(
+                    antlr_get_id_set_context(ctx.id_set()),
+                )
+
+                result = VarDecl.var_decl(id, type_, init, values, id_line, id_col)
+                return result.map(builder.with_var_decl).alt(lambda error: error)
+
+            self.state_builder = self.state_builder.bind(get_var_decl)  # pyright: ignore[reportUnknownMemberType]
 
     def __init__(
         self, consts: list[ConstDecl], enums: list[EnumDecl], vars: list[VarDecl]
@@ -600,8 +615,55 @@ class State:
                 state_str += "\n"
         return state_str
 
-    @staticmethod
-    def _build_id_2_type_consts(state: "State") -> Result["State", Error]:
+    def is_defined(self, id: str) -> bool:
+        """
+        Determines if a variable is defined or not
+
+        Args:
+            id (str): Name of variable to check
+        """
+        # requires
+        assert self._id2type != Nothing
+
+        defined: bool = is_successful(self.get_type(id))
+        return defined
+
+    def get_type(self, id: str) -> Result[str, Error]:
+        """
+        Retrieve the type of the variable given the variable name
+
+        Args:
+            id (str): Name of the variable
+        """
+        # requires
+        assert self._id2type != Nothing
+
+        id2type = self._id2type.unwrap()
+        if id in id2type:
+            return Success(id2type[id].type_)
+        result: Result[str, Error] = typechecking.get_type_literal(id)
+        return result
+
+    def type_check(self) -> Result["State", Error]:
+        """
+        Run the given State object through various tests to make sure all variable declarations are type safe
+        """
+        self._id2type = Some(dict())
+        result: Result[State, Error] = (
+            self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
+            .bind(lambda _: self._build_id_2_type_consts())
+            .bind(lambda _: self._build_id_2_type_vars())
+            .bind(lambda _: self._type_check_consts())
+            .bind(lambda _: self._type_check_vars())
+            .map(lambda _: self)
+        )
+        return result
+
+    @property
+    def vars(self) -> list[VarDecl]:
+        return self._vars
+
+    def _build_id_2_type_consts(self) -> Result[None, Error]:
         """
         Adds const variables into id2type dictionary
         Verifies there are no two variables with the same name being declared twice
@@ -610,10 +672,10 @@ class State:
             state (State): State object to modify
         """
         # requires
-        assert state._id2type != Nothing
+        assert self._id2type != Nothing
 
-        id2type = state._id2type.unwrap()
-        for const_decl in state._consts:
+        id2type = self._id2type.unwrap()
+        for const_decl in self._consts:
             if const_decl.id in id2type:
                 first = (id2type[const_decl.id]).decl_loc
                 return Failure(
@@ -627,10 +689,9 @@ class State:
                 )
             id2type[const_decl.id] = TypeWithDeclLoc(const_decl.type_, const_decl)
 
-        return Success(state)
+        return Success(None)
 
-    @staticmethod
-    def _build_id_2_type_enums(state: "State") -> Result["State", Error]:
+    def _build_id_2_type_enums(self) -> Result[None, Error]:
         """
         Adds enum variables into id2type dictionary
         Verifies there are no two variables with the same name being declared twice
@@ -639,17 +700,16 @@ class State:
             state (State): State object to modify
         """
         # requires
-        assert state._id2type != Nothing
+        assert self._id2type != Nothing
 
-        for i in state._enums:
-            result = state._build_id_2_type_enum(i)
+        for i in self._enums:
+            result = self._build_id_2_type_enum(i)
             if not_(is_successful)(result):
                 return result
 
-        return Success(state)
+        return Success(None)
 
-    @staticmethod
-    def _build_id_2_type_vars(state: "State") -> Result["State", Error]:
+    def _build_id_2_type_vars(self) -> Result[None, Error]:
         """
         Adds var variables into id2type dictionary
         Verifies there are no two variables with the same name being declared twice
@@ -658,37 +718,18 @@ class State:
             state (State): State object to modify
         """
         # requires
-        assert state._id2type != Nothing
+        assert self._id2type != Nothing
 
-        for i in state._vars:
-            result = state._build_id_2_type_var(i)
+        for i in self._vars:
+            result = self._build_id_2_type_var(i)
             if not_(is_successful)(result):
                 return result
 
-        return Success(state)
+        return Success(None)
 
-    @staticmethod
-    def _from_str(context: StateParser.StateContext) -> Result["State", Error]:
-        """
-        Return a State object from a valid tree, error otherwise
-
-        Args:
-            context (StateParser.StateContext): Tree to walk through
-        """
-        listener = State._Listener()
-        try:
-            walker: ParseTreeWalker = cast(ParseTreeWalker, ParseTreeWalker.DEFAULT)
-            walker.walk(listener, context)
-            return listener.state_builder.build()
-        except Exception:
-            # requires
-            assert listener.error != Nothing
-            return Failure(listener.error.unwrap())
-
-    @staticmethod
     def _type_check_assigns(
-        state: "State", ltype: str, values: Iterable[AllowedValueDecl]
-    ) -> Result[tuple[()], Error]:
+        self, ltype: str, values: Iterable[AllowedValueDecl]
+    ) -> Result[None, Error]:
         """
         Verify all values are of the same type of variable declaration
 
@@ -697,100 +738,42 @@ class State:
             ltype (str): Type values should be
             values (Iterable[AllowedValueDecl]): List of values
         """
-        # Partial binds variable to the first argument of following function,
-        # creating a new function that only requires input for other arguments
-        get_type_init = partial(State.get_type, state)
-        get_type_assign = partial(typechecking.get_type_assign, ltype)
         for i in values:
-            result: Result[str, Error] = flow(
-                i.value, get_type_init, bind_result(get_type_assign)
+            result: Result[str, Error] = self.get_type(i.value).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda rtype: typechecking.get_type_assign(ltype, rtype)
             )
             if not_(is_successful)(result):
-                return Failure(result.failure())
-        return Success(())
+                return cast(Result[None, Error], result)
+        return Success(None)
 
-    @staticmethod
-    def _type_check_consts(state: "State") -> Result["State", Error]:
+    def _type_check_consts(self) -> Result[None, Error]:
         """
         Verify const variable declarations are type safe
 
         Args:
             state (State): State object to retrieve initial type
         """
-        # Partially bind state to first argument for _type_check_assigns
-        type_check_assigns = partial(State._type_check_assigns, state)
-        for const_decl in state._consts:
-            result = type_check_assigns(const_decl.type_, [const_decl.init])
+        for const_decl in self._consts:
+            result = self._type_check_assigns(const_decl.type_, [const_decl.init])
             if not_(is_successful)(result):
-                return Failure(result.failure())
-        return Success(state)
+                return result
+        return Success(None)
 
-    @staticmethod
-    def _type_check_vars(state: "State") -> Result["State", Error]:
+    def _type_check_vars(self) -> Result[None, Error]:
         """
         Verify vars variable declarations are type safe
 
         Args:
             state (State): State object to retrieve initial type
         """
-        # Partially bind state to first argument for _type_check_assigns
-        type_check_assigns = partial(State._type_check_assigns, state)
-        for var_decl in state._vars:
+        for var_decl in self._vars:
             values = var_decl.values + [var_decl.init]
-            result = type_check_assigns(var_decl.type_, values)
+            result = self._type_check_assigns(var_decl.type_, values)
             if not_(is_successful)(result):
-                return Failure(result.failure())
-        return Success(state)
+                return result
+        return Success(None)
 
-    @staticmethod
-    def type_check(state: "State") -> Result["State", Error]:
-        """
-        Run the given State object through various tests to make sure all variable declarations are type safe
-
-        Args:
-            state (State): State object to run tests through
-        """
-        # Delete previous dictionary stored in _id2type and initialize it to empty dictionary
-        state._id2type = Some(dict())
-        result: Result["State", Error] = flow(
-            state,
-            State._build_id_2_type_enums,
-            bind_result(State._build_id_2_type_consts),
-            bind_result(State._build_id_2_type_vars),
-            bind_result(State._type_check_consts),
-            bind_result(State._type_check_vars),
-        )
-
-        return result
-
-    @staticmethod
-    def generate_promela(state: "State") -> str:
-        str_builder: List[str] = []
-        str_builder.append("//**********VARIABLE DECLARATION************//")
-        for const_decl in state._consts:
-            str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
-        for enum_decl in state._enums:
-            str_builder.append(
-                f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
-            )
-        for var_decl in state._vars:
-            if var_decl.type_ in {enum.id for enum in state._enums}:
-                str_builder.append(
-                    f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-                )
-                str_builder.append(
-                    f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-            else:
-                str_builder.append(
-                    f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-                )
-                str_builder.append(
-                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-        return "\n".join(str_builder) + "\n\n"
-
-    def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result["State", Error]:
+    def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result[None, Error]:
         """
         Ensures that enum variable declarations do not use previously declared variable names
 
@@ -821,9 +804,9 @@ class State:
             else:
                 id2type[v.value] = TypeWithDeclLoc(enum_decl.id, v)
 
-        return Success(self)
+        return Success(None)
 
-    def _build_id_2_type_var(self, var_decl: VarDecl) -> Result["State", Error]:
+    def _build_id_2_type_var(self, var_decl: VarDecl) -> Result[None, Error]:
         """
         Ensures that var variable declarations do not use previously declared variable names
 
@@ -843,40 +826,7 @@ class State:
             )
         id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
 
-        return Success(self)
-
-    @property
-    def vars(self) -> list[VarDecl]:
-        return self._vars
-
-    def get_type(self, id: str) -> Result[str, Error]:
-        """
-        Retrieve the type of the variable given the variable name
-
-        Args:
-            id (str): Name of the variable
-        """
-        # requires
-        assert self._id2type != Nothing
-
-        id2type = self._id2type.unwrap()
-        if id in id2type:
-            return Success(id2type[id].type_)
-        result: Result[str, Error] = typechecking.get_type_literal(id)
-        return result
-
-    def is_defined(self, id: str) -> bool:
-        """
-        Determines if a variable is defined or not
-
-        Args:
-            id (str): Name of variable to check
-        """
-        # requires
-        assert self._id2type != Nothing
-
-        defined: bool = is_successful(self.get_type(id))
-        return defined
+        return Success(None)
 
     @staticmethod
     def from_str(state_def: str) -> Result["State", Error]:
@@ -892,3 +842,55 @@ class State:
             bind_result(State._from_str),
         )
         return result
+
+    @staticmethod
+    def generate_promela(state: "State") -> str:
+        str_builder: List[str] = []
+        str_builder.append("//**********VARIABLE DECLARATION************//")
+        for const_decl in state._consts:
+            str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
+        for enum_decl in state._enums:
+            str_builder.append(
+                f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
+            )
+        for var_decl in state._vars:
+            if var_decl.type_ in {enum.id for enum in state._enums}:
+                str_builder.append(
+                    f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                )
+                str_builder.append(
+                    f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                )
+            else:
+                str_builder.append(
+                    f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                )
+                str_builder.append(
+                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                )
+        return "\n".join(str_builder) + "\n\n"
+
+    @staticmethod
+    def _from_str(context: StateParser.StateContext) -> Result["State", Error]:
+        """
+        Return a State object from a valid tree, error otherwise
+
+        Args:
+            context (StateParser.StateContext): Tree to walk through
+        """
+
+        @safe
+        def walk_tree() -> State._Listener:
+            walker: ParseTreeWalker = cast(ParseTreeWalker, ParseTreeWalker.DEFAULT)
+            listener = State._Listener()
+            walker.walk(listener, context)
+            return listener
+
+        listner_result: Result[State._Listener, Error] = walk_tree().alt(
+            lambda exc: StateAntlrWalkerError(str(exc))
+        )
+        return listner_result.bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda listener: listener.state_builder.bind(  # pyright: ignore[reportArgumentType, reportUnknownMemberType]
+                lambda builder: builder.build()
+            )
+        )

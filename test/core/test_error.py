@@ -53,6 +53,7 @@ from bpmncwpverify.core.error import (
     SpinCoverageError,
     SpinInvalidEndStateError,
     SpinSyntaxError,
+    StateAntlrWalkerError,
     StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
@@ -265,6 +266,10 @@ test_inputs: list[tuple[Error, str]] = [
         "Syntax Error in generated promela:\n1 error(s) occurred:\n1: On line 1 in the file 'test/file/path': test_msg",
     ),
     (
+        StateAntlrWalkerError("error"),
+        "STATE ERROR: error",
+    ),
+    (
         StateInitNotInValues("a", Some(0), Some(1), {"b", "c"}),
         "STATE ERROR: init value 'a' at line 0:1 not in allowed values ['b', 'c']",
     ),
@@ -341,6 +346,7 @@ test_ids: list[str] = [
     "SpinCoverageError",
     "SpinInvalidEndStateError",
     "SpinSyntaxError",
+    "StateAntlrWalkerError",
     "StateInitNotInValues",
     "StateInitNotInValuesLineCol",
     "StateMultipleDefinitionError",
