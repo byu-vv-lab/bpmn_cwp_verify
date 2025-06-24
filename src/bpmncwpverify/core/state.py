@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List, Protocol, cast
+from typing import Any, Iterable, Protocol, cast
 
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
@@ -615,6 +615,14 @@ class State:
                 state_str += "\n"
         return state_str
 
+    @property
+    def consts(self) -> tuple[ConstDecl, ...]:
+        return tuple(self._consts)
+
+    @property
+    def enums(self) -> tuple[EnumDecl, ...]:
+        return tuple(self._enums)
+
     def is_defined(self, id: str) -> bool:
         """
         Determines if a variable is defined or not
@@ -660,8 +668,8 @@ class State:
         return result
 
     @property
-    def vars(self) -> list[VarDecl]:
-        return self._vars
+    def vars(self) -> tuple[VarDecl, ...]:
+        return tuple(self._vars)
 
     def _build_id_2_type_consts(self) -> Result[None, Error]:
         """
@@ -842,33 +850,6 @@ class State:
             bind_result(State._from_str),
         )
         return result
-
-    @staticmethod
-    def generate_promela(state: "State") -> str:
-        str_builder: List[str] = []
-        str_builder.append("//**********VARIABLE DECLARATION************//")
-        for const_decl in state._consts:
-            str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
-        for enum_decl in state._enums:
-            str_builder.append(
-                f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
-            )
-        for var_decl in state._vars:
-            if var_decl.type_ in {enum.id for enum in state._enums}:
-                str_builder.append(
-                    f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-                )
-                str_builder.append(
-                    f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-            else:
-                str_builder.append(
-                    f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-                )
-                str_builder.append(
-                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-        return "\n".join(str_builder) + "\n\n"
 
     @staticmethod
     def _from_str(context: StateParser.StateContext) -> Result["State", Error]:

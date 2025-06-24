@@ -61,7 +61,28 @@ def _generate_promela(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
 
 
 def _generate_state_promela(state: State) -> str:
-    return State.generate_promela(state)
+    str_builder: list[str] = []
+    str_builder.append("//**********VARIABLE DECLARATION************//")
+    for const_decl in state.consts:
+        str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
+    for enum_decl in state.enums:
+        str_builder.append(
+            f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
+        )
+    for var_decl in state.vars:
+        if var_decl.type_ in {enum.id for enum in state.enums}:
+            str_builder.append(
+                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+            )
+            str_builder.append(
+                f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+            )
+        else:
+            str_builder.append(
+                f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+            )
+            str_builder.append(f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}")
+    return "\n".join(str_builder) + "\n\n"
 
 
 def _get_variable_names(state: State) -> list[str]:
