@@ -497,6 +497,14 @@ class StateSyntaxError(Error):
         super().__init__()
 
 
+class StateAntlrWalkerError(Error):
+    __slots__ = "msg"
+
+    def __init__(self, msg: str) -> None:
+        self.msg = msg
+        super().__init__()
+
+
 class SubProcessRunError(Error):
     __slots__ = "process_name"
 
@@ -680,6 +688,8 @@ def get_error_message(error: Error) -> str:
                     f"{idx + 1}: On line {map['line_number']} in the file '{map['file_path']}': {map['error_msg']}"
                 )
             return "\n".join(errors)
+        case StateAntlrWalkerError(msg=msg):
+            return "STATE ERROR: {}".format(msg)
         case StateInitNotInValues(id=id, line=line, column=column, values=values):
             location: str = " "
             if line != Nothing and column != Nothing:
