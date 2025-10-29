@@ -19,9 +19,8 @@ def lambda_handler(event, context):
         bpmnData = files[0]
         cwpData = files[1]
         stateData = files[2]
-        behaviorData = files[3]
 
-        result : Result = web_verify(bpmnData, cwpData, stateData, behaviorData)
+        result : Result = web_verify(bpmnData, cwpData, stateData)
         if is_successful(result):
             outputs = result.unwrap()
             return {
