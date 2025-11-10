@@ -60,7 +60,8 @@ docker buildx build --platform linux/amd64 --target lambda -t bpmn-cwp-verify:la
 export PROFILE=teacher
 export REGION=us-east-1
 export ACCOUNT_ID=$(aws sts get-caller-identity --profile "$PROFILE" --query Account --output text)
-export REPO=bpmn-cwp-verify
+export REPO=bpmn-cwp-verify-docker
+export FUNC_NAME=bpmn-cwp-verify-function
 
 # Push to ECR and update Lambda function
 aws ecr get-login-password --profile "$PROFILE" --region "$REGION" | \
