@@ -57,7 +57,7 @@ Quick start:
 docker buildx build --platform linux/amd64 --target lambda -t bpmn-cwp-verify:lambda --load .
 
 # Deploy to AWS (see docker-build.md for full steps)
-export PROFILE=teacher
+export PROFILE=teacher # Replace this with whatever you named the role you are assuming
 export REGION=us-east-1
 export ACCOUNT_ID=$(aws sts get-caller-identity --profile "$PROFILE" --query Account --output text)
 export REPO=bpmn-cwp-verify-docker
@@ -122,4 +122,38 @@ aws lambda create-function \
   --role "IAM_ROLE_ARN/LambdaExec-bpmn-cwp-verify" \
   --handler lambda_function.lambda_handler \
   --zip-file fileb://bpmn-cwp-verify.zip
+```
+
+#### Testing the lambda
+
+The following shell script demonstrates how to test your deployed Lambda function by constructing a test payload (using Python to read example files and encode them in JSON) and invoking the Lambda using the AWS CLI.
+
+It first prepares a JSON payload from three test files (state.txt, test_cwp.xml, test_bpmn.bpmn) located in `test/resources/simple_example`. The payload is constructed by embedding the contents of these files in a JSON structure expected by the Lambda. The script then exports necessary environment variables for AWS CLI authentication and Lambda function identification.
+
+Finally, it sends the payload to your Lambda function and saves the response to `/tmp/verify-response.json`. You should adjust the IAM profile name and other environment variables as needed for your specific deployment.
+
+Review and update any file paths or parameters if your environment differs from the example.
+
+```shell
+PAYLOAD=$(python - <<'PY'
+import json, pathlib
+base = pathlib.Path("test/resources/simple_example")
+state = (base / "state.txt").read_text()
+cwp = (base / "test_cwp.xml").read_text()
+bpmn = (base / "test_bpmn.bpmn").read_text()
+event = {"body": json.dumps({"files": [state, cwp, bpmn]})}
+print(json.dumps(event))
+PY
+)
+export PROFILE=teacher # Replace this with whatever you named the role you are assuming
+export REGION=us-east-1
+export FUNC_NAME=bpmn-cwp-verify-function
+
+aws lambda invoke \
+  --profile "$PROFILE" \
+  --region "$REGION" \
+  --function-name "$FUNC_NAME" \
+  --cli-binary-format raw-in-base64-out \
+  --payload "$PAYLOAD" \
+  /tmp/verify-response.json
 ```
