@@ -1,44 +1,6 @@
 ## Current Lambda Code
 
-```python
-import json
-import os
-import sys
-from bpmncwpverify.cli import web_verify
-from returns.pipeline import is_successful
-from returns.result import Result
-
-def lambda_handler(event, context):
-    try:
-        body = json.loads(event["body"])
-        files = body.get("files", [])
-        if not files:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "No files received"})
-            }
-        bpmnData = files[0]
-        cwpData = files[1]
-        stateData = files[2]
-
-        result : Result = web_verify(stateData, cwpData, bpmnData)
-        if is_successful(result):
-            outputs = result.unwrap()
-            return {
-                "statusCode": 200,
-                "body": json.dumps({"message": outputs.promela})
-            }
-        else:
-            return {
-                "statusCode": 400,
-                "body": json.dumps({"error": "Verification failed"})
-            }
-    except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)})
-        }
-```
+See [`lambda_function.py`](../lambda_function.py) for the current Lambda handler implementation.
 
 ## Deploying as a Lambda to AWS
 
