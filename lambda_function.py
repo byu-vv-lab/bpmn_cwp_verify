@@ -24,7 +24,7 @@ def lambda_handler(event: dict[str, Any], context: dict[str, Any]) -> dict[str, 
         stateData = files[2]
 
         result: IOResult[SpinVerificationReport, Error] = web_verify(
-            bpmnData, cwpData, stateData
+            stateData, cwpData, bpmnData
         )
         if is_successful(result):
             outputs: SpinVerificationReport = unsafe_perform_io(result.unwrap())

@@ -21,7 +21,7 @@ def lambda_handler(event, context):
         cwpData = files[1]
         stateData = files[2]
 
-        result : Result = web_verify(bpmnData, cwpData, stateData)
+        result : Result = web_verify(stateData, cwpData, bpmnData)
         if is_successful(result):
             outputs = result.unwrap()
             return {
