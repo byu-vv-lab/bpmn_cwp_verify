@@ -6,7 +6,7 @@ FROM public.ecr.aws/lambda/python:3.12 AS base
 # Install build tools and runtime dependencies
 # bison provides yacc (needed to build Spin)
 # Create yacc wrapper that uses bison -y for yacc compatibility
-RUN microdnf -y install gcc make tar gzip ca-certificates zip which wget bison \
+RUN microdnf -y install gcc make tar gzip xz ca-certificates zip which wget bison git \
     && microdnf -y clean all \
     && printf '#!/usr/bin/bash\nexec /usr/bin/bison -y "$@"\n' > /usr/bin/yacc \
     && chmod +x /usr/bin/yacc \
@@ -32,6 +32,24 @@ ENV PATH=/opt/bin:$PATH
 # Development stage: For local development with hot reload
 # ============================================================================
 FROM base AS dev
+
+# Install Node.js (needed for pyright and other tooling)
+ARG NODE_VERSION=16.20.2
+ARG TARGETARCH
+RUN case "${TARGETARCH}" in \
+        "amd64") NODE_ARCH="x64" ;; \
+        "arm64") NODE_ARCH="arm64" ;; \
+        *) echo "Unsupported TARGETARCH ${TARGETARCH}" && exit 1 ;; \
+    esac \
+    && NODE_DIST="node-v${NODE_VERSION}-linux-${NODE_ARCH}" \
+    && wget -q https://nodejs.org/dist/v${NODE_VERSION}/${NODE_DIST}.tar.xz \
+    && mkdir -p /usr/local/lib/nodejs \
+    && tar -xJf ${NODE_DIST}.tar.xz -C /usr/local/lib/nodejs \
+    && rm ${NODE_DIST}.tar.xz \
+    && ln -sf /usr/local/lib/nodejs/${NODE_DIST}/bin/node /usr/local/bin/node \
+    && ln -sf /usr/local/lib/nodejs/${NODE_DIST}/bin/npm /usr/local/bin/npm \
+    && ln -sf /usr/local/lib/nodejs/${NODE_DIST}/bin/npx /usr/local/bin/npx \
+    && ln -sf /usr/local/lib/nodejs/${NODE_DIST}/bin/corepack /usr/local/bin/corepack
 
 WORKDIR /app
 
