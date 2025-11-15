@@ -9,8 +9,7 @@ FROM public.ecr.aws/lambda/python:3.12 AS base
 RUN microdnf -y install gcc make tar gzip xz ca-certificates zip which wget bison git \
     && microdnf -y clean all \
     && printf '#!/usr/bin/bash\nexec /usr/bin/bison -y "$@"\n' > /usr/bin/yacc \
-    && chmod +x /usr/bin/yacc \
-    && ls -la /usr/bin/yacc && cat /usr/bin/yacc
+    && chmod +x /usr/bin/yacc
 
 ARG SPIN_VERSION=6.5.2
 
