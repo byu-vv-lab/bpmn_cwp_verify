@@ -14,6 +14,6 @@
   "reportUnknownArgumentType": false,
   "extraPaths": [
     "src",
-    "/home/vscode/.local/lib/python3.12/site-packages"
+    "/var/lang/lib/python3.12/site-packages/"
   ]
 }

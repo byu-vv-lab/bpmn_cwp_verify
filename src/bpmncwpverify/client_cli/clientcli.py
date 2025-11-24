@@ -9,7 +9,7 @@ from returns.pipeline import flow, is_successful, managed
 from returns.result import Failure, Result, ResultE, Success
 from returns.unsafe import unsafe_perform_io
 
-LAMBDA_URL = "https://cxvqggpd6swymxnmahwvgfsina0tiokb.lambda-url.us-east-1.on.aws/"
+LAMBDA_URL = "https://iatjgvm4gt75bw4qwbz7l3bihq0irdns.lambda-url.us-east-1.on.aws/"
 
 
 class Outputs:
