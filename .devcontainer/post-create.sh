@@ -13,6 +13,9 @@ spin -V || echo "Warning: Spin not found in PATH"
 # Upgrade pip
 pip install --upgrade pip
 
+# Install pyright for pre-commit
+pip install pyright
+
 # Install the package
 pip install --user --editable ".[dev]"
 
