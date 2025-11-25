@@ -95,10 +95,11 @@ def _trigger_lambda(
 ) -> IOResult[SpinVerificationReport, Error]:
     try:
         response: requests.Response = requests.post(
-            url=LAMBDA_URL, data={"file": [bpmn, cwp, state]}
+            url=LAMBDA_URL, data={"files": [bpmn, cwp, state]}
         )
         response.raise_for_status()
-        return IOSuccess(response.json())
+        report = response.json(object_hook=lambda obj: SpinVerificationReport(**obj))
+        return IOSuccess(report)
     except requests.exceptions.HTTPError as err:
         if err.response.status_code == 400:
             return IOFailure(LambdaVerificationError(err.response.text))

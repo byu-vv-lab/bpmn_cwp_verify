@@ -28,7 +28,17 @@ def lambda_handler(event: dict[str, Any], context: dict[str, Any]) -> dict[str, 
         )
         if is_successful(result):
             outputs: SpinVerificationReport = unsafe_perform_io(result.unwrap())
-            return {"statusCode": 200, "body": json.dumps({"message": outputs.promela})}
+            return {
+                "statusCode": 200,
+                "body": json.dumps(
+                    {
+                        "file_path": outputs.file_path,
+                        "promela": outputs.promela,
+                        "spin_cli_args": outputs.spin_cli_args,
+                        "spin_report": outputs.spin_report,
+                    }
+                ),
+            }
         else:
             return {
                 "statusCode": 400,
