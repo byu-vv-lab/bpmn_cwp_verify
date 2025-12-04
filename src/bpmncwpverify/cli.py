@@ -95,7 +95,12 @@ def _trigger_lambda(
 ) -> IOResult[SpinVerificationReport, Error]:
     try:
         response: requests.Response = requests.post(
-            url=LAMBDA_URL, data={"files": [bpmn, cwp, state]}
+            url=LAMBDA_URL,
+            json={
+                "state": state,
+                "cwp": cwp,
+                "bpmn": bpmn,
+            },
         )
         response.raise_for_status()
         report = response.json(object_hook=lambda obj: SpinVerificationReport(**obj))
@@ -123,7 +128,6 @@ def _verify_on_lambda_from_files(
     ).bind(  # pyright: ignore[reportUnknownMemberType]
         lambda state: read_file_as_string(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda cwp: read_file_as_string(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
-                # call equivalent of `_trigger_lambda` here; change it to return a ResultIO value
                 lambda bpmn: _trigger_lambda(state, cwp, bpmn)
             )
         )
