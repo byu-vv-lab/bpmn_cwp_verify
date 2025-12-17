@@ -1,14 +1,25 @@
 # type: ignore
+import json
 import os
 import sys
+from types import SimpleNamespace
 
 import pytest
+from requests.exceptions import HTTPError
 from returns.functions import not_
+from returns.io import IOSuccess
 from returns.pipeline import is_successful
 from returns.unsafe import unsafe_perform_io
 
-from bpmncwpverify.cli import cli_verify, web_verify
-from bpmncwpverify.core.error import Error, FileReadFileError, StateSyntaxError
+from bpmncwpverify.cli import _trigger_lambda, cli_verify, verify, web_verify
+from bpmncwpverify.core.error import (
+    Error,
+    FileReadFileError,
+    HttpError,
+    LambdaVerificationError,
+    StateSyntaxError,
+)
+from bpmncwpverify.core.spin import SpinVerificationReport
 
 
 def test_givin_bad_state_file_path_when_verify_then_io_error(capsys):
@@ -156,3 +167,125 @@ def test_given_bad_input_when_webverify_then_failure():
     assert not_(is_successful)(result)
     error = unsafe_perform_io(result.failure())
     assert isinstance(error, StateSyntaxError)
+
+
+def test_triggers_lambda_when_given_cloud_flag(mocker):
+    mock_trigger_lambda = mocker.patch(
+        "bpmncwpverify.cli._trigger_lambda",
+        return_value=IOSuccess(
+            json.load(
+                open("./test/resources/simple_example/lambda_output.json", "r"),
+                object_hook=lambda obj: SpinVerificationReport(**obj),
+            )
+        ),
+    )
+    test_args = [
+        "verify",
+        "--cloud",
+        "./test/resources/simple_example/state.txt",
+        "./test/resources/simple_example/test_cwp.xml",
+        "./test/resources/simple_example/test_bpmn.bpmn",
+    ]
+    sys.argv = test_args
+    verify()
+
+    mock_trigger_lambda.assert_called_once()
+
+
+def test_assert_success_when_lambda_returns_success(mocker):
+    mock_response = SimpleNamespace()
+    mock_response.raise_for_status = lambda: None
+    mock_response.json = lambda **kwargs: json.load(
+        open("./test/resources/simple_example/lambda_output.json", "r"),
+        object_hook=lambda obj: SpinVerificationReport(**obj),
+    )
+
+    mocker.patch("requests.post", return_value=mock_response)
+
+    bpmn = ""
+    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+        for line in bpmn_file:
+            bpmn += line
+
+    cwp = ""
+    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+        for line in cwp_file:
+            cwp += line
+
+    state = ""
+    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+        for line in state_file:
+            state += line
+
+    result = _trigger_lambda(state, cwp, bpmn)
+
+    assert is_successful(result)
+
+
+def test_assert_failure_when_lambda_verification_fails(mocker):
+    mock_response = SimpleNamespace()
+    mock_response.status_code = 400
+    mock_response.text = "Error text"
+
+    def throw_http_error():
+        raise HTTPError(response=mock_response)
+
+    mock_response.raise_for_status = throw_http_error
+
+    mocker.patch("requests.post", return_value=mock_response)
+
+    bpmn = ""
+    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+        for line in bpmn_file:
+            bpmn += line
+
+    cwp = ""
+    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+        for line in cwp_file:
+            cwp += line
+
+    state = ""
+    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+        for line in state_file:
+            state += line
+
+    result = _trigger_lambda(state, cwp, bpmn)
+
+    assert not_(is_successful)(result)
+    error = unsafe_perform_io(result.failure())
+    assert isinstance(error, LambdaVerificationError)
+
+
+def test_assert_failure_when_lambda_returns_internal_server_error(mocker):
+    mock_response = SimpleNamespace()
+    mock_response.status_code = 500
+    mock_response.reason = "Internal Server Error"
+    mock_response.text = "Error text"
+
+    def throw_http_error():
+        raise HTTPError(response=mock_response)
+
+    mock_response.raise_for_status = throw_http_error
+
+    mocker.patch("requests.post", return_value=mock_response)
+
+    bpmn = ""
+    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+        for line in bpmn_file:
+            bpmn += line
+
+    cwp = ""
+    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+        for line in cwp_file:
+            cwp += line
+
+    state = ""
+    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+        for line in state_file:
+            state += line
+
+    result = _trigger_lambda(state, cwp, bpmn)
+
+    assert not_(is_successful)(result)
+    error = unsafe_perform_io(result.failure())
+    assert isinstance(error, HttpError)
