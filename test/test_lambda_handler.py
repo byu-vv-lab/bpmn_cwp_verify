@@ -20,9 +20,13 @@ def test_lambda_handler_correctly_handles_good_input(mocker):
     )
 
     input = {
-        "bpmn": open("test/resources/simple_example/test_bpmn.bpmn").read(),
-        "cwp": open("test/resources/simple_example/test_cwp.xml").read(),
-        "state": open("test/resources/simple_example/state.txt").read(),
+        "body": json.dumps(
+            {
+                "bpmn": open("test/resources/simple_example/test_bpmn.bpmn").read(),
+                "cwp": open("test/resources/simple_example/test_cwp.xml").read(),
+                "state": open("test/resources/simple_example/state.txt").read(),
+            }
+        )
     }
 
     expected = open("test/resources/simple_example/lambda_output.json").read().strip()
@@ -35,8 +39,12 @@ def test_lambda_handler_correctly_handles_good_input(mocker):
 
 def test_lambda_handler_returns_bad_request_on_bad_input():
     input = {
-        "bpmn": open("test/resources/simple_example/test_bpmn.bpmn").read(),
-        "bad_input": True,
+        "body": json.dumps(
+            {
+                "bpmn": open("test/resources/simple_example/test_bpmn.bpmn").read(),
+                "bad_input": True,
+            }
+        )
     }
 
     response = lambda_handler(input, {})

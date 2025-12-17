@@ -12,9 +12,11 @@ from bpmncwpverify.core.spin import SpinVerificationReport
 
 def lambda_handler(event: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
     try:
-        state = event.get("state", None)
-        cwp = event.get("cwp", None)
-        bpmn = event.get("bpmn", None)
+        body = event.get("body", "{}")
+        data = json.loads(body)
+        state = data.get("state", None)
+        cwp = data.get("cwp", None)
+        bpmn = data.get("bpmn", None)
         if not (state and cwp and bpmn):
             return {
                 "statusCode": 400,
