@@ -3,6 +3,7 @@ import builtins
 import typing
 from xml.etree.ElementTree import Element
 
+import requests
 from returns.maybe import Maybe, Nothing
 
 
@@ -354,6 +355,32 @@ class FlowExpressionError(Error):
         self.exception_str = exception_str
 
 
+class HttpError(Error):
+    __slots__ = ["status", "reason", "body"]
+
+    def __init__(self, status: int, reason: str, body: str):
+        super().__init__()
+        self.status = status
+        self.reason = reason
+        self.body = body
+
+
+class JsonDecodeError(Error):
+    __slots__ = ["body"]
+
+    def __init__(self, body: str):
+        super().__init__()
+        self.body = body
+
+
+class LambdaVerificationError(Error):
+    __slots__ = ["description"]
+
+    def __init__(self, description: str):
+        super().__init__()
+        self.description = description
+
+
 class MessageError(Error):
     __slots__ = ["node_id", "error_msg"]
 
@@ -388,6 +415,14 @@ class CounterExampleError(Error):
 
     def get_counter_example(self) -> str:
         return self.counter_example
+
+
+class RequestError(Error):
+    __slots__ = ["err"]
+
+    def __init__(self, err: requests.exceptions.RequestException) -> None:
+        super().__init__()
+        self.err = err
 
 
 class SpinAssertionError(CounterExampleError):
@@ -650,12 +685,22 @@ def get_error_message(error: Error) -> str:
             flow_id=flow_id, expression=expression, exception_str=exception_str
         ):
             return f"Error occurred while parsing the expression on flow: '{flow_id}' with expression: '{expression}':\n\t'{exception_str}'"
+        case HttpError(status=status, reason=reason):
+            return f"ERROR: HTTP Error received as response: {status} {reason}"
+        case JsonDecodeError(body=body):
+            return f"ERROR: Failed to decode JSON of lamdba response: {body}"
+        case LambdaVerificationError(description=description):
+            return f"ERROR: Lambda encountered an error in the verification process: {description}"
         case MessageError(node_id=node_id, error_msg=error_msg):
             return f"Inter-process message error at node: {node_id}. {error_msg}"
         case NotImplementedError(function=function):
             return "ERROR: not implemented '{}'".format(function)
         case NotInitializedError(var_name=var_name):
             return "ERROR: '{}' is not initialized".format(var_name)
+        case RequestError(err=err):
+            return (
+                f"ERROR: Unknown error occurred while sending request to lambda: {err}"
+            )
         case SpinAssertionError(list_of_error_maps=list_of_error_maps):
             errors: list[str] = []
             errors.append("Assertion Error:")

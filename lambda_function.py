@@ -12,23 +12,31 @@ from bpmncwpverify.core.spin import SpinVerificationReport
 
 def lambda_handler(event: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
     try:
-        body = json.loads(event["body"])
-        files = body.get("files", [])
-        if not files:
+        body = event.get("body", "{}")
+        data = json.loads(body)
+        state = data.get("state", None)
+        cwp = data.get("cwp", None)
+        bpmn = data.get("bpmn", None)
+        if not (state and cwp and bpmn):
             return {
                 "statusCode": 400,
-                "body": json.dumps({"error": "No files received"}),
+                "body": json.dumps({"error": "Missing file(s)"}),
             }
-        bpmnData = files[0]
-        cwpData = files[1]
-        stateData = files[2]
 
-        result: IOResult[SpinVerificationReport, Error] = web_verify(
-            stateData, cwpData, bpmnData
-        )
+        result: IOResult[SpinVerificationReport, Error] = web_verify(state, cwp, bpmn)
         if is_successful(result):
             outputs: SpinVerificationReport = unsafe_perform_io(result.unwrap())
-            return {"statusCode": 200, "body": json.dumps({"message": outputs.promela})}
+            return {
+                "statusCode": 200,
+                "body": json.dumps(
+                    {
+                        "file_path": outputs.file_path,
+                        "promela": outputs.promela,
+                        "spin_cli_args": outputs.spin_cli_args,
+                        "spin_report": outputs.spin_report,
+                    }
+                ),
+            }
         else:
             return {
                 "statusCode": 400,

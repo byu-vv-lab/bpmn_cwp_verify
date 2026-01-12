@@ -1,14 +1,22 @@
 import argparse
 from xml.etree.ElementTree import Element
 
+import requests
 from returns.functions import not_
-from returns.io import IOResult
+from returns.io import IOFailure, IOResult, IOSuccess
 from returns.pipeline import is_successful
 from returns.unsafe import unsafe_perform_io
 
 from bpmncwpverify.core.accessmethods import bpmnmethods
 from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
-from bpmncwpverify.core.error import Error, get_error_message
+from bpmncwpverify.core.error import (
+    Error,
+    HttpError,
+    JsonDecodeError,
+    LambdaVerificationError,
+    RequestError,
+    get_error_message,
+)
 from bpmncwpverify.core.spin import (
     SpinVerificationReport,
     verify_with_spin,
@@ -18,6 +26,8 @@ from bpmncwpverify.util.file import (
     element_tree_from_string,
     read_file_as_string,
 )
+
+LAMBDA_URL = "https://iatjgvm4gt75bw4qwbz7l3bihq0irdns.lambda-url.us-east-1.on.aws/"
 
 
 def _get_argument_parser() -> "argparse.ArgumentParser":
@@ -36,6 +46,11 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
     argument_parser.add_argument(
         "bpmn_file",
         help="BPMN workflow file in XML",
+    )
+    argument_parser.add_argument(
+        "--cloud",
+        action="store_true",
+        help="Run verification remotely on AWS Lambda",
     )
     return argument_parser
 
@@ -75,6 +90,51 @@ def _verify_with_spin_from_files(
     return result
 
 
+def _trigger_lambda(
+    state: str, cwp: str, bpmn: str
+) -> IOResult[SpinVerificationReport, Error]:
+    try:
+        response: requests.Response = requests.post(
+            url=LAMBDA_URL,
+            json={
+                "state": state,
+                "cwp": cwp,
+                "bpmn": bpmn,
+            },
+        )
+        response.raise_for_status()
+        report = response.json(object_hook=lambda obj: SpinVerificationReport(**obj))
+        return IOSuccess(report)
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == 400:
+            return IOFailure(LambdaVerificationError(err.response.text))
+        else:
+            return IOFailure(
+                HttpError(
+                    err.response.status_code, err.response.reason, err.response.text
+                )
+            )
+    except requests.exceptions.JSONDecodeError as err:
+        return IOFailure(JsonDecodeError(err.response.text if err.response else ""))
+    except requests.exceptions.RequestException as err:
+        return IOFailure(RequestError(err))
+
+
+def _verify_on_lambda_from_files(
+    state_file: str, cwp_file: str, bpmn_file: str
+) -> IOResult[SpinVerificationReport, Error]:
+    result: IOResult[SpinVerificationReport, Error] = read_file_as_string(
+        state_file
+    ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: read_file_as_string(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: read_file_as_string(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn: _trigger_lambda(state, cwp, bpmn)
+            )
+        )
+    )
+    return result
+
+
 def cli_verify(
     state_file: str, cwp_file: str, bpmn_file: str
 ) -> IOResult[SpinVerificationReport, Error]:
@@ -88,7 +148,12 @@ def verify() -> None:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
 
-    result = cli_verify(args.state_file, args.cwp_file, args.bpmn_file)
+    if args.cloud:
+        result = _verify_on_lambda_from_files(
+            args.state_file, args.cwp_file, args.bpmn_file
+        )
+    else:
+        result = cli_verify(args.state_file, args.cwp_file, args.bpmn_file)
 
     if not_(is_successful)(result):
         error: Error = unsafe_perform_io(result.failure())

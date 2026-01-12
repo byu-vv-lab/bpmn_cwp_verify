@@ -34,7 +34,7 @@ FROM base AS dev
 
 # Install Node.js (needed for pyright and other tooling)
 ARG NODE_VERSION=16.20.2
-ARG TARGETARCH
+ARG TARGETARCH=amd64
 RUN case "${TARGETARCH}" in \
         "amd64") NODE_ARCH="x64" ;; \
         "arm64") NODE_ARCH="arm64" ;; \
