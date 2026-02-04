@@ -1,0 +1,12 @@
+enum IsDanger { isDangerInit true false }
+enum IsCommunication { IsCommunicationInit received failed }
+enum IsPersonFound { isPersonFoundInit false true }
+enum IsSearchOn {isSearchOnInit on off }
+
+var groundDanger: IsDanger = isDangerInit
+var airDanger: IsDanger = isDangerInit
+
+var communication: IsCommunication = IsCommunicationInit
+
+var personFound: IsPersonFound = isPersonFoundInit
+var searchState: IsSearchOn = isSearchOnInit
