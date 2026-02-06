@@ -1,12 +1,15 @@
-enum Risk { riskInit ground air both }
+enum RiskState { riskInit ground air both }
 
-enum IsCommunication { isCommunicationInit received failed }
-enum IsPersonFound { isPersonFoundInit false true }
-enum IsSearchOn {isSearchOnInit on off }
+enum CommunicationState { communicationInit received failed }
+enum ConditionsState { conditionsInit changed same}
 
-var risk: Risk = riskInit
+enum MissingPersonState { missingPersonInit found missing }
+enum SearchState {searchInit on off }
 
-var communication: IsCommunication = isCommunicationInit
+var risk: RiskState = riskInit
 
-var personFound: IsPersonFound = isPersonFoundInit
-var searchState: IsSearchOn = isSearchOnInit
+var communication: CommunicationState = communicationInit
+var conditions: ConditionsState = conditionsInit
+
+var missingPerson: MissingPersonState = missingPersonInit
+var search: SearchState = searchInit
