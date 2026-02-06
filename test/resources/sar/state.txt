@@ -1,4 +1,4 @@
-enum RiskState { riskInit ground air both }
+enum RiskState { riskInit ground air both none }
 
 enum CommunicationState { communicationInit received failed }
 enum ConditionsState { conditionsInit changed same}
