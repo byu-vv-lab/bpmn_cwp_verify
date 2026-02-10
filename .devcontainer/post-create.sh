@@ -26,10 +26,14 @@ npm install -g pyright
 pre-commit install
 
 # --- devcontainer niceties (dircolors, aliases) ---
+# Append color support to ~/.bashrc so it persists in interactive shells.
+# post-create.sh runs in its own subshell, so aliases and exports set here
+# would not survive into new terminal sessions without writing them to a
+# shell profile.
+cat >> ~/.bashrc << 'EOF'
 
-# Mac-ish LS_COLORS (closer to BSD/macOS vibe)
+# Color support (added by devcontainer post-create)
 export LS_COLORS='di=34:ln=36:so=35:pi=33:ex=32:bd=33;01:cd=33;01:su=31;01:sg=31;01:tw=34;01:ow=34;01:'
-
 alias ls='ls --color=auto'
 alias ll='ls -alhF --color=auto'
 alias la='ls -A'
@@ -38,3 +42,4 @@ alias diff='diff --color=auto'
 alias ip='ip -color=auto'
 export LESS='-R'
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+EOF
