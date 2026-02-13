@@ -1,6 +1,6 @@
 # Docker Build Guide
 
-This guide explains how to build the different Docker images for this project. The Dockerfile uses multi-stage builds with different targets for different use cases.
+This guide explains how to build the different Docker images for this project. The Dockerfile lives in `.devcontainer/Dockerfile` and uses multi-stage builds with different targets for different use cases. Run all build commands from the **project root**.
 
 ## Available Build Targets
 
@@ -29,7 +29,7 @@ A minimal stage that extracts the Spin layer zip file from `spin-layer` for easy
 ### Development Image (for local testing)
 
 ```bash
-docker build --target dev -t bpmn-cwp-verify:dev .
+docker build -f .devcontainer/Dockerfile --target dev -t bpmn-cwp-verify:dev .
 ```
 
 **Usage:**
@@ -48,7 +48,7 @@ docker run --rm --entrypoint /bin/bash bpmn-cwp-verify:dev -c "python -c 'from b
 ### Lambda Image (for AWS deployment)
 
 ```bash
-docker buildx build --platform linux/amd64 --target lambda -t bpmn-cwp-verify:lambda --load .
+docker buildx build -f .devcontainer/Dockerfile --platform linux/amd64 --target lambda -t bpmn-cwp-verify:lambda --load .
 ```
 
 **Note:** The `--load` flag is required to load the image into your local Docker daemon. Without it, the image only exists in the buildx cache. This builds for x86_64 architecture, which matches the Lambda function configuration.
@@ -58,7 +58,7 @@ docker buildx build --platform linux/amd64 --target lambda -t bpmn-cwp-verify:la
 **Build the layer artifact:**
 
 ```bash
-docker buildx build --platform linux/amd64 --target artifact -o type=local,dest=. .
+docker buildx build -f .devcontainer/Dockerfile --platform linux/amd64 --target artifact -o type=local,dest=. .
 ```
 
 This creates `spin-layer.zip` in the current directory.
@@ -174,7 +174,7 @@ cat response.json
 ### Lambda function fails with "Unable to import module"
 
 - Make sure you're building the `lambda` target, not just `base` or `dev`.
-- Verify the Lambda handler file (`lambda_function.py`) is copied in the Dockerfile.
+- Verify the Lambda handler file (`lambda_function.py`) is copied in `.devcontainer/Dockerfile`.
 
 ### Spin not found in Lambda
 

@@ -8,15 +8,15 @@ This project supports two deployment methods:
 
 ### Option 1: Container Image (Recommended)
 
-The project includes a Dockerfile that builds a container image with Spin, gcc, and the Python package. This is the recommended approach for production deployments.
+The project includes a Dockerfile in `.devcontainer/Dockerfile` that builds a container image with Spin, gcc, and the Python package. This is the recommended approach for production deployments.
 
 **See [Docker Build Guide](docker-build.md) for detailed instructions.**
 
 Quick start:
 
 ```bash
-# Build Lambda image
-docker buildx build --platform linux/amd64 --target lambda -t bpmn-cwp-verify:lambda --load .
+# Build Lambda image (run from project root)
+docker buildx build -f .devcontainer/Dockerfile --platform linux/amd64 --target lambda -t bpmn-cwp-verify:lambda --load .
 
 # Deploy to AWS (see docker-build.md for full steps)
 export PROFILE=teacher # Replace this with whatever you named the role you are assuming
