@@ -1,0 +1,38 @@
+# Git and IDE
+.git
+.gitignore
+.vscode
+.cursor
+*.code-workspace
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+env
+.mypy_cache
+.pytest_cache
+.ruff_cache
+*.egg-info
+.eggs
+dist
+build
+
+# Test and dev artifacts
+.coverage
+htmlcov
+.tox
+.nox
+
+# Docs and notes (not needed in image)
+docs
+*.md
+!README.md
+
+# Local and OS
+.DS_Store
+Thumbs.db
