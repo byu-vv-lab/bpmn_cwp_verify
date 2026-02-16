@@ -139,7 +139,9 @@
       <bpmn:outgoing>Flow_19yvcxl</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_0xqfhag" sourceRef="Event_0rie1jb" targetRef="Gateway_1wiubgs" />
-    <bpmn:sequenceFlow id="Flow_0ys3orh" name="search == off" sourceRef="Gateway_1wiubgs" targetRef="Event_1y08vay" />
+    <bpmn:sequenceFlow id="Flow_0ys3orh" name="search == off" sourceRef="Gateway_1wiubgs" targetRef="Event_1y08vay">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=search == off</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_11kkrhc" sourceRef="Gateway_1wiubgs" targetRef="Event_0b77iep">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=conditions == same</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -481,7 +483,7 @@
         <di:waypoint x="770" y="180" />
         <di:waypoint x="568" y="180" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="737" y="373" width="65" height="14" />
+          <dc:Bounds x="777" y="373" width="65" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_11kkrhc_di" bpmnElement="Flow_11kkrhc">
