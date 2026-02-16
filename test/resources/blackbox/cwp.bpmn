@@ -41,6 +41,7 @@
     <bpmn:endEvent id="Event_1y08vay" name="Black Box Not Found">
       <bpmn:incoming>Flow_05ze3p4</bpmn:incoming>
       <bpmn:incoming>Flow_0cw6in5</bpmn:incoming>
+      <bpmn:incoming>Flow_0ys3orh</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_14ajlmh" sourceRef="StartEvent_1" targetRef="Activity_0hi7yqd" />
     <bpmn:sequenceFlow id="Flow_1amtk72" sourceRef="Activity_0hi7yqd" targetRef="Gateway_12gwky0" />
@@ -61,6 +62,7 @@
       <bpmn:incoming>Flow_1vkp8sg</bpmn:incoming>
       <bpmn:incoming>Flow_18gu4s0</bpmn:incoming>
       <bpmn:incoming>Flow_1i3h75n</bpmn:incoming>
+      <bpmn:incoming>Flow_19yvcxl</bpmn:incoming>
       <bpmn:outgoing>Flow_17vrmpc</bpmn:outgoing>
     </bpmn:task>
     <bpmn:exclusiveGateway id="Gateway_0n5d8p6">
@@ -92,8 +94,8 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=missingPerson == found</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:intermediateCatchEvent id="Event_0b77iep" name="Await Updates">
-      <bpmn:incoming>Flow_06v49tq</bpmn:incoming>
       <bpmn:incoming>Flow_00v1iq6</bpmn:incoming>
+      <bpmn:incoming>Flow_11kkrhc</bpmn:incoming>
       <bpmn:outgoing>Flow_18gu4s0</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0oo7uks" messageRef="Message_1043r11" />
     </bpmn:intermediateCatchEvent>
@@ -103,10 +105,9 @@
         <zeebe:taskDefinition type="updateUUV" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1d11uiy</bpmn:incoming>
-      <bpmn:outgoing>Flow_06v49tq</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0xqfhag</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0czpnw4" />
     </bpmn:intermediateThrowEvent>
-    <bpmn:sequenceFlow id="Flow_06v49tq" sourceRef="Event_0rie1jb" targetRef="Event_0b77iep" />
     <bpmn:sequenceFlow id="Flow_1cw95ww" name="blackBox == missing" sourceRef="Gateway_0n5d8p6" targetRef="Event_0qccs6x">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=blackBox == missing</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -129,6 +130,20 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=conditions == same</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1i3h75n" name="conditions == changed" sourceRef="Gateway_0kojsxy" targetRef="Activity_0wmycgw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=conditions == changed</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_1wiubgs">
+      <bpmn:incoming>Flow_0xqfhag</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ys3orh</bpmn:outgoing>
+      <bpmn:outgoing>Flow_11kkrhc</bpmn:outgoing>
+      <bpmn:outgoing>Flow_19yvcxl</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0xqfhag" sourceRef="Event_0rie1jb" targetRef="Gateway_1wiubgs" />
+    <bpmn:sequenceFlow id="Flow_0ys3orh" name="search == off" sourceRef="Gateway_1wiubgs" targetRef="Event_1y08vay" />
+    <bpmn:sequenceFlow id="Flow_11kkrhc" sourceRef="Gateway_1wiubgs" targetRef="Event_0b77iep">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=conditions == same</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_19yvcxl" name="conditions == changed" sourceRef="Gateway_1wiubgs" targetRef="Activity_0wmycgw">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=conditions == changed</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
   </bpmn:process>
@@ -341,6 +356,9 @@
       <bpmndi:BPMNShape id="Gateway_0kojsxy_di" bpmnElement="Gateway_0kojsxy" isMarkerVisible="true">
         <dc:Bounds x="485" y="395" width="50" height="50" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1wiubgs_di" bpmnElement="Gateway_1wiubgs" isMarkerVisible="true">
+        <dc:Bounds x="745" y="395" width="50" height="50" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_14ajlmh_di" bpmnElement="Flow_14ajlmh">
         <di:waypoint x="250" y="198" />
         <di:waypoint x="250" y="260" />
@@ -422,10 +440,6 @@
         <di:waypoint x="650" y="300" />
         <di:waypoint x="690" y="300" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_06v49tq_di" bpmnElement="Flow_06v49tq">
-        <di:waypoint x="852" y="420" />
-        <di:waypoint x="668" y="420" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1cw95ww_di" bpmnElement="Flow_1cw95ww">
         <di:waypoint x="895" y="300" />
         <di:waypoint x="982" y="300" />
@@ -456,6 +470,31 @@
         <di:waypoint x="740" y="340" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="566" y="366" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xqfhag_di" bpmnElement="Flow_0xqfhag">
+        <di:waypoint x="852" y="420" />
+        <di:waypoint x="795" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ys3orh_di" bpmnElement="Flow_0ys3orh">
+        <di:waypoint x="770" y="395" />
+        <di:waypoint x="770" y="180" />
+        <di:waypoint x="568" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="737" y="373" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11kkrhc_di" bpmnElement="Flow_11kkrhc">
+        <di:waypoint x="745" y="420" />
+        <di:waypoint x="668" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19yvcxl_di" bpmnElement="Flow_19yvcxl">
+        <di:waypoint x="770" y="445" />
+        <di:waypoint x="770" y="500" />
+        <di:waypoint x="740" y="500" />
+        <di:waypoint x="740" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="722" y="506" width="67" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Participant_0tp0tl4_di" bpmnElement="Participant_0tp0tl4" isHorizontal="true">
