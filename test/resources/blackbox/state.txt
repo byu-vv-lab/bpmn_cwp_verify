@@ -1,0 +1,15 @@
+enum RiskState { riskInit auv human both none }
+
+enum CommunicationState { communicationInit received failed }
+enum ConditionsState { conditionsInit changed same}
+
+enum BlackBoxState { blackBoxInit found missing }
+enum SearchState {searchInit on off }
+
+var risk: RiskState = riskInit
+
+var communication: CommunicationState = communicationInit
+var conditions: ConditionsState = conditionsInit
+
+var blackBox: BlackBoxState = blackBoxInit
+var search: SearchState = searchInit
