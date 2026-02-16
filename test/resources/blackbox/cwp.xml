@@ -32,7 +32,7 @@
         <mxCell id="dWC7u1PsDlPDUTVALTmd-54" edge="1" parent="1" source="dWC7u1PsDlPDUTVALTmd-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="dWC7u1PsDlPDUTVALTmd-52">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="dWC7u1PsDlPDUTVALTmd-66" connectable="0" parent="dWC7u1PsDlPDUTVALTmd-54" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(risk == auv || risk == uuv || risk == both&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212)); color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;" vertex="1">
+        <mxCell id="dWC7u1PsDlPDUTVALTmd-66" connectable="0" parent="dWC7u1PsDlPDUTVALTmd-54" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(risk == both&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212)); color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;)&lt;/span&gt;" vertex="1">
           <mxGeometry relative="1" x="0.2179" y="-2" as="geometry">
             <mxPoint x="7" y="32" as="offset" />
           </mxGeometry>
