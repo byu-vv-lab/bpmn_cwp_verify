@@ -85,11 +85,10 @@ class CwpXmlParser:
             expr_lstnr = ExpressionListener(state)
             parser._add_states(builder, states)
             parser._add_edges(builder, edges)
+            parser._check_expressions(builder, all_items, expr_lstnr, state)
         except Exception as e:
             assert e.args, "Error does not have enough arguments"
             return Failure(e.args[0])
-
-        parser._check_expressions(builder, all_items, expr_lstnr, state)
 
         result: Result["Cwp", Error] = builder.build()
         return result
