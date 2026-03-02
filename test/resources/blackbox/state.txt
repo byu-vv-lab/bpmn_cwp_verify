@@ -1,4 +1,4 @@
-enum RiskState { riskInit auv uuv both none }
+enum RiskState { riskInit acceptable notAcceptable }
 
 enum CommunicationState { communicationInit received failed }
 enum ConditionsState { conditionsInit changed same}
