@@ -34,6 +34,53 @@ The following assume the terminal is in the root directory of the package.
 
 `antlr4 -o src/bpmncwpverify/ -Dlanguage=Python3 antlr/State.g4 `
 
+## AWS Account setup
+
+To set up AWS access, you will first need to create an IAM role called `DeveloperVvlab` that has access to the VV Lab AWS account with a policy as follows (replacing `VVLAB_AWS_CONSOLE_ID`, `YOUR_AWS_CONSOLE_ID`, and `VVLAB_EXTERNAL_ID` with the corresponding values):
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Resource": "arn:aws:iam::VVLAB_AWS_CONSOLE_ID:role/DeveloperLambdaAPIRole"
+        }
+    ]
+}
+```
+
+Since AWS root users are not allowed to assume roles, you will also need to create a new IAM user with permission to assume the newly created role:
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Resource": "arn:aws:iam::YOUR_AWS_CONSOLE_ID:role/DeveloperVvlab"
+        }
+    ]
+}
+```
+
+Once this has been done, the ARN for that role (in the format `arn:aws:iam::YOUR_AWS_CONSOLE_ID:role/DeveloperVvlab`) must be added as an allowed user in the VV Lab account.
+
+To allow for deployments from the CLI as described in [docs/deployments.md](docs/deployments.md), create a profile for the newly created user that will automatically assume the `DeveloperVvlab` role in your account and from there the `DeveloperLambdaAPIRole` role on the VV Lab AWS account by adding the following to your AWS CLI config (found at `~/.aws/config`):
+
+```
+[profile vvlab]
+role_arn = arn:aws:iam::YOUR_AWS_CONSOLE_ID:role/DeveloperVvlab
+source_profile = default
+
+[profile lambda_api_role]
+role_arn = arn:aws:iam::VVLAB_AWS_CONSOLE_ID:role/DeveloperLambdaAPIRole
+source_profile = vvlab
+external_id = VVLAB_EXTERNAL_ID
+```
+
 ## Deployments
 
 See [docs/deployments.md](docs/deployments.md) for instructions on how to deploy this project as an AWS Lambda and use it in production.
