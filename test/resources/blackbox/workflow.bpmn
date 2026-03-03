@@ -12,7 +12,6 @@
     <bpmn:messageFlow id="Flow_0qqri9f" sourceRef="Event_0qccs6x" targetRef="Event_1je5ro2" />
   </bpmn:collaboration>
   <bpmn:process id="Process_1oqinmw" isExecutable="true">
-    <bpmn:laneSet id="LaneSet_13o5xjq" />
     <bpmn:startEvent id="StartEvent_1" name="Missing Plane Call">
       <bpmn:outgoing>Flow_14ajlmh</bpmn:outgoing>
     </bpmn:startEvent>
@@ -46,14 +45,14 @@
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_14ajlmh" sourceRef="StartEvent_1" targetRef="Activity_0hi7yqd" />
     <bpmn:sequenceFlow id="Flow_1amtk72" sourceRef="Activity_0hi7yqd" targetRef="Gateway_12gwky0" />
-    <bpmn:sequenceFlow id="Flow_084axaf" name="risk == none || risk == uuv" sourceRef="Gateway_12gwky0" targetRef="Activity_1la5hb0">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == none or risk == uuv</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_084axaf" name="risk == acceptable" sourceRef="Gateway_12gwky0" targetRef="Activity_1la5hb0">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == acceptable</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_01fo4ba" name="risk == none || risk == auv" sourceRef="Gateway_12gwky0" targetRef="Activity_1vqld5b">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == none or risk == auv</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_01fo4ba" name="risk == acceptable" sourceRef="Gateway_12gwky0" targetRef="Activity_1vqld5b">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == acceptable</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1624f1a" name="risk == both" sourceRef="Gateway_12gwky0" targetRef="Activity_0f2ak46">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == both</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_1624f1a" name="risk == notAcceptable" sourceRef="Gateway_12gwky0" targetRef="Activity_0f2ak46">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == notAcceptable</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_05ze3p4" name="search == off" sourceRef="Gateway_12gwky0" targetRef="Event_1y08vay">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=search == off</bpmn:conditionExpression>
@@ -102,9 +101,6 @@
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_18gu4s0" sourceRef="Event_0b77iep" targetRef="Activity_0wmycgw" />
     <bpmn:intermediateThrowEvent id="Event_0rie1jb" name="Update UUV Info">
-      <bpmn:extensionElements>
-        <zeebe:taskDefinition type="updateUUV" />
-      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1d11uiy</bpmn:incoming>
       <bpmn:outgoing>Flow_0xqfhag</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0czpnw4" />
@@ -113,9 +109,6 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=blackBox == missing</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:intermediateThrowEvent id="Event_0qccs6x" name="Update AUV Info">
-      <bpmn:extensionElements>
-        <zeebe:taskDefinition type="updateAUV" />
-      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1cw95ww</bpmn:incoming>
       <bpmn:outgoing>Flow_1d11uiy</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0ljxbtr" />
@@ -144,7 +137,7 @@
     <bpmn:sequenceFlow id="Flow_0ys3orh" name="search == off" sourceRef="Gateway_1wiubgs" targetRef="Event_1y08vay">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=search == off</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_11kkrhc" sourceRef="Gateway_1wiubgs" targetRef="Event_0b77iep">
+    <bpmn:sequenceFlow id="Flow_11kkrhc" name="conditions == same" sourceRef="Gateway_1wiubgs" targetRef="Event_0b77iep">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=conditions == same</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_19yvcxl" name="conditions == changed" sourceRef="Gateway_1wiubgs" targetRef="Activity_0wmycgw">
@@ -153,7 +146,6 @@
     <bpmn:sequenceFlow id="Flow_1yvcfvr" sourceRef="Activity_1la5hb0" targetRef="Gateway_0kojsxy" />
   </bpmn:process>
   <bpmn:process id="Process_1nflle6" isExecutable="false">
-    <bpmn:extensionElements />
     <bpmn:startEvent id="Event_08zqe0x" name="Received Search Plan">
       <bpmn:outgoing>Flow_0n2gsjl</bpmn:outgoing>
     </bpmn:startEvent>
@@ -185,8 +177,8 @@
       <bpmn:outgoing>Flow_1kltn9b</bpmn:outgoing>
       <bpmn:outgoing>Flow_0cy24h9</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1kltn9b" name="risk == none || risk == auv" sourceRef="Gateway_0s3sk1n" targetRef="Activity_06hrjre">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == none or risk == auv</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_1kltn9b" name="risk == acceptable" sourceRef="Gateway_0s3sk1n" targetRef="Activity_06hrjre">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == acceptable</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_0h1eo8k" sourceRef="Activity_1ouz1fn" targetRef="Gateway_0s3sk1n" />
     <bpmn:sequenceFlow id="Flow_0cy24h9" name="search == off" sourceRef="Gateway_0s3sk1n" targetRef="Event_17qbdxd">
@@ -207,7 +199,6 @@
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_190tfak" sourceRef="Event_148pjzs" targetRef="Activity_1ouz1fn" />
     <bpmn:intermediateThrowEvent id="Event_0882ksr">
-      <bpmn:extensionElements />
       <bpmn:incoming>Flow_0uw6e77</bpmn:incoming>
       <bpmn:outgoing>Flow_11kbm7z</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1dexyel" />
@@ -252,8 +243,8 @@
       <bpmn:outgoing>Flow_135f8xi</bpmn:outgoing>
       <bpmn:outgoing>Flow_1c19jzn</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_135f8xi" name="risk == none || risk == UUV" sourceRef="Gateway_1988xwv" targetRef="Activity_0ggh0z3">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == none or risk == UUV</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_135f8xi" name="risk == acceptable" sourceRef="Gateway_1988xwv" targetRef="Activity_0ggh0z3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=risk == acceptable</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1c19jzn" name="search == off" sourceRef="Gateway_1988xwv" targetRef="Event_13791ti">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=search == off</bpmn:conditionExpression>
@@ -279,9 +270,6 @@
     <bpmn:sequenceFlow id="Flow_151x8z0" sourceRef="Event_1je5ro2" targetRef="Activity_1tgvqat" />
   </bpmn:process>
   <bpmn:message id="Message_1043r11" name="receiveUpates">
-    <bpmn:extensionElements>
-      <zeebe:subscription correlationKey="=blackBox" />
-    </bpmn:extensionElements>
   </bpmn:message>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_008o63p">
@@ -376,21 +364,21 @@
         <di:waypoint x="405" y="300" />
         <di:waypoint x="500" y="300" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="266" width="70" height="27" />
+          <dc:Bounds x="405" y="283" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_01fo4ba_di" bpmnElement="Flow_01fo4ba">
         <di:waypoint x="380" y="325" />
         <di:waypoint x="380" y="380" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="305" y="346" width="70" height="27" />
+          <dc:Bounds x="345" y="346" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1624f1a_di" bpmnElement="Flow_1624f1a">
         <di:waypoint x="380" y="275" />
         <di:waypoint x="380" y="180" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="351" y="203" width="58" height="14" />
+          <dc:Bounds x="345" y="203" width="70" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_05ze3p4_di" bpmnElement="Flow_05ze3p4">
@@ -492,6 +480,9 @@
       <bpmndi:BPMNEdge id="Flow_11kkrhc_di" bpmnElement="Flow_11kkrhc">
         <di:waypoint x="745" y="420" />
         <di:waypoint x="668" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="673" y="406" width="67" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_19yvcxl_di" bpmnElement="Flow_19yvcxl">
         <di:waypoint x="770" y="445" />
@@ -575,7 +566,7 @@
         <di:waypoint x="410" y="835" />
         <di:waypoint x="410" y="740" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="385" y="776" width="70" height="27" />
+          <dc:Bounds x="375" y="776" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0h1eo8k_di" bpmnElement="Flow_0h1eo8k">
@@ -683,7 +674,7 @@
         <di:waypoint x="400" y="1345" />
         <di:waypoint x="400" y="1250" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="375" y="1295" width="70" height="27" />
+          <dc:Bounds x="365" y="1295" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1c19jzn_di" bpmnElement="Flow_1c19jzn">
