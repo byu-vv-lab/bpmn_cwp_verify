@@ -21,22 +21,32 @@
     <button type="submit">Submit</button>
   </form>
 
-  <div id="responseContainer" style="margin-top: 20px; font-size: 16px; color: blue;"></div>
+  <div id="statusContainer" style="margin-top: 20px; font-size: 16px; color: blue;"></div>
+  <pre><code id="spinReport" hidden></code></pre>
+  <a id="promelaLink" href="promela.html" target="_blank" hidden>Promela</a>
 
   <script>
+    function populateSpinReport(report) {
+      const container = document.getElementById('spinReport');
+      container.innerText = report;
+      container.hidden = false;
+      const promelaLink = document.getElementById("promelaLink");
+      promelaLink.hidden = false;
+    }
+
+    let spinReport = localStorage.getItem('spinReport');
+    if (spinReport) populateSpinReport(spinReport);
+
     document.getElementById('lambdaForm').addEventListener('submit', async function (event) {
       event.preventDefault();
 
       const bpmnData = document.getElementById('bpmnData').files[0];
       const cwpData = document.getElementById('cwpData').files[0];
       const stateData = document.getElementById('stateData').files[0];
-      const responseContainer = document.getElementById('responseContainer');
-      const lambda_url = 'https://iatjgvm4gt75bw4qwbz7l3bihq0irdns.lambda-url.us-east-1.on.aws/';
+      const statusContainer = document.getElementById('statusContainer');
+      const lambdaUrl = 'https://iatjgvm4gt75bw4qwbz7l3bihq0irdns.lambda-url.us-east-1.on.aws/';
 
-      responseContainer.textContent = 'Processing...';
-
-      const files = [bpmnData, cwpData, stateData];
-      const fileContents = [];
+      statusContainer.textContent = 'Processing...';
 
       const fileToString = (file) => {
         return new Promise((resolve, reject) => {
@@ -49,18 +59,14 @@
       };
 
       try {
-        for (const file of files) {
-          if (file) {
-            const content = await fileToString(file);
-            fileContents.push(content);
-          }
-        }
 
         const payload = {
-          files: fileContents.filter(Boolean),
+          state: await fileToString(stateData),
+          cwp: await fileToString(cwpData),
+          bpmn: await fileToString(bpmnData),
         };
 
-        const response = await fetch(lambda_url, {
+        const response = await fetch(lambdaUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -71,28 +77,22 @@
         }
 
         const result = await response.json();
-        const result_stringify = JSON.stringify(result);
-        const message = JSON.parse(result_stringify);
 
-        message.message = message.message.replace(/[&<>"'\n\t]/g, function(match) {
-          return {
-            '&': "&amp;",
-            '<': "&lt;",
-            '>': "&gt;",
-            '"': "&quot;",
-            "'": "&#39;",
-            "\n": "<br>",
-            "\t": "&nbsp;&nbsp;&nbsp;&nbsp;"
-          }[match];
-        });
+        let report = result.spin_report;
+        let promela = result.promela;
 
-        localStorage.setItem('lambdaResponse', message.message);
+        populateSpinReport(report);
 
-        responseContainer.innerHTML = `<a href="promela.html" target="_blank">Promela</a>`;
-      }
-      catch (error) {
+        localStorage.setItem('spinReport', report);
+        localStorage.setItem('promela', promela);
+
+        statusContainer.innerHTML = 'Spin Report:';
+
+        const promelaLink = document.getElementById("promelaLink");
+        promelaLink.hidden = false;
+      } catch (error) {
         console.error('Error calling Lambda:', error);
-        responseContainer.textContent = `Error: ${error.message}`;
+        statusContainer.textContent = `Error: ${error.message}`;
       }
     });
   </script>
