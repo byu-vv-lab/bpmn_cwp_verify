@@ -48,7 +48,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64 \
-            --provenance=false
+            --provenance=false \
             --target lambda \
             -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
             --push .
