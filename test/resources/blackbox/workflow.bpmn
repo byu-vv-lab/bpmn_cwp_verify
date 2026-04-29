@@ -54,7 +54,8 @@ conditions = same</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0svtyow" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_0azuxo1" name="Retrieve Black Box">
-      <bpmn:documentation>search = off</bpmn:documentation>
+      <bpmn:documentation>search = off
+uuvComms = sent</bpmn:documentation>
       <bpmn:incoming>Flow_0wtm01a</bpmn:incoming>
       <bpmn:outgoing>Flow_1fl52xy</bpmn:outgoing>
     </bpmn:task>
@@ -122,9 +123,9 @@ fi</bpmn:documentation>
       <bpmn:documentation>if
 :: blackBox == missing -&gt; conditions = same
 :: blackBox == missing -&gt;
-conditions = changed;
-risk = assessing;
-uuvComms = wait;
+  conditions = changed;
+  risk = assessing;
+  uuvComms = wait;
 :: else -&gt; skip
 fi</bpmn:documentation>
       <bpmn:incoming>Flow_1bt1a2g</bpmn:incoming>
@@ -132,7 +133,8 @@ fi</bpmn:documentation>
     </bpmn:task>
     <bpmn:sequenceFlow id="Flow_11h72oi" sourceRef="Activity_0uoxpfd" targetRef="Activity_0zl5lqs" />
     <bpmn:task id="Activity_0uoxpfd" name="Update Info">
-      <bpmn:documentation>risk = assessing</bpmn:documentation>
+      <bpmn:documentation>risk = assessing
+uuvComms = wait</bpmn:documentation>
       <bpmn:incoming>Flow_1atvpb2</bpmn:incoming>
       <bpmn:outgoing>Flow_11h72oi</bpmn:outgoing>
     </bpmn:task>
@@ -234,9 +236,6 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1rv897x</bpmn:incoming>
       <bpmn:outgoing>Flow_04wh7yo</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:endEvent id="Event_04mhz3e" name="Search Off Found">
-      <bpmn:incoming>Flow_04wh7yo</bpmn:incoming>
-    </bpmn:endEvent>
     <bpmn:task id="Activity_15xph9w" name="Received Acceptable">
       <bpmn:incoming>Flow_0vy3iib</bpmn:incoming>
       <bpmn:outgoing>Flow_00e2sn9</bpmn:outgoing>
@@ -282,6 +281,9 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_18avrt1</bpmn:incoming>
       <bpmn:outgoing>Flow_064to2u</bpmn:outgoing>
     </bpmn:task>
+    <bpmn:endEvent id="Event_04mhz3e" name="Search Off Found">
+      <bpmn:incoming>Flow_04wh7yo</bpmn:incoming>
+    </bpmn:endEvent>
   </bpmn:process>
   <bpmn:message id="Message_26q47k7" name="Move On" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -661,10 +663,6 @@ fi</bpmn:documentation>
         <di:waypoint x="900" y="1580" />
         <di:waypoint x="952" y="1580" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0bxyuzw_di" bpmnElement="Flow_0bxyuzw">
-        <di:waypoint x="410" y="1580" />
-        <di:waypoint x="472" y="1580" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1q6tdit_di" bpmnElement="Flow_1q6tdit">
         <di:waypoint x="735" y="1580" />
         <di:waypoint x="800" y="1580" />
@@ -678,6 +676,10 @@ fi</bpmn:documentation>
         <bpmndi:BPMNLabel>
           <dc:Bounds x="605" y="1520" width="90" height="40" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bxyuzw_di" bpmnElement="Flow_0bxyuzw">
+        <di:waypoint x="410" y="1580" />
+        <di:waypoint x="472" y="1580" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0opunqa_di" bpmnElement="Flow_0opunqa">
         <di:waypoint x="710" y="1410" />
