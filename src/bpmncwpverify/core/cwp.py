@@ -1,5 +1,8 @@
+import html
 import re
 from xml.etree.ElementTree import Element
+
+from bs4 import BeautifulSoup
 
 
 class Cwp:
@@ -70,19 +73,60 @@ class CwpEdge:
         visitor.end_visit_edge(self)
 
     @staticmethod
+    def has_html(expr: str) -> bool:
+        HTML_HINTS = ("<br", "<span", "<div", "<font", "</")
+        HTML_TAG_RE = re.compile(r"<\s*/?\s*[a-zA-Z][a-zA-Z0-9]*\b[^>]*>")
+
+        if any(h in expr for h in HTML_HINTS):
+            return True
+
+        return bool(HTML_TAG_RE.search(expr))
+
+    @staticmethod
+    def deep_decode(expr: str) -> str:
+        prev = expr
+
+        for _ in range(5):
+            curr = html.unescape(prev)
+
+            if curr == prev:
+                break
+            prev = curr
+
+        return prev
+
+    @staticmethod
+    def conditional_folier(s: list[str]) -> str:
+        OPS = ("&&", "||")
+        CONDITIONALS = ("==", "!=", "<=", "=<", "<", ">", ">=", "=>")
+        ALL = OPS + CONDITIONALS
+        prev_operation = ""
+        i = 0
+
+        while i != len(s):
+            if i == len(s) - 1:
+                break
+            elif s[i] in OPS:
+                prev_operation = s[i]
+            elif s[i] not in ALL and s[i + 1] not in ALL:
+                s.insert(i + 1, prev_operation)
+            i += 1
+
+        return " ".join(s)
+
+    @staticmethod
     def cleanup_expression(expression: str) -> str:
-        expression = re.sub(r"&amp;amp;|&amp;", "&", expression)
-        expression = re.sub(r"&lt;", "<", expression)
-        expression = re.sub(r"&gt;", ">", expression)
+        decoded = CwpEdge.deep_decode(expression)
+        decoded = re.sub(r"\s*(&&|\|\|)\s*", r" \1 ", decoded)
 
-        expression = re.sub(r"</?div>", "", expression)
-        expression = re.sub(r"<br>", " ", expression)
+        if CwpEdge.has_html(decoded):
+            soup = BeautifulSoup(decoded, "html.parser").get_text(" ", strip=True)
+            decoded = CwpEdge.conditional_folier(soup.split())
 
-        expression = re.sub(r"\s*(==|!=|&&|\|\|)\s*", r" \1 ", expression)
+        decoded = re.sub(r"\s*(&&|\|\||==|!=|>=|<=|=|<|>)\s*", r" \1 ", decoded)
+        decoded = re.sub(r"\s+", " ", decoded).strip()
 
-        expression = re.sub(r"\s+", " ", expression)
-
-        return expression.strip()
+        return decoded
 
     @staticmethod
     def from_xml(element: Element, name: str) -> "CwpEdge":
