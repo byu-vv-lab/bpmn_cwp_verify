@@ -20,6 +20,9 @@ spec {
     decreases 6 - x
     invariant 0 <= x
     invariant x <= 6
+    invariant (!(p_flow1 || p_flow4) || x <= 5)  // if a token is waiting for Task_1, x must be <= 5
+    invariant (!p_flow3 || x > 5)                // if a token has reached EndEvent_1, x must be > 5
+    invariant (p_flow1 || p_flow4 || p_flow3)    // a token is always in one of these places
   {
     // T_INCREMENT — task id=Task_1: consume p_flow1 or p_flow4, run <documentation>, produce p_flow2
     x := x + 1;
