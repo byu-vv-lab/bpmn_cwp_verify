@@ -26,15 +26,15 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
     loggerFunction = StringManager()
 
     loggerFunction.write_str("inline stateLogger(){", NL_SINGLE, IndentAction.INC)
-    loggerFunction.write_str('printf("Changed Vars: \\n");', NL_SINGLE)
+    loggerFunction.write_str('printf("Changed Vars: \\n")', NL_SINGLE)
     for name in var_names:
         loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
         loggerFunction.write_str(
             f":: {name} != old_{name} ->", NL_SINGLE, IndentAction.INC
         )
-        loggerFunction.write_str(f'printf("{name} = %e\\n", {name});', NL_SINGLE)
+        loggerFunction.write_str(f'printf("{name} = %e\\n", {name})', NL_SINGLE)
         loggerFunction.write_str(f"old_{name} = {name}", NL_SINGLE)
-        loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+        loggerFunction.write_str(":: else", NL_SINGLE, IndentAction.DEC)
         loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
 
     for cwp_state in cwp.states.values():
@@ -43,9 +43,9 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
             f":: {cwp_state.name} == true ->", NL_SINGLE, IndentAction.INC
         )
         loggerFunction.write_str(
-            f'printf("Current state: {cwp_state.name}\\n");', NL_SINGLE
+            f'printf("Current state: {cwp_state.name}\\n")', NL_SINGLE
         )
-        loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+        loggerFunction.write_str(":: else", NL_SINGLE, IndentAction.DEC)
         loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
     loggerFunction.write_str("}", NL_SINGLE, IndentAction.DEC)
     return str(loggerFunction)

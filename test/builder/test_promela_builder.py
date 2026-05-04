@@ -36,24 +36,24 @@ def test_logger_generator(mocker):
 
     calls = [
         mocker.call("inline stateLogger(){", NL_SINGLE, IndentAction.INC),
-        mocker.call('printf("Changed Vars: \\n");', NL_SINGLE),
+        mocker.call('printf("Changed Vars: \\n")', NL_SINGLE),
         mocker.call("if", NL_SINGLE, IndentAction.INC),
         mocker.call(
             ":: test_string != old_test_string ->", NL_SINGLE, IndentAction.INC
         ),
-        mocker.call('printf("test_string = %e\\n", test_string);', NL_SINGLE),
+        mocker.call('printf("test_string = %e\\n", test_string)', NL_SINGLE),
         mocker.call("old_test_string = test_string", NL_SINGLE),
-        mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
+        mocker.call(":: else", NL_SINGLE, IndentAction.DEC),
         mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
         mocker.call("if", NL_SINGLE, IndentAction.INC),
         mocker.call(":: test_val1 == true ->", NL_SINGLE, IndentAction.INC),
-        mocker.call('printf("Current state: test_val1\\n");', NL_SINGLE),
-        mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
+        mocker.call('printf("Current state: test_val1\\n")', NL_SINGLE),
+        mocker.call(":: else", NL_SINGLE, IndentAction.DEC),
         mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
         mocker.call("if", NL_SINGLE, IndentAction.INC),
         mocker.call(":: test_val2 == true ->", NL_SINGLE, IndentAction.INC),
-        mocker.call('printf("Current state: test_val2\\n");', NL_SINGLE),
-        mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
+        mocker.call('printf("Current state: test_val2\\n")', NL_SINGLE),
+        mocker.call(":: else", NL_SINGLE, IndentAction.DEC),
         mocker.call("fi;", NL_SINGLE, IndentAction.DEC),
         mocker.call("}", NL_SINGLE, IndentAction.DEC),
     ]
