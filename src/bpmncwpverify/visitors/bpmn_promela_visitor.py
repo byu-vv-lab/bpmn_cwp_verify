@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from bpmncwpverify.core.bpmn import (
     Bpmn,
     BpmnVisitor,
@@ -47,7 +45,7 @@ class Context:
         self._behavior_model = True
         self._behavior = ""
         self._end_event = False
-        self._boundary_events: List[Task.BoundaryEvent] = []
+        self._boundary_events: list[Task.BoundaryEvent] = []
 
     @property
     def has_option(self) -> bool:
@@ -100,11 +98,11 @@ class Context:
         self._end_event = new_val
 
     @property
-    def boundary_events(self) -> List[Task.BoundaryEvent]:
+    def boundary_events(self) -> list[Task.BoundaryEvent]:
         return self._boundary_events
 
     @boundary_events.setter
-    def boundary_events(self, new_val: List[Task.BoundaryEvent]) -> None:
+    def boundary_events(self, new_val: list[Task.BoundaryEvent]) -> None:
         assert isinstance(self._element, Task), (
             "Only allowed to set boundary_events on a task."
         )
@@ -127,8 +125,8 @@ class TokenPositions:
 
     def __init__(
         self,
-        seq_flows: Optional[List[str]] = None,
-        msg_flows: Optional[List[str]] = None,
+        seq_flows: list[str] | None = None,
+        msg_flows: list[str] | None = None,
         standalone: str = "",
     ) -> None:
         self.seq_flows = seq_flows if seq_flows is not None else []
@@ -145,14 +143,14 @@ class TokenPositions:
                 "Either sequence/message flows or a standalone position must be provided."
             )
 
-    def get_all_positions(self) -> List[str]:
+    def get_all_positions(self) -> list[str]:
         return (
             self.seq_flows + self.msg_flows
             if (self.seq_flows or self.msg_flows)
             else [self.standalone]
         )
 
-    def get_in_process_positions(self) -> List[str]:
+    def get_in_process_positions(self) -> list[str]:
         if self.seq_flows:
             return self.seq_flows
         elif self.standalone:
@@ -170,7 +168,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self.promela = StringManager()
 
     def _generate_location_label(
-        self, element: Node, flow_or_message: Optional[Flow] = None
+        self, element: Node, flow_or_message: Flow | None = None
     ) -> str:
         """
         Should only be called from _get_consume_locations and _get_put_locations.
@@ -200,7 +198,7 @@ class PromelaGenVisitor(BpmnVisitor):
             ],
         )
 
-    def _get_expressions(self, ctx: Context) -> List[str]:
+    def _get_expressions(self, ctx: Context) -> list[str]:
         """
         Returns a list of the expressions that lie on the flows leaving a specific
         node. Example: ["x > 5"]
@@ -263,7 +261,7 @@ class PromelaGenVisitor(BpmnVisitor):
         sm.write_str("fi", NL_SINGLE)
         return sm
 
-    def _get_put_locations(self, element: Node) -> List[str]:
+    def _get_put_locations(self, element: Node) -> list[str]:
         """
         Returns a list of labels representing all outgoing flows from a node.
         Each label indicates the target node and the current node as the source.
@@ -289,14 +287,14 @@ class PromelaGenVisitor(BpmnVisitor):
 
         # Store the consume locations to avoid multiple calls.
         consume_locations: TokenPositions = self._get_consume_locations(ctx.element)
-        inner_process_positions: List[str] = (
+        inner_process_positions: list[str] = (
             consume_locations.get_in_process_positions()
         )
-        msg_positions: List[str] = consume_locations.msg_flows
+        msg_positions: list[str] = consume_locations.msg_flows
 
         if inner_process_positions:
             guard.write_str("(")
-            tokens: List[str] = [f"hasToken({pos})" for pos in inner_process_positions]
+            tokens: list[str] = [f"hasToken({pos})" for pos in inner_process_positions]
             if ctx.is_parallel:
                 guard.write_str(" && ".join(tokens))
             else:
@@ -305,7 +303,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         if msg_positions:
             guard.write_str(" && (" if inner_process_positions else "(")
-            tokens_msg: List[str] = [f"hasToken({pos})" for pos in msg_positions]
+            tokens_msg: list[str] = [f"hasToken({pos})" for pos in msg_positions]
             guard.write_str(" && ".join(tokens_msg))
             guard.write_str(")")
 

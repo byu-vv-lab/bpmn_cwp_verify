@@ -1,14 +1,13 @@
 import re
-from typing import Dict, List, Optional
 from xml.etree.ElementTree import Element
 
 
 class Cwp:
     def __init__(self) -> None:
-        self.states: Dict[str, CwpState] = {}
-        self.edges: Dict[str, CwpEdge] = {}
+        self.states: dict[str, CwpState] = {}
+        self.edges: dict[str, CwpEdge] = {}
         self.start_state: CwpState
-        self.end_states: List[CwpState] = []
+        self.end_states: list[CwpState] = []
 
     def accept(self, visitor: "CwpVisitor") -> None:
         result = visitor.visit_cwp(self)
@@ -21,8 +20,8 @@ class CwpState:
     def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name
-        self.out_edges: List[CwpEdge] = []
-        self.in_edges: List[CwpEdge] = []
+        self.out_edges: list[CwpEdge] = []
+        self.in_edges: list[CwpEdge] = []
 
     def accept(self, visitor: "CwpVisitor") -> None:
         result = visitor.visit_state(self)
@@ -55,7 +54,7 @@ class CwpEdge:
         )
         self.parent_id: str
 
-        self.source: Optional[CwpState] = None
+        self.source: CwpState | None = None
         self.dest: CwpState
         self.is_leaf = False
 

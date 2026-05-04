@@ -1,7 +1,6 @@
 import os
 import re
 import subprocess
-from typing import Dict, List
 
 from returns.io import IOFailure, IOResult, IOSuccess, impure_safe
 from returns.pipeline import flow
@@ -119,7 +118,7 @@ class SpinVerificationReportBuilder:
 
 
 class SpinOutputParser:
-    def _get_re_matches(self, regex: str, spin_msg: str) -> List[Dict[str, str]]:
+    def _get_re_matches(self, regex: str, spin_msg: str) -> list[dict[str, str]]:
         r = re.compile(regex)
 
         return [
@@ -191,7 +190,7 @@ class SpinOutputParser:
         # Find all relevant blocks (excluding never claims)
         matches = block_pattern.finditer(spin_msg)
 
-        detailed_errors: List[Dict[str, str]] = []
+        detailed_errors: list[dict[str, str]] = []
 
         for match in matches:
             proctype_name = (

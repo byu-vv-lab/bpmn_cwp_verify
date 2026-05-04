@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, TypeVar
 from xml.etree.ElementTree import Element
 
 from returns.result import Failure, Result, Success
@@ -33,7 +33,7 @@ class BpmnElement:
         self.name = name
 
     @classmethod
-    def from_xml(cls: Type[T], element: Element) -> T:
+    def from_xml(cls: type[T], element: Element) -> T:
         id = element.attrib.get("id")
         if not id:
             raise Exception("Id cannot be None")
@@ -69,10 +69,10 @@ class Node(BpmnElement):
         name: str,
     ) -> None:
         super().__init__(id, name)
-        self.out_flows: List[SequenceFlow] = []
-        self.in_flows: List[SequenceFlow] = []
-        self.in_msgs: List[MessageFlow] = []
-        self.out_msgs: List[MessageFlow] = []
+        self.out_flows: list[SequenceFlow] = []
+        self.in_flows: list[SequenceFlow] = []
+        self.in_msgs: list[MessageFlow] = []
+        self.out_msgs: list[MessageFlow] = []
 
     def add_out_flow(self, flow: "SequenceFlow") -> None:
         """
@@ -269,7 +269,7 @@ class Task(Node):
     def __init__(self, id: str, name: str, behavior: str) -> None:
         super().__init__(id, name)
         self.behavior = behavior
-        self.msg_boundary_events: List[Task.BoundaryEvent] = []
+        self.msg_boundary_events: list[Task.BoundaryEvent] = []
 
     def add_boundary_event(self, event: BoundaryEvent) -> None:
         self.msg_boundary_events.append(event)
@@ -398,9 +398,9 @@ class Process(BpmnElement):
         Initialize Process object
         """
         super().__init__(id, name)
-        self._flows: Dict[str, SequenceFlow] = {}
-        self._elements: Dict[str, Node] = {}
-        self._start_states: Dict[str, StartEvent] = {}
+        self._flows: dict[str, SequenceFlow] = {}
+        self._elements: dict[str, Node] = {}
+        self._start_states: dict[str, StartEvent] = {}
 
     def __setitem__(self, key: str, item: BpmnElement) -> None:
         """
@@ -417,7 +417,7 @@ class Process(BpmnElement):
         elif isinstance(item, Node):
             self._elements[key] = item
 
-    def __getitem__(self, key: str) -> Union[Node, Flow]:
+    def __getitem__(self, key: str) -> Node | Flow:
         """
         Retrieve item stored in business process
 
@@ -434,19 +434,19 @@ class Process(BpmnElement):
             BpmnStructureError(key, "Key not found in any of the processe's elements")
         )
 
-    def get_flows(self) -> Dict[str, SequenceFlow]:
+    def get_flows(self) -> dict[str, SequenceFlow]:
         """
         Return flows of business model
         """
         return self._flows
 
-    def all_items(self) -> Dict[str, Node]:
+    def all_items(self) -> dict[str, Node]:
         """
         Return all items of business model
         """
         return self._elements | self._start_states
 
-    def get_start_states(self) -> Dict[str, StartEvent]:
+    def get_start_states(self) -> dict[str, StartEvent]:
         """
         Return start states of business model
         """
@@ -459,14 +459,14 @@ class Process(BpmnElement):
         visitor.end_visit_process(self)
 
 
-def get_element_type(tag: str) -> Result[Union[type[SequenceFlow], type[Node]], Error]:
+def get_element_type(tag: str) -> Result[type[SequenceFlow] | type[Node], Error]:
     """
     Maps tag name to its respective builder function
 
     Args:
         tag (str): String representation of builder function
     """
-    mapping: Dict[str, Union[type[SequenceFlow], type[Node]]] = {
+    mapping: dict[str, type[SequenceFlow] | type[Node]] = {
         "task": Task,
         "startEvent": StartEvent,
         "endEvent": EndEvent,
@@ -498,9 +498,9 @@ class Bpmn:
         """
         Initialize Bpmn object
         """
-        self.processes: Dict[str, Process] = {}
-        self.id_to_element: Dict[str, BpmnElement] = {}  # Maps ids to elements
-        self.inter_process_msgs: Dict[str, MessageFlow] = {}
+        self.processes: dict[str, Process] = {}
+        self.id_to_element: dict[str, BpmnElement] = {}  # Maps ids to elements
+        self.inter_process_msgs: dict[str, MessageFlow] = {}
 
     def store_element(self, element: BpmnElement) -> None:
         """

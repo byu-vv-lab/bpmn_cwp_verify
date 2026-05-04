@@ -1,5 +1,3 @@
-from typing import Union
-
 from returns.functions import not_
 from returns.pipeline import is_successful
 from returns.result import Failure, Result, Success
@@ -18,7 +16,7 @@ class ProcessBuilder:
         self._process = Process(id, name)
         self._state = state
 
-    def with_element(self, element: Union[SequenceFlow, Node]) -> "ProcessBuilder":
+    def with_element(self, element: SequenceFlow | Node) -> "ProcessBuilder":
         self._process[element.id] = element
         return self
 
@@ -46,7 +44,7 @@ class ProcessBuilder:
         flow_id: str,
         source_ref: str,
         target_ref: str,
-        expression: Union[str, None],
+        expression: str | None,
     ) -> Result["ProcessBuilder", Error]:
         flow = self._process[flow_id]
         source_node = self._process[source_ref]

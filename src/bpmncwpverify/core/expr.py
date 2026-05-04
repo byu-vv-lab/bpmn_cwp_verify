@@ -1,4 +1,4 @@
-from typing import Any, List, cast
+from typing import Any, cast
 
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
@@ -60,7 +60,7 @@ class ThrowingErrorListener(ErrorListener):  # type: ignore[misc]
             msg (str): Error message passed along by the recognizer
             e (Exception): Exception associated with error
         """
-        msg = "line {}:{} {}".format(line, column, msg)
+        msg = f"line {line}:{column} {msg}"
         raise ParseCancellationException(msg)
 
 
@@ -119,7 +119,7 @@ class ExpressionListener(ExprListener):
         """
         self.final_type: str
         self.state = state
-        self.type_stack: List[str] = []
+        self.type_stack: list[str] = []
 
     def check_arithmetic_types(self, left_type: str, right_type: str) -> None:
         """

@@ -1,6 +1,6 @@
 # type: ignore
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 from antlr4.error.ErrorStrategy import ParseCancellationException
@@ -65,7 +65,7 @@ class Test_get_parser:
         try:
             tree = parser.state()
         except Exception as exception:
-            pytest.fail("ERROR: unexpected {}".format(exception))
+            pytest.fail(f"ERROR: unexpected {exception}")
 
         # then
         assert 0 == parser.getNumberOfSyntaxErrors()
@@ -87,7 +87,7 @@ class Test_parse_state:
         self, bad_parser: Result[StateParser, Error]
     ):
         # given
-        assert is_successful(bad_parser), "ERROR: unexpected {}".format(str(bad_parser))
+        assert is_successful(bad_parser), f"ERROR: unexpected {str(bad_parser)}"
 
         # when
         result = bad_parser.bind(_parse_state)
@@ -102,9 +102,7 @@ class Test_parse_state:
         self, good_parser: Result[StateParser, Error]
     ):
         # given
-        assert is_successful(good_parser), "ERROR: unexpected {}".format(
-            str(good_parser)
-        )
+        assert is_successful(good_parser), f"ERROR: unexpected {str(good_parser)}"
 
         # when
         result = good_parser.bind_result(_parse_state)

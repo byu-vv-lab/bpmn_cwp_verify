@@ -123,17 +123,17 @@ def test_givin_good_files_when_verify_then_success(capsys):
 def test_given_good_input_when_webverify_then_success():
     # given
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/state.txt") as state_file:
         for line in state_file:
             state += line
 
@@ -147,17 +147,17 @@ def test_given_good_input_when_webverify_then_success():
 def test_given_bad_input_when_webverify_then_failure():
     # given
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/simple_example/bad_state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/bad_state.txt") as state_file:
         for line in state_file:
             state += line
     # when
@@ -174,7 +174,7 @@ def test_triggers_lambda_when_given_cloud_flag(mocker):
         "bpmncwpverify.cli._trigger_lambda",
         return_value=IOSuccess(
             json.load(
-                open("./test/resources/simple_example/lambda_output.json", "r"),
+                open("./test/resources/simple_example/lambda_output.json"),
                 object_hook=lambda obj: SpinVerificationReport(**obj),
             )
         ),
@@ -196,24 +196,24 @@ def test_assert_success_when_lambda_returns_success(mocker):
     mock_response = SimpleNamespace()
     mock_response.raise_for_status = lambda: None
     mock_response.json = lambda **kwargs: json.load(
-        open("./test/resources/simple_example/lambda_output.json", "r"),
+        open("./test/resources/simple_example/lambda_output.json"),
         object_hook=lambda obj: SpinVerificationReport(**obj),
     )
 
     mocker.patch("requests.post", return_value=mock_response)
 
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/state.txt") as state_file:
         for line in state_file:
             state += line
 
@@ -235,17 +235,17 @@ def test_assert_failure_when_lambda_verification_fails(mocker):
     mocker.patch("requests.post", return_value=mock_response)
 
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/state.txt") as state_file:
         for line in state_file:
             state += line
 
@@ -270,17 +270,17 @@ def test_assert_failure_when_lambda_returns_internal_server_error(mocker):
     mocker.patch("requests.post", return_value=mock_response)
 
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn", "r") as bpmn_file:
+    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/simple_example/test_cwp.xml", "r") as cwp_file:
+    with open("./test/resources/simple_example/test_cwp.xml") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/simple_example/state.txt", "r") as state_file:
+    with open("./test/resources/simple_example/state.txt") as state_file:
         for line in state_file:
             state += line
 

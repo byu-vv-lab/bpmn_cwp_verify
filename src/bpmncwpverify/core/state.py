@@ -1,4 +1,5 @@
-from typing import Any, Iterable, Protocol, cast
+from collections.abc import Iterable
+from typing import Any, Protocol, cast
 
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
@@ -127,7 +128,7 @@ class ThrowingErrorListener(ErrorListener):  # type: ignore[misc]
             msg (str): Error message passed along by the recognizer
             e (Exception): Exception associated with error
         """
-        msg = "line {}:{} {}".format(line, column, msg)
+        msg = f"line {line}:{column} {msg}"
         raise ParseCancellationException(msg)
 
 
@@ -420,7 +421,7 @@ class State:
             Initialize _Listener object
             """
             super().__init__()
-            self.state_builder: Result["StateBuilder", Error] = Success(StateBuilder())
+            self.state_builder: Result[StateBuilder, Error] = Success(StateBuilder())
 
         @staticmethod
         def _get_id(id_node: TerminalNodeImpl) -> str:
@@ -843,7 +844,7 @@ class State:
 
         state_def (str): String that contains varaible declarations
         """
-        result: Result["State", Error] = flow(
+        result: Result[State, Error] = flow(
             state_def,
             _get_parser,
             bind_result(_parse_state),

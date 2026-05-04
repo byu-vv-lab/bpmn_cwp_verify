@@ -1,12 +1,10 @@
-from typing import Set
-
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState, CwpVisitor
 from bpmncwpverify.core.error import CwpGraphConnError
 
 
 class CwpConnectivityVisitor(CwpVisitor):
     def __init__(self) -> None:
-        self.visited: Set[CwpState] = set()
+        self.visited: set[CwpState] = set()
 
     def visit_state(self, state: CwpState) -> bool:
         self.visited.add(state)

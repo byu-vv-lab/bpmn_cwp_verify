@@ -1,4 +1,4 @@
-from typing import Optional, TextIO, cast
+from typing import TextIO, cast
 from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
@@ -16,7 +16,7 @@ from bpmncwpverify.core.error import (
 
 def _close_file(
     file_obj: TextIO,
-    file_contents: ResultE[Optional[str]],
+    file_contents: ResultE[str | None],
 ) -> IOResultE[None]:
     return impure_safe(file_obj.close)()
 
@@ -35,7 +35,7 @@ def _read_file_contents(name: str) -> IOResult[str, Error]:
 
 
 def _open_file_for_reading(filename: str) -> TextIO:
-    return open(filename, "r")
+    return open(filename)
 
 
 def _open_file_for_writing(filename: str) -> TextIO:
