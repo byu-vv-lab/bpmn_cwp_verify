@@ -15,7 +15,8 @@ dependencies = [
   "antlr4-python3-runtime",
   "requests",
   "defusedxml",
-  "graphviz"
+  "graphviz",
+  "bs4"
 ]
 
 [project.scripts]
