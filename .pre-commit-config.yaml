@@ -51,6 +51,7 @@ repos:
         language: system
         types: [python]
         args: ["--config-file=pyproject.toml"]
+        require_serial: true
         exclude: ^(test/|src/bpmncwpverify/antlr/)
 -   repo: local
     hooks:

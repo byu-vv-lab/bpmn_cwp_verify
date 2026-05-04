@@ -13,7 +13,7 @@ def test_lambda_handler_correctly_handles_good_input(mocker):
         "lambda_function.web_verify",
         return_value=IOSuccess(
             json.load(
-                open("./test/resources/simple_example/lambda_output.json", "r"),
+                open("./test/resources/simple_example/lambda_output.json"),
                 object_hook=lambda obj: SpinVerificationReport(**obj),
             )
         ),

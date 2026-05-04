@@ -1,5 +1,5 @@
 # type: ignore
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 from antlr4.error.ErrorStrategy import ParseCancellationException

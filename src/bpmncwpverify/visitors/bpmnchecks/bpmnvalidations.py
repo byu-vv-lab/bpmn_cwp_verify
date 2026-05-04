@@ -1,5 +1,4 @@
 import re
-from typing import Set
 
 from returns.result import Failure, Result, Success
 
@@ -41,7 +40,7 @@ from bpmncwpverify.core.error import (
 
 class ProcessConnectivityVisitor(BpmnVisitor):
     def __init__(self) -> None:
-        self.visited: Set[BpmnElement] = set()
+        self.visited: set[BpmnElement] = set()
 
     def visit_start_event(self, event: StartEvent) -> bool:
         self.visited.add(event)
@@ -195,7 +194,7 @@ class ValidateStartEventFlows(BpmnVisitor):
 
 class SetFlowLeafs(BpmnVisitor):
     def __init__(self) -> None:
-        self.visited: Set[BpmnElement] = set()
+        self.visited: set[BpmnElement] = set()
 
     def visit_start_event(self, event: StartEvent) -> bool:
         self.visited.add(event)

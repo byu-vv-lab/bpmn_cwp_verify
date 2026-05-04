@@ -1,4 +1,3 @@
-from typing import List
 from xml.etree.ElementTree import Element
 
 from returns.result import Failure, Result
@@ -17,7 +16,7 @@ from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 
 
 class CwpXmlParser:
-    def _get_mx_cells(self, root: Element) -> List[Element]:
+    def _get_mx_cells(self, root: Element) -> list[Element]:
         if (diagram := root.find("diagram")) is None:
             raise Exception(CwpFileStructureError("diagram"))
         if (mx_graph_model := diagram.find("mxGraphModel")) is None:
@@ -28,23 +27,23 @@ class CwpXmlParser:
             raise Exception(CwpFileStructureError("mxCell"))
         return mx_cells
 
-    def _get_all_items(self, mx_cells: List[Element]) -> List[Element]:
+    def _get_all_items(self, mx_cells: list[Element]) -> list[Element]:
         return [itm for itm in mx_cells]
 
-    def _get_edges(self, mx_cells: List[Element]) -> List[Element]:
+    def _get_edges(self, mx_cells: list[Element]) -> list[Element]:
         return [itm for itm in mx_cells if itm.get("edge")]
 
-    def _get_states(self, mx_cells: List[Element]) -> List[Element]:
+    def _get_states(self, mx_cells: list[Element]) -> list[Element]:
         return [itm for itm in mx_cells if itm.get("vertex")]
 
-    def _add_states(self, builder: CwpBuilder, states: List[Element]) -> None:
+    def _add_states(self, builder: CwpBuilder, states: list[Element]) -> None:
         for element in states:
             style = element.get("style")
             if style and "edgeLabel" not in style:
                 state = CwpState.from_xml(element)
                 builder = builder.with_state(state)
 
-    def _add_edges(self, builder: CwpBuilder, edges: List[Element]) -> None:
+    def _add_edges(self, builder: CwpBuilder, edges: list[Element]) -> None:
         for element in edges:
             source_ref = element.get("source")
             target_ref = element.get("target")
@@ -57,7 +56,7 @@ class CwpXmlParser:
     def _check_expressions(
         self,
         builder: CwpBuilder,
-        all_items: List[Element],
+        all_items: list[Element],
         expr_lstnr: ExpressionListener,
         state: State,
     ) -> None:
@@ -90,7 +89,7 @@ class CwpXmlParser:
             assert e.args, "Error does not have enough arguments"
             return Failure(e.args[0])
 
-        result: Result["Cwp", Error] = builder.build()
+        result: Result[Cwp, Error] = builder.build()
         return result
 
 

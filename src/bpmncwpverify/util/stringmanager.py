@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Union
+from typing import Union
 
 NL_NONE = 0
 NL_SINGLE = 1
@@ -14,7 +14,7 @@ class IndentAction(Enum):
 
 class StringManager:
     def __init__(self) -> None:
-        self.contents: List[str] = []
+        self.contents: list[str] = []
         self.indent = 0
 
     def _tab(self) -> str:
@@ -52,7 +52,7 @@ class StringManager:
         if indent_action == IndentAction.DEC:
             self._dec_indent()
 
-        def needs_tab(idx: int, items: List[str]) -> bool:
+        def needs_tab(idx: int, items: list[str]) -> bool:
             """Helper function to determine if tabulation is necessary."""
             # Check if it's the first item and if the last content line ends with a newline
             if idx == 0:

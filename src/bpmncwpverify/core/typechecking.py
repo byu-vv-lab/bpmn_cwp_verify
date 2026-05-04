@@ -1,4 +1,5 @@
-from typing import Callable, Final
+from collections.abc import Callable
+from typing import Final
 
 from returns.result import Failure, Result, Success
 

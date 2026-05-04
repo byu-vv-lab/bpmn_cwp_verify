@@ -24,7 +24,7 @@ def dot_edge(graph: graphviz.Digraph, src: str, dst: str, label: str) -> None:
 
 class GraphVizVisitor(BpmnVisitor):
     def __init__(self, process_number: int) -> None:
-        self.dot = graphviz.Digraph(comment="Process graph {}".format(process_number))
+        self.dot = graphviz.Digraph(comment=f"Process graph {process_number}")
 
     def visit_start_event(self, event: StartEvent) -> bool:
         dot_node(self.dot, event.id, event.name)

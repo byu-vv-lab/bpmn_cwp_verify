@@ -1,4 +1,3 @@
-from typing import Union
 from xml.etree.ElementTree import Element
 
 from returns.functions import not_
@@ -30,13 +29,13 @@ def from_xml(element: Element, state: State) -> Result["Process", Error]:
         result = get_element_type(tag)
         if not_(is_successful)(result):
             return Failure(result.failure())
-        element_type: Union[type[SequenceFlow], type[Node]] = result.unwrap()
+        element_type: type[SequenceFlow] | type[Node] = result.unwrap()
 
         class_object = element_type.from_xml(sub_element)
         builder = builder.with_element(class_object)
 
     for seq_flow in element.findall("bpmn:sequenceFlow", BPMN_XML_NAMESPACE):
-        result_builder: Result["ProcessBuilder", Error] = builder.with_process_flow(
+        result_builder: Result[ProcessBuilder, Error] = builder.with_process_flow(
             seq_flow.attrib["id"],
             seq_flow.attrib["sourceRef"],
             seq_flow.attrib["targetRef"],

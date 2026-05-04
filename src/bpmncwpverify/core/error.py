@@ -223,7 +223,7 @@ class CwpGraphConnError(Error):
 class CwpMultStartStateError(Error):
     __slots__ = ["start_states"]
 
-    def __init__(self, start_states: typing.List[str]) -> None:
+    def __init__(self, start_states: list[str]) -> None:
         super().__init__()
         self.start_states = start_states
 
@@ -431,7 +431,7 @@ class SpinAssertionError(CounterExampleError):
     def __init__(
         self,
         counter_example: str,
-        list_of_error_maps: typing.List[typing.Dict[str, str]],
+        list_of_error_maps: list[dict[str, str]],
     ):
         super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
@@ -441,7 +441,7 @@ class SpinCoverageError(CounterExampleError):
     __slots__ = ["coverage_errors"]
 
     def __init__(
-        self, counter_example: str, coverage_errors: typing.List[typing.Dict[str, str]]
+        self, counter_example: str, coverage_errors: list[dict[str, str]]
     ) -> None:
         super().__init__(counter_example)
         self.coverage_errors = coverage_errors
@@ -453,7 +453,7 @@ class SpinInvalidEndStateError(CounterExampleError):
     def __init__(
         self,
         counter_example: str,
-        list_of_error_maps: typing.List[typing.Dict[str, str]],
+        list_of_error_maps: list[dict[str, str]],
     ):
         super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
@@ -465,7 +465,7 @@ class SpinSyntaxError(CounterExampleError):
     def __init__(
         self,
         counter_example: str,
-        list_of_error_maps: typing.List[typing.Dict[str, str]],
+        list_of_error_maps: list[dict[str, str]],
     ):
         super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
@@ -654,33 +654,23 @@ def get_error_message(error: Error) -> str:
         case CwpNoStartStateError():
             return "CWP ERROR: No start states found."
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
-            return "EXPR ERROR: sometion of type '{}' cannot be computed with something of type '{}'".format(
-                rtype, ltype
-            )
+            return f"EXPR ERROR: sometion of type '{rtype}' cannot be computed with something of type '{ltype}'"
         case ExpressionNegatorError(_type=_type):
-            return "EXPR ERROR: sometiong of type '{}' cannot be used with a mathmatical negator".format(
-                _type
-            )
+            return f"EXPR ERROR: sometiong of type '{_type}' cannot be used with a mathmatical negator"
         case ExpressionParseError(exception_str=exception_str):
             return f"Error while parsing expression: {exception_str}"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
-            return "EXPR ERROR: sometion of type '{}' cannot be related with something of type '{}'".format(
-                rtype, ltype
-            )
+            return f"EXPR ERROR: sometion of type '{rtype}' cannot be related with something of type '{ltype}'"
         case ExpressionRelationalNotError(_type=_type):
-            return "EXPR ERROR: sometiong of type '{}' cannot be used with a relational not".format(
-                _type
-            )
+            return f"EXPR ERROR: sometiong of type '{_type}' cannot be used with a relational not"
         case ExpressionUnrecognizedID(_id=_id):
-            return "EXPR ERROR: '{}' is not recognized as a literal or something stored in the symbol table".format(
-                _id
-            )
+            return f"EXPR ERROR: '{_id}' is not recognized as a literal or something stored in the symbol table"
         case FileReadFileError(msg=msg):
-            return "FILE ERROR: '{}'".format(msg)
+            return f"FILE ERROR: '{msg}'"
         case FileWriteFileError(msg=msg):
-            return "FILE ERROR: '{}'".format(msg)
+            return f"FILE ERROR: '{msg}'"
         case FileXmlParseError(msg=msg):
-            return "FILE ERROR: '{}'".format(msg)
+            return f"FILE ERROR: '{msg}'"
         case FlowExpressionError(
             flow_id=flow_id, expression=expression, exception_str=exception_str
         ):
@@ -694,9 +684,9 @@ def get_error_message(error: Error) -> str:
         case MessageError(node_id=node_id, error_msg=error_msg):
             return f"Inter-process message error at node: {node_id}. {error_msg}"
         case NotImplementedError(function=function):
-            return "ERROR: not implemented '{}'".format(function)
+            return f"ERROR: not implemented '{function}'"
         case NotInitializedError(var_name=var_name):
-            return "ERROR: '{}' is not initialized".format(var_name)
+            return f"ERROR: '{var_name}' is not initialized"
         case RequestError(err=err):
             return (
                 f"ERROR: Unknown error occurred while sending request to lambda: {err}"
@@ -734,14 +724,12 @@ def get_error_message(error: Error) -> str:
                 )
             return "\n".join(errors)
         case StateAntlrWalkerError(msg=msg):
-            return "STATE ERROR: {}".format(msg)
+            return f"STATE ERROR: {msg}"
         case StateInitNotInValues(id=id, line=line, column=column, values=values):
             location: str = " "
             if line != Nothing and column != Nothing:
                 location = f" at line {line.unwrap()}:{column.unwrap()} "
-            return "STATE ERROR: init value '{}'{}not in allowed values {}".format(
-                id, location, sorted(values)
-            )
+            return f"STATE ERROR: init value '{id}'{location}not in allowed values {sorted(values)}"
         case StateMultipleDefinitionError(
             id=id,
             line=line,
@@ -757,19 +745,15 @@ def get_error_message(error: Error) -> str:
             if prev_line != Nothing and prev_column != Nothing:
                 location_second = f", previously defined at line {prev_line.unwrap()}:{prev_column.unwrap()}"
 
-            return "STATE ERROR: multiple definition of '{}'{}{}".format(
-                id, location_first, location_second
-            )
+            return f"STATE ERROR: multiple definition of '{id}'{location_first}{location_second}"
         case StateSyntaxError(msg=msg):
-            return "STATE SYNTAX ERROR: {}".format(msg)
+            return f"STATE SYNTAX ERROR: {msg}"
         case SubProcessRunError(process_name=process_name):
-            return "ERROR: failed to run '{}'".format(process_name)
+            return f"ERROR: failed to run '{process_name}'"
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
-            return "TYPING ERROR: something of type '{}' cannot by assigned to something of type '{}'".format(
-                rtype, ltype
-            )
+            return f"TYPING ERROR: something of type '{rtype}' cannot by assigned to something of type '{ltype}'"
         case TypingNoTypeError(id=id):
-            return "TYPING ERROR: literal '{}' has an unknown type".format(id)
+            return f"TYPING ERROR: literal '{id}' has an unknown type"
 
         case _:
             raise builtins.NotImplementedError
