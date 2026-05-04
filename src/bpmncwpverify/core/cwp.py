@@ -96,7 +96,7 @@ class CwpEdge:
         return prev
 
     @staticmethod
-    def conditional_folier(s: list[str]) -> str:
+    def expression_reconstructor(s: list[str]) -> str:
         OPS = ("&&", "||")
         CONDITIONALS = ("==", "!=", "<=", "=<", "<", ">", ">=", "=>")
         ALL = OPS + CONDITIONALS
@@ -117,14 +117,20 @@ class CwpEdge:
     @staticmethod
     def cleanup_expression(expression: str) -> str:
         decoded = CwpEdge.deep_decode(expression)
-        decoded = re.sub(r"\s*(&&|\|\|)\s*", r" \1 ", decoded)
+        decoded = re.sub(
+            r"\s*(&&|\|\|)\s*", r" \1 ", decoded
+        )  # adds spaces around logical operators for BeautifulSoup and expression_reconstructor
 
         if CwpEdge.has_html(decoded):
             soup = BeautifulSoup(decoded, "html.parser").get_text(" ", strip=True)
-            decoded = CwpEdge.conditional_folier(soup.split())
+            decoded = CwpEdge.expression_reconstructor(soup.split())
 
-        decoded = re.sub(r"\s*(&&|\|\||==|!=|>=|<=|=|<|>)\s*", r" \1 ", decoded)
-        decoded = re.sub(r"\s+", " ", decoded).strip()
+        decoded = re.sub(
+            r"\s*(&&|\|\||==|!=|>=|<=|=|<|>)\s*", r" \1 ", decoded
+        )  # adds spaces between everything for standardization
+        decoded = re.sub(
+            r"\s+", " ", decoded
+        ).strip()  # strips all extra spaces and leading/ending whitespace if any
 
         return decoded
 
