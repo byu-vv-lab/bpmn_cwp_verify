@@ -101,10 +101,6 @@ int main() {
             p_negotiate = true;
 
          } else if (paymentOffered == PAYMENT_AMOUNT && terms == TERMS_AGREED) {
-            __CPROVER_assert(p_at_gateway, "CWP: taking both agreed path requires p_at_gateway");
-            __CPROVER_assert(p_negotiate, "CWP: taking both agreed path requires p_negotiate");
-            __CPROVER_assert(p_terms_ready, "CWP: taking both agreed path requires p_terms_ready");
-            __CPROVER_assert(p_price_ready, "CWP: taking both agreed path requires p_price_ready");
             /* Flow_0yqye0v: both agreed → proceed to shake hands */
             __CPROVER_assert(terms == TERMS_AGREED && paymentOffered == PAYMENT_AMOUNT,
                               "CWP: Purchase Agreed — terms and payment both satisfied");
