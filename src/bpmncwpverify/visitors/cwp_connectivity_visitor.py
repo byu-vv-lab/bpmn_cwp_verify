@@ -3,6 +3,8 @@ from bpmncwpverify.core.error import CwpGraphConnError
 
 
 class CwpConnectivityVisitor(CwpVisitor):
+    __slots__ = "visited"
+
     def __init__(self) -> None:
         self.visited: set[CwpState] = set()
 

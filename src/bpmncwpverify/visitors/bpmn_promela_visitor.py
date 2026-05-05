@@ -160,6 +160,8 @@ class TokenPositions:
 
 
 class PromelaGenVisitor(BpmnVisitor):
+    __slots__ = ["defs", "var_defs", "behaviors", "init_proc_contents", "promela"]
+
     def __init__(self) -> None:
         self.defs = StringManager()
         self.var_defs = StringManager()

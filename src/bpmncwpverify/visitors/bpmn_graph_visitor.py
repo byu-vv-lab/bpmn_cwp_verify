@@ -23,6 +23,8 @@ def dot_edge(graph: graphviz.Digraph, src: str, dst: str, label: str) -> None:
 
 
 class GraphVizVisitor(BpmnVisitor):
+    __slots__ = "dot"
+
     def __init__(self, process_number: int) -> None:
         self.dot = graphviz.Digraph(comment=f"Process graph {process_number}")
 

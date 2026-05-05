@@ -8,6 +8,8 @@ from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 
 
 class BpmnBuilder:
+    __slots__ = "_bpmn"
+
     def __init__(self) -> None:
         self._bpmn = Bpmn()
 

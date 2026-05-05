@@ -16,6 +16,8 @@ from bpmncwpverify.visitors.cwp_connectivity_visitor import CwpConnectivityVisit
 
 
 class CwpBuilder:
+    __slots__ = ["_cur_edge_letter", "_cwp"]
+
     def __init__(self) -> None:
         self._cur_edge_letter = "A"
         self._cwp = Cwp()
