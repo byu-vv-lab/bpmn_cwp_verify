@@ -10,6 +10,8 @@ class ErrorTrace:
     Class to represent an error trace.
     """
 
+    __slots__ = ["id", "changed_vars", "curr_cwp_state"]
+
     def __init__(self, id: str, changed_vars: list[str], curr_cwp_state: list[str]):
         self.id = id
         self.changed_vars = changed_vars
@@ -20,6 +22,8 @@ class CounterExample:
     """
     Class to represent a counterexample.
     """
+
+    __slots__ = ["trace_steps", "error"]
 
     def __init__(self, trace_steps: list[ErrorTrace], error: type["Error"]):
         self.trace_steps = trace_steps

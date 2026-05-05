@@ -5,6 +5,8 @@ from bpmncwpverify.visitors.bpmn_graph_visitor import dot_edge, dot_node
 
 
 class CwpGraphVizVisitor(CwpVisitor):
+    __slots__ = "dot"
+
     def __init__(self) -> None:
         self.dot = graphviz.Digraph(comment="cwp graph")
 

@@ -393,6 +393,8 @@ class Process(BpmnElement):
     Representation of the business process being modeled
     """
 
+    __slots__ = ["_flows", "_elements", "_start_states"]
+
     def __init__(self, id: str, name: str):
         """
         Initialize Process object
@@ -493,6 +495,8 @@ class Bpmn:
     """
     BPMN Promela/graph constructor
     """
+
+    __slots__ = ["processes", "id_to_element", "inter_process_msgs"]
 
     def __init__(self) -> None:
         """

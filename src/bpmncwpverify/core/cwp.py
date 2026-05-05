@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 
 
 class Cwp:
+    __slots__ = ["states", "edges", "start_state", "end_states"]
+
     def __init__(self) -> None:
         self.states: dict[str, CwpState] = {}
         self.edges: dict[str, CwpEdge] = {}
@@ -20,6 +22,8 @@ class Cwp:
 
 
 class CwpState:
+    __slots__ = ["id", "name", "out_edges", "in_edges"]
+
     def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name
@@ -49,6 +53,8 @@ class CwpState:
 
 
 class CwpEdge:
+    __slots__ = ["id", "name", "expression", "parent_id", "source", "dest", "is_leaf"]
+
     def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name

@@ -39,6 +39,8 @@ from bpmncwpverify.core.error import (
 
 
 class ProcessConnectivityVisitor(BpmnVisitor):
+    __slots__ = "visited"
+
     def __init__(self) -> None:
         self.visited: set[BpmnElement] = set()
 
@@ -193,6 +195,8 @@ class ValidateStartEventFlows(BpmnVisitor):
 
 
 class SetFlowLeafs(BpmnVisitor):
+    __slots__ = "visited"
+
     def __init__(self) -> None:
         self.visited: set[BpmnElement] = set()
 

@@ -13,6 +13,8 @@ class IndentAction(Enum):
 
 
 class StringManager:
+    __slots__ = ["contents", "indent"]
+
     def __init__(self) -> None:
         self.contents: list[str] = []
         self.indent = 0
