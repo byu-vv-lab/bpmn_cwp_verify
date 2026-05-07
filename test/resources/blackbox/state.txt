@@ -8,7 +8,7 @@ enum SearchState { searchInit on off }
 
 var risk: RiskState = riskInit
 
-var auvComms: CommunicationState = communicationInit
+var comms: CommunicationState = communicationInit
 var conditions: ConditionsState = conditionsInit
 
 var blackBox: BlackBoxState = blackBoxInit
