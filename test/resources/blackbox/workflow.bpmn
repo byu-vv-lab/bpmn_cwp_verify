@@ -202,7 +202,7 @@ comms = sent</bpmn:documentation>
       <bpmn:incoming>Flow_1n4b7r9</bpmn:incoming>
       <bpmn:outgoing>Flow_0s9sz8o</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_1gpoluy" name="Return">
+    <bpmn:task id="Activity_1gpoluy" name="Return to Surface">
       <bpmn:incoming>Flow_169v6ma</bpmn:incoming>
       <bpmn:outgoing>Flow_0bxyuzw</bpmn:outgoing>
     </bpmn:task>
@@ -230,14 +230,14 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_1rv897x</bpmn:outgoing>
       <bpmn:outgoing>Flow_1kzgclj</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_10ign21" name="Black Box Located">
+    <bpmn:task id="Activity_10ign21" name="Black Box Located Ping Command">
       <bpmn:incoming>Flow_1rv897x</bpmn:incoming>
       <bpmn:outgoing>Flow_04wh7yo</bpmn:outgoing>
     </bpmn:task>
     <bpmn:endEvent id="Event_09gq76c" name="Search Off Risk">
       <bpmn:incoming>Flow_0hl1n0e</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_1vf2l3e" name="Update Info">
+    <bpmn:task id="Activity_1vf2l3e" name="Update Info and Return to Surface">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1q6tdit</bpmn:incoming>
       <bpmn:outgoing>Flow_0hl1n0e</bpmn:outgoing>
@@ -257,9 +257,6 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1kxj6za</bpmn:incoming>
       <bpmn:outgoing>Flow_0opunqa</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:endEvent id="Event_04mhz3e" name="Search Off Found">
-      <bpmn:incoming>Flow_04wh7yo</bpmn:incoming>
-    </bpmn:endEvent>
     <bpmn:task id="Activity_15xph9w" name="Received Acceptable">
       <bpmn:incoming>Flow_0vy3iib</bpmn:incoming>
       <bpmn:outgoing>Flow_00e2sn9</bpmn:outgoing>
@@ -280,7 +277,7 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_11w7314</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1phdw1a" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_1f0uppm" name="Notify">
+    <bpmn:task id="Activity_1f0uppm" name="Ping Updates and Information">
       <bpmn:incoming>Flow_06gih1r</bpmn:incoming>
       <bpmn:outgoing>Flow_06tewjg</bpmn:outgoing>
     </bpmn:task>
@@ -299,7 +296,6 @@ fi</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_1t4wl0u" sourceRef="Activity_1bgymg8" targetRef="Gateway_0hwogsi" />
     <bpmn:sequenceFlow id="Flow_18avrt1" name="comms != waiting &#38;&#38; blackBox == missing" sourceRef="Gateway_0hwogsi" targetRef="Event_0gh42fh" />
     <bpmn:sequenceFlow id="Flow_1rv897x" name="blackBox == found" sourceRef="Gateway_0hwogsi" targetRef="Activity_10ign21" />
-    <bpmn:sequenceFlow id="Flow_04wh7yo" sourceRef="Activity_10ign21" targetRef="Event_04mhz3e" />
     <bpmn:sequenceFlow id="Flow_0hl1n0e" sourceRef="Activity_1vf2l3e" targetRef="Event_09gq76c" />
     <bpmn:sequenceFlow id="Flow_1q6tdit" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="Gateway_1s1jaoc" targetRef="Activity_1vf2l3e" />
     <bpmn:sequenceFlow id="Flow_12btwul" sourceRef="Event_15hpt57" targetRef="Gateway_1s1jaoc" />
@@ -310,6 +306,10 @@ fi</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_037qktc" sourceRef="Activity_1egcug9" targetRef="Gateway_0ygsp1s" />
     <bpmn:sequenceFlow id="Flow_06tewjg" sourceRef="Activity_1f0uppm" targetRef="Event_1i9a79o" />
     <bpmn:sequenceFlow id="Flow_06gih1r" sourceRef="Event_0gh42fh" targetRef="Activity_1f0uppm" />
+    <bpmn:sequenceFlow id="Flow_04wh7yo" sourceRef="Activity_10ign21" targetRef="Event_04mhz3e" />
+    <bpmn:endEvent id="Event_04mhz3e" name="Search Off Found">
+      <bpmn:incoming>Flow_04wh7yo</bpmn:incoming>
+    </bpmn:endEvent>
   </bpmn:process>
   <bpmn:message id="Message_26q47k7" name="Move On" />
   <bpmn:process id="Process_1hpe8bw" isExecutable="false">
@@ -326,7 +326,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_17sry0g</bpmn:incoming>
       <bpmn:outgoing>Flow_1drtlov</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_0zr2r7y" name="Return">
+    <bpmn:task id="Activity_0zr2r7y" name="Return to Command Vessel">
       <bpmn:incoming>Flow_0i1i54e</bpmn:incoming>
       <bpmn:outgoing>Flow_1h2ei0f</bpmn:outgoing>
     </bpmn:task>
@@ -354,14 +354,14 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_1nf4yz0</bpmn:outgoing>
       <bpmn:outgoing>Flow_1dodm0m</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_0w71h2e" name="Black Box Located">
+    <bpmn:task id="Activity_0w71h2e" name="Black Box Located Notify Command">
       <bpmn:incoming>Flow_1dodm0m</bpmn:incoming>
       <bpmn:outgoing>Flow_1797uxk</bpmn:outgoing>
     </bpmn:task>
     <bpmn:endEvent id="Event_0mkk9ro" name="Search Off Risk">
       <bpmn:incoming>Flow_0xcofz8</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_13d0lub" name="Update Info">
+    <bpmn:task id="Activity_13d0lub" name="Update Info and Return to Command Vessel">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1llg1yu</bpmn:incoming>
       <bpmn:outgoing>Flow_0xcofz8</bpmn:outgoing>
@@ -404,7 +404,7 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_1ltwuf3</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_113t6jv" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_0srv8i9" name="Notify">
+    <bpmn:task id="Activity_0srv8i9" name="Send Updates and Information">
       <bpmn:incoming>Flow_0simk23</bpmn:incoming>
       <bpmn:outgoing>Flow_1fvhber</bpmn:outgoing>
     </bpmn:task>
