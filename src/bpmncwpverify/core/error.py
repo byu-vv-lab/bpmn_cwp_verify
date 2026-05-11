@@ -12,6 +12,22 @@ class Error:
         pass
 
 
+class BpmnNoElementNameError(Error):
+    __slots__ = ["ids"]
+
+    def __init__(self, ids: list[str]) -> None:
+        super().__init__()
+        self.ids = ids
+
+
+class BpmnNoSwimLaneNameError(Error):
+    __slots__ = ["ids"]
+
+    def __init__(self, ids: list[str]) -> None:
+        super().__init__()
+        self.ids = ids
+
+
 class BpmnFlowIncomingError(Error):
     __slots__ = ["node_id"]
 
@@ -435,15 +451,13 @@ class SpinAssertionError(CounterExampleError):
     ):
         super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
+        self.counter_example = counter_example
 
 
-class SpinCoverageError(CounterExampleError):
+class SpinCoverageError(Error):
     __slots__ = ["coverage_errors"]
 
-    def __init__(
-        self, counter_example: str, coverage_errors: list[dict[str, str]]
-    ) -> None:
-        super().__init__(counter_example)
+    def __init__(self, coverage_errors: list[dict[str, str]]) -> None:
         self.coverage_errors = coverage_errors
 
 
@@ -459,15 +473,13 @@ class SpinInvalidEndStateError(CounterExampleError):
         self.list_of_error_maps = list_of_error_maps
 
 
-class SpinSyntaxError(CounterExampleError):
+class SpinSyntaxError(Error):
     __slots__ = ["list_of_error_maps"]
 
     def __init__(
         self,
-        counter_example: str,
         list_of_error_maps: list[dict[str, str]],
     ):
-        super().__init__(counter_example)
         self.list_of_error_maps = list_of_error_maps
 
 
@@ -593,6 +605,12 @@ class TypingNotNonBoolError(Error):
 
 def get_error_message(error: Error) -> str:
     match error:
+        case BpmnNoElementNameError(ids=ids):
+            return (
+                f"Bpmn error: {ids} must have a name that is different from their ID."
+            )
+        case BpmnNoSwimLaneNameError(ids=ids):
+            return f"Bpmn error: {ids} must have a swimlane with a name that is different from their ID"
         case BpmnFlowIncomingError(node_id=node_id):
             return f"Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: {node_id}."
         case BpmnFlowNoIdError(element=element):
@@ -691,7 +709,9 @@ def get_error_message(error: Error) -> str:
             return (
                 f"ERROR: Unknown error occurred while sending request to lambda: {err}"
             )
-        case SpinAssertionError(list_of_error_maps=list_of_error_maps):
+        case SpinAssertionError(
+            counter_example=counter_example, list_of_error_maps=list_of_error_maps
+        ):
             errors: list[str] = []
             errors.append("Assertion Error:")
             errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
@@ -699,6 +719,8 @@ def get_error_message(error: Error) -> str:
                 errors.append(
                     f"{idx + 1}: Assertion: {map['assertion']}, Depth info: {map['depth']}"
                 )
+            #    errors.append("Counter Example:")
+            errors.append(counter_example)
             return "\n".join(errors)
         case SpinCoverageError(coverage_errors=coverage_errors):
             return "\n".join(

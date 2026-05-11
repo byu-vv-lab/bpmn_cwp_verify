@@ -21,6 +21,8 @@ from bpmncwpverify.core.error import (
     BpmnMsgStartEventError,
     BpmnMsgTargetError,
     BpmnNodeTypeError,
+    BpmnNoElementNameError,
+    BpmnNoSwimLaneNameError,
     BpmnSeqFlowEndEventError,
     BpmnSeqFlowNoExprError,
     BpmnStructureError,
@@ -64,6 +66,14 @@ from bpmncwpverify.core.error import (
 )
 
 test_inputs: list[tuple[Error, str]] = [
+    (
+        BpmnNoElementNameError(["Event_4kd93"]),
+        "Bpmn error: ['Event_4kd93'] must have a name that is different from their ID.",
+    ),
+    (
+        BpmnNoSwimLaneNameError(["Proces_32kdf8"]),
+        "Bpmn error: ['Proces_32kdf8'] must have a swimlane with a name that is different from their ID",
+    ),
     (
         BpmnFlowIncomingError("node_id"),
         "Flow error: All flow objects other than start events, boundary events, and compensating activities must have an incoming sequence flow, if the process level includes any start or end events. node: node_id.",
@@ -231,12 +241,11 @@ test_inputs: list[tuple[Error, str]] = [
                 {"assertion": "test_assertion2", "depth": "test_depth2"},
             ],
         ),
-        "Assertion Error:\n2 error(s) occurred:\n1: Assertion: test_assertion1, Depth info: test_depth1\n2: Assertion: test_assertion2, Depth info: test_depth2",
+        "Assertion Error:\n2 error(s) occurred:\n1: Assertion: test_assertion1, Depth info: test_depth1\n2: Assertion: test_assertion2, Depth info: test_depth2\n",
     ),
     (NotInitializedError("x"), "ERROR: 'x' is not initialized"),
     (
         SpinCoverageError(
-            "",
             [
                 {
                     "proctype": "test_proctype",
@@ -254,7 +263,6 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         SpinSyntaxError(
-            "",
             [
                 {
                     "line_number": "1",
@@ -299,6 +307,8 @@ test_inputs: list[tuple[Error, str]] = [
 ]
 
 test_ids: list[str] = [
+    "BpmnNoElementNameError",
+    "BpmnNoSwimLaneNameError",
     "BpmnFlowIncomingError",
     "BpmnFlowNoIdError",
     "BpmnFlowOutgoingError",

@@ -259,7 +259,10 @@ class PromelaGenVisitor(BpmnVisitor):
                     sm.write_str(f"putToken({put_loc})", NL_SINGLE)
                 sm.write_str("", indent_action=IndentAction.DEC)
 
-        sm.write_str(":: atomic{else -> assert false}", NL_SINGLE)
+        sm.write_str(
+            ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
+            NL_SINGLE,
+        )
         sm.write_str("fi", NL_SINGLE)
         return sm
 
@@ -503,6 +506,9 @@ class PromelaGenVisitor(BpmnVisitor):
     def visit_bpmn(self, bpmn: Bpmn) -> bool:
         self.defs.write_str(HELPER_FUNCS_STR, NL_DOUBLE)
         self.init_proc_contents.write_str("init {", NL_SINGLE, IndentAction.INC)
+        # vars = vars.split("//**********VARIABLE DECLARATION************//\n")[1]
+        # vars = vars.replace("\n", "\\n")
+        # self.init_proc_contents.write_str(f'printf("{vars}\\n")', NL_SINGLE)
         return True
 
     def end_visit_bpmn(self, bpmn: Bpmn) -> None:

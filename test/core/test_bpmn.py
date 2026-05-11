@@ -20,14 +20,14 @@ def create_bpmn_definition():
             "targetNamespace": "http://example.com/schema/bpmn",
         },
     )
-    SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
-    return root
+    collab = SubElement(root, "bpmn:collaboration", attrib={"id": "Collaboration_1"})
+    return root, collab
 
 
-def add_process(root: Element, process_id="Process_1"):
+def add_process(collab: Element, process_id="Process_1"):
     """Add a collaboration and participant to the BPMN definition."""
     SubElement(
-        root,
+        collab,
         "bpmn:participant",
         attrib={
             "id": "Participant_1",
@@ -48,8 +48,8 @@ def add_process_with_elements(root, elements):
 
 def test_complete_bpmn_with_no_start_or_end_event():
     state = StateBuilder().build()
-    root = create_bpmn_definition()
-    add_process(root)
+    root, collab = create_bpmn_definition()
+    add_process(collab)
     task = Element("bpmn:task", attrib={"id": "Task_1", "name": "Test Task"})
     add_process_with_elements(root, [task])
 
@@ -64,8 +64,8 @@ def test_complete_bpmn_with_no_start_or_end_event():
 
 def test_complete_bpmn_with_no_end_event():
     state = StateBuilder().build()
-    root = create_bpmn_definition()
-    add_process(root)
+    root, collab = create_bpmn_definition()
+    add_process(collab)
 
     start_event = Element("bpmn:startEvent", attrib={"id": "se1"})
     outgoing = SubElement(start_event, "bpmn:outgoing")
@@ -89,8 +89,8 @@ def test_complete_bpmn_with_no_end_event():
 
 def test_complete_bpmn_with_good_process():
     state = StateBuilder().build()
-    root = create_bpmn_definition()
-    add_process(root)
+    root, collab = create_bpmn_definition()
+    add_process(collab)
 
     start_event = Element("bpmn:startEvent", attrib={"id": "se1"})
     outgoing = SubElement(start_event, "bpmn:outgoing")
@@ -108,6 +108,7 @@ def test_complete_bpmn_with_good_process():
     result = from_xml(parsed_root, state)
 
     assert isinstance(result, Success)
+    assert result.unwrap().processes["Process_1"].name == "Test Participant"
 
 
 def test_from_xml(mocker):

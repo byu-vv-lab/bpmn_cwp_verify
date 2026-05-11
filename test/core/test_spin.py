@@ -3,6 +3,7 @@
 import pytest
 from returns.result import Failure, Success
 
+from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.spin import SpinOutputParser
 
 
@@ -19,16 +20,16 @@ def mock_generate_counter_example(mocker):
 def test_check_syntax_errors(mock_generate_counter_example):
     mock_generate_counter_example
     spin_output = SpinOutputParser()
+    bpmn = Bpmn()
     s = """
     spin: test/resources/simple_example/valid_output.pml:55, Error: syntax error    saw ''}' = 125'
     spin: test/resources/simple_example/valid_output.pml:116, Error: missing '}' ?
     """
 
-    result = spin_output.check_syntax_errors("", s)
+    result = spin_output.check_syntax_errors("", s, bpmn)
 
     assert isinstance(result, Failure)
     result = result.failure()
-    assert result.get_counter_example() == "test_json"
     assert (
         result.list_of_error_maps[0]["file_path"]
         == "test/resources/simple_example/valid_output.pml"
@@ -48,6 +49,7 @@ def test_check_syntax_errors(mock_generate_counter_example):
 def test_check_syntax_errors_none(mock_generate_counter_example):
     mock_generate_counter_example
     spin_output = SpinOutputParser()
+    bpmn = Bpmn()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -60,13 +62,14 @@ def test_check_syntax_errors_none(mock_generate_counter_example):
         ...
     """
 
-    result = spin_output.check_syntax_errors("", s)
+    result = spin_output.check_syntax_errors("", s, bpmn)
 
     assert isinstance(result, Success)
 
 
 def test_has_uncovered_states(mock_generate_counter_example):
     mock_generate_counter_example
+    bpmn = Bpmn()
     spin_output = """
 
         Full statespace search for:
@@ -112,10 +115,9 @@ def test_has_uncovered_states(mock_generate_counter_example):
                 (1 of 7 states)
     """
     spin_obj = SpinOutputParser()
-    result = spin_obj.check_coverage_errors("", spin_output)
+    result = spin_obj.check_coverage_errors("", spin_output, bpmn)
     assert isinstance(result, Failure)
 
-    assert result.failure().get_counter_example() == "test_json"
     errors = result.failure().coverage_errors
     assert errors[0]["proctype"] == "testproc"
     assert errors[0]["file"] == "test.pml"
@@ -147,6 +149,7 @@ def test_has_uncovered_states(mock_generate_counter_example):
 
 def test_has_no_uncovered_states(mock_generate_counter_example):
     mock_generate_counter_example
+    bpmn = Bpmn()
     spin_output = """
     Full statespace search for:
             never claim             - (none specified)
@@ -181,13 +184,14 @@ def test_has_no_uncovered_states(mock_generate_counter_example):
     """
 
     spin_obj = SpinOutputParser()
-    result = spin_obj.check_coverage_errors("", spin_output)
+    result = spin_obj.check_coverage_errors("", spin_output, bpmn)
     assert isinstance(result, Success)
 
 
 def test_check_invalid_end_state(mock_generate_counter_example):
     mock_generate_counter_example
     spin_output = SpinOutputParser()
+    bpmn = Bpmn()
     s = """
         pan:1: invalid end state (at depth -1)
         pan: wrote first.pml.trail
@@ -203,7 +207,7 @@ def test_check_invalid_end_state(mock_generate_counter_example):
                 invalid end states      +
     """
 
-    result = spin_output.check_invalid_end_state("", s)
+    result = spin_output.check_invalid_end_state("", s, bpmn)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -214,6 +218,7 @@ def test_check_invalid_end_state(mock_generate_counter_example):
 def test_check_invalid_end_state_none(mock_generate_counter_example):
     mock_generate_counter_example
     spin_output = SpinOutputParser()
+    bpmn = Bpmn()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -226,7 +231,7 @@ def test_check_invalid_end_state_none(mock_generate_counter_example):
         ...
     """
 
-    result = spin_output.check_invalid_end_state("", s)
+    result = spin_output.check_invalid_end_state("", s, bpmn)
 
     assert isinstance(result, Success)
 
@@ -234,11 +239,12 @@ def test_check_invalid_end_state_none(mock_generate_counter_example):
 def test_check_assertion_violation(mock_generate_counter_example):
     mock_generate_counter_example
     spin_output = SpinOutputParser()
+    bpmn = Bpmn()
     s = """
         pan:1: assertion violated (_nr_pr==3) (at depth 0)
     """
 
-    result = spin_output.check_assertion_violation("", s)
+    result = spin_output.check_assertion_violation("", s, bpmn)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -249,7 +255,7 @@ def test_check_assertion_violation(mock_generate_counter_example):
         pan: wrote verification.pml.trail
     """
 
-    result = spin_output.check_assertion_violation("", s)
+    result = spin_output.check_assertion_violation("", s, bpmn)
 
     assert isinstance(result, Failure)
     result = result.failure()
@@ -259,6 +265,7 @@ def test_check_assertion_violation(mock_generate_counter_example):
 def test_check_assertion_violation_none(mock_generate_counter_example):
     mock_generate_counter_example
     spin_output = SpinOutputParser()
+    bpmn = Bpmn()
     s = """
         (Spin Version 6.5.2 -- 6 December 2019)
                 + Partial Order Reduction
@@ -271,6 +278,6 @@ def test_check_assertion_violation_none(mock_generate_counter_example):
         ...
     """
 
-    result = spin_output.check_assertion_violation("", s)
+    result = spin_output.check_assertion_violation("", s, bpmn)
 
     assert isinstance(result, Success)

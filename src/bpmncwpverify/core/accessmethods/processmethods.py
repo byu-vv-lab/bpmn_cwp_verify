@@ -16,11 +16,23 @@ from bpmncwpverify.core.error import Error
 from bpmncwpverify.core.state import State
 
 
-def from_xml(element: Element, state: State) -> Result["Process", Error]:
+def get_process_name(id: str, parts: list[Element]) -> str:
+    for part in parts:
+        if id == part.attrib.get("processRef"):
+            return part.attrib.get("name", id)
+
+    return id
+
+
+def from_xml(
+    element: Element, participants: list[Element], state: State
+) -> Result["Process", Error]:
     id = element.attrib.get("id")
     if not id:
         raise Exception("Id cannot be None")
-    name: str = element.attrib.get("name", id)
+
+    name: str = get_process_name(id, participants)
+
     builder = ProcessBuilder(id, name, state)
 
     for sub_element in element:

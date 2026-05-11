@@ -1,5 +1,7 @@
+# type: ignore
 import pytest
 
+from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.counterexample import NL_SINGLE, CounterExample
 from bpmncwpverify.core.error import Error
 
@@ -20,7 +22,7 @@ def test_generate_counter_example(mocker):
     )
 
     CounterExample.generate_counterexample(
-        mocker.Mock(), mocker.MagicMock(__name__="test")
+        mocker.Mock(), mocker.MagicMock(__name__="test"), mocker.MagicMock()
     )
 
     mock_filter_spin_trace.assert_called_once_with("test_str")
@@ -59,10 +61,19 @@ def test_counterexample_constructor(mocker):
     assert ce.error == "SubError"
 
 
-def test_counterexample_extract_steps():
-    test_string = """ID: test_id\nChanged vars:\ntest_var1\ntest_var2\nCurrent state: test_state1"""
-    steps = CounterExample.extract_steps(test_string)
+def test_counterexample_extract_steps(mocker):
+    test_string = """ID: Event_1\nChanged Vars:\ntest_var1\ntest_var2\nCurrent state: test_state1"""
+    bpmn = Bpmn()
+    mock_element = mocker.MagicMock()
+    mock_element.id = "Event_1"
+    mock_element.name = "start"
+
+    bpmn.id_to_element[mock_element.id] = mock_element
+
+    steps, issue = CounterExample.extract_steps_v_two(test_string, bpmn)
+
+    assert issue == ""
     assert len(steps) == 1
-    assert steps[0].id == "test_id"
+    assert steps[0].id == "start"
     assert steps[0].changed_vars == ["test_var1", "test_var2"]
-    assert steps[0].curr_cwp_state == ["test_state1"]
+    assert steps[0].cur_cwp_state == "test_state1"
