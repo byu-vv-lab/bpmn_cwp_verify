@@ -3,6 +3,7 @@ import pytest
 
 from bpmncwpverify.builder.promela_builder import (
     _generate_logger,
+    _generate_state_dump,
     _generate_state_promela,
     _get_variable_names,
 )
@@ -69,6 +70,57 @@ def test_variable_name_extractor(mocker):
     result = _get_variable_names(state)
 
     assert result == [1, 2]
+
+
+def test_state_dump_int(mocker):
+    vars = [
+        mocker.Mock(id="v1", type_="int", init="1"),
+        mocker.Mock(id="v2", type_="int", init="2"),
+    ]
+
+    state = mocker.Mock()
+    state.vars = vars
+
+    result = _generate_state_dump(state)
+
+    assert (
+        result
+        == 'inline stateDump(){\n\tprintf("v1 = %d\\n", v1)\n\tprintf("v2 = %d\\n", v2)\n}\n'
+    )
+
+
+def test_state_dump_bool(mocker):
+    vars = [
+        mocker.Mock(id="v1", type_="bool", init="true"),
+        mocker.Mock(id="v2", type_="bool", init="true"),
+    ]
+
+    state = mocker.Mock()
+    state.vars = vars
+
+    result = _generate_state_dump(state)
+
+    assert (
+        result
+        == 'inline stateDump(){\n\tprintf("v1 = %d\\n", v1)\n\tprintf("v2 = %d\\n", v2)\n}\n'
+    )
+
+
+def test_state_dump_enum(mocker):
+    vars = [
+        mocker.Mock(id="v1", type_="BinDecision", init="yes"),
+        mocker.Mock(id="v2", type_="BinDecision", init="no"),
+    ]
+
+    state = mocker.Mock()
+    state.vars = vars
+
+    result = _generate_state_dump(state)
+
+    assert (
+        result
+        == 'inline stateDump(){\n\tprintf("v1 = %e\\n", v1)\n\tprintf("v2 = %e\\n", v2)\n}\n'
+    )
 
 
 def test_generate_promela(mocker):
