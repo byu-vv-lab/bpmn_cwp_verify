@@ -719,7 +719,7 @@ def get_error_message(error: Error) -> str:
                 errors.append(
                     f"{idx + 1}: Assertion: {map['assertion']}, Depth info: {map['depth']}"
                 )
-            #    errors.append("Counter Example:")
+
             errors.append(counter_example)
             return "\n".join(errors)
         case SpinCoverageError(coverage_errors=coverage_errors):
