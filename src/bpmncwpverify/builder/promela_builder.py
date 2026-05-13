@@ -111,15 +111,15 @@ def _get_variable_names(state: State) -> list[str]:
 def _get_print_type(type: str) -> str:
     match type:
         case "bit":
-            return "%d"
+            return "%u"
         case "bool":
             return "%d"
         case "byte":
-            return "%d"
+            return "%u"
         case "int":
             return "%d"
         case "short":
-            return "%d"
+            return "%hd"
         case _:
             return "%e"
 
