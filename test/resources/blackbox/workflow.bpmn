@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0uq4ztg" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.43.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
   <bpmn:collaboration id="Collaboration_09uj9w9">
-    <bpmn:participant id="Participant_0lfpcet" name="Commander" processRef="Process_Commander" />
-    <bpmn:participant id="Participant_026l33z" name="AUV" processRef="Process_AUV" />
-    <bpmn:participant id="Participant_1qbu7ex" name="ROV" processRef="Process_ROV" />
-    <bpmn:messageFlow id="Flow_1nnf1e9" sourceRef="Activity_blackBox_Located_Ping" targetRef="Event_BlackBox_Found_Msg" />
-    <bpmn:messageFlow id="Flow_0gcy363" sourceRef="Activity_Deploy_Searchers" targetRef="Event_1kvb9x7" />
-    <bpmn:messageFlow id="Flow_1xt1y4i" sourceRef="Activity_0ppnjd6" targetRef="Event_1poppd1" />
-    <bpmn:messageFlow id="Flow_0pro922" sourceRef="Activity_Update_Searchers" targetRef="Event_Receive_Updates_AUV" />
-    <bpmn:messageFlow id="Flow_1xoxwnp" sourceRef="Activity_15xph9w" targetRef="Event_1aaupcl" />
-    <bpmn:messageFlow id="Flow_0nhugqw" sourceRef="Activity_Notify_Searchers_Conditions" targetRef="Event_15hpt57" />
-    <bpmn:messageFlow id="Flow_0ayy8tw" sourceRef="Activity_1gpoluy" targetRef="Event_1a65dx8" />
-    <bpmn:messageFlow id="Flow_0ztugp1" sourceRef="Activity_1f0uppm" targetRef="Event_1obj7bi" />
-    <bpmn:messageFlow id="Flow_0lxljux" sourceRef="Activity_Notify_Searchers_To_Wait" targetRef="Event_Received_Wait" />
-    <bpmn:messageFlow id="Flow_1l3kfkx" sourceRef="Activity_Deploy_Searchers" targetRef="Event_0wvq5ts" />
-    <bpmn:messageFlow id="Flow_05dg7ql" sourceRef="Activity_1bq71bi" targetRef="Event_1poppd1" />
-    <bpmn:messageFlow id="Flow_1qg0wm2" sourceRef="Activity_Notify_Searchers_To_Wait" targetRef="Event_Receive_Wait_ROV" />
-    <bpmn:messageFlow id="Flow_1rwbbzw" sourceRef="Activity_Update_Searchers" targetRef="Event_01seco2" />
-    <bpmn:messageFlow id="Flow_0w5qdwk" sourceRef="Activity_0srv8i9" targetRef="Event_1obj7bi" />
-    <bpmn:messageFlow id="Flow_1fur8b8" sourceRef="Activity_0zr2r7y" targetRef="Event_1a65dx8" />
-    <bpmn:messageFlow id="Flow_1i2p8eh" sourceRef="Activity_Notify_Searchers_Conditions" targetRef="Event_0dv4jy2" />
-    <bpmn:messageFlow id="Flow_1sfwpqv" sourceRef="Activity_blackBox_Located" targetRef="Event_BlackBox_Found_Msg" />
-    <bpmn:messageFlow id="Flow_1bug0np" sourceRef="Activity_0c6b8n2" targetRef="Event_1aaupcl" />
-    <bpmn:messageFlow id="Flow_1nsc1iv" sourceRef="Activity_Report_To_Commander" targetRef="Event_Receive_Updates" />
-    <bpmn:messageFlow id="Flow_1sbnsb7" sourceRef="Activity_Confirm_Received_Updates" targetRef="Event_Receive_Confirmation" />
-    <bpmn:messageFlow id="Flow_0tkhaph" sourceRef="Activity_Report_To_Commander_ROV" targetRef="Event_Receive_Updates" />
-    <bpmn:messageFlow id="Flow_17fnh91" sourceRef="Activity_Confirm_Received_Updates" targetRef="Event_Receive_Confirmation_ROV" />
+    <bpmn:participant id="Participant_0lfpcet" name="Commander" processRef="Commander_Process" />
+    <bpmn:participant id="Participant_026l33z" name="AUV" processRef="AUV_Process" />
+    <bpmn:participant id="Participant_1qbu7ex" name="ROV" processRef="ROV_Process" />
+    <bpmn:messageFlow id="Flow_1nnf1e9" sourceRef="AUV_blackBox_Located_Ping" targetRef="Commander_BlackBox_Found_Msg" />
+    <bpmn:messageFlow id="Flow_0gcy363" sourceRef="Commander_Deploy_Searchers" targetRef="AUV_Receive_Deploy" />
+    <bpmn:messageFlow id="Flow_1xt1y4i" sourceRef="AUV_Send_Deployed" targetRef="Commander_Receive_Deployed" />
+    <bpmn:messageFlow id="Flow_0pro922" sourceRef="Commander_Update_Searchers" targetRef="AUV_Receive_Updates_AUV" />
+    <bpmn:messageFlow id="Flow_1xoxwnp" sourceRef="AUV_Received_Acceptable" targetRef="Commander_Received_Accepted" />
+    <bpmn:messageFlow id="Flow_0nhugqw" sourceRef="Commander_Notify_Searchers_Conditions" targetRef="AUV_Receive_Conditions" />
+    <bpmn:messageFlow id="Flow_0ayy8tw" sourceRef="AUV_Return_To_Surface" targetRef="Commander_Received_NotAcceptable" />
+    <bpmn:messageFlow id="Flow_0ztugp1" sourceRef="AUV_Ping_Updates" targetRef="Commander_Receive_Response" />
+    <bpmn:messageFlow id="Flow_0lxljux" sourceRef="Commander_Notify_Searchers_To_Wait" targetRef="AUV_Received_Wait" />
+    <bpmn:messageFlow id="Flow_1l3kfkx" sourceRef="Commander_Deploy_Searchers" targetRef="ROV_Receive_Deploy" />
+    <bpmn:messageFlow id="Flow_05dg7ql" sourceRef="ROV_Send_Deployed" targetRef="Commander_Receive_Deployed" />
+    <bpmn:messageFlow id="Flow_1qg0wm2" sourceRef="Commander_Notify_Searchers_To_Wait" targetRef="ROV_Receive_Wait" />
+    <bpmn:messageFlow id="Flow_1rwbbzw" sourceRef="Commander_Update_Searchers" targetRef="ROV_Receive_Updates" />
+    <bpmn:messageFlow id="Flow_0w5qdwk" sourceRef="ROV_Send_Updates_And_Info" targetRef="Commander_Receive_Response" />
+    <bpmn:messageFlow id="Flow_1fur8b8" sourceRef="ROV_Return_To_Command_Vessel" targetRef="Commander_Received_NotAcceptable" />
+    <bpmn:messageFlow id="Flow_1i2p8eh" sourceRef="Commander_Notify_Searchers_Conditions" targetRef="ROV_Receive_Conditions" />
+    <bpmn:messageFlow id="Flow_1sfwpqv" sourceRef="ROV_blackBox_Located" targetRef="Commander_BlackBox_Found_Msg" />
+    <bpmn:messageFlow id="Flow_1bug0np" sourceRef="Activity_0c6b8n2" targetRef="Commander_Received_Accepted" />
+    <bpmn:messageFlow id="Flow_1nsc1iv" sourceRef="AUV_Report_To_Commander" targetRef="Commander_Receive_Updates" />
+    <bpmn:messageFlow id="Flow_1sbnsb7" sourceRef="Commander_Confirm_Received_Updates" targetRef="AUV_Receive_Confirmation" />
+    <bpmn:messageFlow id="Flow_0tkhaph" sourceRef="ROV_Report_To_Commander" targetRef="Commander_Receive_Updates" />
+    <bpmn:messageFlow id="Flow_17fnh91" sourceRef="Commander_Confirm_Received_Updates" targetRef="ROV_Event_Receive_Confirmation" />
   </bpmn:collaboration>
-  <bpmn:process id="Process_Commander" isExecutable="true">
-    <bpmn:startEvent id="Event_17mv5qi" name="Missing Black Box">
+  <bpmn:process id="Commander_Process" isExecutable="true">
+    <bpmn:startEvent id="Commander_Start" name="Missing Black Box">
       <bpmn:outgoing>Flow_0ugmrj0</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:task id="Activity_Plan_Search" name="Plan Search">
+    <bpmn:task id="Commander_Plan_Search" name="Plan Search">
       <bpmn:documentation>search = on
 conditions = changed
 blackBox = missing
@@ -40,29 +40,29 @@ risk = assessing</bpmn:documentation>
       <bpmn:incoming>Flow_0ugmrj0</bpmn:incoming>
       <bpmn:outgoing>Flow_05o3vkq</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Deploy_Searchers" name="Deploy Searchers">
+    <bpmn:task id="Commander_Deploy_Searchers" name="Deploy Searchers">
       <bpmn:documentation>risk = acceptable
 comms = sent
 conditions = same</bpmn:documentation>
       <bpmn:incoming>Flow_05o3vkq</bpmn:incoming>
       <bpmn:outgoing>Flow_1c014h9</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_1poppd1">
+    <bpmn:intermediateCatchEvent id="Commander_Receive_Deployed" name="Receive Deployed">
       <bpmn:incoming>Flow_1c014h9</bpmn:incoming>
       <bpmn:outgoing>Flow_0nr0iwo</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1yr4nbh" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:intermediateCatchEvent id="Event_1aaupcl">
+    <bpmn:intermediateCatchEvent id="Commander_Received_Accepted">
       <bpmn:incoming>Flow_1pyj6c3</bpmn:incoming>
       <bpmn:outgoing>Flow_1tznmwy</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1by30z5" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:exclusiveGateway id="Gateway_Risk">
+    <bpmn:exclusiveGateway id="Commander_Risk_Acceptable_Or_NA">
       <bpmn:incoming>Flow_10h30va</bpmn:incoming>
       <bpmn:outgoing>Flow_0yslpgn</bpmn:outgoing>
       <bpmn:outgoing>Flow_1pyj6c3</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_Check_Risk" name="Check Risk">
+    <bpmn:task id="Commander_Check_Risk" name="Check Risk">
       <bpmn:documentation>if
 :: true -&gt;
 risk = acceptable;
@@ -74,7 +74,7 @@ comms = sent;</bpmn:documentation>
       <bpmn:incoming>Flow_1lzno7z</bpmn:incoming>
       <bpmn:outgoing>Flow_15ohdb9</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Update_Searchers" name="Update Searchers">
+    <bpmn:task id="Commander_Update_Searchers" name="Update Searchers">
       <bpmn:documentation>if
 :: risk == acceptable -&gt; conditions = same
 :: else -&gt; skip
@@ -82,12 +82,12 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_15ohdb9</bpmn:incoming>
       <bpmn:outgoing>Flow_10h30va</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Notify_Searchers_Conditions" name="Notify Searchers Conditions">
+    <bpmn:task id="Commander_Notify_Searchers_Conditions" name="Notify Searchers Conditions">
       <bpmn:documentation>comms = sent</bpmn:documentation>
       <bpmn:incoming>Flow_1et7avh</bpmn:incoming>
       <bpmn:outgoing>Flow_1x890u1</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Check_Conditions_Lower" name="Check Conditions">
+    <bpmn:task id="Commander_Check_Conditions_Lower" name="Check Conditions">
       <bpmn:documentation>if
 :: blackBox == missing -&gt; conditions = same
 :: blackBox == missing -&gt;
@@ -99,18 +99,18 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_0nq8kre</bpmn:incoming>
       <bpmn:outgoing>Flow_1ybrkic</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Update_Info" name="Update Info">
+    <bpmn:task id="Commander_Update_Info" name="Update Info">
       <bpmn:documentation>risk = assessing
 comms = wait</bpmn:documentation>
       <bpmn:incoming>Flow_1atvpb2</bpmn:incoming>
       <bpmn:outgoing>Flow_11h72oi</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_1a65dx8">
+    <bpmn:intermediateCatchEvent id="Commander_Received_NotAcceptable">
       <bpmn:incoming>Flow_0yslpgn</bpmn:incoming>
       <bpmn:outgoing>Flow_1rjccce</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0696ss6" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_Check_Conditions_Upper" name="Check Conditions">
+    <bpmn:task id="Commander_Check_Conditions" name="Check Conditions">
       <bpmn:documentation>if
 :: true -&gt; conditions = same
 :: true -&gt; conditions = changed
@@ -118,21 +118,21 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1rjccce</bpmn:incoming>
       <bpmn:outgoing>Flow_1et7avh</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_Conditions">
+    <bpmn:exclusiveGateway id="Commander_Conditions_Change_Or_Same">
       <bpmn:incoming>Flow_1x890u1</bpmn:incoming>
       <bpmn:outgoing>Flow_03ypw3z</bpmn:outgoing>
       <bpmn:outgoing>Flow_1atvpb2</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:endEvent id="Event_02o56k6" name="Search Off Risk">
+    <bpmn:endEvent id="Commander_Search_Off_Risk" name="Search Off Risk">
       <bpmn:documentation>search = off</bpmn:documentation>
       <bpmn:incoming>Flow_03ypw3z</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:exclusiveGateway id="Gateway_Conditions_And_blackBox">
+    <bpmn:exclusiveGateway id="Commander_Conditions_And_blackBox">
       <bpmn:incoming>Flow_1ybrkic</bpmn:incoming>
       <bpmn:outgoing>Flow_1twjnj7</bpmn:outgoing>
       <bpmn:outgoing>Flow_12106bx</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_Await_Updates" name="Await Updates">
+    <bpmn:task id="Commander_Await_Updates" name="Await Updates">
       <bpmn:documentation>if
 :: blackBox == found -&gt; skip
 :: else -&gt; comms = updates
@@ -142,91 +142,91 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_0nr0iwo</bpmn:incoming>
       <bpmn:outgoing>Flow_0v7q20v</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Notify_Searchers_To_Wait" name="Notify Searchers to Wait">
+    <bpmn:task id="Commander_Notify_Searchers_To_Wait" name="Notify Searchers to Wait">
       <bpmn:incoming>Flow_12106bx</bpmn:incoming>
       <bpmn:outgoing>Flow_1glliuj</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_1obj7bi" name="Receive Response">
+    <bpmn:intermediateCatchEvent id="Commander_Receive_Response" name="Receive Response">
       <bpmn:incoming>Flow_1glliuj</bpmn:incoming>
       <bpmn:outgoing>Flow_1lzno7z</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1527394" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_0ugmrj0" sourceRef="Event_17mv5qi" targetRef="Activity_Plan_Search" />
-    <bpmn:sequenceFlow id="Flow_05o3vkq" sourceRef="Activity_Plan_Search" targetRef="Activity_Deploy_Searchers" />
-    <bpmn:sequenceFlow id="Flow_1c014h9" sourceRef="Activity_Deploy_Searchers" targetRef="Event_1poppd1" />
-    <bpmn:sequenceFlow id="Flow_0nr0iwo" sourceRef="Event_1poppd1" targetRef="Activity_Await_Updates" />
-    <bpmn:sequenceFlow id="Flow_1pyj6c3" name="risk == acceptable" sourceRef="Gateway_Risk" targetRef="Event_1aaupcl" />
-    <bpmn:sequenceFlow id="Flow_1tznmwy" sourceRef="Event_1aaupcl" targetRef="Activity_Await_Updates" />
-    <bpmn:sequenceFlow id="Flow_10h30va" sourceRef="Activity_Update_Searchers" targetRef="Gateway_Risk" />
-    <bpmn:sequenceFlow id="Flow_0yslpgn" name="risk == notAcceptable" sourceRef="Gateway_Risk" targetRef="Event_1a65dx8" />
-    <bpmn:sequenceFlow id="Flow_11h72oi" sourceRef="Activity_Update_Info" targetRef="Activity_Check_Risk" />
-    <bpmn:sequenceFlow id="Flow_1lzno7z" sourceRef="Event_1obj7bi" targetRef="Activity_Check_Risk" />
-    <bpmn:sequenceFlow id="Flow_15ohdb9" sourceRef="Activity_Check_Risk" targetRef="Activity_Update_Searchers" />
-    <bpmn:sequenceFlow id="Flow_1et7avh" sourceRef="Activity_Check_Conditions_Upper" targetRef="Activity_Notify_Searchers_Conditions" />
-    <bpmn:sequenceFlow id="Flow_1x890u1" sourceRef="Activity_Notify_Searchers_Conditions" targetRef="Gateway_Conditions" />
-    <bpmn:sequenceFlow id="Flow_1bt1a2g" name="blackBox == missing" sourceRef="Gateway_Blackbox_Missing_Or_Found" targetRef="Event_Receive_Updates" />
-    <bpmn:sequenceFlow id="Flow_1ybrkic" sourceRef="Activity_Check_Conditions_Lower" targetRef="Gateway_Conditions_And_blackBox" />
-    <bpmn:sequenceFlow id="Flow_1atvpb2" name="conditions == changed" sourceRef="Gateway_Conditions" targetRef="Activity_Update_Info" />
-    <bpmn:sequenceFlow id="Flow_1rjccce" sourceRef="Event_1a65dx8" targetRef="Activity_Check_Conditions_Upper" />
-    <bpmn:sequenceFlow id="Flow_03ypw3z" name="conditions == same" sourceRef="Gateway_Conditions" targetRef="Event_02o56k6" />
-    <bpmn:sequenceFlow id="Flow_12106bx" name="conditions == changed &#38;&#38; blackBox == missing" sourceRef="Gateway_Conditions_And_blackBox" targetRef="Activity_Notify_Searchers_To_Wait" />
-    <bpmn:sequenceFlow id="Flow_1twjnj7" name="conditions == same || blackBox == found" sourceRef="Gateway_Conditions_And_blackBox" targetRef="Activity_Await_Updates" />
-    <bpmn:sequenceFlow id="Flow_0v7q20v" sourceRef="Activity_Await_Updates" targetRef="Gateway_Blackbox_Missing_Or_Found" />
-    <bpmn:sequenceFlow id="Flow_1os4dn1" name="blackBox == found" sourceRef="Gateway_Blackbox_Missing_Or_Found" targetRef="Event_BlackBox_Found_Msg" />
-    <bpmn:sequenceFlow id="Flow_1glliuj" sourceRef="Activity_Notify_Searchers_To_Wait" targetRef="Event_1obj7bi" />
-    <bpmn:exclusiveGateway id="Gateway_Blackbox_Missing_Or_Found">
+    <bpmn:sequenceFlow id="Flow_0ugmrj0" sourceRef="Commander_Start" targetRef="Commander_Plan_Search" />
+    <bpmn:sequenceFlow id="Flow_05o3vkq" sourceRef="Commander_Plan_Search" targetRef="Commander_Deploy_Searchers" />
+    <bpmn:sequenceFlow id="Flow_1c014h9" sourceRef="Commander_Deploy_Searchers" targetRef="Commander_Receive_Deployed" />
+    <bpmn:sequenceFlow id="Flow_0nr0iwo" sourceRef="Commander_Receive_Deployed" targetRef="Commander_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_1pyj6c3" name="risk == acceptable" sourceRef="Commander_Risk_Acceptable_Or_NA" targetRef="Commander_Received_Accepted" />
+    <bpmn:sequenceFlow id="Flow_1tznmwy" sourceRef="Commander_Received_Accepted" targetRef="Commander_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_10h30va" sourceRef="Commander_Update_Searchers" targetRef="Commander_Risk_Acceptable_Or_NA" />
+    <bpmn:sequenceFlow id="Flow_0yslpgn" name="risk == notAcceptable" sourceRef="Commander_Risk_Acceptable_Or_NA" targetRef="Commander_Received_NotAcceptable" />
+    <bpmn:sequenceFlow id="Flow_11h72oi" sourceRef="Commander_Update_Info" targetRef="Commander_Check_Risk" />
+    <bpmn:sequenceFlow id="Flow_1lzno7z" sourceRef="Commander_Receive_Response" targetRef="Commander_Check_Risk" />
+    <bpmn:sequenceFlow id="Flow_15ohdb9" sourceRef="Commander_Check_Risk" targetRef="Commander_Update_Searchers" />
+    <bpmn:sequenceFlow id="Flow_1et7avh" sourceRef="Commander_Check_Conditions" targetRef="Commander_Notify_Searchers_Conditions" />
+    <bpmn:sequenceFlow id="Flow_1x890u1" sourceRef="Commander_Notify_Searchers_Conditions" targetRef="Commander_Conditions_Change_Or_Same" />
+    <bpmn:sequenceFlow id="Flow_1bt1a2g" name="blackBox == missing" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_Receive_Updates" />
+    <bpmn:sequenceFlow id="Flow_1ybrkic" sourceRef="Commander_Check_Conditions_Lower" targetRef="Commander_Conditions_And_blackBox" />
+    <bpmn:sequenceFlow id="Flow_1atvpb2" name="conditions == changed" sourceRef="Commander_Conditions_Change_Or_Same" targetRef="Commander_Update_Info" />
+    <bpmn:sequenceFlow id="Flow_1rjccce" sourceRef="Commander_Received_NotAcceptable" targetRef="Commander_Check_Conditions" />
+    <bpmn:sequenceFlow id="Flow_03ypw3z" name="conditions == same" sourceRef="Commander_Conditions_Change_Or_Same" targetRef="Commander_Search_Off_Risk" />
+    <bpmn:sequenceFlow id="Flow_12106bx" name="conditions == changed &#38;&#38; blackBox == missing" sourceRef="Commander_Conditions_And_blackBox" targetRef="Commander_Notify_Searchers_To_Wait" />
+    <bpmn:sequenceFlow id="Flow_1twjnj7" name="conditions == same || blackBox == found" sourceRef="Commander_Conditions_And_blackBox" targetRef="Commander_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_0v7q20v" sourceRef="Commander_Await_Updates" targetRef="Commander_Blackbox_Missing_Or_Found" />
+    <bpmn:sequenceFlow id="Flow_1os4dn1" name="blackBox == found" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_BlackBox_Found_Msg" />
+    <bpmn:sequenceFlow id="Flow_1glliuj" sourceRef="Commander_Notify_Searchers_To_Wait" targetRef="Commander_Receive_Response" />
+    <bpmn:exclusiveGateway id="Commander_Blackbox_Missing_Or_Found">
       <bpmn:incoming>Flow_0v7q20v</bpmn:incoming>
       <bpmn:outgoing>Flow_1bt1a2g</bpmn:outgoing>
       <bpmn:outgoing>Flow_1os4dn1</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1fl52xy" sourceRef="Activity_Retrieve_Black_Box" targetRef="Event_1gibfpo" />
-    <bpmn:sequenceFlow id="Flow_0wtm01a" sourceRef="Event_BlackBox_Found_Msg" targetRef="Activity_Retrieve_Black_Box" />
-    <bpmn:endEvent id="Event_1gibfpo" name="Search Off Found">
+    <bpmn:sequenceFlow id="Flow_1fl52xy" sourceRef="Commander_Retrieve_Black_Box" targetRef="Commander_Search_Off_Found" />
+    <bpmn:sequenceFlow id="Flow_0wtm01a" sourceRef="Commander_BlackBox_Found_Msg" targetRef="Commander_Retrieve_Black_Box" />
+    <bpmn:endEvent id="Commander_Search_Off_Found" name="Search Off Found">
       <bpmn:incoming>Flow_1fl52xy</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_Retrieve_Black_Box" name="Retrieve Black Box">
+    <bpmn:task id="Commander_Retrieve_Black_Box" name="Retrieve Black Box">
       <bpmn:documentation>search = off
 comms = sent</bpmn:documentation>
       <bpmn:incoming>Flow_0wtm01a</bpmn:incoming>
       <bpmn:outgoing>Flow_1fl52xy</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_BlackBox_Found_Msg">
+    <bpmn:intermediateCatchEvent id="Commander_BlackBox_Found_Msg">
       <bpmn:incoming>Flow_1os4dn1</bpmn:incoming>
       <bpmn:outgoing>Flow_0wtm01a</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0svtyow" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:intermediateCatchEvent id="Event_Receive_Updates" name="Receive Updates">
+    <bpmn:intermediateCatchEvent id="Commander_Receive_Updates" name="Receive Updates">
       <bpmn:incoming>Flow_1bt1a2g</bpmn:incoming>
       <bpmn:outgoing>Flow_05itcp1</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0kma2eb" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_05itcp1" sourceRef="Event_Receive_Updates" targetRef="Activity_Confirm_Received_Updates" />
-    <bpmn:task id="Activity_Confirm_Received_Updates" name="Confirm Received Updates">
+    <bpmn:sequenceFlow id="Flow_05itcp1" sourceRef="Commander_Receive_Updates" targetRef="Commander_Confirm_Received_Updates" />
+    <bpmn:task id="Commander_Confirm_Received_Updates" name="Confirm Received Updates">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_05itcp1</bpmn:incoming>
       <bpmn:outgoing>Flow_0nq8kre</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_0nq8kre" sourceRef="Activity_Confirm_Received_Updates" targetRef="Activity_Check_Conditions_Lower" />
+    <bpmn:sequenceFlow id="Flow_0nq8kre" sourceRef="Commander_Confirm_Received_Updates" targetRef="Commander_Check_Conditions_Lower" />
   </bpmn:process>
-  <bpmn:process id="Process_AUV" isExecutable="false">
-    <bpmn:startEvent id="Event_1bvu1ea">
+  <bpmn:process id="AUV_Process" isExecutable="false">
+    <bpmn:startEvent id="AUV_Start">
       <bpmn:outgoing>Flow_1ax9s2y</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:intermediateCatchEvent id="Event_1kvb9x7">
+    <bpmn:intermediateCatchEvent id="AUV_Receive_Deploy">
       <bpmn:incoming>Flow_1ax9s2y</bpmn:incoming>
       <bpmn:outgoing>Flow_1n4b7r9</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1kimus2" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_0ppnjd6" name="Deployed">
+    <bpmn:task id="AUV_Send_Deployed" name="Deployed">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1n4b7r9</bpmn:incoming>
       <bpmn:outgoing>Flow_0s9sz8o</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_1gpoluy" name="Return to Surface">
+    <bpmn:task id="AUV_Return_To_Surface" name="Return to Surface">
       <bpmn:incoming>Flow_169v6ma</bpmn:incoming>
       <bpmn:outgoing>Flow_0bxyuzw</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Active_Search" name="Active Search">
+    <bpmn:task id="AUV_Active_Search" name="Active Search">
       <bpmn:documentation>if
 :: blackBox == found || comms == updates -&gt; skip
 :: else -&gt;
@@ -245,126 +245,126 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1oisetq</bpmn:incoming>
       <bpmn:outgoing>Flow_1t4wl0u</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_Comms_And_blackBox">
+    <bpmn:exclusiveGateway id="AUV_Comms_And_blackBox">
       <bpmn:incoming>Flow_1t4wl0u</bpmn:incoming>
       <bpmn:outgoing>Flow_18avrt1</bpmn:outgoing>
       <bpmn:outgoing>Flow_1rv897x</bpmn:outgoing>
       <bpmn:outgoing>Flow_1kzgclj</bpmn:outgoing>
       <bpmn:outgoing>Flow_1oisetq</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_blackBox_Located_Ping" name="Black Box Located Ping Command">
+    <bpmn:task id="AUV_blackBox_Located_Ping" name="Black Box Located Ping Command">
       <bpmn:incoming>Flow_1rv897x</bpmn:incoming>
       <bpmn:outgoing>Flow_04wh7yo</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:endEvent id="Event_09gq76c" name="Search Off Risk">
+    <bpmn:endEvent id="AUV_Search_Off_Risk" name="Search Off Risk">
       <bpmn:incoming>Flow_0hl1n0e</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_1vf2l3e" name="Update Info and Return to Surface">
+    <bpmn:task id="AUV_Update_Info_Return_To_Surface" name="Update Info and Return to Surface">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1q6tdit</bpmn:incoming>
       <bpmn:outgoing>Flow_0hl1n0e</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_1s1jaoc">
+    <bpmn:exclusiveGateway id="AUV_Conditions_Changed_Or_Same">
       <bpmn:incoming>Flow_12btwul</bpmn:incoming>
       <bpmn:outgoing>Flow_1q6tdit</bpmn:outgoing>
       <bpmn:outgoing>Flow_1kxj6za</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_15hpt57">
+    <bpmn:intermediateCatchEvent id="AUV_Receive_Conditions" name="Receive Conditions">
       <bpmn:incoming>Flow_0bxyuzw</bpmn:incoming>
       <bpmn:outgoing>Flow_12btwul</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0ibzqj0" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_05h7v9t" name="Received Conditions">
+    <bpmn:task id="AUV_Await_Updates" name="Await Updates">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1kxj6za</bpmn:incoming>
       <bpmn:outgoing>Flow_0opunqa</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:endEvent id="Event_04mhz3e" name="Search Off Found">
+    <bpmn:endEvent id="AUV_Search_Off_Found" name="Search Off Found">
       <bpmn:incoming>Flow_04wh7yo</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_15xph9w" name="Received Acceptable">
+    <bpmn:task id="AUV_Received_Acceptable" name="Received Acceptable">
       <bpmn:incoming>Flow_0vy3iib</bpmn:incoming>
       <bpmn:outgoing>Flow_00e2sn9</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_1egcug9" name="Update Info">
+    <bpmn:task id="AUV_Update_Info" name="Update Info">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_11w7314</bpmn:incoming>
       <bpmn:outgoing>Flow_037qktc</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_0ygsp1s">
+    <bpmn:exclusiveGateway id="AUV_Risk_Acceptable_Or_NA">
       <bpmn:incoming>Flow_037qktc</bpmn:incoming>
       <bpmn:outgoing>Flow_0vy3iib</bpmn:outgoing>
       <bpmn:outgoing>Flow_169v6ma</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_Receive_Updates_AUV" name="Receive Updates">
+    <bpmn:intermediateCatchEvent id="AUV_Receive_Updates_AUV" name="Receive Updates">
       <bpmn:incoming>Flow_0opunqa</bpmn:incoming>
       <bpmn:incoming>Flow_06tewjg</bpmn:incoming>
       <bpmn:outgoing>Flow_11w7314</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1phdw1a" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_1f0uppm" name="Ping Updates and Information">
+    <bpmn:task id="AUV_Ping_Updates" name="Ping Updates and Information">
       <bpmn:incoming>Flow_06gih1r</bpmn:incoming>
       <bpmn:outgoing>Flow_06tewjg</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_Received_Wait" name="Receive Wait">
+    <bpmn:intermediateCatchEvent id="AUV_Received_Wait" name="Receive Wait">
       <bpmn:incoming>Flow_18avrt1</bpmn:incoming>
       <bpmn:outgoing>Flow_06gih1r</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1qfxc8v" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:intermediateCatchEvent id="Event_Receive_Confirmation" name="Receive Confirmation">
+    <bpmn:intermediateCatchEvent id="AUV_Receive_Confirmation" name="Receive Confirmation">
       <bpmn:incoming>Flow_1kx964a</bpmn:incoming>
       <bpmn:outgoing>Flow_11vwxyo</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_06xqzas" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_1ax9s2y" sourceRef="Event_1bvu1ea" targetRef="Event_1kvb9x7" />
-    <bpmn:sequenceFlow id="Flow_1n4b7r9" sourceRef="Event_1kvb9x7" targetRef="Activity_0ppnjd6" />
-    <bpmn:sequenceFlow id="Flow_0s9sz8o" sourceRef="Activity_0ppnjd6" targetRef="Activity_Active_Search" />
-    <bpmn:sequenceFlow id="Flow_169v6ma" name="search == on &#38;&#38; risk == notAcceptable" sourceRef="Gateway_0ygsp1s" targetRef="Activity_1gpoluy" />
-    <bpmn:sequenceFlow id="Flow_0bxyuzw" sourceRef="Activity_1gpoluy" targetRef="Event_15hpt57" />
-    <bpmn:sequenceFlow id="Flow_00e2sn9" sourceRef="Activity_15xph9w" targetRef="Activity_Active_Search" />
-    <bpmn:sequenceFlow id="Flow_11vwxyo" sourceRef="Event_Receive_Confirmation" targetRef="Activity_Active_Search" />
-    <bpmn:sequenceFlow id="Flow_1t4wl0u" sourceRef="Activity_Active_Search" targetRef="Gateway_Comms_And_blackBox" />
-    <bpmn:sequenceFlow id="Flow_1kzgclj" name="comms == updates &#38;&#38; blackBox == missing" sourceRef="Gateway_Comms_And_blackBox" targetRef="Activity_Report_To_Commander" />
-    <bpmn:sequenceFlow id="Flow_18avrt1" name="comms == wait &#38;&#38; blackBox == missing" sourceRef="Gateway_Comms_And_blackBox" targetRef="Event_Received_Wait" />
-    <bpmn:sequenceFlow id="Flow_1rv897x" name="blackBox == found" sourceRef="Gateway_Comms_And_blackBox" targetRef="Activity_blackBox_Located_Ping" />
-    <bpmn:sequenceFlow id="Flow_04wh7yo" sourceRef="Activity_blackBox_Located_Ping" targetRef="Event_04mhz3e" />
-    <bpmn:sequenceFlow id="Flow_0hl1n0e" sourceRef="Activity_1vf2l3e" targetRef="Event_09gq76c" />
-    <bpmn:sequenceFlow id="Flow_1q6tdit" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="Gateway_1s1jaoc" targetRef="Activity_1vf2l3e" />
-    <bpmn:sequenceFlow id="Flow_12btwul" sourceRef="Event_15hpt57" targetRef="Gateway_1s1jaoc" />
-    <bpmn:sequenceFlow id="Flow_1kxj6za" name="risk == acceptable || conditions == changed" sourceRef="Gateway_1s1jaoc" targetRef="Activity_05h7v9t" />
-    <bpmn:sequenceFlow id="Flow_0opunqa" sourceRef="Activity_05h7v9t" targetRef="Event_Receive_Updates_AUV" />
-    <bpmn:sequenceFlow id="Flow_0vy3iib" name="search == on &#38;&#38; risk == acceptable" sourceRef="Gateway_0ygsp1s" targetRef="Activity_15xph9w" />
-    <bpmn:sequenceFlow id="Flow_11w7314" sourceRef="Event_Receive_Updates_AUV" targetRef="Activity_1egcug9" />
-    <bpmn:sequenceFlow id="Flow_037qktc" sourceRef="Activity_1egcug9" targetRef="Gateway_0ygsp1s" />
-    <bpmn:sequenceFlow id="Flow_06tewjg" sourceRef="Activity_1f0uppm" targetRef="Event_Receive_Updates_AUV" />
-    <bpmn:sequenceFlow id="Flow_06gih1r" sourceRef="Event_Received_Wait" targetRef="Activity_1f0uppm" />
-    <bpmn:sequenceFlow id="Flow_1kx964a" sourceRef="Activity_Report_To_Commander" targetRef="Event_Receive_Confirmation" />
-    <bpmn:task id="Activity_Report_To_Commander" name="Surface and Report to Commander">
+    <bpmn:sequenceFlow id="Flow_1ax9s2y" sourceRef="AUV_Start" targetRef="AUV_Receive_Deploy" />
+    <bpmn:sequenceFlow id="Flow_1n4b7r9" sourceRef="AUV_Receive_Deploy" targetRef="AUV_Send_Deployed" />
+    <bpmn:sequenceFlow id="Flow_0s9sz8o" sourceRef="AUV_Send_Deployed" targetRef="AUV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_169v6ma" name="search == on &#38;&#38; risk == notAcceptable" sourceRef="AUV_Risk_Acceptable_Or_NA" targetRef="AUV_Return_To_Surface" />
+    <bpmn:sequenceFlow id="Flow_0bxyuzw" sourceRef="AUV_Return_To_Surface" targetRef="AUV_Receive_Conditions" />
+    <bpmn:sequenceFlow id="Flow_00e2sn9" sourceRef="AUV_Received_Acceptable" targetRef="AUV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_11vwxyo" sourceRef="AUV_Receive_Confirmation" targetRef="AUV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_1t4wl0u" sourceRef="AUV_Active_Search" targetRef="AUV_Comms_And_blackBox" />
+    <bpmn:sequenceFlow id="Flow_1kzgclj" name="comms == updates &#38;&#38; blackBox == missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Report_To_Commander" />
+    <bpmn:sequenceFlow id="Flow_18avrt1" name="comms == wait &#38;&#38; blackBox == missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Received_Wait" />
+    <bpmn:sequenceFlow id="Flow_1rv897x" name="blackBox == found" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_blackBox_Located_Ping" />
+    <bpmn:sequenceFlow id="Flow_04wh7yo" sourceRef="AUV_blackBox_Located_Ping" targetRef="AUV_Search_Off_Found" />
+    <bpmn:sequenceFlow id="Flow_0hl1n0e" sourceRef="AUV_Update_Info_Return_To_Surface" targetRef="AUV_Search_Off_Risk" />
+    <bpmn:sequenceFlow id="Flow_1q6tdit" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="AUV_Conditions_Changed_Or_Same" targetRef="AUV_Update_Info_Return_To_Surface" />
+    <bpmn:sequenceFlow id="Flow_12btwul" sourceRef="AUV_Receive_Conditions" targetRef="AUV_Conditions_Changed_Or_Same" />
+    <bpmn:sequenceFlow id="Flow_1kxj6za" name="risk == acceptable || conditions == changed" sourceRef="AUV_Conditions_Changed_Or_Same" targetRef="AUV_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_0opunqa" sourceRef="AUV_Await_Updates" targetRef="AUV_Receive_Updates_AUV" />
+    <bpmn:sequenceFlow id="Flow_0vy3iib" name="search == on &#38;&#38; risk == acceptable" sourceRef="AUV_Risk_Acceptable_Or_NA" targetRef="AUV_Received_Acceptable" />
+    <bpmn:sequenceFlow id="Flow_11w7314" sourceRef="AUV_Receive_Updates_AUV" targetRef="AUV_Update_Info" />
+    <bpmn:sequenceFlow id="Flow_037qktc" sourceRef="AUV_Update_Info" targetRef="AUV_Risk_Acceptable_Or_NA" />
+    <bpmn:sequenceFlow id="Flow_06tewjg" sourceRef="AUV_Ping_Updates" targetRef="AUV_Receive_Updates_AUV" />
+    <bpmn:sequenceFlow id="Flow_06gih1r" sourceRef="AUV_Received_Wait" targetRef="AUV_Ping_Updates" />
+    <bpmn:sequenceFlow id="Flow_1kx964a" sourceRef="AUV_Report_To_Commander" targetRef="AUV_Receive_Confirmation" />
+    <bpmn:task id="AUV_Report_To_Commander" name="Surface and Report to Commander">
       <bpmn:incoming>Flow_1kzgclj</bpmn:incoming>
       <bpmn:outgoing>Flow_1kx964a</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_1oisetq" name="comms == waiting &#38;&#38; blackBox == missing" sourceRef="Gateway_Comms_And_blackBox" targetRef="Activity_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_1oisetq" name="comms == waiting &#38;&#38; blackBox == missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Active_Search" />
   </bpmn:process>
   <bpmn:message id="Message_26q47k7" name="Move On" />
-  <bpmn:process id="Process_ROV" isExecutable="false">
-    <bpmn:startEvent id="Event_1lvf9b5">
+  <bpmn:process id="ROV_Process" isExecutable="false">
+    <bpmn:startEvent id="ROV_Start">
       <bpmn:outgoing>Flow_18qfxt8</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:intermediateCatchEvent id="Event_0wvq5ts">
+    <bpmn:intermediateCatchEvent id="ROV_Receive_Deploy">
       <bpmn:incoming>Flow_18qfxt8</bpmn:incoming>
       <bpmn:outgoing>Flow_17sry0g</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0o5jwsi" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_1bq71bi" name="Deployed">
+    <bpmn:task id="ROV_Send_Deployed" name="Deployed">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_17sry0g</bpmn:incoming>
       <bpmn:outgoing>Flow_1drtlov</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_0zr2r7y" name="Return to Command Vessel">
+    <bpmn:task id="ROV_Return_To_Command_Vessel" name="Return to Command Vessel">
       <bpmn:incoming>Flow_0i1i54e</bpmn:incoming>
       <bpmn:outgoing>Flow_1h2ei0f</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_Active_Search_ROV" name="Active Search">
+    <bpmn:task id="ROV_Active_Search" name="Active Search">
       <bpmn:documentation>if
 :: blackBox == found || comms == updates -&gt; skip
 :: else -&gt;
@@ -383,105 +383,105 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1o2s7oe</bpmn:incoming>
       <bpmn:outgoing>Flow_04q0sr7</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_Comms_And_blackBox_ROV">
+    <bpmn:exclusiveGateway id="ROV_Comms_And_blackBox">
       <bpmn:incoming>Flow_04q0sr7</bpmn:incoming>
       <bpmn:outgoing>Flow_1yre9aq</bpmn:outgoing>
       <bpmn:outgoing>Flow_1nf4yz0</bpmn:outgoing>
       <bpmn:outgoing>Flow_1dodm0m</bpmn:outgoing>
       <bpmn:outgoing>Flow_1o2s7oe</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_blackBox_Located" name="Black Box Located Notify Command">
+    <bpmn:task id="ROV_blackBox_Located" name="Black Box Located Notify Command">
       <bpmn:incoming>Flow_1dodm0m</bpmn:incoming>
       <bpmn:outgoing>Flow_1797uxk</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:endEvent id="Event_0mkk9ro" name="Search Off Risk">
+    <bpmn:endEvent id="ROV_Search_Off_Risk" name="Search Off Risk">
       <bpmn:incoming>Flow_0xcofz8</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:task id="Activity_13d0lub" name="Update Info and Return to Command Vessel">
+    <bpmn:task id="ROV_Update_Info_And_Return" name="Update Info and Return to Command Vessel">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1llg1yu</bpmn:incoming>
       <bpmn:outgoing>Flow_0xcofz8</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_0ud23f9">
+    <bpmn:exclusiveGateway id="ROV_Conditions_Changed_Or_Same">
       <bpmn:incoming>Flow_1mi24jj</bpmn:incoming>
       <bpmn:outgoing>Flow_1llg1yu</bpmn:outgoing>
       <bpmn:outgoing>Flow_15vyqp6</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_0dv4jy2">
+    <bpmn:intermediateCatchEvent id="ROV_Receive_Conditions" name="Receive Conditions">
       <bpmn:incoming>Flow_1h2ei0f</bpmn:incoming>
       <bpmn:outgoing>Flow_1mi24jj</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1v4hjkr" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_1g6gwo5" name="Received Conditions">
+    <bpmn:task id="ROV_Await_Updates" name="Await_Updates">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_15vyqp6</bpmn:incoming>
       <bpmn:outgoing>Flow_07ea5e7</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:endEvent id="Event_1td9o9q" name="Search Off Found">
+    <bpmn:endEvent id="ROV_Search_Off_Found" name="Search Off Found">
       <bpmn:incoming>Flow_1797uxk</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Activity_0c6b8n2" name="Received Acceptable">
       <bpmn:incoming>Flow_05vuap3</bpmn:incoming>
       <bpmn:outgoing>Flow_0a7wrzz</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_1wjxvr8" name="Update Info">
+    <bpmn:task id="ROV_Update_Info" name="Update Info">
       <bpmn:documentation>comms = waiting</bpmn:documentation>
       <bpmn:incoming>Flow_1ltwuf3</bpmn:incoming>
       <bpmn:outgoing>Flow_0cvwhuj</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_0snhxa1">
+    <bpmn:exclusiveGateway id="ROV_Risk_Acceptable_Or_NA">
       <bpmn:incoming>Flow_0cvwhuj</bpmn:incoming>
       <bpmn:outgoing>Flow_0i1i54e</bpmn:outgoing>
       <bpmn:outgoing>Flow_05vuap3</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_01seco2" name="Receive Updates">
+    <bpmn:intermediateCatchEvent id="ROV_Receive_Updates" name="Receive Updates">
       <bpmn:incoming>Flow_07ea5e7</bpmn:incoming>
       <bpmn:incoming>Flow_1fvhber</bpmn:incoming>
       <bpmn:outgoing>Flow_1ltwuf3</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_113t6jv" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_0srv8i9" name="Send Updates and Information">
+    <bpmn:task id="ROV_Send_Updates_And_Info" name="Send Updates and Information">
       <bpmn:incoming>Flow_0simk23</bpmn:incoming>
       <bpmn:outgoing>Flow_1fvhber</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_Receive_Wait_ROV" name="Receive Wait">
+    <bpmn:intermediateCatchEvent id="ROV_Receive_Wait" name="Receive Wait">
       <bpmn:incoming>Flow_1nf4yz0</bpmn:incoming>
       <bpmn:outgoing>Flow_0simk23</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1qs20z0" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_18qfxt8" sourceRef="Event_1lvf9b5" targetRef="Event_0wvq5ts" />
-    <bpmn:sequenceFlow id="Flow_17sry0g" sourceRef="Event_0wvq5ts" targetRef="Activity_1bq71bi" />
-    <bpmn:sequenceFlow id="Flow_1drtlov" sourceRef="Activity_1bq71bi" targetRef="Activity_Active_Search_ROV" />
-    <bpmn:sequenceFlow id="Flow_0i1i54e" name="search == on &#38;&#38; risk == notAcceptable" sourceRef="Gateway_0snhxa1" targetRef="Activity_0zr2r7y" />
-    <bpmn:sequenceFlow id="Flow_1h2ei0f" sourceRef="Activity_0zr2r7y" targetRef="Event_0dv4jy2" />
-    <bpmn:sequenceFlow id="Flow_1yre9aq" name="comms == updates &#38;&#38; blackBox == missing" sourceRef="Gateway_Comms_And_blackBox_ROV" targetRef="Activity_Report_To_Commander_ROV" />
-    <bpmn:sequenceFlow id="Flow_0a7wrzz" sourceRef="Activity_0c6b8n2" targetRef="Activity_Active_Search_ROV" />
-    <bpmn:sequenceFlow id="Flow_04q0sr7" sourceRef="Activity_Active_Search_ROV" targetRef="Gateway_Comms_And_blackBox_ROV" />
-    <bpmn:sequenceFlow id="Flow_1nf4yz0" name="comms == wait &#38;&#38; blackBox == missing" sourceRef="Gateway_Comms_And_blackBox_ROV" targetRef="Event_Receive_Wait_ROV" />
-    <bpmn:sequenceFlow id="Flow_1dodm0m" name="blackBox == found" sourceRef="Gateway_Comms_And_blackBox_ROV" targetRef="Activity_blackBox_Located" />
-    <bpmn:sequenceFlow id="Flow_1797uxk" sourceRef="Activity_blackBox_Located" targetRef="Event_1td9o9q" />
-    <bpmn:sequenceFlow id="Flow_0xcofz8" sourceRef="Activity_13d0lub" targetRef="Event_0mkk9ro" />
-    <bpmn:sequenceFlow id="Flow_1llg1yu" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="Gateway_0ud23f9" targetRef="Activity_13d0lub" />
-    <bpmn:sequenceFlow id="Flow_1mi24jj" sourceRef="Event_0dv4jy2" targetRef="Gateway_0ud23f9" />
-    <bpmn:sequenceFlow id="Flow_15vyqp6" name="risk == acceptable || conditions == changed" sourceRef="Gateway_0ud23f9" targetRef="Activity_1g6gwo5" />
-    <bpmn:sequenceFlow id="Flow_07ea5e7" sourceRef="Activity_1g6gwo5" targetRef="Event_01seco2" />
-    <bpmn:sequenceFlow id="Flow_05vuap3" name="search == on &#38;&#38; risk == acceptable" sourceRef="Gateway_0snhxa1" targetRef="Activity_0c6b8n2" />
-    <bpmn:sequenceFlow id="Flow_1ltwuf3" sourceRef="Event_01seco2" targetRef="Activity_1wjxvr8" />
-    <bpmn:sequenceFlow id="Flow_0cvwhuj" sourceRef="Activity_1wjxvr8" targetRef="Gateway_0snhxa1" />
-    <bpmn:sequenceFlow id="Flow_1fvhber" sourceRef="Activity_0srv8i9" targetRef="Event_01seco2" />
-    <bpmn:sequenceFlow id="Flow_0simk23" sourceRef="Event_Receive_Wait_ROV" targetRef="Activity_0srv8i9" />
-    <bpmn:sequenceFlow id="Flow_1k21835" sourceRef="Activity_Report_To_Commander_ROV" targetRef="Event_Receive_Confirmation_ROV" />
-    <bpmn:sequenceFlow id="Flow_00mw89e" sourceRef="Event_Receive_Confirmation_ROV" targetRef="Activity_Active_Search_ROV" />
-    <bpmn:intermediateCatchEvent id="Event_Receive_Confirmation_ROV" name="Receive Confirmation">
+    <bpmn:sequenceFlow id="Flow_18qfxt8" sourceRef="ROV_Start" targetRef="ROV_Receive_Deploy" />
+    <bpmn:sequenceFlow id="Flow_17sry0g" sourceRef="ROV_Receive_Deploy" targetRef="ROV_Send_Deployed" />
+    <bpmn:sequenceFlow id="Flow_1drtlov" sourceRef="ROV_Send_Deployed" targetRef="ROV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_0i1i54e" name="search == on &#38;&#38; risk == notAcceptable" sourceRef="ROV_Risk_Acceptable_Or_NA" targetRef="ROV_Return_To_Command_Vessel" />
+    <bpmn:sequenceFlow id="Flow_1h2ei0f" sourceRef="ROV_Return_To_Command_Vessel" targetRef="ROV_Receive_Conditions" />
+    <bpmn:sequenceFlow id="Flow_1yre9aq" name="comms == updates &#38;&#38; blackBox == missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Report_To_Commander" />
+    <bpmn:sequenceFlow id="Flow_0a7wrzz" sourceRef="Activity_0c6b8n2" targetRef="ROV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_04q0sr7" sourceRef="ROV_Active_Search" targetRef="ROV_Comms_And_blackBox" />
+    <bpmn:sequenceFlow id="Flow_1nf4yz0" name="comms == wait &#38;&#38; blackBox == missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Receive_Wait" />
+    <bpmn:sequenceFlow id="Flow_1dodm0m" name="blackBox == found" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_blackBox_Located" />
+    <bpmn:sequenceFlow id="Flow_1797uxk" sourceRef="ROV_blackBox_Located" targetRef="ROV_Search_Off_Found" />
+    <bpmn:sequenceFlow id="Flow_0xcofz8" sourceRef="ROV_Update_Info_And_Return" targetRef="ROV_Search_Off_Risk" />
+    <bpmn:sequenceFlow id="Flow_1llg1yu" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="ROV_Conditions_Changed_Or_Same" targetRef="ROV_Update_Info_And_Return" />
+    <bpmn:sequenceFlow id="Flow_1mi24jj" sourceRef="ROV_Receive_Conditions" targetRef="ROV_Conditions_Changed_Or_Same" />
+    <bpmn:sequenceFlow id="Flow_15vyqp6" name="risk == acceptable || conditions == changed" sourceRef="ROV_Conditions_Changed_Or_Same" targetRef="ROV_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_07ea5e7" sourceRef="ROV_Await_Updates" targetRef="ROV_Receive_Updates" />
+    <bpmn:sequenceFlow id="Flow_05vuap3" name="search == on &#38;&#38; risk == acceptable" sourceRef="ROV_Risk_Acceptable_Or_NA" targetRef="Activity_0c6b8n2" />
+    <bpmn:sequenceFlow id="Flow_1ltwuf3" sourceRef="ROV_Receive_Updates" targetRef="ROV_Update_Info" />
+    <bpmn:sequenceFlow id="Flow_0cvwhuj" sourceRef="ROV_Update_Info" targetRef="ROV_Risk_Acceptable_Or_NA" />
+    <bpmn:sequenceFlow id="Flow_1fvhber" sourceRef="ROV_Send_Updates_And_Info" targetRef="ROV_Receive_Updates" />
+    <bpmn:sequenceFlow id="Flow_0simk23" sourceRef="ROV_Receive_Wait" targetRef="ROV_Send_Updates_And_Info" />
+    <bpmn:sequenceFlow id="Flow_1k21835" sourceRef="ROV_Report_To_Commander" targetRef="ROV_Event_Receive_Confirmation" />
+    <bpmn:sequenceFlow id="Flow_00mw89e" sourceRef="ROV_Event_Receive_Confirmation" targetRef="ROV_Active_Search" />
+    <bpmn:intermediateCatchEvent id="ROV_Event_Receive_Confirmation" name="Receive Confirmation">
       <bpmn:incoming>Flow_1k21835</bpmn:incoming>
       <bpmn:outgoing>Flow_00mw89e</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1dmlf99" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:task id="Activity_Report_To_Commander_ROV" name="Report to Commander">
+    <bpmn:task id="ROV_Report_To_Commander" name="Report to Commander">
       <bpmn:incoming>Flow_1yre9aq</bpmn:incoming>
       <bpmn:outgoing>Flow_1k21835</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_1o2s7oe" name="comms == waiting &#38;&#38; blackBox == missing" sourceRef="Gateway_Comms_And_blackBox_ROV" targetRef="Activity_Active_Search_ROV" />
+    <bpmn:sequenceFlow id="Flow_1o2s7oe" name="comms == waiting &#38;&#38; blackBox == missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Active_Search" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_09uj9w9">
@@ -489,105 +489,111 @@ fi</bpmn:documentation>
         <dc:Bounds x="160" y="80" width="1060" height="820" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_17mv5qi_di" bpmnElement="Event_17mv5qi">
+      <bpmndi:BPMNShape id="Event_17mv5qi_di" bpmnElement="Commander_Start">
         <dc:Bounds x="372" y="422" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="346" y="386" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0syv9sd_di" bpmnElement="Activity_Plan_Search">
+      <bpmndi:BPMNShape id="Activity_0syv9sd_di" bpmnElement="Commander_Plan_Search">
         <dc:Bounds x="340" y="520" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0nwlyl9_di" bpmnElement="Activity_Deploy_Searchers">
+      <bpmndi:BPMNShape id="Activity_0nwlyl9_di" bpmnElement="Commander_Deploy_Searchers">
         <dc:Bounds x="440" y="640" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1gibfpo_di" bpmnElement="Event_1gibfpo">
-        <dc:Bounds x="1092" y="372" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_1poppd1_di" bpmnElement="Commander_Receive_Deployed">
+        <dc:Bounds x="522" y="752" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1066" y="353" width="87" height="14" />
+          <dc:Bounds x="495" y="795" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1poppd1_di" bpmnElement="Event_1poppd1">
-        <dc:Bounds x="522" y="752" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1aaupcl_di" bpmnElement="Event_1aaupcl">
+      <bpmndi:BPMNShape id="Event_1aaupcl_di" bpmnElement="Commander_Received_Accepted">
         <dc:Bounds x="812" y="522" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0bvrdqi_di" bpmnElement="Gateway_Risk" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_0bvrdqi_di" bpmnElement="Commander_Risk_Acceptable_Or_NA" isMarkerVisible="true">
         <dc:Bounds x="805" y="405" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="799" y="375" width="62" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0zl5lqs_di" bpmnElement="Activity_Check_Risk">
+      <bpmndi:BPMNShape id="Activity_0zl5lqs_di" bpmnElement="Commander_Check_Risk">
         <dc:Bounds x="540" y="390" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1i6huz6_di" bpmnElement="Activity_Update_Searchers">
+      <bpmndi:BPMNShape id="Activity_1i6huz6_di" bpmnElement="Commander_Update_Searchers">
         <dc:Bounds x="670" y="390" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1hjiquu_di" bpmnElement="Activity_Notify_Searchers_Conditions">
+      <bpmndi:BPMNShape id="Activity_1hjiquu_di" bpmnElement="Commander_Notify_Searchers_Conditions">
         <dc:Bounds x="900" y="190" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_04lnckb_di" bpmnElement="Activity_Check_Conditions_Lower">
+      <bpmndi:BPMNShape id="Activity_04lnckb_di" bpmnElement="Commander_Check_Conditions_Lower">
         <dc:Bounds x="600" y="760" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0uoxpfd_di" bpmnElement="Activity_Update_Info">
+      <bpmndi:BPMNShape id="Activity_0uoxpfd_di" bpmnElement="Commander_Update_Info">
         <dc:Bounds x="540" y="220" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1a65dx8_di" bpmnElement="Event_1a65dx8">
+      <bpmndi:BPMNShape id="Event_1a65dx8_di" bpmnElement="Commander_Received_NotAcceptable">
         <dc:Bounds x="932" y="412" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0pipelz_di" bpmnElement="Activity_Check_Conditions_Upper">
+      <bpmndi:BPMNShape id="Activity_0pipelz_di" bpmnElement="Commander_Check_Conditions">
         <dc:Bounds x="900" y="300" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0o4xpgj_di" bpmnElement="Gateway_Conditions" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_0o4xpgj_di" bpmnElement="Commander_Conditions_Change_Or_Same" isMarkerVisible="true">
         <dc:Bounds x="925" y="105" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_02o56k6_di" bpmnElement="Event_02o56k6">
+      <bpmndi:BPMNShape id="Event_02o56k6_di" bpmnElement="Commander_Search_Off_Risk">
         <dc:Bounds x="1072" y="112" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1051" y="93" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0rb75od_di" bpmnElement="Gateway_Conditions_And_blackBox" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_0rb75od_di" bpmnElement="Commander_Conditions_And_blackBox" isMarkerVisible="true">
         <dc:Bounds x="625" y="645" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0pvorq9_di" bpmnElement="Activity_Await_Updates">
+      <bpmndi:BPMNShape id="Activity_0pvorq9_di" bpmnElement="Commander_Await_Updates">
         <dc:Bounds x="780" y="630" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1owfb4m_di" bpmnElement="Gateway_Blackbox_Missing_Or_Found" isMarkerVisible="true">
-        <dc:Bounds x="985" y="645" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_18kspmd_di" bpmnElement="Event_BlackBox_Found_Msg">
-        <dc:Bounds x="1092" y="652" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0gjumjs_di" bpmnElement="Activity_Notify_Searchers_To_Wait">
+      <bpmndi:BPMNShape id="Activity_0gjumjs_di" bpmnElement="Commander_Notify_Searchers_To_Wait">
         <dc:Bounds x="600" y="500" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1obj7bi_di" bpmnElement="Event_1obj7bi">
+      <bpmndi:BPMNShape id="Event_1obj7bi_di" bpmnElement="Commander_Receive_Response">
         <dc:Bounds x="492" y="514" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="495" y="556" width="50" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0azuxo1_di" bpmnElement="Activity_Retrieve_Black_Box">
+      <bpmndi:BPMNShape id="Gateway_1owfb4m_di" bpmnElement="Commander_Blackbox_Missing_Or_Found" isMarkerVisible="true">
+        <dc:Bounds x="985" y="645" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1gibfpo_di" bpmnElement="Commander_Search_Off_Found">
+        <dc:Bounds x="1092" y="372" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1066" y="353" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0azuxo1_di" bpmnElement="Commander_Retrieve_Black_Box">
         <dc:Bounds x="1060" y="492" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0gj7ak4_di" bpmnElement="Event_Receive_Updates">
+      <bpmndi:BPMNShape id="Event_18kspmd_di" bpmnElement="Commander_BlackBox_Found_Msg">
+        <dc:Bounds x="1092" y="652" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0gj7ak4_di" bpmnElement="Commander_Receive_Updates">
         <dc:Bounds x="882" y="782" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="857" y="758" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0tm3m5m_di" bpmnElement="Activity_Confirm_Received_Updates">
+      <bpmndi:BPMNShape id="Activity_0tm3m5m_di" bpmnElement="Commander_Confirm_Received_Updates">
         <dc:Bounds x="750" y="760" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
@@ -603,10 +609,6 @@ fi</bpmn:documentation>
       <bpmndi:BPMNEdge id="Flow_1c014h9_di" bpmnElement="Flow_1c014h9">
         <di:waypoint x="504" y="720" />
         <di:waypoint x="530" y="756" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1fl52xy_di" bpmnElement="Flow_1fl52xy">
-        <di:waypoint x="1110" y="492" />
-        <di:waypoint x="1110" y="408" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0nr0iwo_di" bpmnElement="Flow_0nr0iwo">
         <di:waypoint x="548" y="754" />
@@ -713,13 +715,17 @@ fi</bpmn:documentation>
           <dc:Bounds x="1033" y="636" width="62" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0wtm01a_di" bpmnElement="Flow_0wtm01a">
-        <di:waypoint x="1110" y="652" />
-        <di:waypoint x="1110" y="572" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1glliuj_di" bpmnElement="Flow_1glliuj">
         <di:waypoint x="600" y="532" />
         <di:waypoint x="528" y="532" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1fl52xy_di" bpmnElement="Flow_1fl52xy">
+        <di:waypoint x="1110" y="492" />
+        <di:waypoint x="1110" y="408" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wtm01a_di" bpmnElement="Flow_0wtm01a">
+        <di:waypoint x="1110" y="652" />
+        <di:waypoint x="1110" y="572" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_05itcp1_di" bpmnElement="Flow_05itcp1">
         <di:waypoint x="882" y="800" />
@@ -733,91 +739,94 @@ fi</bpmn:documentation>
         <dc:Bounds x="160" y="950" width="1060" height="740" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1bvu1ea_di" bpmnElement="Event_1bvu1ea">
+      <bpmndi:BPMNShape id="Event_1bvu1ea_di" bpmnElement="AUV_Start">
         <dc:Bounds x="342" y="1012" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1kvb9x7_di" bpmnElement="Event_1kvb9x7">
+      <bpmndi:BPMNShape id="Event_1kvb9x7_di" bpmnElement="AUV_Receive_Deploy">
         <dc:Bounds x="342" y="1092" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0ppnjd6_di" bpmnElement="Activity_0ppnjd6">
+      <bpmndi:BPMNShape id="Activity_0ppnjd6_di" bpmnElement="AUV_Send_Deployed">
         <dc:Bounds x="340" y="1160" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1gpoluy_di" bpmnElement="Activity_1gpoluy">
+      <bpmndi:BPMNShape id="Activity_1gpoluy_di" bpmnElement="AUV_Return_To_Surface">
         <dc:Bounds x="460" y="1550" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1bgymg8_di" bpmnElement="Activity_Active_Search">
+      <bpmndi:BPMNShape id="Activity_1bgymg8_di" bpmnElement="AUV_Active_Search">
         <dc:Bounds x="460" y="1070" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0hwogsi_di" bpmnElement="Gateway_Comms_And_blackBox" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_0hwogsi_di" bpmnElement="AUV_Comms_And_blackBox" isMarkerVisible="true">
         <dc:Bounds x="635" y="1085" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_10ign21_di" bpmnElement="Activity_blackBox_Located_Ping">
+      <bpmndi:BPMNShape id="Activity_10ign21_di" bpmnElement="AUV_blackBox_Located_Ping">
         <dc:Bounds x="800" y="1070" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_09gq76c_di" bpmnElement="Event_09gq76c">
+      <bpmndi:BPMNShape id="Event_09gq76c_di" bpmnElement="AUV_Search_Off_Risk">
         <dc:Bounds x="1102" y="1572" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1081" y="1553" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1vf2l3e_di" bpmnElement="Activity_1vf2l3e">
+      <bpmndi:BPMNShape id="Activity_1vf2l3e_di" bpmnElement="AUV_Update_Info_Return_To_Surface">
         <dc:Bounds x="950" y="1550" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1s1jaoc_di" bpmnElement="Gateway_1s1jaoc" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_1s1jaoc_di" bpmnElement="AUV_Conditions_Changed_Or_Same" isMarkerVisible="true">
         <dc:Bounds x="835" y="1565" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_15hpt57_di" bpmnElement="Event_15hpt57">
+      <bpmndi:BPMNShape id="Event_15hpt57_di" bpmnElement="AUV_Receive_Conditions">
         <dc:Bounds x="622" y="1572" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="614" y="1542" width="53" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_05h7v9t_di" bpmnElement="Activity_05h7v9t">
+      <bpmndi:BPMNShape id="Activity_05h7v9t_di" bpmnElement="AUV_Await_Updates">
         <dc:Bounds x="810" y="1420" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_04mhz3e_di" bpmnElement="Event_04mhz3e">
+      <bpmndi:BPMNShape id="Event_04mhz3e_di" bpmnElement="AUV_Search_Off_Found">
         <dc:Bounds x="832" y="1182" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="807" y="1225" width="87" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_15xph9w_di" bpmnElement="Activity_15xph9w">
+      <bpmndi:BPMNShape id="Activity_15xph9w_di" bpmnElement="AUV_Received_Acceptable">
         <dc:Bounds x="460" y="1230" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1egcug9_di" bpmnElement="Activity_1egcug9">
+      <bpmndi:BPMNShape id="Activity_1egcug9_di" bpmnElement="AUV_Update_Info">
         <dc:Bounds x="610" y="1430" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0ygsp1s_di" bpmnElement="Gateway_0ygsp1s" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_0ygsp1s_di" bpmnElement="AUV_Risk_Acceptable_Or_NA" isMarkerVisible="true">
         <dc:Bounds x="485" y="1445" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1i9a79o_di" bpmnElement="Event_Receive_Updates_AUV">
+      <bpmndi:BPMNShape id="Event_1i9a79o_di" bpmnElement="AUV_Receive_Updates_AUV">
         <dc:Bounds x="642" y="1362" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="557" y="1373" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1f0uppm_di" bpmnElement="Activity_1f0uppm">
+      <bpmndi:BPMNShape id="Activity_1f0uppm_di" bpmnElement="AUV_Ping_Updates">
         <dc:Bounds x="610" y="1250" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0gh42fh_di" bpmnElement="Event_Received_Wait">
+      <bpmndi:BPMNShape id="Event_0gh42fh_di" bpmnElement="AUV_Received_Wait">
         <dc:Bounds x="642" y="1182" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="667" y="1173" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0wa7bdr_di" bpmnElement="Event_Receive_Confirmation">
+      <bpmndi:BPMNShape id="Event_0wa7bdr_di" bpmnElement="AUV_Receive_Confirmation">
         <dc:Bounds x="462" y="1012" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="408" y="986" width="63" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_06cc3iv_di" bpmnElement="Activity_Report_To_Commander">
+      <bpmndi:BPMNShape id="Activity_06cc3iv_di" bpmnElement="AUV_Report_To_Commander">
         <dc:Bounds x="520" y="960" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
@@ -955,52 +964,55 @@ fi</bpmn:documentation>
         <dc:Bounds x="160" y="1740" width="1060" height="740" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_09ndx7t" bpmnElement="Event_1lvf9b5">
+      <bpmndi:BPMNShape id="BPMNShape_09ndx7t" bpmnElement="ROV_Start">
         <dc:Bounds x="282" y="1832" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0086m01" bpmnElement="Event_0wvq5ts">
+      <bpmndi:BPMNShape id="BPMNShape_0086m01" bpmnElement="ROV_Receive_Deploy">
         <dc:Bounds x="282" y="1912" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0k0dloe" bpmnElement="Activity_1bq71bi">
+      <bpmndi:BPMNShape id="BPMNShape_0k0dloe" bpmnElement="ROV_Send_Deployed">
         <dc:Bounds x="280" y="1980" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0xz6ck3" bpmnElement="Activity_0zr2r7y">
+      <bpmndi:BPMNShape id="BPMNShape_0xz6ck3" bpmnElement="ROV_Return_To_Command_Vessel">
         <dc:Bounds x="400" y="2370" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0wdumt3" bpmnElement="Activity_Active_Search_ROV">
+      <bpmndi:BPMNShape id="BPMNShape_0wdumt3" bpmnElement="ROV_Active_Search">
         <dc:Bounds x="400" y="1890" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1ifvlyf" bpmnElement="Gateway_Comms_And_blackBox_ROV" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="BPMNShape_1ifvlyf" bpmnElement="ROV_Comms_And_blackBox" isMarkerVisible="true">
         <dc:Bounds x="575" y="1905" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1972257" bpmnElement="Activity_blackBox_Located">
+      <bpmndi:BPMNShape id="BPMNShape_1972257" bpmnElement="ROV_blackBox_Located">
         <dc:Bounds x="740" y="1890" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_13lscq7" bpmnElement="Event_0mkk9ro">
+      <bpmndi:BPMNShape id="BPMNShape_13lscq7" bpmnElement="ROV_Search_Off_Risk">
         <dc:Bounds x="1042" y="2392" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="1021" y="2373" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1g4w2o9" bpmnElement="Activity_13d0lub">
+      <bpmndi:BPMNShape id="BPMNShape_1g4w2o9" bpmnElement="ROV_Update_Info_And_Return">
         <dc:Bounds x="890" y="2370" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0lg8nia" bpmnElement="Gateway_0ud23f9" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="BPMNShape_0lg8nia" bpmnElement="ROV_Conditions_Changed_Or_Same" isMarkerVisible="true">
         <dc:Bounds x="775" y="2385" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0cmvux9" bpmnElement="Event_0dv4jy2">
+      <bpmndi:BPMNShape id="BPMNShape_0cmvux9" bpmnElement="ROV_Receive_Conditions">
         <dc:Bounds x="562" y="2392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="554" y="2362" width="53" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1x3ld51" bpmnElement="Activity_1g6gwo5">
+      <bpmndi:BPMNShape id="BPMNShape_1x3ld51" bpmnElement="ROV_Await_Updates">
         <dc:Bounds x="750" y="2240" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_04cu8fa" bpmnElement="Event_1td9o9q">
+      <bpmndi:BPMNShape id="BPMNShape_04cu8fa" bpmnElement="ROV_Search_Off_Found">
         <dc:Bounds x="772" y="2002" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="747" y="2045" width="87" height="14" />
@@ -1010,36 +1022,36 @@ fi</bpmn:documentation>
         <dc:Bounds x="400" y="2050" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0jdtviq" bpmnElement="Activity_1wjxvr8">
+      <bpmndi:BPMNShape id="BPMNShape_0jdtviq" bpmnElement="ROV_Update_Info">
         <dc:Bounds x="550" y="2250" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1g2bzkt" bpmnElement="Gateway_0snhxa1" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="BPMNShape_1g2bzkt" bpmnElement="ROV_Risk_Acceptable_Or_NA" isMarkerVisible="true">
         <dc:Bounds x="425" y="2265" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_1ci24jb" bpmnElement="Event_01seco2">
+      <bpmndi:BPMNShape id="BPMNShape_1ci24jb" bpmnElement="ROV_Receive_Updates">
         <dc:Bounds x="582" y="2182" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="497" y="2193" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_05txqai" bpmnElement="Activity_0srv8i9">
+      <bpmndi:BPMNShape id="BPMNShape_05txqai" bpmnElement="ROV_Send_Updates_And_Info">
         <dc:Bounds x="550" y="2070" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_0whxj86" bpmnElement="Event_Receive_Wait_ROV">
+      <bpmndi:BPMNShape id="BPMNShape_0whxj86" bpmnElement="ROV_Receive_Wait">
         <dc:Bounds x="582" y="2002" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="607" y="1993" width="66" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1sz8h7z_di" bpmnElement="Event_Receive_Confirmation_ROV">
+      <bpmndi:BPMNShape id="Event_1sz8h7z_di" bpmnElement="ROV_Event_Receive_Confirmation">
         <dc:Bounds x="402" y="1832" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="348" y="1806" width="63" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_01y2eio_di" bpmnElement="Activity_Report_To_Commander_ROV">
+      <bpmndi:BPMNShape id="Activity_01y2eio_di" bpmnElement="ROV_Report_To_Commander">
         <dc:Bounds x="460" y="1760" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
