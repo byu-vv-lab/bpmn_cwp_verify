@@ -1,7 +1,11 @@
 # type: ignore
 import pytest
 
-from bpmncwpverify.core.error import BpmnMsgFlowSamePoolError
+from bpmncwpverify.core.error import (
+    BpmnMsgFlowSamePoolError,
+    BpmnNoElementNameError,
+    BpmnNoSwimLaneNameError,
+)
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_bpmn
 
 
@@ -18,6 +22,8 @@ def setup_bpmn(mocker):
     process2.all_items.return_value = ["node3", "node4"]
 
     bpmn.processes = {"process1": process1, "process2": process2}
+
+    bpmn.id_to_element = {}
 
     msg1 = mocker.MagicMock()
     msg1.id = "msg1"
@@ -50,3 +56,27 @@ def test_validate_bpmn_msg_same_pool_error(mocker, setup_bpmn):
     # Check the exception type and message
     assert isinstance(result.failure(), BpmnMsgFlowSamePoolError)
     assert result.failure().msg_id == "msg2"
+
+
+def test_validate_bpmn_no_name_error(mocker, setup_bpmn):
+    bpmn = setup_bpmn
+
+    mock_element = mocker.MagicMock()
+    mock_element.id = "Event_id"
+    mock_element.name = "Event_id"
+
+    bpmn.id_to_element["Event_id"] = mock_element
+
+    result = validate_bpmn(bpmn)
+
+    assert isinstance(result.failure(), BpmnNoElementNameError)
+
+
+def test_validate_bpmn_no_swimlane_error(mocker, setup_bpmn):
+    bpmn = setup_bpmn
+    bpmn.processes["process1"].name = "Process1"
+    bpmn.processes["process1"].id = "Process1"
+
+    result = validate_bpmn(bpmn)
+
+    assert isinstance(result.failure(), BpmnNoSwimLaneNameError)

@@ -32,7 +32,9 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
         loggerFunction.write_str(
             f":: {name} != old_{name} ->", NL_SINGLE, IndentAction.INC
         )
-        loggerFunction.write_str(f'printf("{name} = %e\\n", {name})', NL_SINGLE)
+        loggerFunction.write_str(
+            f'printf("{name} = {_get_print_type(name)}\\n", {name})', NL_SINGLE
+        )
         loggerFunction.write_str(f"old_{name} = {name}", NL_SINGLE)
         loggerFunction.write_str(":: else", NL_SINGLE, IndentAction.DEC)
         loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
@@ -51,12 +53,26 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
     return str(loggerFunction)
 
 
+def _generate_state_dump(state: State) -> str:
+    state_dump = StringManager()
+    state_dump.write_str("inline stateDump(){", NL_SINGLE, IndentAction.INC)
+
+    for var in state.vars:
+        state_dump.write_str(
+            f'printf("{var.id} = {_get_print_type(var.type_)}\\n", {var.id})', NL_SINGLE
+        )
+
+    state_dump.write_str("}", NL_SINGLE, IndentAction.DEC)
+    return str(state_dump)
+
+
 def _generate_promela(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
     cwp_pml = _generate_cwp_promela(cwp, state)
     vars_pml = _generate_state_promela(state)
     logger_pml = _generate_logger(state, cwp)
+    state_dump_pml = _generate_state_dump(state)
     bpmn_pml = _generate_bpmn_promela(bpmn)
-    pml = f"{vars_pml}{cwp_pml}{logger_pml}{bpmn_pml}"
+    pml = f"{vars_pml}{cwp_pml}{logger_pml}{state_dump_pml}{bpmn_pml}"
     return Success(pml)
 
 
@@ -90,6 +106,22 @@ def _get_variable_names(state: State) -> list[str]:
     for var in state.vars:
         variableNames.append(var.id)
     return variableNames
+
+
+def _get_print_type(type: str) -> str:
+    match type:
+        case "bit":
+            return "%u"
+        case "bool":
+            return "%d"
+        case "byte":
+            return "%hhu"
+        case "int":
+            return "%d"
+        case "short":
+            return "%hd"
+        case _:
+            return "%e"
 
 
 class PromelaBuilder:

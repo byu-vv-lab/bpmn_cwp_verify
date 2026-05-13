@@ -462,7 +462,10 @@ def test_build_expr_conditional(promela_visitor, mocker):
             mocker.call("if", NL_SINGLE),
             mocker.call(":: EXPR1==test_val -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
-            mocker.call(":: atomic{else -> assert false}", NL_SINGLE),
+            mocker.call(
+                ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
+                NL_SINGLE,
+            ),
             mocker.call("fi", NL_SINGLE),
         ]
     )
@@ -506,7 +509,10 @@ def test_build_conditional_with_boundary_event(promela_visitor, mocker):
             mocker.call("consumeToken(TEST2)", NL_SINGLE),
             mocker.call("putToken(2TSET)", NL_SINGLE),
             mocker.call("", indent_action=IndentAction.DEC),
-            mocker.call(":: atomic{else -> assert false}", 1),
+            mocker.call(
+                ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
+                1,
+            ),
             mocker.call("fi", NL_SINGLE),
         ]
     )

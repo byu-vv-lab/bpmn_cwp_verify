@@ -1,6 +1,7 @@
 import json
 import subprocess
 
+from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.error import Error
 from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
@@ -10,12 +11,12 @@ class ErrorTrace:
     Class to represent an error trace.
     """
 
-    __slots__ = ["id", "changed_vars", "curr_cwp_state"]
+    __slots__ = ["id", "changed_vars", "cur_cwp_state", "related_variables"]
 
-    def __init__(self, id: str, changed_vars: list[str], curr_cwp_state: list[str]):
+    def __init__(self, id: str, changed_vars: list[str], cur_cwp_state: str):
         self.id = id
         self.changed_vars = changed_vars
-        self.curr_cwp_state = curr_cwp_state
+        self.cur_cwp_state = cur_cwp_state
 
 
 class CounterExample:
@@ -23,11 +24,19 @@ class CounterExample:
     Class to represent a counterexample.
     """
 
-    __slots__ = ["trace_steps", "error"]
+    __slots__ = ["trace_steps", "error", "issue", "vars"]
 
-    def __init__(self, trace_steps: list[ErrorTrace], error: type["Error"]):
+    def __init__(
+        self,
+        trace_steps: list[ErrorTrace],
+        error: type["Error"],
+        issue: str = "",
+        vars: list[str] = [],
+    ):
         self.trace_steps = trace_steps
         self.error = error.__name__
+        self.issue = issue
+        self.vars = vars
 
     def to_json(self) -> str:
         """
@@ -35,11 +44,13 @@ class CounterExample:
         """
         format = {
             "error": str(self.error),
+            "issue": self.issue,
+            "init variables": self.vars,
             "trace_steps": [
                 {
                     "id": step.id,
                     "changed_vars": step.changed_vars,
-                    "curr_cwp_state": step.curr_cwp_state,
+                    "cur_cwp_state": step.cur_cwp_state,
                 }
                 for step in self.trace_steps
             ],
@@ -48,7 +59,7 @@ class CounterExample:
 
     @staticmethod
     def generate_counterexample(
-        file_path: str, error: type["Error"]
+        file_path: str, error: type["Error"], bpmn: Bpmn
     ) -> "CounterExample":
         """
         Generate a counterexample from the given file path and error.
@@ -57,9 +68,10 @@ class CounterExample:
             ["spin", "-t", file_path], capture_output=True, text=True
         ).stdout
         filtered_str = CounterExample.filter_spin_trace(spin_trace_string)
-        steps = CounterExample.extract_steps(filtered_str)
+        vars = CounterExample.extract_init_variables(filtered_str)
+        counter_steps, issue = CounterExample.extract_steps_v_two(filtered_str, bpmn)
 
-        return CounterExample(steps, error)
+        return CounterExample(counter_steps, error, issue, vars)
 
     @staticmethod
     def filter_spin_trace(spin_trace_string: str) -> str:
@@ -69,49 +81,74 @@ class CounterExample:
         lines = spin_trace_string.splitlines()
         filtered_str = StringManager()
         for line in lines:
-            if line.startswith("spin:"):
+            if "spin:" in line:
+                filtered_str.write_str(line.split("spin:")[0])
                 break
             else:
                 filtered_str.write_str(line, NL_SINGLE)
         return str(filtered_str)
 
     @staticmethod
-    def extract_steps(filtered_str: str) -> list[ErrorTrace]:
-        """
-        Extract trace steps from the filtered string.
-        """
+    def extract_init_variables(filtered_str: str) -> list[str]:
         lines = filtered_str.splitlines()
-        steps: list[ErrorTrace] = []
-        line_index = 0
-        while line_index < len(lines):
-            id = ""
-            changed_vars: list[str] = []
-            curr_cwp_state: list[str] = []
-            if lines[line_index].startswith("ID:"):
-                id = lines[line_index].split(" ", 1)[1].strip()
-                line_index += 1
-                assert line_index < len(lines), (
-                    "line_index should never be out of bounds"
-                )
-                if lines[line_index].startswith("Changed vars:"):
-                    line_index += 1
-                    assert line_index < len(lines), (
-                        "line_index should never be out of bounds"
-                    )
-                    while not lines[line_index].startswith("Current state:"):
-                        changed_vars.append(lines[line_index].strip())
-                        line_index += 1
-                        assert line_index < len(lines), (
-                            "line_index should never be out of bounds"
-                        )
-                    while line_index < len(lines) and lines[line_index].startswith(
-                        "Current state:"
-                    ):
-                        curr_cwp_state.append(
-                            lines[line_index].split(" ", 2)[2].strip()
-                        )
-                        line_index += 1
-                steps.append(ErrorTrace(id, changed_vars, curr_cwp_state))
+        vars: list[str] = []
+
+        for line in lines:
+            if "ID:" in line or not line:
+                break
             else:
+                vars.append(line.strip())
+
+        return vars
+
+    @staticmethod
+    def extract_steps_v_two(
+        filtered_str: str, bpmn: Bpmn
+    ) -> tuple[list[ErrorTrace], str]:
+        lines = filtered_str.splitlines()
+        line_index = 0
+        steps: list[ErrorTrace] = []
+        id = ""
+        changed_variables: list[str] = []
+        state = ""
+        issue = ""
+
+        while line_index < len(lines):
+            if "ID: " in lines[line_index]:  # add one to index
+                id = lines[line_index].split(":", 1)[1].strip()
+
+                if "Process" in id:
+                    id = bpmn.processes[id].name
+                elif "StartEvent" in id:
+                    id = bpmn.id_to_element[id].name
+                elif "Activity" in id:
+                    id = bpmn.id_to_element[id].name
+                elif "Event" in id:
+                    id = bpmn.id_to_element[id].name
+                elif "Gateway" in id:
+                    id = bpmn.id_to_element[id].name
+
+                state = ""
                 line_index += 1
-        return steps
+
+            elif "Changed Vars:" in lines[line_index]:
+                changed_variables = []
+                line_index += 1
+                while ":" not in lines[line_index]:
+                    varaiable = lines[line_index].strip()
+                    changed_variables.append(varaiable)
+                    line_index += 1
+
+            elif "Current state:" in lines[line_index]:
+                state = lines[line_index].split(":", 1)[1].strip()
+                line_index += 1
+
+            else:
+                if "Assert:" in lines[line_index]:
+                    issue = lines[line_index].strip()
+                line_index += 1
+
+            if line_index == len(lines) or "ID: " in lines[line_index]:
+                steps.append(ErrorTrace(id, changed_variables, state))
+
+        return steps, issue

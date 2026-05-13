@@ -4,6 +4,7 @@ import subprocess
 
 from returns.io import IOFailure, IOResult, IOSuccess, impure_safe
 from returns.pipeline import flow
+from returns.pointfree import bind_result
 from returns.result import Failure, Result, Success
 
 from bpmncwpverify.builder.promela_builder import PromelaBuilder
@@ -23,19 +24,29 @@ from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import write_file_contents
 
 
-def _process_spin_output(file_path: str, spin_report: str) -> IOResult[None, Error]:
+def _process_spin_output(
+    file_path: str, spin_report: str, bpmn: Bpmn
+) -> IOResult[None, Error]:
     spin_parser: SpinOutputParser = SpinOutputParser()
-    return flow(
-        spin_parser.check_syntax_errors(file_path, spin_report),
-        lambda _: spin_parser.check_invalid_end_state(file_path, spin_report),  # pyright: ignore[reportUnknownLambdaType]
-        lambda _: spin_parser.check_coverage_errors(file_path, spin_report),  # pyright: ignore[reportUnknownLambdaType]
-        lambda _: spin_parser.check_assertion_violation(file_path, spin_report),  # pyright: ignore[reportUnknownLambdaType]
-        lambda _: IOSuccess(None),  # pyright: ignore[reportUnknownLambdaType]
+    r: Result[None, Error] = flow(  # check this type one of these can return a string
+        spin_parser.check_syntax_errors(file_path, spin_report, bpmn),
+        bind_result(
+            lambda _: spin_parser.check_invalid_end_state(file_path, spin_report, bpmn)
+        ),  # pyright: ignore[reportUnknownLambdaType]
+        bind_result(
+            lambda _: spin_parser.check_coverage_errors(file_path, spin_report, bpmn)
+        ),  # pyright: ignore[reportUnknownLambdaType]
+        bind_result(
+            lambda _: spin_parser.check_assertion_violation(
+                file_path, spin_report, bpmn
+            )
+        ),  # pyright: ignore[reportUnknownLambdaType]
     )
+    return IOResult.from_result(r)
 
 
 def _run_spin(
-    promela: str, file_path: str, cli_args: list[str]
+    promela: str, file_path: str, cli_args: list[str], bpmn: Bpmn
 ) -> IOResult["SpinVerificationReport", Error]:
     file_name: str = os.path.basename(file_path)
     file_dir: str = os.path.dirname(file_path)
@@ -56,7 +67,7 @@ def _run_spin(
     )
 
     result: IOResult[SpinVerificationReport, Error] = spin_result.bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda spin_report: _process_spin_output(file_path, spin_report).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda spin_report: _process_spin_output(file_path, spin_report, bpmn).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda _: IOSuccess(
                 SpinVerificationReport(file_path, promela, cli_args, spin_report)
             )
@@ -92,11 +103,11 @@ class SpinVerificationReportBuilder:
             NotInitializedError("SpinVerificationReportBuilder.spin_cli_args")
         )
 
-    def build(self) -> IOResult[SpinVerificationReport, Error]:
+    def build(self, bpmn: Bpmn) -> IOResult[SpinVerificationReport, Error]:
         spin_result: IOResult[SpinVerificationReport, Error] = self.promela.bind(  # pyright: ignore[reportUnknownMemberType]
             lambda promela: self.file_path.bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda filename: self.spin_cli_args.bind(  # pyright: ignore[reportUnknownMemberType]
-                    lambda cli_args: _run_spin(promela, filename, cli_args)
+                    lambda cli_args: _run_spin(promela, filename, cli_args, bpmn)
                 )
             )
         )
@@ -127,12 +138,12 @@ class SpinOutputParser:
         ]
 
     def check_invalid_end_state(
-        self, file_path: str, spin_msg: str
+        self, file_path: str, spin_msg: str, bpmn: Bpmn
     ) -> Result[None, Error]:
         errors = self._get_re_matches(r"invalid end state \((?P<info>.*)\)", spin_msg)
 
         counter_example = CounterExample.generate_counterexample(
-            file_path, SpinInvalidEndStateError
+            file_path, SpinInvalidEndStateError, bpmn
         )
 
         return (
@@ -142,14 +153,14 @@ class SpinOutputParser:
         )
 
     def check_assertion_violation(
-        self, file_path: str, spin_msg: str
+        self, file_path: str, spin_msg: str, bpmn: Bpmn
     ) -> Result[None, Error]:
         errors = self._get_re_matches(
             r"assertion violated \(?(?P<assertion>[^\s)]*)\)? (?P<depth>.*)", spin_msg
         )
 
         counter_example = CounterExample.generate_counterexample(
-            file_path, SpinAssertionError
+            file_path, SpinAssertionError, bpmn
         )
 
         return (
@@ -158,24 +169,18 @@ class SpinOutputParser:
             else Success(None)
         )
 
-    def check_syntax_errors(self, file_path: str, spin_msg: str) -> Result[str, Error]:
+    def check_syntax_errors(
+        self, file_path: str, spin_msg: str, bpmn: Bpmn
+    ) -> Result[str, Error]:
         errors = self._get_re_matches(
             r"spin: (?P<file_path>.*?):(?P<line_number>\d+),\sError: (?P<error_msg>.*)",
             spin_msg,
         )
 
-        counter_example = CounterExample.generate_counterexample(
-            file_path, SpinAssertionError
-        )
-
-        return (
-            Failure(SpinSyntaxError(counter_example.to_json(), errors))
-            if errors
-            else Success(spin_msg)
-        )
+        return Failure(SpinSyntaxError(errors)) if errors else Success(spin_msg)
 
     def check_coverage_errors(
-        self, file_path: str, spin_msg: str
+        self, file_path: str, spin_msg: str, bpmn: Bpmn
     ) -> Result[None, Error]:
         # Regular expression to match proctype and init blocks, excluding never claims
         block_pattern = re.compile(
@@ -213,12 +218,8 @@ class SpinOutputParser:
                     }
                 )
 
-        counter_example = CounterExample.generate_counterexample(
-            file_path, SpinAssertionError
-        )
-
         return (
-            Failure(SpinCoverageError(counter_example.to_json(), detailed_errors))
+            Failure(SpinCoverageError(detailed_errors))
             if detailed_errors
             else Success(None)
         )
@@ -241,6 +242,6 @@ def verify_with_spin(
         lambda promela: spin_verification_report_builder.with_file_name(OUTPUT_FILE)
         .with_promela(promela)
         .with_spin_cli_args(["-run", "-noclaim"])
-        .build()
+        .build(bpmn)
     )
     return result
