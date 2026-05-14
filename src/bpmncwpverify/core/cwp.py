@@ -22,13 +22,14 @@ class Cwp:
 
 
 class CwpState:
-    __slots__ = ["id", "name", "out_edges", "in_edges"]
+    __slots__ = ["id", "name", "out_edges", "in_edges", "init_state"]
 
     def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name
         self.out_edges: list[CwpEdge] = []
         self.in_edges: list[CwpEdge] = []
+        self.init_state: bool = False
 
     def accept(self, visitor: "CwpVisitor") -> None:
         result = visitor.visit_state(self)

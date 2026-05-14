@@ -36,9 +36,7 @@ class CwpBuilder:
             ]
 
             start_states = [
-                state
-                for state in self._cwp.states.values()
-                if not state.in_edges and state.out_edges
+                state for state in self._cwp.states.values() if state.init_state
             ]
 
             if len(start_states) > 1:
@@ -48,16 +46,8 @@ class CwpBuilder:
             elif not start_states:
                 return Failure(CwpNoStartStateError())
 
-            self._cwp.start_state = start_states[0]
-
             if not end_states:
                 return Failure(CwpNoEndStatesError())
-
-            self._cwp.states = {
-                id: state
-                for id, state in self._cwp.states.items()
-                if state != self._cwp.start_state
-            }
 
             # This step ensures connectivity of the graph and sets leaf edges
             visitor = CwpConnectivityVisitor()
@@ -97,4 +87,18 @@ class CwpBuilder:
 
     def with_state(self, cwpState: CwpState) -> "CwpBuilder":
         self._cwp.states[cwpState.id] = cwpState
+        return self
+
+    def find_start_state(self) -> "CwpBuilder":
+        for cwpState in self._cwp.states.values():
+            if not cwpState.in_edges and cwpState.out_edges:
+                self._cwp.start_state = cwpState
+                self._cwp.start_state.init_state = True
+        return self
+
+    def with_start_edge(self, edge: CwpEdge) -> "CwpBuilder":
+        dest = self._cwp.states[self._cwp.start_state.id]
+        dest.in_edges.append(edge)
+        edge.set_dest(dest)
+        self._cwp.edges[edge.id] = edge
         return self
