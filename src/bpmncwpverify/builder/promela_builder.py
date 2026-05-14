@@ -115,7 +115,7 @@ def _get_print_type(type: str) -> str:
         case "bool":
             return "%d"
         case "byte":
-            return "%hhu"
+            return "%u"
         case "int":
             return "%d"
         case "short":
