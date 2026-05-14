@@ -134,7 +134,7 @@ class CounterExample:
             elif "Changed Vars:" in lines[line_index]:
                 changed_variables = []
                 line_index += 1
-                while ":" not in lines[line_index]:
+                while len(lines) != line_index and ":" not in lines[line_index]:
                     varaiable = lines[line_index].strip()
                     changed_variables.append(varaiable)
                     line_index += 1
@@ -148,7 +148,7 @@ class CounterExample:
                     issue = lines[line_index].strip()
                 line_index += 1
 
-            if line_index == len(lines) or "ID: " in lines[line_index]:
+            if line_index == len(lines) or "ID: " in lines[line_index] and id != "":
                 steps.append(ErrorTrace(id, changed_variables, state))
 
         return steps, issue
