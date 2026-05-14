@@ -1,3 +1,4 @@
+# type: ignore
 import pytest
 from returns.functions import not_
 from returns.pipeline import is_successful

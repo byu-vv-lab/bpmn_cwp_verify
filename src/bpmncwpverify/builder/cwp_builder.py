@@ -35,16 +35,16 @@ class CwpBuilder:
                 if not state.out_edges and state.in_edges
             ]
 
-            start_states = [
-                state for state in self._cwp.states.values() if state.init_state
-            ]
+            # start_states = [
+            #     state for state in self._cwp.states.values() if state.init_state
+            # ]
 
-            if len(start_states) > 1:
-                return Failure(
-                    CwpMultStartStateError([state.id for state in start_states])
-                )
-            elif not start_states:
-                return Failure(CwpNoStartStateError())
+            # if len(start_states) > 1:
+            #     return Failure(
+            #         CwpMultStartStateError([state.id for state in start_states])
+            #     )
+            # elif not start_states:
+            #     return Failure(CwpNoStartStateError())
 
             if not end_states:
                 return Failure(CwpNoEndStatesError())
@@ -90,10 +90,23 @@ class CwpBuilder:
         return self
 
     def find_start_state(self) -> "CwpBuilder":
+        found: bool = False
+        start_states: list[CwpState] = []
+
         for cwpState in self._cwp.states.values():
             if not cwpState.in_edges and cwpState.out_edges:
+                if found:
+                    start_states.append(cwpState)
                 self._cwp.start_state = cwpState
                 self._cwp.start_state.init_state = True
+                found = True
+
+        if not found:
+            raise Exception(CwpNoStartStateError())
+        elif start_states:
+            raise Exception(
+                CwpMultStartStateError([state.id for state in start_states])
+            )
         return self
 
     def with_start_edge(self, edge: CwpEdge) -> "CwpBuilder":
