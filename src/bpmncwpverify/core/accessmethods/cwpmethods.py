@@ -64,6 +64,8 @@ class CwpXmlParser:
 
         edge = CwpEdge("Init_Edge", builder.gen_edge_name())
         edge.expression = edge_expr
+
+        builder.find_start_state()
         builder = builder.with_start_edge(edge)
 
     def _check_expressions(
@@ -97,7 +99,6 @@ class CwpXmlParser:
             expr_lstnr = ExpressionListener(state)
             parser._add_states(builder, states)
             parser._add_edges(builder, edges)
-            builder.find_start_state()
             parser._add_incoming_edge_to_start_state(builder, state)
             parser._check_expressions(builder, all_items, expr_lstnr, state)
         except Exception as e:
