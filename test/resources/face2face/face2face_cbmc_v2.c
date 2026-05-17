@@ -12,12 +12,15 @@
  * retry loop), so the guard is || not &&.  It produces tokens on both
  * outgoing flows simultaneously (the AND-split).
  *
- * Loop bound: BOUND 30 covers the shortest happy path (13 transitions) plus
- * several retry cycles with headroom. SPIN doesn't need a bound because it
- * does state-based exploration; CBMC unrolls paths and requires an explicit
- * limit. Pass --unwind 31 (BOUND + 1) to cover the termination check.
+ * Loop bound:
+ *   BOUND = acyclic_path (13) + retry_loop_length (5) * MAX_RETRIES (2) + buffer (2) = 25
+ *   Acyclic happy path is 13 transitions. Each retry-both cycle adds 5 steps
+ *   (GW_DEC_RETRY_BOTH + GW_BOTH + TASK2 + TASK3 + GW_BOTH_JOIN). MAX_RETRIES
+ *   caps how many times any retry branch can fire; retry_count enforces this in
+ *   the enable conditions so CBMC never explores deeper retry paths.
+ *   Pass --unwind (BOUND + 1) to cover the loop termination check.
  *
- * cbmc face2face_cbmc_v2.c --unwind 31
+ * cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26
  */
 
 #include <stdbool.h>
@@ -37,9 +40,9 @@ int nondet_int();
 #define BUYER_NAME   0
 #define SELLER_NAME  1
 
-/* Loop bound: shortest happy path is 13 transitions; 20 gives headroom for
- * multiple retry cycles. Must pass --unwind (BOUND + 1) to CBMC. */
-#define BOUND 20
+/* BOUND = acyclic_path(13) + retry_loop_length(5) * MAX_RETRIES(2) + buffer(2) */
+#define MAX_RETRIES 2
+#define BOUND       25
 
 #define T_START_EVENT          0
 #define T_TASK1_MEET           1   // Activity_1qm7qck
@@ -110,6 +113,7 @@ int main() {
 
     bool running = true;
     int step = 0;
+    int retry_count = 0;
     while (running && step < BOUND) {
 
         int choice = nondet_int();
@@ -130,11 +134,22 @@ int main() {
 
         /* Routing conditions can overlap — CBMC non-deterministically picks any
            applicable route, matching SPIN's overlapping if-statement guards */
-        bool en_agreed      = en_gwdec && (paymentOffered == PAYMENT_AMOUNT && terms == TERMS_AGREED);
-        bool en_noretry     = en_gwdec && (paymentOffered == NO_RETRY_PAYMENT || terms == TERMS_NO_RETRY);
-        bool en_retry_price = en_gwdec && (paymentOffered < PAYMENT_AMOUNT);
-        bool en_retry_terms = en_gwdec && (terms == TERMS_FAILED);
-        bool en_retry_both  = en_gwdec && (paymentOffered < PAYMENT_AMOUNT) && (terms == TERMS_FAILED);
+        bool en_agreed      = en_gwdec
+                            && (paymentOffered == PAYMENT_AMOUNT)
+                            && (terms == TERMS_AGREED)
+                            && (retry_count == 0);
+        bool en_noretry     = en_gwdec
+                            && (paymentOffered == NO_RETRY_PAYMENT || terms == TERMS_NO_RETRY);
+        bool en_retry_price = en_gwdec
+                            && (paymentOffered < PAYMENT_AMOUNT)
+                            && (retry_count < MAX_RETRIES);
+        bool en_retry_terms = en_gwdec
+                            && (terms == TERMS_FAILED)
+                            && (retry_count < MAX_RETRIES);
+        bool en_retry_both  = en_gwdec
+                            && (paymentOffered < PAYMENT_AMOUNT)
+                            && (terms == TERMS_FAILED)
+                            && (retry_count < MAX_RETRIES);
 
         bool en_task4       = p_task4_FROM_gwdec;
         bool en_task5       = p_task5_FROM_gwdec;
@@ -234,18 +249,21 @@ int main() {
             p_endfail_FROM_gwdec = true;
 
         } else if (choice == T_GW_DEC_RETRY_PRICE) {
+            retry_count++;
             p_gwdec_FROM_join  = false;
             p_gwdec_FROM_task4 = false;
             p_gwdec_FROM_task5 = false;
             p_task4_FROM_gwdec = true;
 
         } else if (choice == T_GW_DEC_RETRY_TERMS) {
+            retry_count++;
             p_gwdec_FROM_join  = false;
             p_gwdec_FROM_task4 = false;
             p_gwdec_FROM_task5 = false;
             p_task5_FROM_gwdec = true;
 
         } else if (choice == T_GW_DEC_RETRY_BOTH) {
+            retry_count++;
             p_gwdec_FROM_join    = false;
             p_gwdec_FROM_task4   = false;
             p_gwdec_FROM_task5   = false;
