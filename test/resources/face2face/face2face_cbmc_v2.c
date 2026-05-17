@@ -12,8 +12,12 @@
  * retry loop), so the guard is || not &&.  It produces tokens on both
  * outgoing flows simultaneously (the AND-split).
  *
- * cbmc face2face_cbmc_v2.c --unwind 10
- * cbmc face2face_cbmc_v2.c --unwind 10 --no-unwinding-assertions
+ * Loop bound: BOUND 30 covers the shortest happy path (13 transitions) plus
+ * several retry cycles with headroom. SPIN doesn't need a bound because it
+ * does state-based exploration; CBMC unrolls paths and requires an explicit
+ * limit. Pass --unwind 31 (BOUND + 1) to cover the termination check.
+ *
+ * cbmc face2face_cbmc_v2.c --unwind 31
  */
 
 #include <stdbool.h>
@@ -32,6 +36,10 @@ int nondet_int();
 
 #define BUYER_NAME   0
 #define SELLER_NAME  1
+
+/* Loop bound: shortest happy path is 13 transitions; 20 gives headroom for
+ * multiple retry cycles. Must pass --unwind (BOUND + 1) to CBMC. */
+#define BOUND 20
 
 #define T_START_EVENT          0
 #define T_TASK1_MEET           1   // Activity_1qm7qck
@@ -101,7 +109,8 @@ int main() {
     bool p_endok_FROM_gwexchjoin  = false;  // Flow_1cm84v3
 
     bool running = true;
-    while (running) {
+    int step = 0;
+    while (running && step < BOUND) {
 
         int choice = nondet_int();
 
@@ -296,6 +305,8 @@ int main() {
             p_endfail_FROM_gwdec = false;
             running = false;
         }
+
+        step++;
     }
 
     return 0;
