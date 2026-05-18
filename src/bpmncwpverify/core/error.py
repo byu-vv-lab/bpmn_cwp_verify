@@ -12,6 +12,14 @@ class Error:
         pass
 
 
+class BpmnUnsupportedStartEvent(Error):
+    __slots__ = ["id"]
+
+    def __init__(self, id: str) -> None:
+        super().__init__()
+        self.id = id
+
+
 class BpmnNoElementNameError(Error):
     __slots__ = ["ids"]
 
@@ -618,6 +626,8 @@ def get_error_message(error: Error) -> str:
             return (
                 f"Bpmn error: {ids} must have a name that is different from their ID."
             )
+        case BpmnUnsupportedStartEvent(id=id):
+            return f"Bpmn error: {id} is not a supported start event"
         case BpmnNoSwimLaneNameError(ids=ids):
             return f"Bpmn error: {ids} must have a swimlane with a name that is different from their ID"
         case BpmnFlowIncomingError(node_id=node_id):
