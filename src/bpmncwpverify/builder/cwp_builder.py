@@ -35,17 +35,6 @@ class CwpBuilder:
                 if not state.out_edges and state.in_edges
             ]
 
-            # start_states = [
-            #     state for state in self._cwp.states.values() if state.init_state
-            # ]
-
-            # if len(start_states) > 1:
-            #     return Failure(
-            #         CwpMultStartStateError([state.id for state in start_states])
-            #     )
-            # elif not start_states:
-            #     return Failure(CwpNoStartStateError())
-
             if not end_states:
                 return Failure(CwpNoEndStatesError())
 
