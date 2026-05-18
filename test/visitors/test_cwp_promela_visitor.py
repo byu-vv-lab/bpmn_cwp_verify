@@ -58,6 +58,9 @@ class TestCwpPromelaVisitor:
         visitor = CwpPromelaVisitor()
 
         mock_create_update = mocker.patch.object(visitor, "create_update_state_inline")
+        mock_create_update = mocker.patch.object(
+            visitor, "create_caculate_state_inline"
+        )
 
         visitor.end_visit_cwp(mocker.Mock())
 
@@ -70,6 +73,7 @@ class TestCwpPromelaVisitor:
         mock_write_str = get_mock_write_str
         visitor = CwpPromelaVisitor()
         mocker.patch.object(visitor, "_build_prime_var")
+        mocker.patch.object(visitor, "_build_vars")
         mocker.patch.object(visitor, "_build_proper_path_block")
         mocker.patch.object(visitor, "_reassign_vars_to_primes")
         mocker.patch.object(visitor, "_add_stationary_state")

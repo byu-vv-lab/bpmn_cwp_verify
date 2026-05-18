@@ -508,6 +508,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self.init_proc_contents.write_str("init {", NL_SINGLE, IndentAction.INC)
         self.init_proc_contents.write_str("atomic {", NL_SINGLE, IndentAction.INC)
         self.init_proc_contents.write_str("stateDump()", NL_SINGLE)
+        self.init_proc_contents.write_str("caculateState()", NL_SINGLE)
         return True
 
     def end_visit_bpmn(self, bpmn: Bpmn) -> None:

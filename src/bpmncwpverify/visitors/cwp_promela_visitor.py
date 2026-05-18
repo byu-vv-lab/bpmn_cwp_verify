@@ -15,7 +15,9 @@ class CwpPromelaVisitor(CwpVisitor):
     __slots__ = [
         "cwp_states",
         "update_state_inline",
+        "caculate_state_inline",
         "prime_vars",
+        "vars",
         "proper_path_block",
         "var_reassignment",
         "list_of_cwp_states",
@@ -24,7 +26,9 @@ class CwpPromelaVisitor(CwpVisitor):
     def __init__(self) -> None:
         self.cwp_states = StringManager()
         self.update_state_inline = StringManager()
+        self.caculate_state_inline = StringManager()
         self.prime_vars = StringManager()
+        self.vars = StringManager()
         self.proper_path_block = StringManager()
         self.var_reassignment = StringManager()
         self.list_of_cwp_states: list[str] = []
@@ -60,6 +64,10 @@ class CwpPromelaVisitor(CwpVisitor):
         self.prime_vars.write_str(
             f"bool {state.name}{PRIME_SUFFIX} = {mapping_func}", NL_SINGLE
         )
+
+    def _build_vars(self, state: CwpState) -> None:
+        mapping_func = self._build_mapping_function(state)
+        self.vars.write_str(f"{state.name} = {mapping_func}", NL_SINGLE)
 
     def _build_proper_path_block(self, state: CwpState) -> None:
         for out_edge in state.out_edges:
@@ -109,6 +117,7 @@ class CwpPromelaVisitor(CwpVisitor):
             self.cwp_states.write_str(new_str, NL_SINGLE)
 
             self._build_prime_var(state)
+            self._build_vars(state)
             self._build_proper_path_block(state)
             self._add_stationary_state(state)
             self._reassign_vars_to_primes(state)
@@ -147,6 +156,15 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
 
+    def create_caculate_state_inline(self) -> None:
+        self.caculate_state_inline.write_str(
+            "inline caculateState() {", NL_SINGLE, IndentAction.INC
+        )
+
+        self.caculate_state_inline.write_str(self.vars)
+
+        self.caculate_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
+
     def end_visit_edge(self, edge: CwpEdge) -> None:
         pass
 
@@ -157,6 +175,9 @@ class CwpPromelaVisitor(CwpVisitor):
     def end_visit_cwp(self, model: Cwp) -> None:
         self.cwp_states.write_str(END_STR, NL_DOUBLE)
         self.create_update_state_inline()
+        self.create_caculate_state_inline()
 
     def __repr__(self) -> str:
-        return f"{self.cwp_states}{self.update_state_inline}"
+        return (
+            f"{self.cwp_states}{self.update_state_inline}{self.caculate_state_inline}"
+        )

@@ -61,9 +61,13 @@ def test_valid_cwp_end_start_events():
     )
 
     cwp = setup_cwp_and_assert(root, state)
-    assert len(cwp.edges) == 1
+    assert len(cwp.edges) == 2
+    assert "Init_Edge" in cwp.edges
+    assert "e1" in cwp.edges
     assert cwp.start_state.id == "s1"
-    assert len(cwp.states) == 1
+    assert len(cwp.states) == 2
+    assert "s1" in cwp.states
+    assert "s2" in cwp.states
 
 
 def test_invalid_cwp_missing_start_event():
