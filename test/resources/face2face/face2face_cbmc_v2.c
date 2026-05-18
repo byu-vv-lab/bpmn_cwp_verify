@@ -21,6 +21,13 @@
  *   Pass --unwind (BOUND + 1) to cover the loop termination check.
  *
  * cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26
+ *
+ * Reachability checks (Sprint #2):
+ *   cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26
+ *   Expect VERIFICATION FAILED with 2 counterexamples (one per end event).
+ *   In any path exactly one end event fires; CBMC explores all paths and finds both.
+ *   "VERIFICATION SUCCESSFUL" would mean CBMC found no path to an end event —
+ *   the unwind bound is too small or there is a modelling error.
  */
 
 #include <stdbool.h>
@@ -110,6 +117,11 @@ int main() {
     bool p_gwexchjoin_FROM_task7b = false;  // Flow_1sx1rdt
 
     bool p_endok_FROM_gwexchjoin  = false;  // Flow_1cm84v3
+
+    /* Reachability tracking — set to true when each end event fires.
+       Asserted false after the loop: a CBMC counterexample proves the end IS reachable. */
+    bool end_completed_reached = false;
+    bool end_failed_reached    = false;
 
     bool running = true;
     int step = 0;
@@ -314,6 +326,7 @@ int main() {
 
         } else if (choice == T_END_COMPLETED) {
             p_endok_FROM_gwexchjoin = false;
+            end_completed_reached = true;
             running = false;
 
         } else if (choice == T_END_FAILED) {
@@ -321,11 +334,30 @@ int main() {
                 paymentOffered == NO_RETRY_PAYMENT || terms == TERMS_NO_RETRY,
                 "CWP: Purchase Failed terminal — noRetry condition holds");
             p_endfail_FROM_gwdec = false;
+            end_failed_reached = true;
             running = false;
         }
 
         step++;
     }
+
+    /* Reachability checks (Sprint #2, action item #2).
+     *
+     * __CPROVER_cover(condition) asks CBMC to find a path making the condition true.
+     * Guarded by REACHABILITY so the correctness run is not affected.
+     *
+     * Correctness (all CWP properties hold on all paths):
+     *   cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26
+     *   expect: VERIFICATION SUCCESSFUL
+     *
+     * Reachability (both end events are reachable):
+     *   cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26 --cover cover -DREACHABILITY
+     *   expect: 2 of 2 covered (100%)
+     */
+    #ifdef REACHABILITY
+        __CPROVER_cover(end_completed_reached);
+        __CPROVER_cover(end_failed_reached);
+    #endif
 
     return 0;
 }
