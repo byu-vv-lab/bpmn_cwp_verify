@@ -43,9 +43,9 @@
  *
  * cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26
  *
- * Reachability checks:
+ * Reachability checks (end events + all CWP states):
  *   cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26 --cover cover -DREACHABILITY
- *   expect: 2 of 2 covered (100%)
+ *   expect: 7 of 7 covered (100%)
  */
 
 #include <stdbool.h>
@@ -240,6 +240,10 @@ int main() {
     /* Initial variable values satisfy Init Purchase Pending, so start there. */
     bool cwp[CWP_NUM_STATES] = {true, false, false, false, false};
 
+    /* CWP state reachability tracking — mirrors end_completed_reached pattern.
+     * cwp_reached[S] becomes true the first time the workflow enters state S. */
+    bool cwp_reached[CWP_NUM_STATES] = {true, false, false, false, false};
+
     bool running = true;
     int step = 0;
     int retry_count = 0;
@@ -365,6 +369,7 @@ int main() {
             p_task2_FROM_gwboth = false;
             p_gwjoin_FROM_task2 = true;
             update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
+            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
 
         } else if (choice == T_TASK3_PRICE) {
             /* Buyer offers price; Seller evaluates.
@@ -375,6 +380,7 @@ int main() {
             p_task3_FROM_gwboth = false;
             p_gwjoin_FROM_task3 = true;
             update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
+            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
 
         } else if (choice == T_GW_BOTH_JOIN) {
             p_gwjoin_FROM_task2 = false;
@@ -429,6 +435,7 @@ int main() {
             p_task4_FROM_gwdec = false;
             p_gwdec_FROM_task4 = true;
             update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
+            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
 
         } else if (choice == T_TASK5_RETRY_TERMS) {
             /* Seller revises terms; noRetry now possible */
@@ -438,6 +445,7 @@ int main() {
             p_task5_FROM_gwdec = false;
             p_gwdec_FROM_task5 = true;
             update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
+            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
 
         } else if (choice == T_TASK6_HANDSHAKE) {
             /* Buyer and Seller shake hands — deal is agreed, exchange begins */
@@ -456,6 +464,7 @@ int main() {
             p_task7a_FROM_gwexch     = false;
             p_gwexchjoin_FROM_task7a = true;
             update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
+            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
 
         } else if (choice == T_TASK7B_BACKPACK) {
             /* Seller hands backpack to Buyer */
@@ -463,6 +472,7 @@ int main() {
             p_task7b_FROM_gwexch     = false;
             p_gwexchjoin_FROM_task7b = true;
             update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
+            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
 
         } else if (choice == T_GW_EXCH_JOIN) {
             __CPROVER_assert(
@@ -489,7 +499,7 @@ int main() {
         step++;
     }
 
-    /* Reachability checks.
+    /* Reachability checks (4th CWP property).
      *
      * __CPROVER_cover(condition) asks CBMC to find a path making the condition true.
      * Guarded by -DREACHABILITY so the correctness run is not affected.
@@ -498,13 +508,20 @@ int main() {
      *   cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26
      *   expect: VERIFICATION SUCCESSFUL
      *
-     * Reachability (both end events are reachable):
+     * Reachability (both end events and every CWP state are reachable):
      *   cbmc test/resources/face2face/face2face_cbmc_v2.c --unwind 26 --cover cover -DREACHABILITY
-     *   expect: 2 of 2 covered (100%)
+     *   expect: 7 of 7 covered (100%)
      */
     #ifdef REACHABILITY
+        /* End-event reachability */
         __CPROVER_cover(end_completed_reached);
         __CPROVER_cover(end_failed_reached);
+        /* CWP state reachability — every state must be visitable on some execution path */
+        __CPROVER_cover(cwp_reached[CWP_INIT]);
+        __CPROVER_cover(cwp_reached[CWP_NEGOTIATIONS]);
+        __CPROVER_cover(cwp_reached[CWP_AGREED]);
+        __CPROVER_cover(cwp_reached[CWP_FAILED]);
+        __CPROVER_cover(cwp_reached[CWP_SWITCHED]);
     #endif
 
     return 0;
