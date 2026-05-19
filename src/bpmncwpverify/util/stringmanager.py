@@ -77,3 +77,11 @@ class StringManager:
 
     def __repr__(self) -> str:
         return "".join(self.contents)
+
+    def replace(self, process: str, var_defs: "StringManager") -> None:
+        location = self.contents.index(f"\tREPLACE_VARS_FOR_{process}\n")
+        indented = [
+            f"\t{item}" if not item.startswith("\t") else item
+            for item in var_defs.contents
+        ]
+        self.contents[location : location + 1] = indented

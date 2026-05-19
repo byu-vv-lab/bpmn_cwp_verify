@@ -6,7 +6,6 @@ from returns.result import Failure, Result, Success
 from bpmncwpverify.core.error import (
     BpmnStructureError,
     BpmnUnrecognizedElement,
-    BpmnUnsupportedStartEvent,
     Error,
 )
 
@@ -183,8 +182,8 @@ class StartEvent(Event):
 
     @classmethod
     def verify_element(cls, element: Element, id: str) -> Result[None, Error]:
-        if element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE) is not None:
-            return Failure(BpmnUnsupportedStartEvent(id))
+        # if element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE) is not None:
+        #     return Failure(BpmnUnsupportedStartEvent(id))
 
         return Success(None)
 
