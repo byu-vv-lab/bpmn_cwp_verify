@@ -114,18 +114,12 @@ class CounterExample:
         issue = ""
 
         while line_index < len(lines):
-            if "ID: " in lines[line_index]:  # add one to index
+            if "ID: " in lines[line_index]:
                 id = lines[line_index].split(":", 1)[1].strip()
 
-                if "Process" in id:
+                if id in bpmn.processes:
                     id = bpmn.processes[id].name
-                elif "StartEvent" in id:
-                    id = bpmn.id_to_element[id].name
-                elif "Activity" in id:
-                    id = bpmn.id_to_element[id].name
-                elif "Event" in id:
-                    id = bpmn.id_to_element[id].name
-                elif "Gateway" in id:
+                elif id in bpmn.id_to_element:
                     id = bpmn.id_to_element[id].name
 
                 state = ""

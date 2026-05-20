@@ -2,7 +2,7 @@ from returns.pipeline import flow
 from returns.pointfree import bind_result
 from returns.result import Failure, Result, Success
 
-from bpmncwpverify.core.bpmn import Bpmn, Process
+from bpmncwpverify.core.bpmn import Bpmn, MessageFlow, Process, SequenceFlow
 from bpmncwpverify.core.error import (
     BpmnMsgFlowSamePoolError,
     BpmnNoElementNameError,
@@ -51,7 +51,7 @@ def validate_process_names(bpmn: Bpmn) -> Result[Bpmn, Error]:
         process_name = id.name
         process_id = id.id
 
-        if process_name == process_id and process_id.startswith("Process"):
+        if process_name == process_id:
             no_name_ids.append(process_id)
 
     if no_name_ids:
@@ -61,13 +61,14 @@ def validate_process_names(bpmn: Bpmn) -> Result[Bpmn, Error]:
 
 
 def validate_element_names(bpmn: Bpmn) -> Result[Bpmn, Error]:
-    ELEMENTS = ("Event", "Activity", "Gateway")
     no_name_ids: list[str] = []
     for id in bpmn.id_to_element.values():
         element_name = id.name
         element_id = id.id
 
-        if element_name == element_id and element_id.startswith(ELEMENTS):
+        if element_name == element_id and not (
+            isinstance(id, SequenceFlow) or isinstance(id, MessageFlow)
+        ):
             no_name_ids.append(element_id)
 
     if no_name_ids:
