@@ -284,7 +284,13 @@ class Task(Node):
     @classmethod
     def _extract_attributes(cls, element: Element) -> dict[str, Any]:
         attributes = super()._extract_attributes(element)
-        behavior = element.find("bpmn:documentation", BPMN_XML_NAMESPACE)
+
+        behavior = element.find("nullpromela_code", BPMN_XML_NAMESPACE)
+
+        if behavior is None:
+            behavior = element.find("bpmn:documentation", BPMN_XML_NAMESPACE)
+
+
         attributes["behavior"] = (
             behavior.text if behavior is not None and behavior.text else ""
         )
