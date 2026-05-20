@@ -32,6 +32,7 @@ def from_xml(root: Element, state: State) -> Result["Bpmn", Error]:
     bpmn_builder = BpmnBuilder()
     for process_element in processes:
 
+        # This is for filtering out dummy processes that some tools add
         if process_element.attrib.get("processType", "Private") == "Public":
             continue
 
