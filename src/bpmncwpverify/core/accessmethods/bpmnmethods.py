@@ -31,6 +31,10 @@ def from_xml(root: Element, state: State) -> Result["Bpmn", Error]:
 
     bpmn_builder = BpmnBuilder()
     for process_element in processes:
+
+        if process_element.attrib.get("processType", "Private") == "Public":
+            continue
+
         process = process_from_xml(process_element, participants, state)
         if not_(is_successful)(process):
             return cast(Result[Bpmn, Error], process)
