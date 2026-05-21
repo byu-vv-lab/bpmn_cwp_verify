@@ -290,7 +290,6 @@ class Task(Node):
         if behavior is None:
             behavior = element.find("bpmn:documentation", BPMN_XML_NAMESPACE)
 
-
         attributes["behavior"] = (
             behavior.text if behavior is not None and behavior.text else ""
         )
