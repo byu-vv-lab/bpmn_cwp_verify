@@ -17,7 +17,7 @@ from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 ##############
 # Constants
 ##############
-HELPER_FUNCS_STR = "#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tassert (place != 1)\n\tplace = 1\n}\n\n#define consumeToken(place) place = 0\n"
+HELPER_FUNCS_STR = '#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place != 1 -> place = 1\n\t\t:: else -> {\n\t\t\tprintf("Assert: Attempting to place token in already-occupied place\\n")\n\t\t\tassert false\n\t\t}\n\tfi\n}\n\n#define consumeToken(place) place = 0\n'
 NL_NONE = 0
 NL_SINGLE = 1
 NL_DOUBLE = 2

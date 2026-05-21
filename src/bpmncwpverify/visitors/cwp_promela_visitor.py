@@ -103,7 +103,10 @@ class CwpPromelaVisitor(CwpVisitor):
 
         nWayXor.write_str("if", NL_SINGLE, IndentAction.INC)
 
-        nWayXor.write_str(":: (sumOfActiveStates != 1) -> assert false", NL_SINGLE)
+        nWayXor.write_str(
+            ':: (sumOfActiveStates != 1) -> {printf("Assert: In more that one or no state"); assert false}',
+            NL_SINGLE,
+        )
         nWayXor.write_str(":: else -> skip", NL_SINGLE)
 
         nWayXor.write_str("fi", NL_SINGLE, IndentAction.DEC)
@@ -146,7 +149,10 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.update_state_inline.write_str(self.proper_path_block)
 
-        self.update_state_inline.write_str(":: else -> assert false", NL_SINGLE)
+        self.update_state_inline.write_str(
+            ':: else -> printf("Assert: Not a valid CWP transition"); assert false',
+            NL_SINGLE,
+        )
 
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DEC)
 
