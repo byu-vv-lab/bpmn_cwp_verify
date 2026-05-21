@@ -92,13 +92,15 @@ def test_complete_bpmn_with_good_process():
     root, collab = create_bpmn_definition()
     add_process(collab)
 
-    start_event = Element("bpmn:startEvent", attrib={"id": "se1"})
+    start_event = Element(
+        "bpmn:startEvent", attrib={"id": "startevent_1", "name": "Start"}
+    )
     outgoing = SubElement(start_event, "bpmn:outgoing")
     outgoing.text = "flow1"
-    end_event = Element("bpmn:endEvent", attrib={"id": "ee1"})
+    end_event = Element("bpmn:endEvent", attrib={"id": "event_e1", "name": "End"})
     sequence_flow = Element(
         "bpmn:sequenceFlow",
-        attrib={"id": "flow1", "sourceRef": "se1", "targetRef": "ee1"},
+        attrib={"id": "flow1", "sourceRef": "startevent_1", "targetRef": "event_e1"},
     )
 
     add_process_with_elements(root, [start_event, end_event, sequence_flow])
