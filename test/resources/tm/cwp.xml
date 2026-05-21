@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36">
   <diagram name="Page-1" id="QhSg0AyubeimSL7xaQw8">
-    <mxGraphModel dx="2264" dy="777" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2028" dy="648" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -9,7 +9,7 @@
             <mxGeometry height="30" width="30" x="690" y="375" as="geometry" />
           </mxCell>
         </object>
-        <mxCell id="Is_LVwK_c9I-FXufL17f-9" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;">
+        <mxCell id="Is_LVwK_c9I-FXufL17f-9" edge="1" parent="1" source="Is_LVwK_c9I-FXufL17f-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;" target="Is_LVwK_c9I-FXufL17f-8">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="213.00000000000023" y="81" as="sourcePoint" />
             <mxPoint x="213.00000000000023" y="128.0000000000001" as="targetPoint" />
@@ -59,13 +59,6 @@
         <mxCell id="Is_LVwK_c9I-FXufL17f-23" connectable="0" parent="Is_LVwK_c9I-FXufL17f-22" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;div&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#006633&quot;&gt;ptID == KAB&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#006633&quot;&gt;&amp;amp;&amp;amp; hasCare == H_addSvcs&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#006633&quot;&gt;&amp;amp;&amp;amp; ptStatus == stable_C_AddSvcs&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 10px;&quot; color=&quot;#006633&quot;&gt;&amp;amp;&amp;amp; alertStatus == cancelled&lt;br&gt;&lt;/font&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="0.4521" y="-2" as="geometry">
             <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="Is_LVwK_c9I-FXufL17f-33" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;align=left;labelPosition=center;verticalLabelPosition=top;verticalAlign=bottom;fontSize=10;" value="&lt;div align=&quot;left&quot;&gt;&lt;br&gt;&lt;/div&gt;">
-          <mxGeometry relative="1" x="1" y="108" as="geometry">
-            <mxPoint x="46" y="10" as="offset" />
-            <mxPoint x="45" y="469.0000000000001" as="sourcePoint" />
-            <mxPoint x="209" y="470.0000000000001" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="ffp90AkMHuYeq19hx1X3-2" edge="1" parent="1" source="Is_LVwK_c9I-FXufL17f-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=0;" target="Is_LVwK_c9I-FXufL17f-32">
@@ -144,6 +137,9 @@
         <mxCell id="iT1XKnC8tmgYPLgT7Wkz-9" edge="1" parent="1" source="iT1XKnC8tmgYPLgT7Wkz-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="Is_LVwK_c9I-FXufL17f-1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
+              <mxPoint x="233" y="580" />
+              <mxPoint x="260" y="580" />
+              <mxPoint x="260" y="599" />
               <mxPoint x="705" y="599" />
             </Array>
             <mxPoint x="485" y="240" as="sourcePoint" />
