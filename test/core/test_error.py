@@ -174,7 +174,7 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         CwpUnsupportedElementError(2, "object"),
-        "CWP ERROR: object is not supported and there exists 2",
+        "CWP ERROR: object is/are not supported and there exists 2",
     ),
     (
         CwpFileStructureError("element"),

@@ -671,7 +671,7 @@ def get_error_message(error: Error) -> str:
         case CwpUnsupportedElementError(
             number_of_elements=number_of_elements, element=element
         ):
-            return f"CWP ERROR: {element} is not supported and there exists {number_of_elements}"
+            return f"CWP ERROR: {element} is/are not supported and there exists {number_of_elements}"
         case CwpFileStructureError(element=element):
             return f"A {element} element is missing from your cwp file."
         case CwpGraphConnError():

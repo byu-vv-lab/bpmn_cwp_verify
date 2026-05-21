@@ -40,11 +40,21 @@ class CwpXmlParser:
         return [itm for itm in mx_cells if itm.get("vertex")]
 
     def _add_states(self, builder: CwpBuilder, states: list[Element]) -> None:
+        unsupported_shapes: int = 0
         for element in states:
             style = element.get("style")
             if style and "edgeLabel" not in style:
+                if "rounded=1" not in style:
+                    unsupported_shapes += 1
                 state = CwpState.from_xml(element)
                 builder = builder.with_state(state)
+
+        if unsupported_shapes != 0:
+            raise Exception(
+                CwpUnsupportedElementError(
+                    unsupported_shapes, "different shapes other than rounded rectangles"
+                )
+            )
 
     def _add_edges(self, builder: CwpBuilder, edges: list[Element]) -> None:
         for element in edges:
