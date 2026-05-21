@@ -8,6 +8,7 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
+    CwpUnsupportedElementError,
     Error,
 )
 from bpmncwpverify.core.expr import ExpressionListener
@@ -25,6 +26,8 @@ class CwpXmlParser:
             raise Exception(CwpFileStructureError("root"))
         if not (mx_cells := mx_root.findall("mxCell")):
             raise Exception(CwpFileStructureError("mxCell"))
+        if object := mx_root.findall("object"):
+            raise Exception(CwpUnsupportedElementError(len(object), "object"))
         return mx_cells
 
     def _get_all_items(self, mx_cells: list[Element]) -> list[Element]:

@@ -8,6 +8,7 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
+    CwpUnsupportedElementError,
 )
 
 
@@ -20,9 +21,29 @@ class TestCwpXmlParser:
         mx_cells = mocker.Mock()
         root.find.return_value = diagram
         diagram.find.return_value = mx_graph_model
-        mx_root.findall.return_value = mx_cells
+        mx_graph_model.find.return_value = mx_root
+        mx_root.findall.side_effect = lambda x: mx_cells if x == "mxCell" else {}
         CwpXmlParser._get_mx_cells(mocker.Mock(), root)
         # should not throw error
+
+    def test_get_xml_cells_fail(self, mocker):
+        root = mocker.Mock()
+        diagram = mocker.Mock()
+        mx_graph_model = mocker.Mock()
+        mx_root = mocker.Mock()
+        mx_cells = mocker.Mock()
+        object = [mocker.Mock()]
+        root.find.return_value = diagram
+
+        diagram.find.return_value = mx_graph_model
+        mx_graph_model.find.return_value = mx_root
+        mx_root.findall.side_effect = lambda x: mx_cells if x == "mxCell" else object
+
+        with pytest.raises(Exception) as exc_info:
+            CwpXmlParser._get_mx_cells(mocker.Mock(), root)
+
+        assert isinstance(exc_info.value.args[0], CwpUnsupportedElementError)
+        assert exc_info.value.args[0].element == "object"
 
     def test_get_xml_cells_no_diagram(self, mocker):
         root = mocker.Mock()
