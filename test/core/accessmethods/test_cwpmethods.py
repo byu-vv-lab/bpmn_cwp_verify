@@ -116,11 +116,11 @@ class TestCwpXmlParser:
         mock_builder.with_state.assert_has_calls(calls)
         mock_from_xml.assert_has_calls([mocker.call(state) for state in states])
 
-    def test_add_states_not_rounded_rectangles(self, mocker):
+    def test_add_states_not_rectangles(self, mocker):
         states = []
         for _ in range(3):
             mock_state = mocker.Mock()
-            mock_state.get.return_value = "rounded=0;test"
+            mock_state.get.return_value = "ellipse;test"
             states.append(mock_state)
 
         mock_builder = mocker.Mock()
@@ -131,8 +131,7 @@ class TestCwpXmlParser:
 
         assert isinstance(exc_info.value.args[0], CwpUnsupportedElementError)
         assert (
-            exc_info.value.args[0].element
-            == "different shapes other than rounded rectangles"
+            exc_info.value.args[0].element == "different shapes other than rectangles"
         )
         assert exc_info.value.args[0].number_of_elements == 3
 

@@ -44,7 +44,7 @@ class CwpXmlParser:
         for element in states:
             style = element.get("style")
             if style and "edgeLabel" not in style:
-                if "rounded=1" not in style:
+                if "rounded=1" not in style and "rounded=0" not in style:
                     unsupported_shapes += 1
                 state = CwpState.from_xml(element)
                 builder = builder.with_state(state)
@@ -52,7 +52,7 @@ class CwpXmlParser:
         if unsupported_shapes != 0:
             raise Exception(
                 CwpUnsupportedElementError(
-                    unsupported_shapes, "different shapes other than rounded rectangles"
+                    unsupported_shapes, "different shapes other than rectangles"
                 )
             )
 
