@@ -60,6 +60,7 @@ def _verify_with_spin(
     cwp_xml: Element,
     bpmn_xml: Element,
 ) -> IOResult[SpinVerificationReport, Error]:
+    print("Verifying state against CWP and BPMN files")
     result: IOResult[SpinVerificationReport, Error] = IOResult.from_result(
         State.from_str(state_str)
     ).bind(  # pyright: ignore[reportUnknownMemberType]
@@ -78,6 +79,7 @@ def _verify_with_spin(
 def _verify_with_spin_from_files(
     state_file: str, cwp_file: str, bpmn_file: str
 ) -> IOResult[SpinVerificationReport, Error]:
+    print("Reading input files")
     result: IOResult[SpinVerificationReport, Error] = read_file_as_string(
         state_file
     ).bind(  # pyright: ignore[reportUnknownMemberType]
@@ -169,6 +171,7 @@ def verify() -> None:
 def web_verify(
     state: str, cwp_str: str, bpmn_str: str
 ) -> IOResult[SpinVerificationReport, Error]:
+    print("Converting input XML files to tree")
     result: IOResult[SpinVerificationReport, Error] = element_tree_from_string(
         cwp_str
     ).bind(  # pyright: ignore[reportUnknownMemberType]

@@ -51,6 +51,8 @@ def _write_file(file_obj: TextIO, contents: str) -> IOResultE[None]:
 
 
 def element_tree_from_string(input: str) -> IOResult[Element, Error]:
+    print("    Converting file to XML tree")
+
     def _element_tree_from_string(input: str) -> Element:
         return cast(Element, ElementTree.fromstring(input))  # pyright: ignore[reportUnknownMemberType]
 
@@ -63,6 +65,7 @@ def element_tree_from_string(input: str) -> IOResult[Element, Error]:
 
 
 def read_file_as_string(path: str) -> IOResult[str, Error]:
+    print(f"    Reading file: {path}")
     return _read_file_contents(path)
 
 

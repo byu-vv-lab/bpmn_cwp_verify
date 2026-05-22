@@ -21,6 +21,7 @@ def from_xml(root: Element, state: State) -> Result["Bpmn", Error]:
     ##############
     # Build and add processes
     ##############
+    print("    Verifying BPMN against state")
     processes = root.findall("bpmn:process", BPMN_XML_NAMESPACE)
     collab = root.find("bpmn:collaboration", BPMN_XML_NAMESPACE)
 

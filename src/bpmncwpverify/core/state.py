@@ -844,6 +844,7 @@ class State:
 
         state_def (str): String that contains varaible declarations
         """
+        print("    Verifying state file syntax")
         result: Result[State, Error] = flow(
             state_def,
             _get_parser,
