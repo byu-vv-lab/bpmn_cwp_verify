@@ -223,6 +223,15 @@ class CwpEdgeNoStateError(Error):
         self.edge = edge
 
 
+class CwpUnsupportedElementError(Error):
+    __slots__ = ["number_of_elements", "element"]
+
+    def __init__(self, number_of_elements: int, element: str) -> None:
+        super().__init__()
+        self.number_of_elements = number_of_elements
+        self.element = element
+
+
 class CwpFileStructureError(Error):
     __slots__ = ["element"]
 
@@ -659,6 +668,10 @@ def get_error_message(error: Error) -> str:
             return f"CWP ERROR: Expression or parent node not found in edge. Edge details: {edge.attrib}."
         case CwpEdgeNoStateError(edge=edge):
             return f"CWP ERROR: Edge does not have a source or a target. Edge details: {edge.attrib}."
+        case CwpUnsupportedElementError(
+            number_of_elements=number_of_elements, element=element
+        ):
+            return f"CWP ERROR: {element} is/are not supported and there exists {number_of_elements}"
         case CwpFileStructureError(element=element):
             return f"A {element} element is missing from your cwp file."
         case CwpGraphConnError():

@@ -8,6 +8,7 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
+    CwpUnsupportedElementError,
     Error,
 )
 from bpmncwpverify.core.expr import ExpressionListener
@@ -25,6 +26,8 @@ class CwpXmlParser:
             raise Exception(CwpFileStructureError("root"))
         if not (mx_cells := mx_root.findall("mxCell")):
             raise Exception(CwpFileStructureError("mxCell"))
+        if object := mx_root.findall("object"):
+            raise Exception(CwpUnsupportedElementError(len(object), "object"))
         return mx_cells
 
     def _get_all_items(self, mx_cells: list[Element]) -> list[Element]:
@@ -37,11 +40,21 @@ class CwpXmlParser:
         return [itm for itm in mx_cells if itm.get("vertex")]
 
     def _add_states(self, builder: CwpBuilder, states: list[Element]) -> None:
+        unsupported_shapes: int = 0
         for element in states:
             style = element.get("style")
             if style and "edgeLabel" not in style:
+                if "rounded=1" not in style and "rounded=0" not in style:
+                    unsupported_shapes += 1
                 state = CwpState.from_xml(element)
                 builder = builder.with_state(state)
+
+        if unsupported_shapes != 0:
+            raise Exception(
+                CwpUnsupportedElementError(
+                    unsupported_shapes, "different shapes other than rectangles"
+                )
+            )
 
     def _add_edges(self, builder: CwpBuilder, edges: list[Element]) -> None:
         for element in edges:

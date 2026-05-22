@@ -1,3 +1,4 @@
+# type: ignore
 from unittest import mock
 
 import pytest
@@ -37,6 +38,7 @@ from bpmncwpverify.core.error import (
     CwpNoEndStatesError,
     CwpNoParentEdgeError,
     CwpNoStartStateError,
+    CwpUnsupportedElementError,
     Error,
     ExpressionComputationCompatabilityError,
     ExpressionNegatorError,
@@ -169,6 +171,10 @@ test_inputs: list[tuple[Error, str]] = [
     (
         CwpEdgeNoStateError(mock.Mock(attrib="edge_attrib")),
         "CWP ERROR: Edge does not have a source or a target. Edge details: edge_attrib.",
+    ),
+    (
+        CwpUnsupportedElementError(2, "object"),
+        "CWP ERROR: object is/are not supported and there exists 2",
     ),
     (
         CwpFileStructureError("element"),
@@ -337,6 +343,7 @@ test_ids: list[str] = [
     "CwpGraphConnError",
     "CwpMultStartStateError",
     "CwpNoEndStatesError",
+    "CwpUnsupportedElementError",
     "CwpNoParentEdgeError",
     "CwpNoStartStateError",
     "ExpressionComputationCompatabilityError",

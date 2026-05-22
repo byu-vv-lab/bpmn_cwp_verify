@@ -8,6 +8,7 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
+    CwpUnsupportedElementError,
 )
 
 
@@ -20,9 +21,29 @@ class TestCwpXmlParser:
         mx_cells = mocker.Mock()
         root.find.return_value = diagram
         diagram.find.return_value = mx_graph_model
-        mx_root.findall.return_value = mx_cells
+        mx_graph_model.find.return_value = mx_root
+        mx_root.findall.side_effect = lambda x: mx_cells if x == "mxCell" else {}
         CwpXmlParser._get_mx_cells(mocker.Mock(), root)
         # should not throw error
+
+    def test_get_xml_cells_fail(self, mocker):
+        root = mocker.Mock()
+        diagram = mocker.Mock()
+        mx_graph_model = mocker.Mock()
+        mx_root = mocker.Mock()
+        mx_cells = mocker.Mock()
+        object = [mocker.Mock()]
+        root.find.return_value = diagram
+
+        diagram.find.return_value = mx_graph_model
+        mx_graph_model.find.return_value = mx_root
+        mx_root.findall.side_effect = lambda x: mx_cells if x == "mxCell" else object
+
+        with pytest.raises(Exception) as exc_info:
+            CwpXmlParser._get_mx_cells(mocker.Mock(), root)
+
+        assert isinstance(exc_info.value.args[0], CwpUnsupportedElementError)
+        assert exc_info.value.args[0].element == "object"
 
     def test_get_xml_cells_no_diagram(self, mocker):
         root = mocker.Mock()
@@ -80,7 +101,7 @@ class TestCwpXmlParser:
         states = []
         for _ in range(3):
             mock_state = mocker.Mock()
-            mock_state.get.return_value = "test"
+            mock_state.get.return_value = "rounded=1;test"
             states.append(mock_state)
 
         mock_builder = mocker.Mock()
@@ -94,6 +115,25 @@ class TestCwpXmlParser:
         calls = [mocker.call("test_state") for _ in range(3)]
         mock_builder.with_state.assert_has_calls(calls)
         mock_from_xml.assert_has_calls([mocker.call(state) for state in states])
+
+    def test_add_states_not_rectangles(self, mocker):
+        states = []
+        for _ in range(3):
+            mock_state = mocker.Mock()
+            mock_state.get.return_value = "ellipse;test"
+            states.append(mock_state)
+
+        mock_builder = mocker.Mock()
+        mock_builder.with_state.return_value = mock_builder
+
+        with pytest.raises(Exception) as exc_info:
+            CwpXmlParser._add_states(mocker.Mock(), mock_builder, states)
+
+        assert isinstance(exc_info.value.args[0], CwpUnsupportedElementError)
+        assert (
+            exc_info.value.args[0].element == "different shapes other than rectangles"
+        )
+        assert exc_info.value.args[0].number_of_elements == 3
 
     def test_add_edges_no_src_or_target(self, mocker):
         mock_edge = mocker.Mock()

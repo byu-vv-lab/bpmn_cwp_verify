@@ -53,8 +53,8 @@ def test_valid_cwp_end_start_events():
     state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
-    add_mx_cell(mx_root, id="s1", value="Start", style="state", vertex="1")
-    add_mx_cell(mx_root, id="s2", value="End", style="state", vertex="1")
+    add_mx_cell(mx_root, id="s1", value="Start", style="rounded=1;state", vertex="1")
+    add_mx_cell(mx_root, id="s2", value="End", style="rounded=1;state", vertex="1")
     add_mx_cell(mx_root, id="e1", source="s1", target="s2", style="edge", edge="1")
     add_mx_cell(
         mx_root, id="expr1", value="x > 0", style="edgeLabel", parent="e1", vertex="1"
@@ -74,7 +74,7 @@ def test_invalid_cwp_missing_start_event():
     state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
-    add_mx_cell(mx_root, id="s1", value="state", style="state", vertex="1")
+    add_mx_cell(mx_root, id="s1", value="state", style="rounded=1;state", vertex="1")
 
     setup_cwp_and_assert(
         root, state, success=False, failure_message=CwpNoStartStateError
@@ -86,16 +86,16 @@ def test_invalid_cwp_not_connected():
     root, mx_root = get_root_mx_root()
 
     # First disconnected component
-    add_mx_cell(mx_root, id="s1", value="Start", style="state", vertex="1")
-    add_mx_cell(mx_root, id="s2", value="End", style="state", vertex="1")
+    add_mx_cell(mx_root, id="s1", value="Start", style="rounded=1;state", vertex="1")
+    add_mx_cell(mx_root, id="s2", value="End", style="rounded=1;state", vertex="1")
     add_mx_cell(mx_root, id="e1", source="s1", target="s2", style="edge", edge="1")
     add_mx_cell(
         mx_root, id="expr1", value="x > 0", style="edgeLabel", parent="e1", vertex="1"
     )
 
     # Second disconnected component
-    add_mx_cell(mx_root, id="s3", value="Start", style="state", vertex="1")
-    add_mx_cell(mx_root, id="s4", value="End", style="state", vertex="1")
+    add_mx_cell(mx_root, id="s3", value="Start", style="rounded=1;state", vertex="1")
+    add_mx_cell(mx_root, id="s4", value="End", style="rounded=1;state", vertex="1")
     add_mx_cell(mx_root, id="e2", source="s3", target="s4", style="edge", edge="1")
     add_mx_cell(
         mx_root, id="expr1", value="x > 0", style="edgeLabel", parent="e2", vertex="1"
@@ -113,9 +113,9 @@ def test_invalid_cwp_no_end_state():
     state = build_state("var x: int = 0")
     root, mx_root = get_root_mx_root()
 
-    add_mx_cell(mx_root, id="s1", value="Start", style="state", vertex="1")
-    add_mx_cell(mx_root, id="s2", value="middle1", style="state", vertex="1")
-    add_mx_cell(mx_root, id="s3", value="middle2", style="state", vertex="1")
+    add_mx_cell(mx_root, id="s1", value="Start", style="rounded=1;state", vertex="1")
+    add_mx_cell(mx_root, id="s2", value="middle1", style="rounded=1;state", vertex="1")
+    add_mx_cell(mx_root, id="s3", value="middle2", style="rounded=1;state", vertex="1")
 
     add_mx_cell(mx_root, id="e1", source="s1", target="s2", style="edge", edge="1")
     add_mx_cell(

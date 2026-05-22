@@ -108,15 +108,16 @@ class CwpEdge:
         CONDITIONALS = ("==", "!=", "<=", "=<", "<", ">", ">=", "=>")
         ALL = OPS + CONDITIONALS
         prev_operation = ""
-        i = 0
+        i = 1
 
         while i != len(s):
             if i == len(s) - 1:
                 break
             elif s[i] in OPS:
                 prev_operation = s[i]
-            elif s[i] not in ALL and s[i + 1] not in ALL:
-                s.insert(i + 1, prev_operation)
+            elif s[i - 1] not in ALL and s[i] not in ALL:
+                s.insert(i, prev_operation)
+                i += 1
             i += 1
 
         return " ".join(s)
