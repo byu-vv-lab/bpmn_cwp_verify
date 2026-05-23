@@ -129,12 +129,11 @@ int nondet_int();
  *   Neg   → Failed       : terms == NO_RETRY || paymentOffered == NO_RETRY_PAYMENT
  *   Agreed→ Switched     : paymentOwner == SELLER && backpackOwner == BUYER
  */
-static void update_cwp_state(bool cwp[], int paymentOwner, int backpackOwner,
-                              int terms, int paymentOffered)
+/* out: cwp_state, cwp_reached */
+static void update_cwp_state(int *cwp_state, bool cwp_reached[], int paymentOwner,
+                              int backpackOwner, int terms, int paymentOffered)
 {
-    /* Snapshot old state before overwriting */
-    bool old[CWP_NUM_STATES];
-    for (int i = 0; i < CWP_NUM_STATES; i++) old[i] = cwp[i];
+    int old_state = *cwp_state;
 
     /* CWP edge conditions */
     bool e_init_to_neg      = (terms != TERMS_PENDING || paymentOffered != PENDING_PAYMENT);
@@ -143,39 +142,46 @@ static void update_cwp_state(bool cwp[], int paymentOwner, int backpackOwner,
     bool e_agreed_to_switch = (paymentOwner == SELLER_NAME && backpackOwner == BUYER_NAME);
 
     /* Next state: conjunction of incoming-edge conditions, negation of outgoing */
-    bool next[CWP_NUM_STATES];
-    next[CWP_INIT]         = !e_init_to_neg;
-    next[CWP_NEGOTIATIONS] =  e_init_to_neg && !e_neg_to_agreed && !e_neg_to_failed;
-    next[CWP_AGREED]       =  e_neg_to_agreed && !e_agreed_to_switch;
-    next[CWP_FAILED]       =  e_neg_to_failed;
-    next[CWP_SWITCHED]     =  e_agreed_to_switch;
+    bool next_init         = !e_init_to_neg;
+    bool next_negotiations =  e_init_to_neg && !e_neg_to_agreed && !e_neg_to_failed;
+    bool next_agreed       =  e_neg_to_agreed && !e_agreed_to_switch;
+    bool next_failed       =  e_neg_to_failed;
+    bool next_switched     =  e_agreed_to_switch;
+
+    int new_state = next_switched     ? CWP_SWITCHED     :
+                    next_agreed       ? CWP_AGREED       :
+                    next_failed       ? CWP_FAILED        :
+                    next_negotiations ? CWP_NEGOTIATIONS :
+                                        CWP_INIT;
 
     /* P1: transition follows a valid CWP edge (or stays in same state) */
     __CPROVER_assert(
-        (old[CWP_INIT]         && next[CWP_INIT])         ||  /* stay           */
-        (old[CWP_NEGOTIATIONS] && next[CWP_NEGOTIATIONS]) ||  /* stay           */
-        (old[CWP_AGREED]       && next[CWP_AGREED])       ||  /* stay           */
-        (old[CWP_FAILED]       && next[CWP_FAILED])       ||  /* stay           */
-        (old[CWP_SWITCHED]     && next[CWP_SWITCHED])     ||  /* stay           */
-        (old[CWP_INIT]         && next[CWP_NEGOTIATIONS]) ||  /* init → neg     */
-        (old[CWP_NEGOTIATIONS] && next[CWP_AGREED])       ||  /* neg  → agreed  */
-        (old[CWP_NEGOTIATIONS] && next[CWP_FAILED])       ||  /* neg  → failed  */
-        (old[CWP_AGREED]       && next[CWP_SWITCHED]),        /* agreed → sw    */
+        (old_state == CWP_INIT         && new_state == CWP_INIT)         ||
+        (old_state == CWP_NEGOTIATIONS && new_state == CWP_NEGOTIATIONS) ||
+        (old_state == CWP_AGREED       && new_state == CWP_AGREED)       ||
+        (old_state == CWP_FAILED       && new_state == CWP_FAILED)       ||
+        (old_state == CWP_SWITCHED     && new_state == CWP_SWITCHED)     ||
+        (old_state == CWP_INIT         && new_state == CWP_NEGOTIATIONS) ||
+        (old_state == CWP_NEGOTIATIONS && new_state == CWP_AGREED)       ||
+        (old_state == CWP_NEGOTIATIONS && new_state == CWP_FAILED)       ||
+        (old_state == CWP_AGREED       && new_state == CWP_SWITCHED),
         "CWP P1: transition follows valid CWP edge");
 
-    /* P2: exactly one CWP state active (mutual exclusion) */
-    int active = 0;
-    for (int i = 0; i < CWP_NUM_STATES; i++) active += next[i] ? 1 : 0;
-    __CPROVER_assert(active == 1, "CWP P2: exactly one CWP state active");
-
-    /* P3: always in some CWP state (implied by P2, but explicit for traceability) */
+    /* P2: exactly one CWP state active — guaranteed by the ternary above, but
+     * assert the underlying conditions are mutually exclusive for traceability */
     __CPROVER_assert(
-        next[CWP_INIT] || next[CWP_NEGOTIATIONS] || next[CWP_AGREED] ||
-        next[CWP_FAILED] || next[CWP_SWITCHED],
+        (next_init ? 1 : 0) + (next_negotiations ? 1 : 0) + (next_agreed ? 1 : 0) +
+        (next_failed ? 1 : 0) + (next_switched ? 1 : 0) == 1,
+        "CWP P2: exactly one CWP state active");
+
+    /* P3: always in some CWP state */
+    __CPROVER_assert(
+        next_init || next_negotiations || next_agreed || next_failed || next_switched,
         "CWP P3: always in some CWP state");
 
-    /* Commit next state */
-    for (int i = 0; i < CWP_NUM_STATES; i++) cwp[i] = next[i];
+    /* Commit — one assignment; update reachability tracking */
+    *cwp_state             = new_state;
+    cwp_reached[new_state] = true;
 }
 
 int main() {
@@ -236,12 +242,12 @@ int main() {
     bool end_failed_reached    = false;
 
     /* ── CWP state tracking ──────────────────────────────────────────────── */
-    /* cwp[S] == true means the workflow is currently in CWP state S.        */
+    /* Single integer — the current CWP state ID.                             */
     /* Initial variable values satisfy Init Purchase Pending, so start there. */
-    bool cwp[CWP_NUM_STATES] = {true, false, false, false, false};
+    int cwp_state = CWP_INIT;
 
-    /* CWP state reachability tracking — mirrors end_completed_reached pattern.
-     * cwp_reached[S] becomes true the first time the workflow enters state S. */
+    /* CWP state reachability tracking — becomes true the first time each
+     * state is entered; used by the reachability cover goals below. */
     bool cwp_reached[CWP_NUM_STATES] = {true, false, false, false, false};
 
     bool running = true;
@@ -368,8 +374,7 @@ int main() {
             terms               = t;
             p_task2_FROM_gwboth = false;
             p_gwjoin_FROM_task2 = true;
-            update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
-            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
+            update_cwp_state(&cwp_state, cwp_reached, paymentOwner, backpackOwner, terms, paymentOffered);
 
         } else if (choice == T_TASK3_PRICE) {
             /* Buyer offers price; Seller evaluates.
@@ -379,8 +384,7 @@ int main() {
             paymentOffered      = p;
             p_task3_FROM_gwboth = false;
             p_gwjoin_FROM_task3 = true;
-            update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
-            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
+            update_cwp_state(&cwp_state, cwp_reached, paymentOwner, backpackOwner, terms, paymentOffered);
 
         } else if (choice == T_GW_BOTH_JOIN) {
             p_gwjoin_FROM_task2 = false;
@@ -434,8 +438,7 @@ int main() {
             paymentOffered     = p;
             p_task4_FROM_gwdec = false;
             p_gwdec_FROM_task4 = true;
-            update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
-            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
+            update_cwp_state(&cwp_state, cwp_reached, paymentOwner, backpackOwner, terms, paymentOffered);
 
         } else if (choice == T_TASK5_RETRY_TERMS) {
             /* Seller revises terms; noRetry now possible */
@@ -444,8 +447,7 @@ int main() {
             terms              = t;
             p_task5_FROM_gwdec = false;
             p_gwdec_FROM_task5 = true;
-            update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
-            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
+            update_cwp_state(&cwp_state, cwp_reached, paymentOwner, backpackOwner, terms, paymentOffered);
 
         } else if (choice == T_TASK6_HANDSHAKE) {
             /* Buyer and Seller shake hands — deal is agreed, exchange begins */
@@ -463,16 +465,14 @@ int main() {
             paymentOwner             = SELLER_NAME;
             p_task7a_FROM_gwexch     = false;
             p_gwexchjoin_FROM_task7a = true;
-            update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
-            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
+            update_cwp_state(&cwp_state, cwp_reached, paymentOwner, backpackOwner, terms, paymentOffered);
 
         } else if (choice == T_TASK7B_BACKPACK) {
             /* Seller hands backpack to Buyer */
             backpackOwner            = BUYER_NAME;
             p_task7b_FROM_gwexch     = false;
             p_gwexchjoin_FROM_task7b = true;
-            update_cwp_state(cwp, paymentOwner, backpackOwner, terms, paymentOffered);
-            for (int i = 0; i < CWP_NUM_STATES; i++) cwp_reached[i] |= cwp[i];
+            update_cwp_state(&cwp_state, cwp_reached, paymentOwner, backpackOwner, terms, paymentOffered);
 
         } else if (choice == T_GW_EXCH_JOIN) {
             __CPROVER_assert(
