@@ -99,7 +99,7 @@ def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
 
     initial_cwp = cwp_visitor.initial_cwp_state_define()
     cwp_reached_init = cwp_visitor.cwp_reached_init_expr()
-    cwp_define_names = cwp_visitor.state_define_names()
+    cwp_define_names = cwp_visitor.reachable_state_define_names()
 
     # ── Assemble ──
     sections: list[str] = []

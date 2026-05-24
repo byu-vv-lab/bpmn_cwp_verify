@@ -19,6 +19,7 @@ class CwpCbmcVisitor(CwpVisitor):
         "_edges",  # dict[str, CwpEdge] all edges, keyed by edge.id
         "_visited_ids",  # set[str] visited state IDs — prevents double-visit
         "_init_state",  # CwpState | None — first tracked state (dest of start_state)
+        "_cwp_start_state",  # CwpState | None — the CWP start_state (excluded from reachability)
     ]
 
     def __init__(self) -> None:
@@ -26,6 +27,7 @@ class CwpCbmcVisitor(CwpVisitor):
         self._edges: dict[str, CwpEdge] = {}
         self._visited_ids: set[str] = set()
         self._init_state: CwpState | None = None
+        self._cwp_start_state: CwpState | None = None
 
     # ── CwpVisitor callbacks ────────────────────────────────────────────────
 
@@ -33,6 +35,10 @@ class CwpCbmcVisitor(CwpVisitor):
         # The initial tracking state is the dest of the start_state's first out_edge.
         if model.start_state.out_edges:
             self._init_state = model.start_state.out_edges[0].dest
+        # Record the CWP start_state so it can be excluded from reachability covers.
+        # Its mapping function is always false at runtime (the Init_Edge condition
+        # conflicts with its outgoing-edge condition), so it can never be reached.
+        self._cwp_start_state = model.start_state
         return True
 
     def visit_state(self, state: CwpState) -> bool:
@@ -62,6 +68,17 @@ class CwpCbmcVisitor(CwpVisitor):
     def state_define_names(self) -> list[str]:
         """Public accessor: ordered list of CWP state #define names."""
         return [self._define_name(s) for s in self._states]
+
+    def reachable_state_define_names(self) -> list[str]:
+        """
+        CWP state #define names for the REACHABILITY block — excludes the CWP
+        start state, whose mapping function is always false at runtime (the
+        Init_Edge condition x==0 conflicts with its outgoing condition x<=5,
+        so it can never be the active CWP state in the generated C model).
+        """
+        return [
+            self._define_name(s) for s in self._states if s is not self._cwp_start_state
+        ]
 
     # ── Name helpers ────────────────────────────────────────────────────────
 

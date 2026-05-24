@@ -34,7 +34,7 @@ FACE2FACE = RESOURCES / "face2face"
 # Resource filenames (matches existing test conventions)
 SIMPLE_STATE = SIMPLE / "state.txt"
 SIMPLE_CWP = SIMPLE / "test_cwp.xml"
-SIMPLE_BPMN = SIMPLE / "workflow.bpmn"
+SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
 
 
 def _build_c(state_path: Path, cwp_path: Path, bpmn_path: Path) -> str:
@@ -191,8 +191,8 @@ class TestSimpleExampleGeneration:
         assert "int cwp_state = CWP_INCREMENT_X;" in c_code
 
     def test_cwp_reached_initializer(self, c_code):
-        # CWP_START (0) = true (reached at t=0 via Init_Edge), CWP_INCREMENT_X (1) = true (initial state), CWP_END (2) = false
-        assert "cwp_reached[CWP_NUM_STATES] = {true, true, false};" in c_code
+        # CWP_START (0) = false (never entered), CWP_INCREMENT_X (1) = true (initial state), CWP_END (2) = false
+        assert "cwp_reached[CWP_NUM_STATES] = {false, true, false};" in c_code
 
     def test_while_loop_with_bound(self, c_code):
         assert "while (running && step < BOUND)" in c_code
@@ -273,7 +273,8 @@ class TestSimpleExampleCbmc:
             capture_output=True,
             text=True,
         )
-        # Expect: 4 of 4 covered (EndEvent_1 + CWP_START + CWP_INCREMENT_X + CWP_END)
-        assert "4 of 4" in result.stdout or "COVERED" in result.stdout, (
+        # Expect: 3 of 3 covered (end event + CWP_INCREMENT_X + CWP_END).
+        # CWP_START is excluded — its mapping is always false at runtime.
+        assert "3 of 3" in result.stdout or "COVERED" in result.stdout, (
             f"Reachability incomplete.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
