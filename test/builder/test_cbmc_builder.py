@@ -31,6 +31,11 @@ RESOURCES = Path(__file__).parent.parent / "resources"
 SIMPLE = RESOURCES / "simple_example"
 FACE2FACE = RESOURCES / "face2face"
 
+# Resource filenames (matches existing test conventions)
+SIMPLE_STATE = SIMPLE / "state.txt"
+SIMPLE_CWP = SIMPLE / "test_cwp.xml"
+SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
+
 
 def _build_c(state_path: Path, cwp_path: Path, bpmn_path: Path) -> str:
     """Run the full parse+build pipeline and return the generated C string."""
@@ -74,11 +79,7 @@ class TestSimpleExampleGeneration:
 
     @pytest.fixture(scope="class")
     def c_code(self):
-        return _build_c(
-            SIMPLE / "state.txt",
-            SIMPLE / "cwp.xml",
-            SIMPLE / "workflow.bpmn",
-        )
+        return _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN)
 
     def test_produces_non_empty_output(self, c_code):
         assert len(c_code) > 100
@@ -124,20 +125,21 @@ class TestSimpleExampleGeneration:
     # ── Transition defines ──
 
     def test_transition_start_event(self, c_code):
-        assert "#define T_StartEvent_1" in c_code
+        assert "#define T_event_GWx9CQ" in c_code
 
     def test_transition_task(self, c_code):
-        assert "#define T_Task_1" in c_code
+        assert "#define T_task_MWMokA" in c_code
 
     def test_transition_flow3_xor_branch(self, c_code):
-        # XOR gateway → one T_ per outgoing flow
-        assert "#define T_Flow_3" in c_code
+        # XOR gateway → one T_ per outgoing flow (x > 5 branch → end event)
+        assert "#define T_sequenceFlow_A5qFbA" in c_code
 
     def test_transition_flow4_xor_branch(self, c_code):
-        assert "#define T_Flow_4" in c_code
+        # XOR gateway → one T_ per outgoing flow (x <= 5 branch → back to task)
+        assert "#define T_sequenceFlow_RqrzQg" in c_code
 
     def test_transition_end_event(self, c_code):
-        assert "#define T_EndEvent_1" in c_code
+        assert "#define T_event_JS1LAA" in c_code
 
     def test_five_transitions_total(self, c_code):
         import re
@@ -178,19 +180,19 @@ class TestSimpleExampleGeneration:
         assert "int x = 0;" in c_code
 
     def test_token_places_present(self, c_code):
-        assert "bool p_StartEvent_1 = true;" in c_code
-        assert "bool p_Task_1_FROM_StartEvent_1 = false;" in c_code
-        assert "bool p_Gateway_1_FROM_Task_1 = false;" in c_code
-        assert "bool p_EndEvent_1_FROM_Gateway_1 = false;" in c_code
-        assert "bool p_Task_1_FROM_Gateway_1 = false;" in c_code
+        assert "bool p_event_GWx9CQ = true;" in c_code
+        assert "bool p_task_MWMokA_FROM_event_GWx9CQ = false;" in c_code
+        assert "bool p_gateway_K0OuHg_FROM_task_MWMokA = false;" in c_code
+        assert "bool p_event_JS1LAA_FROM_gateway_K0OuHg = false;" in c_code
+        assert "bool p_task_MWMokA_FROM_gateway_K0OuHg = false;" in c_code
 
     def test_cwp_initial_state(self, c_code):
         # Initial tracking state = dest of start_state's first out_edge = Increment_x
         assert "int cwp_state = CWP_INCREMENT_X;" in c_code
 
     def test_cwp_reached_initializer(self, c_code):
-        # index 0 (CWP_START) = false, index 1 (CWP_INCREMENT_X) = true, index 2 (CWP_END) = false
-        assert "cwp_reached[CWP_NUM_STATES] = {false, true, false};" in c_code
+        # CWP_START (0) = true (reached at t=0 via Init_Edge), CWP_INCREMENT_X (1) = true (initial state), CWP_END (2) = false
+        assert "cwp_reached[CWP_NUM_STATES] = {true, true, false};" in c_code
 
     def test_while_loop_with_bound(self, c_code):
         assert "while (running && step < BOUND)" in c_code
@@ -208,11 +210,11 @@ class TestSimpleExampleGeneration:
         assert "running = false;" in c_code
 
     def test_end_event_reachability_var(self, c_code):
-        assert "EndEvent_1_reached = true;" in c_code
+        assert "event_JS1LAA_reached = true;" in c_code
 
     def test_reachability_ifdef_block(self, c_code):
         assert "#ifdef REACHABILITY" in c_code
-        assert "__CPROVER_cover(EndEvent_1_reached);" in c_code
+        assert "__CPROVER_cover(event_JS1LAA_reached);" in c_code
 
     def test_returns_zero(self, c_code):
         assert "return 0;" in c_code
@@ -229,17 +231,13 @@ class TestSimpleExampleGeneration:
 # ── CBMC execution tests (require cbmc to be installed) ────────────────────────
 
 
-@pytest.mark.cbmc
+@pytest.mark.skipif(shutil.which("cbmc") is None, reason="cbmc not installed")
 class TestSimpleExampleCbmc:
-    """Runs the actual CBMC tool. Only executed with: pytest -m cbmc"""
+    """Runs the actual CBMC tool. Skipped automatically when cbmc is not installed."""
 
     @pytest.fixture(scope="class")
     def c_file(self):
-        c_code = _build_c(
-            SIMPLE / "state.txt",
-            SIMPLE / "cwp.xml",
-            SIMPLE / "workflow.bpmn",
-        )
+        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN)
         with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
             f.write(c_code)
             return Path(f.name)
