@@ -19,7 +19,6 @@ class CwpCbmcVisitor(CwpVisitor):
         "_edges",  # dict[str, CwpEdge] all edges, keyed by edge.id
         "_visited_ids",  # set[str] visited state IDs — prevents double-visit
         "_init_state",  # CwpState | None — first tracked state (dest of start_state)
-        "_init_start_state",  # CwpState | None — the CWP start_state (passed through at t=0)
     ]
 
     def __init__(self) -> None:
@@ -27,7 +26,6 @@ class CwpCbmcVisitor(CwpVisitor):
         self._edges: dict[str, CwpEdge] = {}
         self._visited_ids: set[str] = set()
         self._init_state: CwpState | None = None
-        self._init_start_state: CwpState | None = None
 
     # ── CwpVisitor callbacks ────────────────────────────────────────────────
 
@@ -35,8 +33,6 @@ class CwpCbmcVisitor(CwpVisitor):
         # The initial tracking state is the dest of the start_state's first out_edge.
         if model.start_state.out_edges:
             self._init_state = model.start_state.out_edges[0].dest
-            # start_state is passed through at t=0 (Init_Edge fires), so it is reached.
-            self._init_start_state = model.start_state
         return True
 
     def visit_state(self, state: CwpState) -> bool:
@@ -110,17 +106,13 @@ class CwpCbmcVisitor(CwpVisitor):
     def cwp_reached_init_expr(self) -> str:
         """
         C initializer for cwp_reached[].
-        Both the CWP start_state (reached via Init_Edge at t=0) and the first
-        tracked state (dest of start_state's out-edge) start as reached.
+        Only the initial tracking state (dest of start_state's first out-edge) starts
+        as reached; the CWP start_state itself is never actually entered by the model
+        (its mapping function is always false at runtime).
         """
         values = ["false"] * len(self._states)
         if self._init_state is not None and self._init_state in self._states:
             values[self._states.index(self._init_state)] = "true"
-        if (
-            self._init_start_state is not None
-            and self._init_start_state in self._states
-        ):
-            values[self._states.index(self._init_start_state)] = "true"
         return "{" + ", ".join(values) + "}"
 
     def generate_state_defines(self) -> str:

@@ -34,7 +34,7 @@ FACE2FACE = RESOURCES / "face2face"
 # Resource filenames (matches existing test conventions)
 SIMPLE_STATE = SIMPLE / "state.txt"
 SIMPLE_CWP = SIMPLE / "test_cwp.xml"
-SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
+SIMPLE_BPMN = SIMPLE / "workflow.bpmn"
 
 
 def _build_c(state_path: Path, cwp_path: Path, bpmn_path: Path) -> str:
