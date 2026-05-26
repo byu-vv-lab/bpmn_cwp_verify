@@ -21,7 +21,6 @@ from bpmncwpverify.core.bpmn import (
 from bpmncwpverify.core.error import CbmcUnsupportedElementError
 from bpmncwpverify.visitors.bpmn_cbmc_visitor import BpmnCbmcVisitor
 
-
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -117,7 +116,9 @@ def test_enable_expr_task_multiple_in_flows(visitor, mocker):
     f2 = mocker.Mock(spec=SequenceFlow)
     f2.source_node = src2
     task.in_flows = [f1, f2]
-    assert visitor._enable_expr(task, None) == "p_task_1_FROM_gw_A || p_task_1_FROM_gw_B"
+    assert (
+        visitor._enable_expr(task, None) == "p_task_1_FROM_gw_A || p_task_1_FROM_gw_B"
+    )
 
 
 def test_enable_expr_xor_gateway_no_expression(visitor, mocker):
@@ -262,10 +263,12 @@ def test_transition_body_task_with_behavior(visitor, mocker):
     task.in_flows = [in_flow]
     task.out_flows = [out_flow]
     lines = visitor._transition_body(task, None, ["x"])
-    assert any("p_task_1_FROM_ev_start = false;" in l for l in lines)
-    assert any("x = x + 1;" in l for l in lines)
-    assert any("p_gw_1_FROM_task_1 = true;" in l for l in lines)
-    assert any("update_cwp_state(&cwp_state, cwp_reached, x);" in l for l in lines)
+    assert any("p_task_1_FROM_ev_start = false;" in line for line in lines)
+    assert any("x = x + 1;" in line for line in lines)
+    assert any("p_gw_1_FROM_task_1 = true;" in line for line in lines)
+    assert any(
+        "update_cwp_state(&cwp_state, cwp_reached, x);" in line for line in lines
+    )
 
 
 def test_transition_body_task_without_behavior_no_update_call(visitor, mocker):
@@ -277,7 +280,7 @@ def test_transition_body_task_without_behavior_no_update_call(visitor, mocker):
     task.in_flows = [in_flow]
     task.out_flows = [out_flow]
     lines = visitor._transition_body(task, None, [])
-    assert not any("update_cwp_state" in l for l in lines)
+    assert not any("update_cwp_state" in line for line in lines)
 
 
 def test_transition_body_xor_gateway(visitor, mocker):
@@ -287,8 +290,8 @@ def test_transition_body_xor_gateway(visitor, mocker):
     out_flow = make_flow(mocker, "gw_1", "task_2", "f_out")
     gw.in_flows = [in_flow]
     lines = visitor._transition_body(gw, out_flow, [])
-    assert any("p_gw_1_FROM_task_1 = false;" in l for l in lines)
-    assert any("p_task_2_FROM_gw_1 = true;" in l for l in lines)
+    assert any("p_gw_1_FROM_task_1 = false;" in line for line in lines)
+    assert any("p_task_2_FROM_gw_1 = true;" in line for line in lines)
 
 
 def test_transition_body_end_event(visitor, mocker):
@@ -297,9 +300,9 @@ def test_transition_body_end_event(visitor, mocker):
     in_flow = make_flow(mocker, "gw_1", "ev_end", "f_in")
     event.in_flows = [in_flow]
     lines = visitor._transition_body(event, None, [])
-    assert any("p_ev_end_FROM_gw_1 = false;" in l for l in lines)
-    assert any("ev_end_reached = true;" in l for l in lines)
-    assert any("running = false;" in l for l in lines)
+    assert any("p_ev_end_FROM_gw_1 = false;" in line for line in lines)
+    assert any("ev_end_reached = true;" in line for line in lines)
+    assert any("running = false;" in line for line in lines)
 
 
 # ── code generation ───────────────────────────────────────────────────────────

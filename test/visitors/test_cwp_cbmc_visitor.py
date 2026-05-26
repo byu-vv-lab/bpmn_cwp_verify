@@ -11,7 +11,6 @@ import pytest
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.visitors.cwp_cbmc_visitor import CwpCbmcVisitor
 
-
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -236,7 +235,10 @@ def test_generate_update_cwp_state_contains_key_sections(visitor, mocker):
 
     output = visitor.generate_update_cwp_state(["int x"])
 
-    assert "static void update_cwp_state(int *cwp_state, bool cwp_reached[], int x)" in output
+    assert (
+        "static void update_cwp_state(int *cwp_state, bool cwp_reached[], int x)"
+        in output
+    )
     assert "bool e_UNKNOWN_to_Start" in output
     assert "bool e_Start_to_Increment_x" in output
     assert "bool e_Increment_x_to_End" in output
