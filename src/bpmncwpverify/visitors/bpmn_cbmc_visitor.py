@@ -154,7 +154,12 @@ class BpmnCbmcVisitor(BpmnVisitor):
         return len(self._transitions)
 
     def compute_bound(self) -> int:
-        """Conservative BOUND estimate for bare-bones models: transitions × 4."""
+        """STUB: returns num_transitions × 4 — a magic-number placeholder.
+
+        An undersized bound causes silent false confidence (CBMC reports
+        VERIFICATION SUCCESSFUL without full coverage). Replace with the
+        R5a longest-path algorithm (see cbmc_generator_requirements.md).
+        """
         return self.num_transitions * 4
 
     # ── code generation ────────────────────────────────────────────────────────
