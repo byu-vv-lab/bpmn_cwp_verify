@@ -8,6 +8,8 @@ from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction, StringMana
 from bpmncwpverify.visitors.bpmn_promela_visitor import PromelaGenVisitor
 from bpmncwpverify.visitors.cwp_promela_visitor import CwpPromelaVisitor
 
+DEBUG_PROMELA = "#ifdef DEBUG\n#define DBG(x) x\n#else\n#define DBG(x)\n#endif\n\n"
+
 
 def _generate_bpmn_promela(bpmn: Bpmn) -> str:
     promela_visitor = PromelaGenVisitor()
@@ -72,7 +74,7 @@ def _generate_promela(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
     logger_pml = _generate_logger(state, cwp)
     state_dump_pml = _generate_state_dump(state)
     bpmn_pml = _generate_bpmn_promela(bpmn)
-    pml = f"{vars_pml}{cwp_pml}{logger_pml}{state_dump_pml}{bpmn_pml}"
+    pml = f"{DEBUG_PROMELA}{vars_pml}{cwp_pml}{logger_pml}{state_dump_pml}{bpmn_pml}"
     return Success(pml)
 
 
@@ -90,14 +92,21 @@ def _generate_state_promela(state: State) -> str:
             str_builder.append(
                 f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
             )
-            str_builder.append(
-                f"mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-            )
+            if "bit" not in var_decl.type_:
+                str_builder.append(
+                    f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                )
         else:
-            str_builder.append(
-                f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-            )
-            str_builder.append(f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}")
+            if var_decl.type_ == "bool":
+                var_decl.type_ = "byte"
+
+            str_builder.append(f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}")
+            
+            if "bit" not in var_decl.type_:
+                str_builder.append(f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id}")
+            else:
+                str_builder.append(f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}")
+                
     return "\n".join(str_builder) + "\n\n"
 
 
@@ -111,7 +120,7 @@ def _get_variable_names(state: State) -> list[str]:
 def _get_print_type(type: str) -> str:
     match type:
         case "bit":
-            return "%u"
+            return "%d"
         case "bool":
             return "%d"
         case "byte":

@@ -17,7 +17,7 @@ from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 ##############
 # Constants
 ##############
-HELPER_FUNCS_STR = '#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place != 1 -> place = 1\n\t\t:: else -> {\n\t\t\tprintf("Assert: Attempting to place token in already-occupied place\\n")\n\t\t\tassert false\n\t\t}\n\tfi\n}\n\n#define consumeToken(place) place = 0\n'
+HELPER_FUNCS_STR = '#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place == 0 ->\n\t\t\tplace = 1\n\t\t:: else -> \n\t\t\tDBG(printf("Assert: Attempting to place token in already-occupied place\\n"))\n\t\t\tassert(false)\n\tfi\n}\n\n#define consumeToken(place) place = 0\n'
 NL_NONE = 0
 NL_SINGLE = 1
 NL_DOUBLE = 2
@@ -160,11 +160,12 @@ class TokenPositions:
 
 
 class PromelaGenVisitor(BpmnVisitor):
-    __slots__ = ["defs", "var_defs", "behaviors", "init_proc_contents", "promela"]
+    __slots__ = ["defs", "local_var_defs", "global_var_defs", "behaviors", "init_proc_contents", "promela"]
 
     def __init__(self) -> None:
         self.defs = StringManager()
-        self.var_defs = StringManager()
+        self.local_var_defs = StringManager()
+        self.global_var_defs = StringManager()
         self.behaviors = StringManager()
         self.init_proc_contents = StringManager()
         self.promela = StringManager()
@@ -253,41 +254,29 @@ class PromelaGenVisitor(BpmnVisitor):
                     )
                 )
                 sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
-                for (
-                    consume_loc
-                ) in consume_locs:  # needs to be split for messages and sqeunces
+                for consume_loc in consume_locs:
                     sm.write_str(f"consumeToken({consume_loc})", NL_SINGLE)
                 for put_loc in put_locs:
                     sm.write_str(f"putToken({put_loc})", NL_SINGLE)
                 sm.write_str("", indent_action=IndentAction.DEC)
 
-        sm.write_str(
-            ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
-            NL_SINGLE,
-        )
-        sm.write_str("fi", NL_SINGLE)
+        sm.write_str(':: atomic else ->', NL_SINGLE, IndentAction.INC)
+        sm.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
+        sm.write_str("assert(false)", NL_SINGLE)
+
+        sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
         return sm
 
-    def _get_put_locations(self, element: Node) -> TokenPositions:
+    def _get_put_locations(self, element: Node) -> list[str]:
         """
         Returns a list of labels representing all outgoing flows from a node.
         Each label indicates the target node and the current node as the source.
         Example: ['Node2_FROM_Node1']
         """
-        # return [
-        #     self._generate_location_label(flow.target_node, flow)
-        #     for flow in element.out_flows + element.out_msgs
-        # ]
-        return TokenPositions(
-            seq_flows=[
-                self._generate_location_label(flow.target_node, flow)
-                for flow in element.out_flows
-            ],
-            msg_flows=[
-                self._generate_location_label(flow.target_node, flow)
-                for flow in element.out_msgs
-            ],
-        )
+        return [
+            self._generate_location_label(flow.target_node, flow)
+            for flow in element.out_flows + element.out_msgs
+        ]
 
     def _build_guard(self, ctx: Context) -> StringManager:
         """
@@ -363,27 +352,14 @@ class PromelaGenVisitor(BpmnVisitor):
         atomic_block.write_str(f'printf("ID: {ctx.element.id}\\n")', NL_SINGLE)
         atomic_block.write_str("stateLogger()", NL_SINGLE)
 
-        consume_flows = self._get_consume_locations(ctx.element)
-        consume_msg_flow = consume_flows.msg_flows
-        consume_seq_flow = consume_flows.seq_flows
-
-        for con_seq_loc in consume_seq_flow:
-            atomic_block.write_str(f"consumeToken({con_seq_loc})", NL_SINGLE)
-
-        put_flows = self._get_put_locations(ctx.element)
-        put_msg_flow = put_flows.msg_flows
-        put_seq_flow = put_flows.seq_flows
-
-        # for location in self._get_consume_locations(ctx.element).get_all_positions(): # needs to be split for messages and sequences
-        #     atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
+        for location in self._get_consume_locations(ctx.element).get_all_positions():
+            atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
         if ctx.has_option or ctx.boundary_events:
             atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
-            # for location in self._get_put_locations(ctx.element):
-            #     atomic_block.write_str(f"putToken({location})", NL_SINGLE)
-            for put_seq_loc in put_seq_flow:
-                atomic_block.write_str(f"putToken({put_seq_loc})", NL_SINGLE)
+            for location in self._get_put_locations(ctx.element):
+                atomic_block.write_str(f"putToken({location})", NL_SINGLE)
 
         atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
 
@@ -399,36 +375,37 @@ class PromelaGenVisitor(BpmnVisitor):
         Writes to the behaviors field to make an inline behavior model for the
         passed element.
         """
-        start_block_key_words = {"if"}
-        end_block_key_words = {"fi"}
-        self.behaviors.write_str(
-            f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
-        )
-        processed_str_list = [
-            line.strip() for line in ctx.behavior.split("\n") if line.strip()
-        ]
-
-        for line in processed_str_list:
-            if line in start_block_key_words:
-                self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
-            elif line in end_block_key_words:
-                self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
-            else:
-                self.behaviors.write_str(line, NL_SINGLE)
-
         if ctx.behavior:
-            self.behaviors.write_str("updateState()", NL_SINGLE)
-        else:
-            self.behaviors.write_str("skip", NL_SINGLE)
+            start_block_key_words = {"if"}
+            end_block_key_words = {"fi"}
+            self.behaviors.write_str(
+                f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
+            )
+            processed_str_list = [
+                line.strip() for line in ctx.behavior.split("\n") if line.strip()
+            ]
 
-        self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
+            for line in processed_str_list:
+                if line in start_block_key_words:
+                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
+                elif line in end_block_key_words:
+                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
+                else:
+                    self.behaviors.write_str(line, NL_SINGLE)
+
+            self.behaviors.write_str("updateState()", NL_SINGLE)
+
+            self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
+        
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx.element).get_all_positions():
-            self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+        for var in self._get_consume_locations(ctx.element).msg_flows:
+            self.global_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+        for var in self._get_consume_locations(ctx.element).seq_flows:
+            self.local_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
-        return f"{self.defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
+        return f"{self.defs}{self.global_var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
 
     ####################
     # Visitor Methods
@@ -520,7 +497,7 @@ class PromelaGenVisitor(BpmnVisitor):
         )
 
         self.promela.write_str(f"REPLACE_VARS_FOR_{process.id}", NL_SINGLE)
-        self.var_defs = StringManager()
+        self.local_var_defs = StringManager()
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
         self.promela.write_str(f'printf("ID: {process.id}\\n")', NL_SINGLE)
@@ -529,7 +506,7 @@ class PromelaGenVisitor(BpmnVisitor):
         return True
 
     def end_visit_process(self, process: Process) -> None:
-        self.promela.replace(process.id, self.var_defs)
+        self.promela.replace(process.id, self.local_var_defs)
 
         self.promela.write_str("od", NL_SINGLE)
         self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
@@ -538,7 +515,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self.defs.write_str(HELPER_FUNCS_STR, NL_DOUBLE)
         self.init_proc_contents.write_str("init {", NL_SINGLE, IndentAction.INC)
         self.init_proc_contents.write_str("atomic {", NL_SINGLE, IndentAction.INC)
-        self.init_proc_contents.write_str("stateDump()", NL_SINGLE)
+        self.init_proc_contents.write_str("DBG(stateDump())", NL_SINGLE)
         self.init_proc_contents.write_str("caculateState()", NL_SINGLE)
         return True
 
