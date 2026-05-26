@@ -62,6 +62,8 @@ inline stateLogger(){
 inline stateDump(){
 	printf("f = %u\n", f)
 }
+#define sendToken(place) place = 1
+#define receiveToken(place) place = 0
 #define hasToken(place) (place != 0)
 
 inline putToken(place) {
@@ -113,16 +115,16 @@ proctype Process_1r9euto() {
 			DBG(printf("ID: Activity_0rhvnxh\n"))
 			DBG(stateLogger())
 			consumeToken(Activity_0rhvnxh_FROM_Event_1hvprlj)
+			sendToken(Event_1npgp03_FROM_Activity_0rhvnxh)
 			putToken(Event_0376xz1_FROM_Activity_0rhvnxh)
-			putToken(Event_1npgp03_FROM_Activity_0rhvnxh)
 		}
 	}
-	:: atomic { ((hasToken(Event_0376xz1_FROM_Activity_0rhvnxh)) && (hasToken(Event_0376xz1_FROM_Activity_0h2q9nt))) ->
+	:: atomic { ((hasToken(Event_0376xz1_FROM_Activity_0rhvnxh)) && (Event_0376xz1_FROM_Activity_0h2q9nt)) ->
 		d_step {
 			DBG(printf("ID: Event_0376xz1\n"))
 			DBG(stateLogger())
+			receiveToken(Event_0376xz1_FROM_Activity_0h2q9nt)
 			consumeToken(Event_0376xz1_FROM_Activity_0rhvnxh)
-			consumeToken(Event_0376xz1_FROM_Activity_0h2q9nt)
 			putToken(Event_09x61bg_FROM_Event_0376xz1)
 		}
 	}
@@ -156,12 +158,12 @@ proctype Process_1xc3pol() {
 			putToken(Event_1npgp03_FROM_Event_0nkdqiv)
 		}
 	}
-	:: atomic { ((hasToken(Event_1npgp03_FROM_Event_0nkdqiv)) && (hasToken(Event_1npgp03_FROM_Activity_0rhvnxh))) ->
+	:: atomic { ((hasToken(Event_1npgp03_FROM_Event_0nkdqiv)) && (Event_1npgp03_FROM_Activity_0rhvnxh)) ->
 		d_step {
 			DBG(printf("ID: Event_1npgp03\n"))
 			DBG(stateLogger())
+			receiveToken(Event_1npgp03_FROM_Activity_0rhvnxh)
 			consumeToken(Event_1npgp03_FROM_Event_0nkdqiv)
-			consumeToken(Event_1npgp03_FROM_Activity_0rhvnxh)
 			putToken(Activity_0h2q9nt_FROM_Event_1npgp03)
 		}
 	}
@@ -170,8 +172,8 @@ proctype Process_1xc3pol() {
 			DBG(printf("ID: Activity_0h2q9nt\n"))
 			DBG(stateLogger())
 			consumeToken(Activity_0h2q9nt_FROM_Event_1npgp03)
+			sendToken(Event_0376xz1_FROM_Activity_0h2q9nt)
 			putToken(Event_0rlxl7u_FROM_Activity_0h2q9nt)
-			putToken(Event_0376xz1_FROM_Activity_0h2q9nt)
 		}
 	}
 	:: atomic { ((hasToken(Event_0rlxl7u_FROM_Activity_0h2q9nt))) ->

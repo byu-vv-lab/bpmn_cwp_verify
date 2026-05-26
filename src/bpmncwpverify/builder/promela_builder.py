@@ -70,9 +70,9 @@ def _generate_state_dump(state: State) -> str:
 
 def _generate_promela(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
     cwp_pml = _generate_cwp_promela(cwp, state)
+    state_dump_pml = _generate_state_dump(state)
     vars_pml = _generate_state_promela(state)
     logger_pml = _generate_logger(state, cwp)
-    state_dump_pml = _generate_state_dump(state)
     bpmn_pml = _generate_bpmn_promela(bpmn)
     pml = f"{DEBUG_PROMELA}{vars_pml}{cwp_pml}{logger_pml}{state_dump_pml}{bpmn_pml}"
     return Success(pml)

@@ -17,7 +17,7 @@ from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 ##############
 # Constants
 ##############
-HELPER_FUNCS_STR = '#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place == 0 ->\n\t\t\tplace = 1\n\t\t:: else -> \n\t\t\tDBG(printf("Assert: Attempting to place token in already-occupied place\\n"))\n\t\t\tassert(false)\n\tfi\n}\n\n#define consumeToken(place) place = 0\n'
+HELPER_FUNCS_STR = '#define sendToken(place) place = 1\n#define receiveToken(place) place = 0\n#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place == 0 ->\n\t\t\tplace = 1\n\t\t:: else -> \n\t\t\tDBG(printf("Assert: Attempting to place token in already-occupied place\\n"))\n\t\t\tassert(false)\n\tfi\n}\n\n#define consumeToken(place) place = 0\n'
 NL_NONE = 0
 NL_SINGLE = 1
 NL_DOUBLE = 2
@@ -222,41 +222,34 @@ class PromelaGenVisitor(BpmnVisitor):
         sm.write_str("if", NL_SINGLE)
 
         if ctx.has_option:
-            # This zip works because the out_flows is an array, which holds its order
-            for expression, location in zip(
-                self._get_expressions(ctx), self._get_put_locations(ctx.element)
-            ):
-                sm.write_str(
-                    f":: {expression.replace('\n', '')} -> putToken({location})",
-                    NL_SINGLE,
-                )
+            # This zip works because the out_flows is an array, which holds its order                   Issue
+            locations =  self._get_put_locations(ctx.element)
+            for expression, location in zip(self._get_expressions(ctx), locations.seq_flows + locations.msg_flows):
+                sm.write_str(f":: {expression.replace('\n', '')} -> putToken({location})", NL_SINGLE,)
+
         if ctx.boundary_events:
             # 1) get all of the put locations [[end_from_boundevent, ...], ...]
             # 2) get all of the consume locations for each boundevent [[end_from_boundevent, ...]]
             # (hastoken(boundevent1consume1) || hastoken(boundevent1consume2)) ->
             #     putToken(element1_from_boundevent1)
             #     putToken(element2_from_boundevent1)
-            put_locations = [
-                self._get_put_locations(boundary_event)
-                for boundary_event in ctx.boundary_events
-            ]
-            consume_locations = [
-                self._get_consume_locations(boundary_event).get_all_positions()
-                for boundary_event in ctx.boundary_events
-            ]
+            put_locations = [self._get_put_locations(boundary_event) for boundary_event in ctx.boundary_events]
+
+            consume_locations = [self._get_consume_locations(boundary_event) for boundary_event in ctx.boundary_events]
 
             # We can zip these two together, because it will return a list n = len(ctx.boundary_events)
             for put_locs, consume_locs in zip(put_locations, consume_locations):
                 sm.write_str(":: (")
-                sm.write_str(
-                    " || ".join(
-                        [f"hasToken({consume_loc})" for consume_loc in consume_locs]
-                    )
-                )
+                sm.write_str(" || ".join([f"hasToken({consume_loc})" for consume_loc in consume_locs.seq_flows]))
+                sm.write_str(" || ".join([f"{consume_loc}" for consume_loc in consume_locs.msg_flows]))
                 sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
-                for consume_loc in consume_locs:
+                for consume_loc in consume_locs.msg_flows:
+                    sm.write_str(f"receiveToken({consume_loc})", NL_SINGLE)
+                for consume_loc in consume_locs.seq_flows:
                     sm.write_str(f"consumeToken({consume_loc})", NL_SINGLE)
-                for put_loc in put_locs:
+                for put_loc in put_locs.msg_flows:
+                    sm.write_str(f"sendToken({put_loc})", NL_SINGLE)
+                for put_loc in put_locs.seq_flows:
                     sm.write_str(f"putToken({put_loc})", NL_SINGLE)
                 sm.write_str("", indent_action=IndentAction.DEC)
 
@@ -267,18 +260,29 @@ class PromelaGenVisitor(BpmnVisitor):
         sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
         return sm
 
-    def _get_put_locations(self, element: Node) -> list[str]:
+    def _get_put_locations(self, element: Node) -> TokenPositions:
         """
         Returns a list of labels representing all outgoing flows from a node.
         Each label indicates the target node and the current node as the source.
         Example: ['Node2_FROM_Node1']
         """
-        return [
-            self._generate_location_label(flow.target_node, flow)
-            for flow in element.out_flows + element.out_msgs
-        ]
+        # return [
+        #     self._generate_location_label(flow.target_node, flow)
+        #     for flow in element.out_flows + element.out_msgs
+        # ]
+        if not (element.out_flows or element.out_msgs):
+            return TokenPositions(standalone=self._generate_location_label(element))
+        return TokenPositions(
+            seq_flows=[
+                self._generate_location_label(flow.target_node, flow)
+                for flow in element.out_flows
+            ],
+            msg_flows=[
+                self._generate_location_label(flow.target_node, flow) for flow in element.out_msgs
+            ],
+        )
 
-    def _build_guard(self, ctx: Context) -> StringManager:
+    def _build_guard(self, ctx: Context, consume_locations: TokenPositions) -> StringManager:
         """
         Constructs a guard condition for an atomic block in a process.
         The guard checks whether a token exists at the current node, based on incoming flows.
@@ -291,8 +295,6 @@ class PromelaGenVisitor(BpmnVisitor):
 
         guard: StringManager = StringManager()
 
-        # Store the consume locations to avoid multiple calls.
-        consume_locations: TokenPositions = self._get_consume_locations(ctx.element)
         inner_process_positions: list[str] = (
             consume_locations.get_in_process_positions()
         )
@@ -309,24 +311,22 @@ class PromelaGenVisitor(BpmnVisitor):
 
         if msg_positions:
             guard.write_str(" && (" if inner_process_positions else "(")
-            tokens_msg: list[str] = [f"hasToken({pos})" for pos in msg_positions]
+            tokens_msg: list[str] = [f"{pos}" for pos in msg_positions]
             guard.write_str(" && ".join(tokens_msg))
             guard.write_str(")")
 
         if ctx.boundary_events:
             guard.write_str(" && (")
 
-            guard.write_str(
-                " || ".join(
-                    [
-                        f"hasToken({loc})"
-                        for boundary_event in ctx.boundary_events
-                        for loc in self._get_consume_locations(
-                            boundary_event
-                        ).get_all_positions()
-                    ]
-                )
-            )
+            for boundary_event in ctx.boundary_events:
+                locations = self._get_consume_locations(boundary_event)
+
+                if locations.standalone:
+                    guard.write_str(f" hasToken({locations.standalone})")
+                else:
+                    guard.write_str(" || ".join([f"hasToken({loc})" for loc in locations.seq_flows]))
+                    guard.write_str(" || ".join([f"{loc}" for loc in locations.msg_flows]))
+
             guard.write_str(")")
 
         return guard
@@ -340,7 +340,9 @@ class PromelaGenVisitor(BpmnVisitor):
         atomic_block = StringManager()
         atomic_block.write_str(":: atomic { (")
 
-        guard = self._build_guard(ctx)
+        in_locations = self._get_consume_locations(ctx.element)
+
+        guard = self._build_guard(ctx, in_locations)
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
@@ -352,13 +354,27 @@ class PromelaGenVisitor(BpmnVisitor):
         atomic_block.write_str(f'DBG(printf("ID: {ctx.element.id}\\n"))', NL_SINGLE)
         atomic_block.write_str("DBG(stateLogger())", NL_SINGLE)
 
-        for location in self._get_consume_locations(ctx.element).get_all_positions():
-            atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
 
+        # in_flows in d_step
+        if in_locations.standalone:
+            atomic_block.write_str(f"consumeToken({in_locations.standalone})", NL_SINGLE)
+        else: 
+            for location in in_locations.msg_flows:
+                atomic_block.write_str(f"receiveToken({location})", NL_SINGLE)
+
+            for location in in_locations.seq_flows:
+                atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
+
+
+        # out_flows in d_step
         if ctx.has_option or ctx.boundary_events:
             atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
-            for location in self._get_put_locations(ctx.element):
+            out_locations = self._get_put_locations(ctx.element)
+            for location in out_locations.msg_flows:
+                atomic_block.write_str(f"sendToken({location})", NL_SINGLE)
+
+            for location in out_locations.seq_flows:
                 atomic_block.write_str(f"putToken({location})", NL_SINGLE)
 
         atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
