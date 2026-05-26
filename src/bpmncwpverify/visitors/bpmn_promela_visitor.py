@@ -344,13 +344,13 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
-        if ctx.behavior_model:
+        if ctx.behavior:
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
 
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        atomic_block.write_str(f'printf("ID: {ctx.element.id}\\n")', NL_SINGLE)
-        atomic_block.write_str("stateLogger()", NL_SINGLE)
+        atomic_block.write_str(f'DBG(printf("ID: {ctx.element.id}\\n"))', NL_SINGLE)
+        atomic_block.write_str("DBG(stateLogger())", NL_SINGLE)
 
         for location in self._get_consume_locations(ctx.element).get_all_positions():
             atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
@@ -399,10 +399,15 @@ class PromelaGenVisitor(BpmnVisitor):
         
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx.element).msg_flows:
-            self.global_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
-        for var in self._get_consume_locations(ctx.element).seq_flows:
-            self.local_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+        locations = self._get_consume_locations(ctx.element)
+
+        if not locations.standalone:
+            for var in locations.msg_flows:
+                self.global_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+            for var in locations.seq_flows:
+                self.local_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+        else:
+            self.local_var_defs.write_str(f"bit {locations.standalone} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
         return f"{self.defs}{self.global_var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
@@ -500,8 +505,8 @@ class PromelaGenVisitor(BpmnVisitor):
         self.local_var_defs = StringManager()
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-        self.promela.write_str(f'printf("ID: {process.id}\\n")', NL_SINGLE)
-        self.promela.write_str("stateLogger()", NL_SINGLE)
+        self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
+        self.promela.write_str("DBG(stateLogger())", NL_SINGLE)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
         return True
 
