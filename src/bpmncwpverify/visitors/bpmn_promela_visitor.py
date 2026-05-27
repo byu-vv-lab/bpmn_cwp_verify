@@ -290,19 +290,17 @@ class PromelaGenVisitor(BpmnVisitor):
             # We can zip these two together, because it will return a list n = len(ctx.boundary_events)
             for put_locs, consume_locs in zip(put_locations, consume_locations):
                 sm.write_str(":: (")
+
                 sm.write_str(
                     " || ".join(
                         [
                             f"hasToken({consume_loc})"
                             for consume_loc in consume_locs.seq_flows
                         ]
+                        + [f"{consume_loc}" for consume_loc in consume_locs.msg_flows]
                     )
                 )
-                sm.write_str(
-                    " || ".join(
-                        [f"{consume_loc}" for consume_loc in consume_locs.msg_flows]
-                    )
-                )
+
                 sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
                 self._in_seq_and_msg_flows(sm, consume_locs)
                 self._out_seq_and_msg_flows(sm, put_locs)

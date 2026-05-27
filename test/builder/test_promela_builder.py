@@ -144,8 +144,8 @@ def test_generate_promela(mocker):
         "hidden int old_var1_id = var1_id\n"
         "mtype:enum_id var2_id = init_val\n"
         "hidden mtype:enum_id old_var2_id = var2_id\n"
-        "byte var3_id = 0\n"
-        "hidden byte old_var3_id = var3_id\n"
+        "bool var3_id = 0\n"
+        "bool old_var3_id = var3_id\n"
         "bit var4_id = 0\n"
         "bit old_var4_id = var4_id\n\n"
     )

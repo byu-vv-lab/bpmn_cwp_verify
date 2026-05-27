@@ -478,11 +478,10 @@ def test_build_expr_conditional(promela_visitor, mocker):
             mocker.call("if", NL_SINGLE),
             mocker.call(":: EXPR1==test_val -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
-            mocker.call(
-                ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
-                NL_SINGLE,
-            ),
-            mocker.call("fi", NL_SINGLE),
+            mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
+            mocker.call('DBG(printf("Assert: No viable path to take"))', NL_SINGLE),
+            mocker.call("assert(false)", NL_SINGLE),
+            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         ]
     )
 
@@ -490,19 +489,31 @@ def test_build_expr_conditional(promela_visitor, mocker):
 def test_build_conditional_with_boundary_event(promela_visitor, mocker):
     mock_sm = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.StringManager")
     mocker.patch.object(
-        promela_visitor, "_get_consume_locations", side_effect=lambda x: x
+        promela_visitor,
+        "_get_consume_locations",
+        side_effect=[
+            TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
+            TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
+        ],
     )
     mocker.patch.object(
         promela_visitor,
         "_get_put_locations",
-        side_effect=lambda x: [x.get_all_positions()[0][::-1]],
+        side_effect=[
+            TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
+            TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
+        ],
     )
+
+    mocker.patch.object(promela_visitor, "_in_seq_and_msg_flows")
+
+    mocker.patch.object(promela_visitor, "_out_seq_and_msg_flows")
 
     ctx = mocker.Mock(spec=Context)
     ctx.has_option = False
     ctx.boundary_events = [
-        TokenPositions(seq_flows=["TEST1"]),
-        TokenPositions(seq_flows=["TEST2"]),
+        TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
+        TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
     ]
 
     mock_write_str = mocker.Mock()
@@ -516,20 +527,18 @@ def test_build_conditional_with_boundary_event(promela_visitor, mocker):
             mocker.call(":: ("),
             mocker.call("hasToken(TEST1)"),
             mocker.call(") ->", NL_SINGLE, IndentAction.INC),
-            mocker.call("consumeToken(TEST1)", NL_SINGLE),
-            mocker.call("putToken(1TSET)", NL_SINGLE),
             mocker.call("", indent_action=IndentAction.DEC),
             mocker.call(":: ("),
             mocker.call("hasToken(TEST2)"),
             mocker.call(") ->", NL_SINGLE, IndentAction.INC),
-            mocker.call("consumeToken(TEST2)", NL_SINGLE),
-            mocker.call("putToken(2TSET)", NL_SINGLE),
             mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
             mocker.call(
-                ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
-                1,
+                'DBG(printf("Assert: No viable path to take"))',
+                NL_SINGLE,
             ),
-            mocker.call("fi", NL_SINGLE),
+            mocker.call("assert(false)", NL_SINGLE),
+            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         ]
     )
 
