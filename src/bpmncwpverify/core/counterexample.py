@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 
 from bpmncwpverify.core.bpmn import Bpmn
@@ -64,8 +65,16 @@ class CounterExample:
         """
         Generate a counterexample from the given file path and error.
         """
+        working_dir = os.path.dirname(file_path)
+        filename = os.path.basename(file_path)
+        subprocess.run(
+            ["spin", "-DDEBUG", "-run", filename], cwd=working_dir, capture_output=True
+        ).stdout
         spin_trace_string = subprocess.run(
-            ["spin", "-t", file_path], capture_output=True, text=True
+            ["spin", "-DDEBUG", "-t", file_path],
+            cwd=working_dir,
+            capture_output=True,
+            text=True,
         ).stdout
         filtered_str = CounterExample.filter_spin_trace(spin_trace_string)
         vars = CounterExample.extract_init_variables(filtered_str)

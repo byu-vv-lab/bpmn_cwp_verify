@@ -103,9 +103,11 @@ class CwpPromelaVisitor(CwpVisitor):
 
         nWayXor.write_str("if", NL_SINGLE, IndentAction.INC)
 
-        nWayXor.write_str(':: (sumOfActiveStates != 1) ->', NL_SINGLE, IndentAction.INC)
-        nWayXor.write_str('DBG(printf("Assert: In more that one or no state"))', NL_SINGLE)
-        nWayXor.write_str('assert(false)', NL_SINGLE)
+        nWayXor.write_str(":: (sumOfActiveStates != 1) ->", NL_SINGLE, IndentAction.INC)
+        nWayXor.write_str(
+            'DBG(printf("Assert: In more that one or no state"))', NL_SINGLE
+        )
+        nWayXor.write_str("assert(false)", NL_SINGLE)
 
         nWayXor.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
 
@@ -149,9 +151,11 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.update_state_inline.write_str(self.proper_path_block)
 
-        self.update_state_inline.write_str(':: else ->', NL_SINGLE, IndentAction.INC)
-        self.update_state_inline.write_str('DBG(printf("Assert: Not a valid CWP transition"))', NL_SINGLE)
-        self.update_state_inline.write_str('assert(false)', NL_SINGLE)
+        self.update_state_inline.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
+        self.update_state_inline.write_str(
+            'DBG(printf("Assert: Not a valid CWP transition"))', NL_SINGLE
+        )
+        self.update_state_inline.write_str("assert(false)", NL_SINGLE)
 
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.TRE)
 
@@ -159,7 +163,7 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.update_state_inline.write_str(self.build_XOR_block())
 
-        self.update_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
+        self.update_state_inline.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def create_caculate_state_inline(self) -> None:
         self.caculate_state_inline.write_str(
@@ -168,7 +172,7 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.caculate_state_inline.write_str(self.vars)
 
-        self.caculate_state_inline.write_str("}", NL_SINGLE, IndentAction.DEC)
+        self.caculate_state_inline.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def end_visit_edge(self, edge: CwpEdge) -> None:
         pass

@@ -43,14 +43,13 @@ class TestCwpPromelaVisitor:
             mocker.call(prime_vars),
             mocker.call("if", NL_SINGLE, IndentAction.INC),
             mocker.call(proper_path_block),
-            mocker.call(
-                ':: else -> printf("Assert: Not a valid CWP transition"); assert false',
-                NL_SINGLE,
-            ),
-            mocker.call("fi", NL_SINGLE, IndentAction.DEC),
+            mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
+            mocker.call('DBG(printf("Assert: Not a valid CWP transition"))', NL_SINGLE),
+            mocker.call("assert(false)", NL_SINGLE),
+            mocker.call("fi", NL_SINGLE, IndentAction.TRE),
             mocker.call(var_reassignment),
             mocker.call("test_val"),
-            mocker.call("}", NL_SINGLE, IndentAction.DEC),
+            mocker.call("}", NL_DOUBLE, IndentAction.DEC),
         ]
 
         mock_write_str.assert_has_calls(calls)
@@ -167,11 +166,12 @@ class TestCwpPromelaVisitor:
             mocker.call("int sumOfActiveStates = "),
             mocker.call("state1 + state2 + state3", NL_DOUBLE),
             mocker.call("if", NL_SINGLE, IndentAction.INC),
+            mocker.call(":: (sumOfActiveStates != 1) ->", NL_SINGLE, IndentAction.INC),
             mocker.call(
-                ':: (sumOfActiveStates != 1) -> {printf("Assert: In more that one or no state"); assert false}',
-                NL_SINGLE,
+                'DBG(printf("Assert: In more that one or no state"))', NL_SINGLE
             ),
-            mocker.call(":: else -> skip", NL_SINGLE),
+            mocker.call("assert(false)", NL_SINGLE),
+            mocker.call(":: else -> skip", NL_SINGLE, IndentAction.DEC),
             mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         ]
 

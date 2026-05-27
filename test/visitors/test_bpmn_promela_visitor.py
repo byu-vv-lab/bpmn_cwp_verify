@@ -1,3 +1,4 @@
+# type: ignore
 import pytest
 
 from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
@@ -133,6 +134,8 @@ def test_string_manager_assertion_error_on_negative_indent(string_manager_factor
 
 def test_promela_gen_visitor_initial_state(promela_visitor):
     assert isinstance(promela_visitor.defs, StringManager)
+    assert isinstance(promela_visitor.local_var_defs, StringManager)
+    assert isinstance(promela_visitor.global_var_defs, StringManager)
     assert isinstance(promela_visitor.init_proc_contents, StringManager)
     assert isinstance(promela_visitor.promela, StringManager)
     assert repr(promela_visitor) == ""
@@ -203,7 +206,7 @@ def test_get_put_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    assert promela_visitor._get_put_locations(node1) == []
+    assert promela_visitor._get_put_locations(node1).standalone == "NODE1"
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -216,23 +219,18 @@ def test_get_put_locations(promela_visitor, mocker):
     node1.out_flows = [flow1]
     node1.out_msgs = [flow2]
 
-    assert promela_visitor._get_put_locations(node1) == [
-        "NODE2_FROM_NODE1",
-        "NODE3_FROM_NODE1",
-    ]
+    assert promela_visitor._get_put_locations(node1).seq_flows == ["NODE2_FROM_NODE1"]
+    assert promela_visitor._get_put_locations(node1).msg_flows == ["NODE3_FROM_NODE1"]
 
 
 def test_build_guard(promela_visitor, mocker):
-    mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
-        return_value=TokenPositions(seq_flows=["TEST1", "TEST2"]),
-    )
+    consume_locations = TokenPositions(seq_flows=["TEST1", "TEST2"])
     ctx = mocker.Mock(spec=Context)
     ctx.boundary_event_consume_locations = []
     ctx.boundary_events = []
     ctx.is_parallel = False
 
-    guard = promela_visitor._build_guard(ctx)
+    guard = promela_visitor._build_guard(ctx, consume_locations)
 
     assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))"
 
@@ -250,7 +248,9 @@ def test_build_guard_with_boundary_events(mocker):
     ]  # Represents one boundary event
     ctx.is_parallel = False
 
-    guard = PromelaGenVisitor()._build_guard(ctx)
+    guard = PromelaGenVisitor()._build_guard(
+        ctx, TokenPositions(seq_flows=["TEST1", "TEST2"])
+    )
 
     assert (
         str(guard)
@@ -262,7 +262,9 @@ def test_build_guard_with_boundary_events(mocker):
         TokenPositions(seq_flows=["TEST5"]),
     ]  # Represents 2 boundary events
 
-    guard = PromelaGenVisitor()._build_guard(ctx)
+    guard = PromelaGenVisitor()._build_guard(
+        ctx, TokenPositions(seq_flows=["TEST1", "TEST2"])
+    )
 
     assert (
         str(guard)
@@ -280,7 +282,9 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     ctx.boundary_events = []
     ctx.is_parallel = True
 
-    guard = promela_visitor._build_guard(ctx)
+    guard = promela_visitor._build_guard(
+        ctx, TokenPositions(seq_flows=["TEST1", "TEST2"])
+    )
 
     assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))"
 
@@ -312,9 +316,13 @@ def test_build_guard_with_msg_flow(promela_visitor, mocker):
     ctx.is_parallel = False
     ctx.boundary_events = []
 
-    guard = promela_visitor._build_guard(ctx)
+    consume_locations = TokenPositions(
+        seq_flows=["NODE1_FROM_NODE2"], msg_flows=["NODE1_FROM_NODE3"]
+    )
 
-    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (hasToken(NODE1_FROM_NODE3))"
+    guard = promela_visitor._build_guard(ctx, consume_locations)
+
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (NODE1_FROM_NODE3)"
 
 
 def test_build_atomic_block(promela_visitor, mocker):
@@ -358,7 +366,7 @@ def test_build_atomic_block(promela_visitor, mocker):
 
     atomic_block = promela_visitor._build_atomic_block(ctx)
 
-    expected_output = ':: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tprintf("ID: NODE1\\n")\n\t\tstateLogger()\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n'
+    expected_output = ':: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tDBG(printf("ID: NODE1\\n"))\n\t\tDBG(stateLogger())\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n'
     assert str(atomic_block) == expected_output
 
 
@@ -372,7 +380,7 @@ def test_gen_behavior_model(mocker):
     ctx.behavior = ""
 
     pv1._gen_behavior_model(ctx)
-    assert str(pv1.behaviors) == "inline TEST_BehaviorModel() {\n\tskip\n}\n\n"
+    assert str(pv1.behaviors) == ""
 
     pv2 = PromelaGenVisitor()
     ctx.behavior = "content"
@@ -401,12 +409,16 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
 
 
 def test_gen_var_defs(promela_visitor, mocker) -> None:
-    mock_var_defs = mocker.Mock()
-    promela_visitor.var_defs = mock_var_defs
+    mock_local_var_defs = mocker.Mock()
+    mock_global_var_defs = mocker.Mock()
+    promela_visitor.local_var_defs = mock_local_var_defs
+    promela_visitor.global_var_defs = mock_global_var_defs
     mock_get_consume_locations = mocker.patch.object(
         promela_visitor,
         "_get_consume_locations",
-        return_value=TokenPositions(seq_flows=["VAL1", "VAL2"]),
+        return_value=TokenPositions(
+            seq_flows=["VAL1", "VAL2"], msg_flows=["VAL3", "VAL4"]
+        ),
     )
     node1 = mocker.Mock()
     node1.id = "TEST"
@@ -418,11 +430,15 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
 
     mock_get_consume_locations.assert_called_once_with(node1)
 
-    mock_var_defs.write_str.assert_has_calls(
+    mock_local_var_defs.write_str.assert_has_calls(
         [
             mocker.call("bit VAL1 = 0", 1),
             mocker.call("bit VAL2 = 0", 1),
         ],
+        any_order=False,
+    )
+    mock_global_var_defs.write_str.assert_has_calls(
+        [mocker.call("bit VAL3 = 0", 1), mocker.call("bit VAL4 = 0", 1)],
         any_order=False,
     )
 
