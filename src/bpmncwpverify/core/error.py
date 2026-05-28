@@ -561,6 +561,23 @@ class StateAntlrWalkerError(Error):
         super().__init__()
 
 
+class CbmcUnsupportedElementError(Error):
+    __slots__ = ["element_id", "element_type"]
+
+    def __init__(self, element_id: str, element_type: str) -> None:
+        super().__init__()
+        self.element_id = element_id
+        self.element_type = element_type
+
+
+class CbmcGeneratorError(Error):
+    __slots__ = ["msg"]
+
+    def __init__(self, msg: str) -> None:
+        super().__init__()
+        self.msg = msg
+
+
 class SubProcessRunError(Error):
     __slots__ = "process_name"
 
@@ -783,6 +800,12 @@ def get_error_message(error: Error) -> str:
             return f"STATE ERROR: multiple definition of '{id}'{location_first}{location_second}"
         case StateSyntaxError(msg=msg):
             return f"STATE SYNTAX ERROR: {msg}"
+        case CbmcUnsupportedElementError(
+            element_id=element_id, element_type=element_type
+        ):
+            return f"CBMC ERROR: unsupported element type '{element_type}' (id: {element_id})"
+        case CbmcGeneratorError(msg=msg):
+            return f"CBMC GENERATOR ERROR: {msg}"
         case SubProcessRunError(process_name=process_name):
             return f"ERROR: failed to run '{process_name}'"
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
