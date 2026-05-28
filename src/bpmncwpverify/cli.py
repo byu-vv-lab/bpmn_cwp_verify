@@ -5,10 +5,13 @@ import requests
 from returns.functions import not_
 from returns.io import IOFailure, IOResult, IOSuccess
 from returns.pipeline import is_successful
+from returns.result import Result
 from returns.unsafe import unsafe_perform_io
 
 from bpmncwpverify.core.accessmethods import bpmnmethods
 from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
+from bpmncwpverify.core.bpmn import Bpmn
+from bpmncwpverify.core.cwp import Cwp
 from bpmncwpverify.core.error import (
     Error,
     HttpError,
@@ -60,14 +63,27 @@ def _verify_with_spin(
     cwp_xml: Element,
     bpmn_xml: Element,
 ) -> IOResult[SpinVerificationReport, Error]:
-    print("Verifying state against CWP and BPMN files")
+    print("Verifying state and comparing against CWP and BPMN files 0/3")
+
+    def _verify_state(state_str: str) -> Result[State, Error]:
+        print("    Verifying state file")
+        return State.from_str(state_str)
+
+    def _verify_cwp_with_state(cwp_xml: Element, state: State) -> IOResult[Cwp, Error]:
+        print("    Verifying CWP against state")
+        return IOResult.from_result(CwpXmlParser.from_xml(cwp_xml, state))
+
+    def _verify_bpmn_with_state(
+        bpmn_xml: Element, state: State
+    ) -> IOResult[Bpmn, Error]:
+        print("    Verifying BPMN against state")
+        return IOResult.from_result(bpmnmethods.from_xml(bpmn_xml, state))
+
     result: IOResult[SpinVerificationReport, Error] = IOResult.from_result(
-        State.from_str(state_str)
+        _verify_state(state_str)
     ).bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda state: IOResult.from_result(CwpXmlParser.from_xml(cwp_xml, state)).bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda cwp: IOResult.from_result(
-                bpmnmethods.from_xml(bpmn_xml, state)
-            ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: _verify_cwp_with_state(cwp_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: _verify_bpmn_with_state(bpmn_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda bpmn: verify_with_spin(state, cwp, bpmn)
             )
         )

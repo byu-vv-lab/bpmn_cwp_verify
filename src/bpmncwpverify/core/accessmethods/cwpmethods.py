@@ -101,7 +101,6 @@ class CwpXmlParser:
 
     @staticmethod
     def from_xml(root: Element, state: State) -> Result["Cwp", Error]:
-        print("    Verifying CWP against state")
         builder = CwpBuilder()
         parser = CwpXmlParser()
 
