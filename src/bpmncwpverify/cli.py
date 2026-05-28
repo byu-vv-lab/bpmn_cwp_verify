@@ -176,11 +176,16 @@ def verify() -> None:
 def web_verify(
     state: str, cwp_str: str, bpmn_str: str
 ) -> IOResult[SpinVerificationReport, Error]:
-    print("Converting input XML files to tree")
-    result: IOResult[SpinVerificationReport, Error] = element_tree_from_string(
-        cwp_str
+    print("Converting input XML files to tree 0/2")
+
+    def _element_tree_from_string(input: str, type: str) -> IOResult[Element, Error]:
+        print(f"    Converting {type} to XML tree")
+        return element_tree_from_string(input)
+
+    result: IOResult[SpinVerificationReport, Error] = _element_tree_from_string(
+        cwp_str, "CWP"
     ).bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda cwp: element_tree_from_string(bpmn_str).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda cwp: _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
             lambda bpmn: _verify_with_spin(state, cwp, bpmn)
         )
     )
