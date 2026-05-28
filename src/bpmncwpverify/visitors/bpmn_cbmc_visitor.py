@@ -114,12 +114,27 @@ class BpmnCbmcVisitor(BpmnVisitor):
 
     @staticmethod
     def _translate_behavior(behavior: str) -> list[str]:
-        """Translate BPMN task behavior (Promela if/fi or plain C) to C statements."""
+        """Translate BPMN task behavior (if/fi blocks or plain statements) to C.
+
+        if/fi blocks encode nondeterministic assignment:
+            if
+            :: true -> var = VALUE_A
+            :: true -> var = VALUE_B
+            fi
+        Each block is translated to the CBMC nondet/assume idiom:
+            int t = nondet_int();
+            __CPROVER_assume(t == VALUE_A || t == VALUE_B);
+            var = t;
+        Plain statements (no if/fi) are passed through with a semicolon added
+        if missing. Empty behavior returns [].
+        """
         behavior = behavior.strip()
         if not behavior:
             return []
 
         result: list[str] = []
+        # Counts if/fi blocks seen so far; used to name temp vars t, t1, t2, ...
+        # to avoid redeclaration when a single task has multiple if/fi blocks.
         iffi_idx = 0
 
         raw_lines = behavior.splitlines()
@@ -128,6 +143,7 @@ class BpmnCbmcVisitor(BpmnVisitor):
             line = raw_lines[i].strip()
 
             if line == "if":
+                # Collect all :: true -> VAR = VALUE branches until 'fi'.
                 branches: list[tuple[str, str]] = []
                 i += 1
                 while i < len(raw_lines) and raw_lines[i].strip() != "fi":
@@ -138,13 +154,16 @@ class BpmnCbmcVisitor(BpmnVisitor):
                 i += 1  # skip 'fi'
 
                 if branches:
+                    # Deduplicate variable names, preserving first-appearance order.
                     vars_in_order: list[str] = []
                     for var, _ in branches:
                         if var not in vars_in_order:
                             vars_in_order.append(var)
 
+                    # Emit one nondet/assume triple per variable.
                     for var in vars_in_order:
                         values = [val for v, val in branches if v == var]
+                        # First block uses 't'; subsequent blocks use 't1', 't2', ...
                         t_var = "t" if iffi_idx == 0 else f"t{iffi_idx}"
                         iffi_idx += 1
                         assume = " || ".join(f"{t_var} == {val}" for val in values)
@@ -153,6 +172,7 @@ class BpmnCbmcVisitor(BpmnVisitor):
                         result.append(f"{var} = {t_var};")
 
             elif line:
+                # Plain statement — pass through, ensuring it ends with a semicolon.
                 stmt = line if line.endswith(";") else line + ";"
                 result.append(stmt)
                 i += 1
