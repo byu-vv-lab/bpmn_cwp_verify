@@ -396,6 +396,12 @@ class BpmnCbmcVisitor(BpmnVisitor):
             # Produce the selected outgoing place.
             lines.append(f"            {self._flow_place_name(flow)} = true;")
 
+        elif isinstance(node, ParallelGatewayNode):
+            for f in node.in_flows:
+                lines.append(f"            {self._flow_place_name(f)} = false;")
+            for f in node.out_flows:
+                lines.append(f"            {self._flow_place_name(f)} = true;")
+
         elif isinstance(node, EndEvent):
             # Consume all incoming places.
             for f in node.in_flows:

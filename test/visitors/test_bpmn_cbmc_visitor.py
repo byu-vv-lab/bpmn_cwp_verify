@@ -342,6 +342,36 @@ def test_transition_body_end_event(visitor, mocker):
     assert any("running = false;" in line for line in lines)
 
 
+def test_transition_body_parallel_gateway_fork(visitor, mocker):
+    gw = mocker.Mock(spec=ParallelGatewayNode)
+    gw.id = "gw_fork"
+    gw.is_fork = True
+    in_flow = make_flow(mocker, "task_1", "gw_fork", "f_in")
+    out_flow_a = make_flow(mocker, "gw_fork", "task_a", "f_out_a")
+    out_flow_b = make_flow(mocker, "gw_fork", "task_b", "f_out_b")
+    gw.in_flows = [in_flow]
+    gw.out_flows = [out_flow_a, out_flow_b]
+    lines = visitor._transition_body(gw, None, [])
+    assert any("p_gw_fork_FROM_task_1 = false;" in line for line in lines)
+    assert any("p_task_a_FROM_gw_fork = true;" in line for line in lines)
+    assert any("p_task_b_FROM_gw_fork = true;" in line for line in lines)
+
+
+def test_transition_body_parallel_gateway_join(visitor, mocker):
+    gw = mocker.Mock(spec=ParallelGatewayNode)
+    gw.id = "gw_join"
+    gw.is_fork = False
+    in_flow_a = make_flow(mocker, "task_a", "gw_join", "f_in_a")
+    in_flow_b = make_flow(mocker, "task_b", "gw_join", "f_in_b")
+    out_flow = make_flow(mocker, "gw_join", "task_2", "f_out")
+    gw.in_flows = [in_flow_a, in_flow_b]
+    gw.out_flows = [out_flow]
+    lines = visitor._transition_body(gw, None, [])
+    assert any("p_gw_join_FROM_task_a = false;" in line for line in lines)
+    assert any("p_gw_join_FROM_task_b = false;" in line for line in lines)
+    assert any("p_task_2_FROM_gw_join = true;" in line for line in lines)
+
+
 # ── behavior translation ──────────────────────────────────────────────────────
 
 
