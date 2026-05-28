@@ -377,23 +377,14 @@ class BpmnCbmcVisitor(BpmnVisitor):
                 lines.append(f"            {self._flow_place_name(f)} = true;")
 
         elif isinstance(node, Task):
-            # Consume all incoming places (OR-merge: zero every in_flow slot).
             for f in node.in_flows:
                 lines.append(f"            {self._flow_place_name(f)} = false;")
-            # Execute behavior statements.
-            behavior = node.behavior.strip()
-            if behavior:
-                for stmt in behavior.splitlines():
-                    stmt = stmt.strip()
-                    if stmt:
-                        if not stmt.endswith(";"):
-                            stmt += ";"
-                        lines.append(f"            {stmt}")
-            # Produce all outgoing flow places.
+            translated = self._translate_behavior(node.behavior)
+            for stmt in translated:
+                lines.append(f"            {stmt}")
             for f in node.out_flows:
                 lines.append(f"            {self._flow_place_name(f)} = true;")
-            # Call update_cwp_state after any state-modifying task.
-            if behavior:
+            if translated:
                 args = ", ".join(["&cwp_state", "cwp_reached"] + var_args)
                 lines.append(f"            update_cwp_state({args});")
 
