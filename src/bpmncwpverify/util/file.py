@@ -65,7 +65,6 @@ def element_tree_from_string(input: str) -> IOResult[Element, Error]:
 
 
 def read_file_as_string(path: str) -> IOResult[str, Error]:
-    print(f"    Reading file: {path}")
     return _read_file_contents(path)
 
 

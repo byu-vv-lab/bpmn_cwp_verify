@@ -79,12 +79,17 @@ def _verify_with_spin(
 def _verify_with_spin_from_files(
     state_file: str, cwp_file: str, bpmn_file: str
 ) -> IOResult[SpinVerificationReport, Error]:
-    print("Reading input files")
-    result: IOResult[SpinVerificationReport, Error] = read_file_as_string(
+    print("Reading input files 0/3")
+
+    def _read_file_as_string(path: str) -> IOResult[str, Error]:
+        print(f"    Reading file: {path}")
+        return read_file_as_string(path)
+
+    result: IOResult[SpinVerificationReport, Error] = _read_file_as_string(
         state_file
     ).bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda state: read_file_as_string(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda cwp: read_file_as_string(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: _read_file_as_string(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: _read_file_as_string(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda bpmn: web_verify(state, cwp, bpmn)
             )
         )
