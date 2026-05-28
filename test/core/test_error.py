@@ -270,7 +270,7 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         SpinInvalidEndStateError("", [{"info": "test_info1"}, {"info": "test_info2"}]),
-        "Invalid end state\n2 error(s) occurred:\n1: test_info1\n2: test_info2",
+        "Invalid end state\n2 error(s) occurred:\n1: test_info1\n2: test_info2\n",
     ),
     (
         SpinSyntaxError(

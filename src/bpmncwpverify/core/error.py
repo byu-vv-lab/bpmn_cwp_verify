@@ -752,12 +752,16 @@ def get_error_message(error: Error) -> str:
                     for error in coverage_errors
                 ]
             )
-        case SpinInvalidEndStateError(list_of_error_maps=list_of_error_maps):
+        case SpinInvalidEndStateError(
+            counter_example=counter_example, list_of_error_maps=list_of_error_maps
+        ):
             errors = []
             errors.append("Invalid end state")
             errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
             for idx, map in enumerate(list_of_error_maps):
                 errors.append(f"{idx + 1}: {map['info']}")
+
+            errors.append(counter_example)
             return "\n".join(errors)
         case SpinSyntaxError(list_of_error_maps=list_of_error_maps):
             errors = []
