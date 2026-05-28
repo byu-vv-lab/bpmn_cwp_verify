@@ -19,6 +19,8 @@ Transition naming:
   - XOR gateway outgoing flow: T_<flow.id>
 """
 
+import re
+
 from bpmncwpverify.core.bpmn import (
     BpmnVisitor,
     EndEvent,
@@ -84,6 +86,12 @@ class BpmnCbmcVisitor(BpmnVisitor):
             return places[0]
         return " || ".join(places)
 
+    def _and_of_in_places(self, node: Node) -> str:
+        places = self._in_place_names(node)
+        if len(places) == 1:
+            return places[0]
+        return " && ".join(places)
+
     def _enable_expr(self, node: Node, flow: "SequenceFlow | None") -> str:
         """C boolean expression: true when this transition may fire."""
         if isinstance(node, StartEvent):
@@ -94,10 +102,65 @@ class BpmnCbmcVisitor(BpmnVisitor):
             if flow.expression:
                 return f"({gw_in}) && ({flow.expression})"
             return f"({gw_in})"
-        # Task or EndEvent — OR of all incoming places
+        if isinstance(node, ParallelGatewayNode):
+            # Fork: OR (usually one in_place). Join: AND (all branches must complete).
+            if node.is_fork:
+                return self._or_of_in_places(node)
+            return self._and_of_in_places(node)
         return self._or_of_in_places(node)
 
-    # ── visitor callbacks ─────────────────────────────────────────────────────
+    # Matches one branch of a Promela if/fi block:  :: true -> VAR = VALUE
+    _BRANCH_RE = re.compile(r"::\s*true\s*->\s*(\w+)\s*=\s*(\S+)")
+
+    @staticmethod
+    def _translate_behavior(behavior: str) -> list[str]:
+        """Translate BPMN task behavior (Promela if/fi or plain C) to C statements."""
+        behavior = behavior.strip()
+        if not behavior:
+            return []
+
+        result: list[str] = []
+        iffi_idx = 0
+
+        raw_lines = behavior.splitlines()
+        i = 0
+        while i < len(raw_lines):
+            line = raw_lines[i].strip()
+
+            if line == "if":
+                branches: list[tuple[str, str]] = []
+                i += 1
+                while i < len(raw_lines) and raw_lines[i].strip() != "fi":
+                    m = BpmnCbmcVisitor._BRANCH_RE.match(raw_lines[i].strip())
+                    if m:
+                        branches.append((m.group(1), m.group(2)))
+                    i += 1
+                i += 1  # skip 'fi'
+
+                if branches:
+                    vars_in_order: list[str] = []
+                    for var, _ in branches:
+                        if var not in vars_in_order:
+                            vars_in_order.append(var)
+
+                    for var in vars_in_order:
+                        values = [val for v, val in branches if v == var]
+                        t_var = "t" if iffi_idx == 0 else f"t{iffi_idx}"
+                        iffi_idx += 1
+                        assume = " || ".join(f"{t_var} == {val}" for val in values)
+                        result.append(f"int {t_var} = nondet_int();")
+                        result.append(f"__CPROVER_assume({assume});")
+                        result.append(f"{var} = {t_var};")
+
+            elif line:
+                stmt = line if line.endswith(";") else line + ";"
+                result.append(stmt)
+                i += 1
+
+            else:
+                i += 1
+
+        return result
 
     def visit_start_event(self, event: StartEvent) -> bool:
         if event.id in self._visited_ids:
@@ -140,8 +203,11 @@ class BpmnCbmcVisitor(BpmnVisitor):
         return True
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
-        self.error = CbmcUnsupportedElementError(gateway.id, "ParallelGatewayNode")
-        return False
+        if gateway.id in self._visited_ids:
+            return False
+        self._visited_ids.add(gateway.id)
+        self._transitions.append((gateway, None))
+        return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
         self.error = CbmcUnsupportedElementError(event.id, "IntermediateEvent")
@@ -154,10 +220,10 @@ class BpmnCbmcVisitor(BpmnVisitor):
         return len(self._transitions)
 
     def compute_bound(self) -> int:
-        """STUB: returns num_transitions × 4 — a magic-number placeholder.
+        """STUB: returns num_transitions × 4 — replace with R5a longest-path algorithm.
 
         An undersized bound causes silent false confidence (CBMC reports
-        VERIFICATION SUCCESSFUL without full coverage). Replace with the
+        VERIFICATION SUCCESSFUL without exploring all paths).
         R5a longest-path algorithm (see cbmc_generator_requirements.md).
         """
         return self.num_transitions * 4

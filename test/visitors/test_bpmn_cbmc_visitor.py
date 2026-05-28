@@ -225,12 +225,26 @@ def test_visit_sequence_flow_does_not_overwrite_existing(visitor, mocker):
     assert visitor._places["p_TGT_FROM_SRC"] is True
 
 
-def test_visit_parallel_gateway_sets_error(visitor, mocker):
+def test_visit_parallel_gateway_registers_transition(visitor, mocker):
+    # Parallel gateways are supported (added in Sprint 1) — one transition regardless of fork/join.
     gw = mocker.Mock(spec=ParallelGatewayNode)
     gw.id = "gw_par"
+    gw.is_fork = True
+    result = visitor.visit_parallel_gateway(gw)
+    assert result is True
+    assert visitor.error is None
+    assert len(visitor._transitions) == 1
+    assert visitor._transitions[0] == (gw, None)
+
+
+def test_visit_parallel_gateway_deduplicates(visitor, mocker):
+    gw = mocker.Mock(spec=ParallelGatewayNode)
+    gw.id = "gw_par"
+    gw.is_fork = True
+    visitor.visit_parallel_gateway(gw)
     result = visitor.visit_parallel_gateway(gw)
     assert result is False
-    assert isinstance(visitor.error, CbmcUnsupportedElementError)
+    assert len(visitor._transitions) == 1
 
 
 def test_visit_intermediate_event_sets_error(visitor, mocker):
@@ -271,6 +285,29 @@ def test_transition_body_task_with_behavior(visitor, mocker):
     )
 
 
+def test_transition_body_task_with_promela_behavior(visitor, mocker):
+    task = mocker.Mock(spec=Task)
+    task.id = "task_1"
+    task.behavior = "if\n:: true -> terms = agreed\n:: true -> terms = failed\nfi"
+    in_flow = make_flow(mocker, "ev_start", "task_1", "f_in")
+    out_flow = make_flow(mocker, "task_1", "gw_1", "f_out")
+    task.in_flows = [in_flow]
+    task.out_flows = [out_flow]
+    lines = visitor._transition_body(task, None, ["terms"])
+    assert any("int t = nondet_int();" in line for line in lines)
+    assert any(
+        "__CPROVER_assume(t == agreed || t == failed);" in line for line in lines
+    )
+    assert any("terms = t;" in line for line in lines)
+    assert any(
+        "update_cwp_state(&cwp_state, cwp_reached, terms);" in line for line in lines
+    )
+    # Raw Promela syntax must NOT appear verbatim in the output.
+    assert not any(":: true" in line for line in lines)
+    assert not any(line.strip() == "if" for line in lines)
+    assert not any(line.strip() == "fi" for line in lines)
+
+
 def test_transition_body_task_without_behavior_no_update_call(visitor, mocker):
     task = mocker.Mock(spec=Task)
     task.id = "task_1"
@@ -303,6 +340,100 @@ def test_transition_body_end_event(visitor, mocker):
     assert any("p_ev_end_FROM_gw_1 = false;" in line for line in lines)
     assert any("ev_end_reached = true;" in line for line in lines)
     assert any("running = false;" in line for line in lines)
+
+
+# ── behavior translation ──────────────────────────────────────────────────────
+
+
+class TestTranslateBehavior:
+    """Unit tests for BpmnCbmcVisitor._translate_behavior (static method)."""
+
+    # ── empty / whitespace ────────────────────────────────────────────────────
+
+    def test_empty_string_returns_empty(self):
+        assert BpmnCbmcVisitor._translate_behavior("") == []
+
+    def test_whitespace_only_returns_empty(self):
+        assert BpmnCbmcVisitor._translate_behavior("   \n  ") == []
+
+    # ── plain C passthrough ───────────────────────────────────────────────────
+
+    def test_single_plain_assignment_gets_semicolon(self):
+        result = BpmnCbmcVisitor._translate_behavior("backpackOwner = sellerName")
+        assert result == ["backpackOwner = sellerName;"]
+
+    def test_plain_assignment_with_existing_semicolon_not_doubled(self):
+        result = BpmnCbmcVisitor._translate_behavior("backpackOwner = sellerName;")
+        assert result == ["backpackOwner = sellerName;"]
+
+    def test_multiline_plain_assignments(self):
+        behavior = "backpackOwner = sellerName\npaymentOwner = buyerName"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "backpackOwner = sellerName;",
+            "paymentOwner = buyerName;",
+        ]
+
+    # ── Promela if/fi → nondet/assume ────────────────────────────────────────
+
+    def test_iffi_two_values(self):
+        behavior = "if\n:: true -> terms = agreed\n:: true -> terms = failed\nfi"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume(t == agreed || t == failed);",
+            "terms = t;",
+        ]
+
+    def test_iffi_three_values(self):
+        behavior = (
+            "if\n"
+            ":: true -> paymentOffered = paymentAmount\n"
+            ":: true -> paymentOffered = belowPaymentAmount\n"
+            ":: true -> paymentOffered = noRetryPayment\n"
+            "fi"
+        )
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume(t == paymentAmount || t == belowPaymentAmount || t == noRetryPayment);",
+            "paymentOffered = t;",
+        ]
+
+    def test_iffi_with_leading_trailing_whitespace(self):
+        # The visitor strips behavior before processing.
+        behavior = "\nif\n:: true -> x = a\n:: true -> x = b\nfi\n"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume(t == a || t == b);",
+            "x = t;",
+        ]
+
+    def test_two_iffi_blocks_use_indexed_temp_vars(self):
+        # Two separate if/fi blocks in one task (unusual but must not redeclare 't').
+        behavior = (
+            "if\n:: true -> a = x\n:: true -> a = y\nfi\n"
+            "if\n:: true -> b = p\n:: true -> b = q\nfi"
+        )
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume(t == x || t == y);",
+            "a = t;",
+            "int t1 = nondet_int();",
+            "__CPROVER_assume(t1 == p || t1 == q);",
+            "b = t1;",
+        ]
+
+    def test_three_iffi_blocks_use_sequential_index(self):
+        block = "if\n:: true -> v = a\n:: true -> v = b\nfi\n"
+        behavior = block * 3
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        # First block: t, second: t1, third: t2
+        assert result[0] == "int t = nondet_int();"
+        assert result[3] == "int t1 = nondet_int();"
+        assert result[6] == "int t2 = nondet_int();"
 
 
 # ── code generation ───────────────────────────────────────────────────────────
