@@ -17,7 +17,7 @@ from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 ##############
 # Constants
 ##############
-HELPER_FUNCS_STR = '#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place != 1 -> place = 1\n\t\t:: else -> {\n\t\t\tprintf("Assert: Attempting to place token in already-occupied place\\n")\n\t\t\tassert false\n\t\t}\n\tfi\n}\n\n#define consumeToken(place) place = 0\n'
+HELPER_FUNCS_STR = '#define sendToken(place) place = 1\n#define receiveToken(place) place = 0\n#define hasToken(place) (place != 0)\n\ninline putToken(place) {\n\tif\n\t\t:: place == 0 ->\n\t\t\tplace = 1\n\t\t:: else -> \n\t\t\tDBG(printf("Assert: Attempting to place token in already-occupied place\\n"))\n\t\t\tassert(false)\n\tfi\n}\n\n#define consumeToken(place) place = 0'
 NL_NONE = 0
 NL_SINGLE = 1
 NL_DOUBLE = 2
@@ -160,11 +160,21 @@ class TokenPositions:
 
 
 class PromelaGenVisitor(BpmnVisitor):
-    __slots__ = ["defs", "var_defs", "behaviors", "init_proc_contents", "promela"]
+    __slots__ = [
+        "defs",
+        "process",
+        "local_var_defs",
+        "global_var_defs",
+        "behaviors",
+        "init_proc_contents",
+        "promela",
+    ]
 
     def __init__(self) -> None:
         self.defs = StringManager()
-        self.var_defs = StringManager()
+        self.process = StringManager()
+        self.local_var_defs = StringManager()
+        self.global_var_defs = StringManager()
         self.behaviors = StringManager()
         self.init_proc_contents = StringManager()
         self.promela = StringManager()
@@ -200,6 +210,41 @@ class PromelaGenVisitor(BpmnVisitor):
             ],
         )
 
+    def _get_put_locations(self, element: Node) -> TokenPositions:
+        """
+        Returns a list of labels representing all outgoing flows from a node.
+        Each label indicates the target node and the current node as the source.
+        Example: ['Node2_FROM_Node1']
+        """
+        if not (element.out_flows or element.out_msgs):
+            return TokenPositions(standalone=self._generate_location_label(element))
+        return TokenPositions(
+            seq_flows=[
+                self._generate_location_label(flow.target_node, flow)
+                for flow in element.out_flows
+            ],
+            msg_flows=[
+                self._generate_location_label(flow.target_node, flow)
+                for flow in element.out_msgs
+            ],
+        )
+
+    def _out_seq_and_msg_flows(
+        self, string: StringManager, flows: TokenPositions
+    ) -> None:
+        for loc in flows.seq_flows:
+            string.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
+        for loc in flows.msg_flows:
+            string.write_str(f"sendToken({loc})", NL_SINGLE, IndentAction.NIL)
+
+    def _in_seq_and_msg_flows(
+        self, string: StringManager, flows: TokenPositions
+    ) -> None:
+        for loc in flows.seq_flows:
+            string.write_str(f"consumeToken({loc})", NL_SINGLE, IndentAction.NIL)
+        for loc in flows.msg_flows:
+            string.write_str(f"receiveToken({loc})", NL_SINGLE, IndentAction.NIL)
+
     def _get_expressions(self, ctx: Context) -> list[str]:
         """
         Returns a list of the expressions that lie on the flows leaving a specific
@@ -221,14 +266,13 @@ class PromelaGenVisitor(BpmnVisitor):
         sm.write_str("if", NL_SINGLE)
 
         if ctx.has_option:
-            # This zip works because the out_flows is an array, which holds its order
-            for expression, location in zip(
-                self._get_expressions(ctx), self._get_put_locations(ctx.element)
-            ):
-                sm.write_str(
-                    f":: {expression.replace('\n', '')} -> putToken({location})",
-                    NL_SINGLE,
-                )
+            for flow in ctx.element.out_flows:
+                if flow.expression:
+                    sm.write_str(
+                        f":: {flow.expression.replace('\n', '')} -> putToken({self._generate_location_label(flow.target_node, flow)})",
+                        NL_SINGLE,
+                    )
+
         if ctx.boundary_events:
             # 1) get all of the put locations [[end_from_boundevent, ...], ...]
             # 2) get all of the consume locations for each boundevent [[end_from_boundevent, ...]]
@@ -239,45 +283,41 @@ class PromelaGenVisitor(BpmnVisitor):
                 self._get_put_locations(boundary_event)
                 for boundary_event in ctx.boundary_events
             ]
+
             consume_locations = [
-                self._get_consume_locations(boundary_event).get_all_positions()
+                self._get_consume_locations(boundary_event)
                 for boundary_event in ctx.boundary_events
             ]
 
             # We can zip these two together, because it will return a list n = len(ctx.boundary_events)
             for put_locs, consume_locs in zip(put_locations, consume_locations):
                 sm.write_str(":: (")
+
                 sm.write_str(
                     " || ".join(
-                        [f"hasToken({consume_loc})" for consume_loc in consume_locs]
+                        [
+                            f"hasToken({consume_loc})"
+                            for consume_loc in consume_locs.seq_flows
+                        ]
+                        + [f"{consume_loc}" for consume_loc in consume_locs.msg_flows]
                     )
                 )
+
                 sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
-                for consume_loc in consume_locs:
-                    sm.write_str(f"consumeToken({consume_loc})", NL_SINGLE)
-                for put_loc in put_locs:
-                    sm.write_str(f"putToken({put_loc})", NL_SINGLE)
+                self._in_seq_and_msg_flows(sm, consume_locs)
+                self._out_seq_and_msg_flows(sm, put_locs)
                 sm.write_str("", indent_action=IndentAction.DEC)
 
-        sm.write_str(
-            ':: atomic{else -> printf("Assert: No viable path to take"); assert false}',
-            NL_SINGLE,
-        )
-        sm.write_str("fi", NL_SINGLE)
+        sm.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
+        sm.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
+        sm.write_str("assert(false)", NL_SINGLE)
+
+        sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
         return sm
 
-    def _get_put_locations(self, element: Node) -> list[str]:
-        """
-        Returns a list of labels representing all outgoing flows from a node.
-        Each label indicates the target node and the current node as the source.
-        Example: ['Node2_FROM_Node1']
-        """
-        return [
-            self._generate_location_label(flow.target_node, flow)
-            for flow in element.out_flows + element.out_msgs
-        ]
-
-    def _build_guard(self, ctx: Context) -> StringManager:
+    def _build_guard(
+        self, ctx: Context, consume_locations: TokenPositions
+    ) -> StringManager:
         """
         Constructs a guard condition for an atomic block in a process.
         The guard checks whether a token exists at the current node, based on incoming flows.
@@ -290,8 +330,6 @@ class PromelaGenVisitor(BpmnVisitor):
 
         guard: StringManager = StringManager()
 
-        # Store the consume locations to avoid multiple calls.
-        consume_locations: TokenPositions = self._get_consume_locations(ctx.element)
         inner_process_positions: list[str] = (
             consume_locations.get_in_process_positions()
         )
@@ -308,24 +346,28 @@ class PromelaGenVisitor(BpmnVisitor):
 
         if msg_positions:
             guard.write_str(" && (" if inner_process_positions else "(")
-            tokens_msg: list[str] = [f"hasToken({pos})" for pos in msg_positions]
+            tokens_msg: list[str] = [f"{pos}" for pos in msg_positions]
             guard.write_str(" && ".join(tokens_msg))
             guard.write_str(")")
 
         if ctx.boundary_events:
             guard.write_str(" && (")
+            guards: list[str] = []
 
-            guard.write_str(
-                " || ".join(
-                    [
-                        f"hasToken({loc})"
-                        for boundary_event in ctx.boundary_events
-                        for loc in self._get_consume_locations(
-                            boundary_event
-                        ).get_all_positions()
-                    ]
-                )
-            )
+            for boundary_event in ctx.boundary_events:
+                locations = self._get_consume_locations(boundary_event)
+
+                if locations.standalone:
+                    guards.append(f" hasToken({locations.standalone})")
+                else:
+                    guards.append(
+                        " || ".join(
+                            [f"hasToken({loc})" for loc in locations.seq_flows]
+                            + [f"{loc}" for loc in locations.msg_flows]
+                        )
+                    )
+
+            guard.write_str(" || ".join(guards))
             guard.write_str(")")
 
         return guard
@@ -339,26 +381,34 @@ class PromelaGenVisitor(BpmnVisitor):
         atomic_block = StringManager()
         atomic_block.write_str(":: atomic { (")
 
-        guard = self._build_guard(ctx)
+        in_locations = self._get_consume_locations(ctx.element)
+
+        guard = self._build_guard(ctx, in_locations)
 
         atomic_block.write_str(guard)
         atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
-        if ctx.behavior_model:
+        if ctx.behavior:
             atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
 
         atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
 
-        atomic_block.write_str(f'printf("ID: {ctx.element.id}\\n")', NL_SINGLE)
-        atomic_block.write_str("stateLogger()", NL_SINGLE)
+        atomic_block.write_str(f'DBG(printf("ID: {ctx.element.id}\\n"))', NL_SINGLE)
+        atomic_block.write_str("DBG(stateLogger())", NL_SINGLE)
 
-        for location in self._get_consume_locations(ctx.element).get_all_positions():
-            atomic_block.write_str(f"consumeToken({location})", NL_SINGLE)
+        # in_flows in d_step
+        if in_locations.standalone:
+            atomic_block.write_str(
+                f"consumeToken({in_locations.standalone})", NL_SINGLE
+            )
+        else:
+            self._in_seq_and_msg_flows(atomic_block, in_locations)
 
+        # out_flows in d_step
         if ctx.has_option or ctx.boundary_events:
             atomic_block.write_str(self._build_expr_conditional(ctx))
         else:
-            for location in self._get_put_locations(ctx.element):
-                atomic_block.write_str(f"putToken({location})", NL_SINGLE)
+            out_locations = self._get_put_locations(ctx.element)
+            self._out_seq_and_msg_flows(atomic_block, out_locations)
 
         atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
 
@@ -374,36 +424,43 @@ class PromelaGenVisitor(BpmnVisitor):
         Writes to the behaviors field to make an inline behavior model for the
         passed element.
         """
-        start_block_key_words = {"if"}
-        end_block_key_words = {"fi"}
-        self.behaviors.write_str(
-            f"inline {ctx.element.id}_BehaviorModel() {{", NL_SINGLE, IndentAction.INC
-        )
-        processed_str_list = [
-            line.strip() for line in ctx.behavior.split("\n") if line.strip()
-        ]
-
-        for line in processed_str_list:
-            if line in start_block_key_words:
-                self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
-            elif line in end_block_key_words:
-                self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
-            else:
-                self.behaviors.write_str(line, NL_SINGLE)
-
         if ctx.behavior:
-            self.behaviors.write_str("updateState()", NL_SINGLE)
-        else:
-            self.behaviors.write_str("skip", NL_SINGLE)
+            start_block_key_words = {"if"}
+            end_block_key_words = {"fi"}
+            self.behaviors.write_str(
+                f"inline {ctx.element.id}_BehaviorModel() {{",
+                NL_SINGLE,
+                IndentAction.INC,
+            )
+            processed_str_list = [
+                line.strip() for line in ctx.behavior.split("\n") if line.strip()
+            ]
 
-        self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
+            for line in processed_str_list:
+                if line in start_block_key_words:
+                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
+                elif line in end_block_key_words:
+                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
+                else:
+                    self.behaviors.write_str(line, NL_SINGLE)
+
+            self.behaviors.write_str("updateState()", NL_SINGLE)
+
+            self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
     def _gen_var_defs(self, ctx: Context) -> None:
-        for var in self._get_consume_locations(ctx.element).get_all_positions():
-            self.var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+        locations = self._get_consume_locations(ctx.element)
+
+        if not locations.standalone:
+            for var in locations.msg_flows:
+                self.global_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+            for var in locations.seq_flows:
+                self.local_var_defs.write_str(f"bit {var} = 0", NL_SINGLE)
+        else:
+            self.local_var_defs.write_str(f"bit {locations.standalone} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
-        return f"{self.defs}{self.var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
+        return f"{self.defs}{self.global_var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
 
     ####################
     # Visitor Methods
@@ -414,16 +471,23 @@ class PromelaGenVisitor(BpmnVisitor):
         self._gen_behavior_model(context)
         self._gen_var_defs(context)
 
-        for loc in self._get_consume_locations(event).get_all_positions():
-            self.promela.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
-        # Close the d_step from the `visit_process`
-        self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
+        flows = self._get_consume_locations(event)
+        if flows.standalone:
+            self.process.write_str(
+                f"putToken({flows.standalone})", NL_SINGLE, IndentAction.INC
+            )
+        else:
+            self._out_seq_and_msg_flows(self.process, flows)
 
-        self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
+        # Close the d_step from the `visit_process`
+
+        self.process.write_str("}", NL_SINGLE)
+
+        self.process.write_str("do", NL_SINGLE)
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
@@ -434,7 +498,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
@@ -444,7 +508,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_task(self, task: Task) -> bool:
@@ -456,7 +520,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
@@ -466,7 +530,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self._gen_var_defs(context)
 
         atomic_block = self._build_atomic_block(context)
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
@@ -480,34 +544,43 @@ class PromelaGenVisitor(BpmnVisitor):
         self._gen_var_defs(context)
 
         atomic_block = self._build_atomic_block(context)
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_message_flow(self, flow: MessageFlow) -> bool:
         return True
 
     def visit_process(self, process: Process) -> bool:
+        self.process = StringManager()
+        self.local_var_defs = StringManager()
+
         self.init_proc_contents.write_str(
             f"run {process.id}()", NL_SINGLE, IndentAction.NIL
         )
         self.promela.write_str(
             f"proctype {process.id}() {{", NL_SINGLE, IndentAction.INC
         )
-        self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-        self.promela.write_str(f'printf("ID: {process.id}\\n")', NL_SINGLE)
-        self.promela.write_str("stateLogger()", NL_SINGLE)
-        self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
         return True
 
     def end_visit_process(self, process: Process) -> None:
-        self.promela.write_str("od", NL_SINGLE)
+        self.promela.write_str(self.local_var_defs)
+        self.promela.write_str("", NL_SINGLE)
+
+        self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
+        self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
+        self.promela.write_str("DBG(stateLogger())", NL_SINGLE)
+        self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
+
+        self.promela.write_str(f"{self.process}")
+
+        self.promela.write_str("od", NL_SINGLE, IndentAction.DEC)
         self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
 
     def visit_bpmn(self, bpmn: Bpmn) -> bool:
         self.defs.write_str(HELPER_FUNCS_STR, NL_DOUBLE)
         self.init_proc_contents.write_str("init {", NL_SINGLE, IndentAction.INC)
         self.init_proc_contents.write_str("atomic {", NL_SINGLE, IndentAction.INC)
-        self.init_proc_contents.write_str("stateDump()", NL_SINGLE)
+        self.init_proc_contents.write_str("DBG(stateDump())", NL_SINGLE)
         self.init_proc_contents.write_str("caculateState()", NL_SINGLE)
         return True
 

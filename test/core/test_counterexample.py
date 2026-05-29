@@ -17,6 +17,8 @@ def test_generate_counter_example(mocker):
     mocker.patch(
         "bpmncwpverify.core.counterexample.subprocess.run", return_value=spin_output
     )
+    mocker.patch("bpmncwpverify.core.counterexample.os.path.dirname")
+    mocker.patch("bpmncwpverify.core.counterexample.os.path.basename")
     mock_filter_spin_trace = mocker.patch(
         "bpmncwpverify.core.counterexample.CounterExample.filter_spin_trace"
     )

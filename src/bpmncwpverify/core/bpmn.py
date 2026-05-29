@@ -6,6 +6,7 @@ from returns.result import Failure, Result, Success
 from bpmncwpverify.core.error import (
     BpmnStructureError,
     BpmnUnrecognizedElement,
+    BpmnUnsupportedStartEvent,
     Error,
 )
 
@@ -49,6 +50,10 @@ class BpmnElement:
         Method for subclasses to add additional attributes to from_xml method
         """
         return {}
+
+    @classmethod
+    def verify_element(cls: type[T], element: Element, id: str) -> Result[None, Error]:
+        return Success(None)
 
 
 class Node(BpmnElement):
@@ -175,6 +180,13 @@ class StartEvent(Event):
         result = visitor.visit_start_event(self)
         self.traverse_outflows_if_result(visitor, result)
         visitor.end_visit_start_event(self)
+
+    @classmethod
+    def verify_element(cls, element: Element, id: str) -> Result[None, Error]:
+        if element.find("bpmn:messageEventDefinition", BPMN_XML_NAMESPACE) is not None:
+            return Failure(BpmnUnsupportedStartEvent(id))
+
+        return Success(None)
 
 
 class EndEvent(Event):

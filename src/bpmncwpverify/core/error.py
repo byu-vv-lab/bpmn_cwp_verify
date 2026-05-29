@@ -12,6 +12,14 @@ class Error:
         pass
 
 
+class BpmnUnsupportedStartEvent(Error):
+    __slots__ = ["id"]
+
+    def __init__(self, id: str) -> None:
+        super().__init__()
+        self.id = id
+
+
 class BpmnNoElementNameError(Error):
     __slots__ = ["ids"]
 
@@ -635,6 +643,8 @@ def get_error_message(error: Error) -> str:
             return (
                 f"Bpmn error: {ids} must have a name that is different from their ID."
             )
+        case BpmnUnsupportedStartEvent(id=id):
+            return f"Bpmn error: {id} is not a supported start event"
         case BpmnNoSwimLaneNameError(ids=ids):
             return f"Bpmn error: {ids} must have a swimlane with a name that is different from their ID"
         case BpmnFlowIncomingError(node_id=node_id):
@@ -759,12 +769,16 @@ def get_error_message(error: Error) -> str:
                     for error in coverage_errors
                 ]
             )
-        case SpinInvalidEndStateError(list_of_error_maps=list_of_error_maps):
+        case SpinInvalidEndStateError(
+            counter_example=counter_example, list_of_error_maps=list_of_error_maps
+        ):
             errors = []
             errors.append("Invalid end state")
             errors.append(f"{len(list_of_error_maps)} error(s) occurred:")
             for idx, map in enumerate(list_of_error_maps):
                 errors.append(f"{idx + 1}: {map['info']}")
+
+            errors.append(counter_example)
             return "\n".join(errors)
         case SpinSyntaxError(list_of_error_maps=list_of_error_maps):
             errors = []
