@@ -230,6 +230,7 @@ def verify_with_spin(
     cwp: Cwp,
     bpmn: Bpmn,
 ) -> IOResult[SpinVerificationReport, Error]:
+    print("Generating Promela model from BPMN, CWP, and state")
     promela_result: Result[str, Error] = (
         PromelaBuilder().with_state(state).with_cwp(cwp).with_bpmn(bpmn).build()
     )
