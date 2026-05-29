@@ -43,7 +43,7 @@
     <bpmn:endEvent id="Event_1eqejkq" name="pt discharged">
       <bpmn:incoming>Flow_1aatpfx</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:intermediateCatchEvent id="Event_0hqgm9w" name="EventName0h">
+    <bpmn:intermediateCatchEvent id="Event_0hqgm9w" name="Clinic Receives Analysis">
       <bpmn:incoming>Flow_0n35392</bpmn:incoming>
       <bpmn:incoming>Flow_09uqcye</bpmn:incoming>
       <bpmn:incoming>Flow_0mw4npb</bpmn:incoming>
@@ -247,7 +247,7 @@
       <bpmn:outgoing>Flow_1hd21j8</bpmn:outgoing>
       <bpmn:outgoing>Flow_0lzszai</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_1d9whft" name="Receive Analysis">
+    <bpmn:intermediateCatchEvent id="Event_1d9whft" name="Caregiver Receives Analysis">
       <bpmn:incoming>Flow_1253ah4</bpmn:incoming>
       <bpmn:outgoing>Flow_0iuy19w</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0lrskit" />
@@ -353,7 +353,7 @@
       <bpmndi:BPMNShape id="Event_08q4ls8_di" bpmnElement="Event_0hqgm9w">
         <dc:Bounds x="752" y="331" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="737" y="374" width="70" height="14" />
+          <dc:Bounds x="735" y="374" width="76" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1s4qrvx_di" bpmnElement="Gateway_1s4qrvx" isMarkerVisible="true">
@@ -726,7 +726,7 @@
       <bpmndi:BPMNShape id="Event_1d9whft_di" bpmnElement="Event_1d9whft">
         <dc:Bounds x="822" y="972" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="798" y="1015" width="84" height="14" />
+          <dc:Bounds x="795" y="1015" width="90" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_16tccdo_di" bpmnElement="Event_16tccdo">
