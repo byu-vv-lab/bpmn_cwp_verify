@@ -613,8 +613,8 @@ def test_visit_start_state(promela_visitor, mocker):
 
     calls = [
         mocker.call("putToken(test_loc)", NL_SINGLE, IndentAction.NIL),
-        mocker.call("}", NL_SINGLE, IndentAction.DEC),
-        mocker.call("do", NL_SINGLE, IndentAction.NIL),
+        mocker.call("}", NL_SINGLE),
+        mocker.call("do", NL_SINGLE),
         mocker.call("atomic_block"),
     ]
     mock_sm.assert_has_calls(calls)
