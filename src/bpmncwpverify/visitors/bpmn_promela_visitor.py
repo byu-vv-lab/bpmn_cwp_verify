@@ -162,6 +162,7 @@ class TokenPositions:
 class PromelaGenVisitor(BpmnVisitor):
     __slots__ = [
         "defs",
+        "process",
         "local_var_defs",
         "global_var_defs",
         "behaviors",
@@ -171,6 +172,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
     def __init__(self) -> None:
         self.defs = StringManager()
+        self.process = StringManager()
         self.local_var_defs = StringManager()
         self.global_var_defs = StringManager()
         self.behaviors = StringManager()
@@ -471,18 +473,21 @@ class PromelaGenVisitor(BpmnVisitor):
 
         flows = self._get_consume_locations(event)
         if flows.standalone:
-            self.promela.write_str(f"putToken({flows.standalone})", NL_SINGLE)
+            self.process.write_str(
+                f"putToken({flows.standalone})", NL_SINGLE, IndentAction.INC
+            )
         else:
-            self._out_seq_and_msg_flows(self.promela, flows)
+            self._out_seq_and_msg_flows(self.process, flows)
 
         # Close the d_step from the `visit_process`
-        self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
 
-        self.promela.write_str("do", NL_SINGLE, IndentAction.NIL)
+        self.process.write_str("}", NL_SINGLE)
+
+        self.process.write_str("do", NL_SINGLE)
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
@@ -493,7 +498,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
@@ -503,7 +508,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_task(self, task: Task) -> bool:
@@ -515,7 +520,7 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
@@ -525,7 +530,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self._gen_var_defs(context)
 
         atomic_block = self._build_atomic_block(context)
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
@@ -539,33 +544,36 @@ class PromelaGenVisitor(BpmnVisitor):
         self._gen_var_defs(context)
 
         atomic_block = self._build_atomic_block(context)
-        self.promela.write_str(atomic_block)
+        self.process.write_str(atomic_block)
         return True
 
     def visit_message_flow(self, flow: MessageFlow) -> bool:
         return True
 
     def visit_process(self, process: Process) -> bool:
+        self.process = StringManager()
+        self.local_var_defs = StringManager()
+
         self.init_proc_contents.write_str(
             f"run {process.id}()", NL_SINGLE, IndentAction.NIL
         )
         self.promela.write_str(
             f"proctype {process.id}() {{", NL_SINGLE, IndentAction.INC
         )
+        return True
 
-        self.promela.write_str(f"REPLACE_VARS_FOR_{process.id}", NL_SINGLE)
-        self.local_var_defs = StringManager()
+    def end_visit_process(self, process: Process) -> None:
+        self.promela.write_str(self.local_var_defs)
+        self.promela.write_str("", NL_SINGLE)
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
         self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
         self.promela.write_str("DBG(stateLogger())", NL_SINGLE)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
-        return True
 
-    def end_visit_process(self, process: Process) -> None:
-        self.promela.replace(process.id, self.local_var_defs)
+        self.promela.write_str(f"{self.process}")
 
-        self.promela.write_str("od", NL_SINGLE)
+        self.promela.write_str("od", NL_SINGLE, IndentAction.DEC)
         self.promela.write_str("}", NL_SINGLE, IndentAction.DEC)
 
     def visit_bpmn(self, bpmn: Bpmn) -> bool:
