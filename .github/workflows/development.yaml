@@ -30,7 +30,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install CBMC
       run: |
-        CBMC_VERSION=6.9.0
+        CBMC_VERSION=$(grep 'ARG CBMC_VERSION=' Dockerfile | cut -d= -f2)
         wget -q https://github.com/diffblue/cbmc/releases/download/cbmc-${CBMC_VERSION}/ubuntu-22.04-cbmc-${CBMC_VERSION}-Linux.deb
         sudo dpkg -i ubuntu-22.04-cbmc-${CBMC_VERSION}-Linux.deb
         cbmc --version
