@@ -21,7 +21,6 @@ from returns.result import Failure, Result, Success
 from bpmncwpverify.core.bpmn import (
     Bpmn,
     EndEvent,
-    ExclusiveGatewayNode,
     Node,
     ParallelGatewayNode,
 )
@@ -31,16 +30,17 @@ from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmn_cbmc_visitor import BpmnCbmcVisitor
 from bpmncwpverify.visitors.cwp_cbmc_visitor import CwpCbmcVisitor
 
-# ── R5a bound computation ──────────────────────────────────────────────────────
+# ── Bound computation ──────────────────────────────────────────────────────────
 
 
 def _acyclic_depth(node: Node, path: frozenset[str]) -> int:
     """
     Longest path (transition firings) from node to any end event in the acyclic skeleton.
     Back-edges (target already in path) are treated as dead ends (-1).
-    XOR gateway: min of valid outgoing branches (each flow = 1 step).
-    AND-fork: 1 + sum of all outgoing branches.
-    Sequential: 1 + max valid continuation.
+    XOR gateway: max of valid outgoing branches — CBMC explores all branches, so
+        the bound must cover the longest one to avoid truncating valid executions.
+    AND-fork: 1 + sum of all outgoing branches (both fire as separate loop iterations).
+    Sequential / join: 1 + max valid continuation.
     Returns -1 if no end event is reachable without a back-edge.
     """
     if node.id in path:
@@ -54,8 +54,6 @@ def _acyclic_depth(node: Node, path: frozenset[str]) -> int:
     valid = [d for d in child_depths if d >= 0]
     if not valid:
         return -1
-    if isinstance(node, ExclusiveGatewayNode):
-        return min(1 + d for d in valid)
     if isinstance(node, ParallelGatewayNode) and node.is_fork:
         return 1 + sum(valid)
     return 1 + max(valid)
@@ -100,9 +98,9 @@ def _cycle_length_bfs(target: Node, source_id: str) -> int:
     return 2  # fallback: minimum cycle
 
 
-def _r5a_bound(bpmn: Bpmn, max_retries: int) -> int:
+def _compute_bound(bpmn: Bpmn, max_retries: int) -> int:
     """
-    R5a: acyclic-skeleton longest path + loop contributions, summed across all pools.
+    Acyclic-skeleton longest path + loop contributions, summed across all pools.
 
     For each process: compute acyclic depth from its start event(s), detect back-edges,
     group by loop-entry node, take the longest cycle per entry, multiply by max_retries.
@@ -202,7 +200,7 @@ def _generate_c(
         return Failure(CbmcGeneratorError("BPMN produced no transitions"))
 
     # ── Derived values ──
-    bound = _r5a_bound(bpmn, max_retries)
+    bound = _compute_bound(bpmn, max_retries)
     st_defines = _state_defines(state)
     v_decls = _var_decls(state)
     v_params = _var_params(state)
