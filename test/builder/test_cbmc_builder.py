@@ -105,11 +105,11 @@ class TestSimpleExampleGeneration:
         assert "#define BOUND" in c_code
 
     def test_bound_is_8(self, c_code):
-        # acyclic depth 4 + cycle(len=2) × max_retries(2) = 4 + 4 = 8
+        # R5a: acyclic depth 4 + cycle(len=2) × max_retries(2) = 4 + 4 = 8
         import re
 
         assert re.search(r"#define BOUND\s+8\b", c_code), (
-            "Expected BOUND == 8 (acyclic=4, cycle=2×2=4)"
+            "Expected BOUND == 8 (R5a: acyclic=4, cycle=2×2=4)"
         )
 
     # ── CWP state defines ──
@@ -258,7 +258,7 @@ class TestSimpleExampleCbmc:
 
     @pytest.fixture(scope="class")
     def c_file_reachability(self):
-        # Reachability: max_retries=8 (BOUND=14) needed to reach x>5 (end event).
+        # Reachability: max_retries=8 (BOUND=20) needed to reach x>5 (end event).
         c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN, max_retries=8)
         with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
             f.write(c_code)
@@ -282,7 +282,7 @@ class TestSimpleExampleCbmc:
 
     def test_cbmc_reachability(self, c_file_reachability):
         """All CWP states and the end event must be reachable.
-        Uses max_retries=8 (BOUND=14) so x can exceed 5 and reach the end event."""
+        Uses max_retries=8 (BOUND=20) so x can exceed 5 and reach the end event."""
         result = subprocess.run(
             [
                 "cbmc",
