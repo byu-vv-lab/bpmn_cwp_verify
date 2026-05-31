@@ -14,14 +14,123 @@ The generated C file has this structure:
   8. int main()          (from BpmnCbmcVisitor)
 """
 
+from collections import deque
+
 from returns.result import Failure, Result, Success
 
-from bpmncwpverify.core.bpmn import Bpmn
+from bpmncwpverify.core.bpmn import (
+    Bpmn,
+    EndEvent,
+    ExclusiveGatewayNode,
+    Node,
+    ParallelGatewayNode,
+)
 from bpmncwpverify.core.cwp import Cwp
 from bpmncwpverify.core.error import CbmcGeneratorError, Error, NotInitializedError
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmn_cbmc_visitor import BpmnCbmcVisitor
 from bpmncwpverify.visitors.cwp_cbmc_visitor import CwpCbmcVisitor
+
+# ── R5a bound computation ──────────────────────────────────────────────────────
+
+
+def _acyclic_depth(node: Node, path: frozenset[str]) -> int:
+    """
+    Longest path (transition firings) from node to any end event in the acyclic skeleton.
+    Back-edges (target already in path) are treated as dead ends (-1).
+    XOR gateway: min of valid outgoing branches (each flow = 1 step).
+    AND-fork: 1 + sum of all outgoing branches.
+    Sequential: 1 + max valid continuation.
+    Returns -1 if no end event is reachable without a back-edge.
+    """
+    if node.id in path:
+        return -1
+    new_path = path | {node.id}
+    if isinstance(node, EndEvent):
+        return 1
+    if not node.out_flows:
+        return -1
+    child_depths = [_acyclic_depth(f.target_node, new_path) for f in node.out_flows]
+    valid = [d for d in child_depths if d >= 0]
+    if not valid:
+        return -1
+    if isinstance(node, ExclusiveGatewayNode):
+        return min(1 + d for d in valid)
+    if isinstance(node, ParallelGatewayNode) and node.is_fork:
+        return 1 + sum(valid)
+    return 1 + max(valid)
+
+
+def _find_back_edges(
+    node: Node,
+    gray: set[str],
+    black: set[str],
+    back_edges: list[tuple[str, str]],
+) -> None:
+    """DFS coloring to collect back-edges as (source_id, target_id) pairs."""
+    if node.id in black or node.id in gray:
+        return
+    gray.add(node.id)
+    for flow in node.out_flows:
+        t = flow.target_node
+        if t.id in gray:
+            back_edges.append((node.id, t.id))
+        elif t.id not in black:
+            _find_back_edges(t, gray, black, back_edges)
+    gray.discard(node.id)
+    black.add(node.id)
+
+
+def _cycle_length_bfs(target: Node, source_id: str) -> int:
+    """
+    BFS from target to source_id in the forward graph.
+    Returns the number of transitions in the cycle (each node = 1 step).
+    """
+    queue: deque[tuple[Node, int]] = deque([(target, 1)])
+    visited: set[str] = {target.id}
+    while queue:
+        node, dist = queue.popleft()
+        if node.id == source_id:
+            return dist
+        for flow in node.out_flows:
+            t = flow.target_node
+            if t.id not in visited:
+                visited.add(t.id)
+                queue.append((t, dist + 1))
+    return 2  # fallback: minimum cycle
+
+
+def _r5a_bound(bpmn: Bpmn, max_retries: int) -> int:
+    """
+    R5a: acyclic-skeleton longest path + loop contributions, summed across all pools.
+
+    For each process: compute acyclic depth from its start event(s), detect back-edges,
+    group by loop-entry node, take the longest cycle per entry, multiply by max_retries.
+    """
+    total = 0
+    for process in bpmn.processes.values():
+        for start in process.get_start_states().values():
+            acyclic = max(_acyclic_depth(start, frozenset()), 0)
+
+            back_edges: list[tuple[str, str]] = []
+            _find_back_edges(start, set(), set(), back_edges)
+
+            node_map: dict[str, Node] = dict(process.all_items())
+
+            # Per loop-entry (back-edge target): keep the longest cycle length.
+            target_max_cycle: dict[str, int] = {}
+            for source_id, target_id in back_edges:
+                if target_id not in node_map:
+                    continue
+                cycle_len = _cycle_length_bfs(node_map[target_id], source_id)
+                prev = target_max_cycle.get(target_id, 0)
+                target_max_cycle[target_id] = max(prev, cycle_len)
+
+            loop_total = sum(c * max_retries for c in target_max_cycle.values())
+            total += acyclic + loop_total
+
+    return max(total, 1)
+
 
 # ── State-to-C helpers ────────────────────────────────────────────────────────
 
@@ -75,7 +184,9 @@ def _var_args(state: State) -> list[str]:
 # ── C file assembly ────────────────────────────────────────────────────────────
 
 
-def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
+def _generate_c(
+    state: State, cwp: Cwp, bpmn: Bpmn, max_retries: int
+) -> Result[str, Error]:
     # ── Run CWP visitor ──
     cwp_visitor = CwpCbmcVisitor()
     cwp.accept(cwp_visitor)
@@ -91,7 +202,7 @@ def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
         return Failure(CbmcGeneratorError("BPMN produced no transitions"))
 
     # ── Derived values ──
-    bound = bpmn_visitor.compute_bound()
+    bound = _r5a_bound(bpmn, max_retries)
     st_defines = _state_defines(state)
     v_decls = _var_decls(state)
     v_params = _var_params(state)
@@ -140,7 +251,7 @@ def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
 
 
 class CbmcBuilder:
-    __slots__ = ["bpmn", "cwp", "state"]
+    __slots__ = ["bpmn", "cwp", "state", "max_retries"]
 
     def __init__(self) -> None:
         self.bpmn: Result[Bpmn, Error] = Failure(
@@ -150,6 +261,7 @@ class CbmcBuilder:
         self.state: Result[State, Error] = Failure(
             NotInitializedError("CbmcBuilder.state")
         )
+        self.max_retries: int = 2
 
     def with_bpmn(self, bpmn: Bpmn) -> "CbmcBuilder":
         self.bpmn = Success(bpmn)
@@ -163,11 +275,16 @@ class CbmcBuilder:
         self.state = Success(state)
         return self
 
+    def with_max_retries(self, max_retries: int) -> "CbmcBuilder":
+        self.max_retries = max_retries
+        return self
+
     def build(self) -> Result[str, Error]:
+        max_retries = self.max_retries
         result: Result[str, Error] = self.state.bind(  # pyright: ignore[reportUnknownMemberType]
             lambda state: self.cwp.bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda cwp: self.bpmn.bind(  # pyright: ignore[reportUnknownMemberType]
-                    lambda bpmn: _generate_c(state, cwp, bpmn)
+                    lambda bpmn: _generate_c(state, cwp, bpmn, max_retries)
                 )
             )
         )
