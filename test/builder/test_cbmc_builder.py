@@ -105,11 +105,11 @@ class TestSimpleExampleGeneration:
         assert "#define BOUND" in c_code
 
     def test_bound_is_8(self, c_code):
-        # R5a: acyclic depth 4 + cycle(len=2) × max_retries(2) = 4 + 4 = 8
+        # acyclic depth 4 + cycle(len=2) × max_retries(2) = 4 + 4 = 8
         import re
 
         assert re.search(r"#define BOUND\s+8\b", c_code), (
-            "Expected BOUND == 8 (R5a: acyclic=4, cycle=2×2=4)"
+            "Expected BOUND == 8 (acyclic=4, cycle=2×2=4)"
         )
 
     # ── CWP state defines ──
