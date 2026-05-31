@@ -487,8 +487,3 @@ def test_num_transitions(visitor, mocker):
     assert visitor.num_transitions == 1
 
 
-def test_compute_bound_is_transitions_times_four(visitor, mocker):
-    task = mocker.Mock(spec=Task)
-    task.id = "task_1"
-    visitor._transitions = [(task, None)] * 3
-    assert visitor.compute_bound() == 12

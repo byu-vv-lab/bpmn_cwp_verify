@@ -239,15 +239,6 @@ class BpmnCbmcVisitor(BpmnVisitor):
     def num_transitions(self) -> int:
         return len(self._transitions)
 
-    def compute_bound(self) -> int:
-        """STUB: returns num_transitions × 4 — replace with R5a longest-path algorithm.
-
-        An undersized bound causes silent false confidence (CBMC reports
-        VERIFICATION SUCCESSFUL without exploring all paths).
-        R5a longest-path algorithm (see cbmc_generator_requirements.md).
-        """
-        return self.num_transitions * 4
-
     # ── code generation ────────────────────────────────────────────────────────
 
     def generate_transition_defines(self) -> str:
