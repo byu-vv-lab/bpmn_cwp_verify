@@ -268,11 +268,17 @@ class PromelaGenVisitor(BpmnVisitor):
 
         if ctx.has_option:
             for flow in ctx.element.out_flows:
-                if flow.expression:
+                if isinstance(ctx.element, EventBasedGatewayNode):
                     sm.write_str(
-                        f":: {flow.expression.replace('\n', '')} -> putToken({self._generate_location_label(flow.target_node, flow)})",
+                        f":: {self._generate_location_label(flow.target_node, flow.target_node.in_msgs[0])} -> putToken({self._generate_location_label(flow.target_node, flow)})",
                         NL_SINGLE,
                     )
+                else:
+                    if flow.expression:
+                        sm.write_str(
+                            f":: {flow.expression.replace('\n', '')} -> putToken({self._generate_location_label(flow.target_node, flow)})",
+                            NL_SINGLE,
+                        )
 
         if ctx.boundary_events:
             # 1) get all of the put locations [[end_from_boundevent, ...], ...]
@@ -310,8 +316,12 @@ class PromelaGenVisitor(BpmnVisitor):
                 sm.write_str("", indent_action=IndentAction.DEC)
 
         sm.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
-        sm.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
-        sm.write_str("assert(false)", NL_SINGLE)
+
+        if isinstance(ctx.element, EventBasedGatewayNode):
+            sm.write_str("skip")
+        else:
+            sm.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
+            sm.write_str("assert(false)", NL_SINGLE)
 
         sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
         return sm
