@@ -136,7 +136,7 @@ def compute_bound(bpmn: Bpmn, max_retries: int) -> int:
     For each process: compute acyclic depth from its start event(s), detect back-edges,
     group by loop-entry node, take the longest cycle per entry, multiply by max_retries.
     """
-    total = 0
+    best = 0
     for process in bpmn.processes.values():
         for start in process.get_start_states().values():
             acyclic = max(_acyclic_depth(start, frozenset()), 0)
@@ -156,6 +156,6 @@ def compute_bound(bpmn: Bpmn, max_retries: int) -> int:
                 target_max_cycle[target_id] = max(prev, cycle_len)
 
             loop_total = sum(c * max_retries for c in target_max_cycle.values())
-            total += acyclic + loop_total
+            best = max(best, acyclic + loop_total)
 
-    return max(total, 1)
+    return max(best, 1)
