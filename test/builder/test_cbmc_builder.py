@@ -196,12 +196,16 @@ class TestSimpleExampleGeneration:
         assert "bool p_task_MWMokA_FROM_gateway_K0OuHg = false;" in c_code
 
     def test_cwp_initial_state(self, c_code):
-        # Initial tracking state = dest of start_state's first out_edge = Increment_x
-        assert "int cwp_state = CWP_INCREMENT_X;" in c_code
+        # cwp_state starts at 0 (start_state); pre-loop update_cwp_state advances it
+        assert "int cwp_state = 0;" in c_code
 
     def test_cwp_reached_initializer(self, c_code):
-        # CWP_START (0) = false (never entered), CWP_INCREMENT_X (1) = true (initial state), CWP_END (2) = false
-        assert "cwp_reached[CWP_NUM_STATES] = {false, true, false};" in c_code
+        # All-false; the pre-loop update_cwp_state sets the initial reached entry
+        assert "bool cwp_reached[CWP_NUM_STATES] = {false};" in c_code
+
+    def test_initial_cwp_state_computed_before_loop(self, c_code):
+        # Pre-loop update_cwp_state call computes the initial CWP state dynamically
+        assert "update_cwp_state(&cwp_state, cwp_reached, x);" in c_code
 
     def test_while_loop_with_bound(self, c_code):
         assert "while (running && step < BOUND)" in c_code
@@ -284,7 +288,7 @@ class TestSimpleExampleCbmc:
                 "cbmc",
                 str(c_file_reachability),
                 "--unwind",
-                "21",
+                "15",
                 "--cover",
                 "cover",
                 "-DREACHABILITY",
@@ -293,7 +297,7 @@ class TestSimpleExampleCbmc:
             text=True,
         )
         # Expect: 3 of 3 covered (end event + CWP_INCREMENT_X + CWP_END).
-        # CWP_START is excluded — its mapping is always false at runtime.
+        # CWP_START is excluded from reachability covers (it's the CWP start state).
         assert "3 of 3" in result.stdout or "COVERED" in result.stdout, (
             f"Reachability incomplete.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
