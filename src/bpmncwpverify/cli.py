@@ -82,12 +82,18 @@ def _verify_with_spin(
         logging.info("    Verifying BPMN against state")
         return IOResult.from_result(bpmnmethods.from_xml(bpmn_xml, state))
 
+    def _verify_spin(
+        state: State, cwp: Cwp, bpmn: Bpmn
+    ) -> IOResult[SpinVerificationReport, Error]:
+        logging.info("Generating Promela model from BPMN, CWP, and state")
+        return verify_with_spin(state, cwp, bpmn)
+
     result: IOResult[SpinVerificationReport, Error] = IOResult.from_result(
         _verify_state(state_str)
     ).bind(  # pyright: ignore[reportUnknownMemberType]
         lambda state: _verify_cwp_with_state(cwp_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda cwp: _verify_bpmn_with_state(bpmn_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
-                lambda bpmn: verify_with_spin(state, cwp, bpmn)
+                lambda bpmn: _verify_spin(state, cwp, bpmn)
             )
         )
     )
