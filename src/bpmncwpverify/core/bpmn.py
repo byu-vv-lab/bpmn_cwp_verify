@@ -317,6 +317,17 @@ class GatewayNode(Node):
     pass
 
 
+class EventBasedGatewayNode(GatewayNode):
+    """
+    Gateway that allows waiting until one of the events gets a token
+    """
+
+    def accept(self, visitor: "BpmnVisitor") -> None:
+        result = visitor.visit_event_based_gateway(self)
+        self.traverse_outflows_if_result(visitor, result)
+        visitor.end_visit_event_based_gateway(self)
+
+
 class ExclusiveGatewayNode(GatewayNode):
     """
     Gateway that only allows one path to be taken
@@ -489,6 +500,7 @@ def get_element_type(tag: str) -> Result[type[SequenceFlow] | type[Node], Error]
         "task": Task,
         "startEvent": StartEvent,
         "endEvent": EndEvent,
+        "eventBasedGateway": EventBasedGatewayNode,
         "exclusiveGateway": ExclusiveGatewayNode,
         "parallelGateway": ParallelGatewayNode,
         "sendTask": IntermediateEvent,
@@ -596,6 +608,12 @@ class BpmnVisitor:
         return True
 
     def end_visit_boundary_event(self, boundary_event: Task.BoundaryEvent) -> None:
+        pass
+
+    def visit_event_based_gateway(self, gateway: EventBasedGatewayNode) -> bool:
+        return True
+
+    def end_visit_event_based_gateway(self, gateway: EventBasedGatewayNode) -> None:
         pass
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:

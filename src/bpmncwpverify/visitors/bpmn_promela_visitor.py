@@ -2,6 +2,7 @@ from bpmncwpverify.core.bpmn import (
     Bpmn,
     BpmnVisitor,
     EndEvent,
+    EventBasedGatewayNode,
     ExclusiveGatewayNode,
     Flow,
     IntermediateEvent,
@@ -53,7 +54,7 @@ class Context:
 
     @has_option.setter
     def has_option(self, new_val: bool) -> None:
-        assert isinstance(self._element, ExclusiveGatewayNode)
+        assert isinstance(self._element, ExclusiveGatewayNode | EventBasedGatewayNode)
         self._has_option = new_val
 
     @property
@@ -520,6 +521,16 @@ class PromelaGenVisitor(BpmnVisitor):
 
         atomic_block = self._build_atomic_block(context)
 
+        self.process.write_str(atomic_block)
+        return True
+
+    def visit_event_based_gateway(self, gateway: EventBasedGatewayNode) -> bool:
+        context = Context(gateway)
+        context.has_option = True
+        context.behavior_model = False
+        self._gen_var_defs(context)
+
+        atomic_block = self._build_atomic_block(context)
         self.process.write_str(atomic_block)
         return True
 
