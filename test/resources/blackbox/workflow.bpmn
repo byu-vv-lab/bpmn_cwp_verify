@@ -52,12 +52,12 @@ conditions = same</bpmn:documentation>
       <bpmn:outgoing>Flow_0nr0iwo</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1yr4nbh" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:intermediateCatchEvent id="Commander_Received_Accepted">
+    <bpmn:intermediateCatchEvent id="Commander_Received_Accepted" name="Receive Response">
       <bpmn:incoming>Flow_1pyj6c3</bpmn:incoming>
       <bpmn:outgoing>Flow_1tznmwy</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1by30z5" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:exclusiveGateway id="Commander_Risk_Acceptable_Or_NA">
+    <bpmn:exclusiveGateway id="Commander_Risk_Acceptable_Or_NA" name="Xor">
       <bpmn:incoming>Flow_10h30va</bpmn:incoming>
       <bpmn:outgoing>Flow_0yslpgn</bpmn:outgoing>
       <bpmn:outgoing>Flow_1pyj6c3</bpmn:outgoing>
@@ -105,7 +105,7 @@ comms = wait</bpmn:documentation>
       <bpmn:incoming>Flow_1atvpb2</bpmn:incoming>
       <bpmn:outgoing>Flow_11h72oi</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Commander_Received_NotAcceptable">
+    <bpmn:intermediateCatchEvent id="Commander_Received_NotAcceptable" name="Received Response">
       <bpmn:incoming>Flow_0yslpgn</bpmn:incoming>
       <bpmn:outgoing>Flow_1rjccce</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0696ss6" />
@@ -118,7 +118,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1rjccce</bpmn:incoming>
       <bpmn:outgoing>Flow_1et7avh</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Commander_Conditions_Change_Or_Same">
+    <bpmn:exclusiveGateway id="Commander_Conditions_Change_Or_Same" name="Xor">
       <bpmn:incoming>Flow_1x890u1</bpmn:incoming>
       <bpmn:outgoing>Flow_03ypw3z</bpmn:outgoing>
       <bpmn:outgoing>Flow_1atvpb2</bpmn:outgoing>
@@ -127,7 +127,7 @@ fi</bpmn:documentation>
       <bpmn:documentation>search = off</bpmn:documentation>
       <bpmn:incoming>Flow_03ypw3z</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:exclusiveGateway id="Commander_Conditions_And_blackBox">
+    <bpmn:exclusiveGateway id="Commander_Conditions_And_blackBox" name="Xor">
       <bpmn:incoming>Flow_1ybrkic</bpmn:incoming>
       <bpmn:outgoing>Flow_1twjnj7</bpmn:outgoing>
       <bpmn:outgoing>Flow_12106bx</bpmn:outgoing>
@@ -174,7 +174,7 @@ fi</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_0v7q20v" sourceRef="Commander_Await_Updates" targetRef="Commander_Blackbox_Missing_Or_Found" />
     <bpmn:sequenceFlow id="Flow_1os4dn1" name="blackBox == found" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_BlackBox_Found_Msg" />
     <bpmn:sequenceFlow id="Flow_1glliuj" sourceRef="Commander_Notify_Searchers_To_Wait" targetRef="Commander_Receive_Response" />
-    <bpmn:exclusiveGateway id="Commander_Blackbox_Missing_Or_Found">
+    <bpmn:exclusiveGateway id="Commander_Blackbox_Missing_Or_Found" name="Xor">
       <bpmn:incoming>Flow_0v7q20v</bpmn:incoming>
       <bpmn:outgoing>Flow_1bt1a2g</bpmn:outgoing>
       <bpmn:outgoing>Flow_1os4dn1</bpmn:outgoing>
@@ -190,7 +190,7 @@ comms = sent</bpmn:documentation>
       <bpmn:incoming>Flow_0wtm01a</bpmn:incoming>
       <bpmn:outgoing>Flow_1fl52xy</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Commander_BlackBox_Found_Msg">
+    <bpmn:intermediateCatchEvent id="Commander_BlackBox_Found_Msg" name="Receive Response">
       <bpmn:incoming>Flow_1os4dn1</bpmn:incoming>
       <bpmn:outgoing>Flow_0wtm01a</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0svtyow" />
@@ -209,10 +209,10 @@ comms = sent</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_0nq8kre" sourceRef="Commander_Confirm_Received_Updates" targetRef="Commander_Check_Conditions_Lower" />
   </bpmn:process>
   <bpmn:process id="AUV_Process" isExecutable="false">
-    <bpmn:startEvent id="AUV_Start">
+    <bpmn:startEvent id="AUV_Start" name="Start">
       <bpmn:outgoing>Flow_1ax9s2y</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:intermediateCatchEvent id="AUV_Receive_Deploy">
+    <bpmn:intermediateCatchEvent id="AUV_Receive_Deploy" name="Receive Deploy">
       <bpmn:incoming>Flow_1ax9s2y</bpmn:incoming>
       <bpmn:outgoing>Flow_1n4b7r9</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1kimus2" />
@@ -245,7 +245,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1oisetq</bpmn:incoming>
       <bpmn:outgoing>Flow_1t4wl0u</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="AUV_Comms_And_blackBox">
+    <bpmn:exclusiveGateway id="AUV_Comms_And_blackBox" name="Xor">
       <bpmn:incoming>Flow_1t4wl0u</bpmn:incoming>
       <bpmn:outgoing>Flow_18avrt1</bpmn:outgoing>
       <bpmn:outgoing>Flow_1rv897x</bpmn:outgoing>
@@ -264,7 +264,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1q6tdit</bpmn:incoming>
       <bpmn:outgoing>Flow_0hl1n0e</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="AUV_Conditions_Changed_Or_Same">
+    <bpmn:exclusiveGateway id="AUV_Conditions_Changed_Or_Same" name="Xor">
       <bpmn:incoming>Flow_12btwul</bpmn:incoming>
       <bpmn:outgoing>Flow_1q6tdit</bpmn:outgoing>
       <bpmn:outgoing>Flow_1kxj6za</bpmn:outgoing>
@@ -291,7 +291,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_11w7314</bpmn:incoming>
       <bpmn:outgoing>Flow_037qktc</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="AUV_Risk_Acceptable_Or_NA">
+    <bpmn:exclusiveGateway id="AUV_Risk_Acceptable_Or_NA" name="Xor">
       <bpmn:incoming>Flow_037qktc</bpmn:incoming>
       <bpmn:outgoing>Flow_0vy3iib</bpmn:outgoing>
       <bpmn:outgoing>Flow_169v6ma</bpmn:outgoing>
@@ -347,10 +347,10 @@ fi</bpmn:documentation>
   </bpmn:process>
   <bpmn:message id="Message_26q47k7" name="Move On" />
   <bpmn:process id="ROV_Process" isExecutable="false">
-    <bpmn:startEvent id="ROV_Start">
+    <bpmn:startEvent id="ROV_Start" name="Start">
       <bpmn:outgoing>Flow_18qfxt8</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:intermediateCatchEvent id="ROV_Receive_Deploy">
+    <bpmn:intermediateCatchEvent id="ROV_Receive_Deploy" name="Receive Deploy">
       <bpmn:incoming>Flow_18qfxt8</bpmn:incoming>
       <bpmn:outgoing>Flow_17sry0g</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0o5jwsi" />
@@ -383,7 +383,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1o2s7oe</bpmn:incoming>
       <bpmn:outgoing>Flow_04q0sr7</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="ROV_Comms_And_blackBox">
+    <bpmn:exclusiveGateway id="ROV_Comms_And_blackBox" name="Xor">
       <bpmn:incoming>Flow_04q0sr7</bpmn:incoming>
       <bpmn:outgoing>Flow_1yre9aq</bpmn:outgoing>
       <bpmn:outgoing>Flow_1nf4yz0</bpmn:outgoing>
@@ -402,7 +402,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1llg1yu</bpmn:incoming>
       <bpmn:outgoing>Flow_0xcofz8</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="ROV_Conditions_Changed_Or_Same">
+    <bpmn:exclusiveGateway id="ROV_Conditions_Changed_Or_Same" name="Xor">
       <bpmn:incoming>Flow_1mi24jj</bpmn:incoming>
       <bpmn:outgoing>Flow_1llg1yu</bpmn:outgoing>
       <bpmn:outgoing>Flow_15vyqp6</bpmn:outgoing>
@@ -429,7 +429,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1ltwuf3</bpmn:incoming>
       <bpmn:outgoing>Flow_0cvwhuj</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="ROV_Risk_Acceptable_Or_NA">
+    <bpmn:exclusiveGateway id="ROV_Risk_Acceptable_Or_NA" name="Xor">
       <bpmn:incoming>Flow_0cvwhuj</bpmn:incoming>
       <bpmn:outgoing>Flow_0i1i54e</bpmn:outgoing>
       <bpmn:outgoing>Flow_05vuap3</bpmn:outgoing>
@@ -511,11 +511,14 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1aaupcl_di" bpmnElement="Commander_Received_Accepted">
         <dc:Bounds x="812" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="756" y="526" width="50" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0bvrdqi_di" bpmnElement="Commander_Risk_Acceptable_Or_NA" isMarkerVisible="true">
         <dc:Bounds x="805" y="405" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="799" y="375" width="62" height="14" />
+          <dc:Bounds x="822" y="393" width="18" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0zl5lqs_di" bpmnElement="Commander_Check_Risk">
@@ -540,6 +543,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1a65dx8_di" bpmnElement="Commander_Received_NotAcceptable">
         <dc:Bounds x="932" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="926" y="455" width="50" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0pipelz_di" bpmnElement="Commander_Check_Conditions">
         <dc:Bounds x="900" y="300" width="100" height="80" />
@@ -547,6 +553,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0o4xpgj_di" bpmnElement="Commander_Conditions_Change_Or_Same" isMarkerVisible="true">
         <dc:Bounds x="925" y="105" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="942" y="93" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_02o56k6_di" bpmnElement="Commander_Search_Off_Risk">
         <dc:Bounds x="1072" y="112" width="36" height="36" />
@@ -556,6 +565,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0rb75od_di" bpmnElement="Commander_Conditions_And_blackBox" isMarkerVisible="true">
         <dc:Bounds x="625" y="645" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="601" y="667" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0pvorq9_di" bpmnElement="Commander_Await_Updates">
         <dc:Bounds x="780" y="630" width="100" height="80" />
@@ -573,6 +585,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1owfb4m_di" bpmnElement="Commander_Blackbox_Missing_Or_Found" isMarkerVisible="true">
         <dc:Bounds x="985" y="645" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1001" y="633" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1gibfpo_di" bpmnElement="Commander_Search_Off_Found">
         <dc:Bounds x="1092" y="372" width="36" height="36" />
@@ -586,6 +601,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_18kspmd_di" bpmnElement="Commander_BlackBox_Found_Msg">
         <dc:Bounds x="1092" y="652" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1125" y="660" width="50" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0gj7ak4_di" bpmnElement="Commander_Receive_Updates">
         <dc:Bounds x="882" y="782" width="36" height="36" />
@@ -741,9 +759,15 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1bvu1ea_di" bpmnElement="AUV_Start">
         <dc:Bounds x="342" y="1012" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="348" y="982" width="25" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1kvb9x7_di" bpmnElement="AUV_Receive_Deploy">
         <dc:Bounds x="342" y="1092" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="311" y="1063" width="78" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ppnjd6_di" bpmnElement="AUV_Send_Deployed">
         <dc:Bounds x="340" y="1160" width="100" height="80" />
@@ -759,6 +783,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0hwogsi_di" bpmnElement="AUV_Comms_And_blackBox" isMarkerVisible="true">
         <dc:Bounds x="635" y="1085" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="651" y="1142" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_10ign21_di" bpmnElement="AUV_blackBox_Located_Ping">
         <dc:Bounds x="800" y="1070" width="100" height="80" />
@@ -776,6 +803,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1s1jaoc_di" bpmnElement="AUV_Conditions_Changed_Or_Same" isMarkerVisible="true">
         <dc:Bounds x="835" y="1565" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="851" y="1622" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_15hpt57_di" bpmnElement="AUV_Receive_Conditions">
         <dc:Bounds x="622" y="1572" width="36" height="36" />
@@ -803,6 +833,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0ygsp1s_di" bpmnElement="AUV_Risk_Acceptable_Or_NA" isMarkerVisible="true">
         <dc:Bounds x="485" y="1445" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="461" y="1460" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1i9a79o_di" bpmnElement="AUV_Receive_Updates_AUV">
         <dc:Bounds x="642" y="1362" width="36" height="36" />
@@ -966,9 +999,15 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_09ndx7t" bpmnElement="ROV_Start">
         <dc:Bounds x="282" y="1832" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="288" y="1802" width="25" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0086m01" bpmnElement="ROV_Receive_Deploy">
         <dc:Bounds x="282" y="1912" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="261" y="1883" width="78" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0k0dloe" bpmnElement="ROV_Send_Deployed">
         <dc:Bounds x="280" y="1980" width="100" height="80" />
@@ -984,6 +1023,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1ifvlyf" bpmnElement="ROV_Comms_And_blackBox" isMarkerVisible="true">
         <dc:Bounds x="575" y="1905" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="591" y="1962" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1972257" bpmnElement="ROV_blackBox_Located">
         <dc:Bounds x="740" y="1890" width="100" height="80" />
@@ -1001,6 +1043,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0lg8nia" bpmnElement="ROV_Conditions_Changed_Or_Same" isMarkerVisible="true">
         <dc:Bounds x="775" y="2385" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="791" y="2442" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_0cmvux9" bpmnElement="ROV_Receive_Conditions">
         <dc:Bounds x="562" y="2392" width="36" height="36" />
@@ -1028,6 +1073,9 @@ fi</bpmn:documentation>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1g2bzkt" bpmnElement="ROV_Risk_Acceptable_Or_NA" isMarkerVisible="true">
         <dc:Bounds x="425" y="2265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="401" y="2280" width="18" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1ci24jb" bpmnElement="ROV_Receive_Updates">
         <dc:Bounds x="582" y="2182" width="36" height="36" />
