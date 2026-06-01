@@ -44,6 +44,12 @@ def from_xml(
         element_type: type[SequenceFlow] | type[Node] = result.unwrap()
 
         class_object = element_type.from_xml(sub_element)
+
+        # mainly to check if the Start Event is supported
+        verified_result = class_object.verify_element(sub_element, class_object.id)
+        if not_(is_successful)(verified_result):
+            return Failure(verified_result.failure())
+
         builder = builder.with_element(class_object)
 
     for seq_flow in element.findall("bpmn:sequenceFlow", BPMN_XML_NAMESPACE):
