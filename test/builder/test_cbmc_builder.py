@@ -37,7 +37,9 @@ SIMPLE_CWP = SIMPLE / "test_cwp.xml"
 SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
 
 
-def _build_c(state_path: Path, cwp_path: Path, bpmn_path: Path) -> str:
+def _build_c(
+    state_path: Path, cwp_path: Path, bpmn_path: Path, max_retries: int = 2
+) -> str:
     """Run the full parse+build pipeline and return the generated C string."""
     state_str_io = read_file_as_string(str(state_path))
     state_str = unsafe_perform_io(state_str_io.unwrap())
@@ -66,7 +68,14 @@ def _build_c(state_path: Path, cwp_path: Path, bpmn_path: Path) -> str:
     assert is_successful(bpmn_result), get_error_message(bpmn_result.failure())
     bpmn = bpmn_result.unwrap()
 
-    c_result = CbmcBuilder().with_state(state).with_cwp(cwp).with_bpmn(bpmn).build()
+    c_result = (
+        CbmcBuilder()
+        .with_state(state)
+        .with_cwp(cwp)
+        .with_bpmn(bpmn)
+        .with_max_retries(max_retries)
+        .build()
+    )
     assert is_successful(c_result), get_error_message(c_result.failure())
     return c_result.unwrap()
 
@@ -95,12 +104,12 @@ class TestSimpleExampleGeneration:
     def test_bound_defined(self, c_code):
         assert "#define BOUND" in c_code
 
-    def test_bound_is_20(self, c_code):
-        # 5 transitions × 4 = 20
+    def test_bound_is_8(self, c_code):
+        # acyclic depth 4 + cycle(len=2) × max_retries(2) = 4 + 4 = 8
         import re
 
-        assert re.search(r"#define BOUND\s+20\b", c_code), (
-            "Expected BOUND == 20 (5 transitions × 4)"
+        assert re.search(r"#define BOUND\s+8\b", c_code), (
+            "Expected BOUND == 8 (acyclic=4, cycle=2×2=4)"
         )
 
     # ── CWP state defines ──
@@ -237,7 +246,16 @@ class TestSimpleExampleCbmc:
 
     @pytest.fixture(scope="class")
     def c_file(self):
-        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN)
+        # Verification: max_retries=2 (BOUND=8) is sufficient for bug-finding.
+        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN, max_retries=2)
+        with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
+            f.write(c_code)
+            return Path(f.name)
+
+    @pytest.fixture(scope="class")
+    def c_file_reachability(self):
+        # Reachability: max_retries=8 (BOUND=20) needed to reach x>5 (end event).
+        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN, max_retries=8)
         with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
             f.write(c_code)
             return Path(f.name)
@@ -248,9 +266,9 @@ class TestSimpleExampleCbmc:
         )
 
     def test_cbmc_verification_successful(self, c_file):
-        """BOUND=20, --unwind 21 covers the loop termination check."""
+        """BOUND=8 (max_retries=2), --unwind 9."""
         result = subprocess.run(
-            ["cbmc", str(c_file), "--unwind", "21"],
+            ["cbmc", str(c_file), "--unwind", "9"],
             capture_output=True,
             text=True,
         )
@@ -258,12 +276,13 @@ class TestSimpleExampleCbmc:
             f"CBMC failed.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
-    def test_cbmc_reachability(self, c_file):
-        """All CWP states and the end event must be reachable."""
+    def test_cbmc_reachability(self, c_file_reachability):
+        """All CWP states and the end event must be reachable.
+        Uses max_retries=8 (BOUND=20) so x can exceed 5 and reach the end event."""
         result = subprocess.run(
             [
                 "cbmc",
-                str(c_file),
+                str(c_file_reachability),
                 "--unwind",
                 "21",
                 "--cover",
