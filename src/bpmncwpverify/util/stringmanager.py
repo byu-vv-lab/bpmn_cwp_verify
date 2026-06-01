@@ -10,7 +10,7 @@ class IndentAction(Enum):
     NIL = 0
     INC = 1
     DEC = 2
-    TRE = 3
+    DECTWO = 3
 
 
 class StringManager:
@@ -35,7 +35,7 @@ class StringManager:
         assert self.indent > 0
         self.indent -= 1
 
-    def _tre_indet(self) -> None:
+    def _dectwo_indet(self) -> None:
         assert self.indent > 1
         self.indent -= 2
 
@@ -59,8 +59,8 @@ class StringManager:
         if indent_action == IndentAction.DEC:
             self._dec_indent()
 
-        if indent_action == IndentAction.TRE:
-            self._tre_indet()
+        if indent_action == IndentAction.DECTWO:
+            self._dectwo_indet()
 
         def needs_tab(idx: int, items: list[str]) -> bool:
             """Helper function to determine if tabulation is necessary."""

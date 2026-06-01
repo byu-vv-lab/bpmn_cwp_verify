@@ -157,7 +157,7 @@ class CwpPromelaVisitor(CwpVisitor):
         )
         self.update_state_inline.write_str("assert(false)", NL_SINGLE)
 
-        self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.TRE)
+        self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DECTWO)
 
         self.update_state_inline.write_str(self.var_reassignment)
 

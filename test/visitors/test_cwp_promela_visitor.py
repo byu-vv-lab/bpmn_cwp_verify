@@ -46,7 +46,7 @@ class TestCwpPromelaVisitor:
             mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
             mocker.call('DBG(printf("Assert: Not a valid CWP transition"))', NL_SINGLE),
             mocker.call("assert(false)", NL_SINGLE),
-            mocker.call("fi", NL_SINGLE, IndentAction.TRE),
+            mocker.call("fi", NL_SINGLE, IndentAction.DECTWO),
             mocker.call(var_reassignment),
             mocker.call("test_val"),
             mocker.call("}", NL_DOUBLE, IndentAction.DEC),
