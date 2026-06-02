@@ -77,7 +77,7 @@ def _var_args(state: State) -> list[str]:
 
 
 def _generate_c(
-    state: State, cwp: Cwp, bpmn: Bpmn, max_retries: int
+    state: State, cwp: Cwp, bpmn: Bpmn, max_retries: int, bound_out: list[int]
 ) -> Result[str, Error]:
     # ── Run CWP visitor ──
     cwp_visitor = CwpCbmcVisitor()
@@ -95,6 +95,7 @@ def _generate_c(
 
     # ── Derived values ──
     bound = compute_bound(bpmn, max_retries)
+    bound_out[0] = bound
     st_defines = _state_defines(state)
     v_decls = _var_decls(state)
     v_params = _var_params(state)
@@ -140,7 +141,7 @@ def _generate_c(
 
 
 class CbmcBuilder:
-    __slots__ = ["bpmn", "cwp", "state", "max_retries"]
+    __slots__ = ["bpmn", "cwp", "state", "max_retries", "last_bound"]
 
     def __init__(self) -> None:
         self.bpmn: Result[Bpmn, Error] = Failure(
@@ -151,6 +152,7 @@ class CbmcBuilder:
             NotInitializedError("CbmcBuilder.state")
         )
         self.max_retries: int = 2
+        self.last_bound: int = 0
 
     def with_bpmn(self, bpmn: Bpmn) -> "CbmcBuilder":
         self.bpmn = Success(bpmn)
@@ -170,11 +172,14 @@ class CbmcBuilder:
 
     def build(self) -> Result[str, Error]:
         max_retries = self.max_retries
+        self.last_bound = 0
+        bound_out: list[int] = [0]
         result: Result[str, Error] = self.state.bind(  # pyright: ignore[reportUnknownMemberType]
             lambda state: self.cwp.bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda cwp: self.bpmn.bind(  # pyright: ignore[reportUnknownMemberType]
-                    lambda bpmn: _generate_c(state, cwp, bpmn, max_retries)
+                    lambda bpmn: _generate_c(state, cwp, bpmn, max_retries, bound_out)
                 )
             )
         )
+        self.last_bound = bound_out[0]
         return result
