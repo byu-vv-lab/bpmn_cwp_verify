@@ -1,5 +1,0 @@
-** coverage results:
-[main.coverage.1] file /tmp/verification.c line 299 function main condition 'Event_1y6wxsp_reached != FALSE': FAILED
-[main.coverage.2] file /tmp/verification.c line 300 function main condition 'Event_0wqympo_reached != FALSE': SATISFIED
-[main.coverage.3] file /tmp/verification.c line 301 function main condition 'cwp_reached[(signed long int)1] != FALSE': SATISFIED
-** 0 of 3 covered (0.0%)

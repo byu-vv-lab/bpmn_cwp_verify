@@ -1,6 +1,0 @@
-** Results:
-/tmp/verification.c function update_cwp_state
-[update_cwp_state.assertion.1] line 83 CWP P1: transition follows valid CWP edge: FAILURE
-
-** 1 of 1 failed (2 iterations)
-VERIFICATION FAILED

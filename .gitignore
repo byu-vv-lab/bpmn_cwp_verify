@@ -172,3 +172,4 @@ pan
 
 # vs-code workspaces
 work.code-workspace
+test/resources/cbmc/
