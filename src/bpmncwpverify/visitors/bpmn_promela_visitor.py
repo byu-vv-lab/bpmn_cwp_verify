@@ -270,7 +270,7 @@ class PromelaGenVisitor(BpmnVisitor):
             for flow in ctx.element.out_flows:
                 if isinstance(ctx.element, EventBasedGatewayNode):
                     sm.write_str(
-                        f":: {self._generate_location_label(flow.target_node, flow.target_node.in_msgs[0])} -> putToken({self._generate_location_label(flow.target_node, flow)})",
+                        f":: hasToken({self._generate_location_label(flow.target_node, flow.target_node.in_msgs[0])}) -> putToken({self._generate_location_label(flow.target_node, flow)})",
                         NL_SINGLE,
                     )
                 else:
@@ -318,7 +318,7 @@ class PromelaGenVisitor(BpmnVisitor):
         sm.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
 
         if isinstance(ctx.element, EventBasedGatewayNode):
-            sm.write_str("skip")
+            sm.write_str("skip", NL_SINGLE)
         else:
             sm.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
             sm.write_str("assert(false)", NL_SINGLE)
