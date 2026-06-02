@@ -16,6 +16,7 @@ The generated C file has this structure:
 
 from returns.result import Failure, Result, Success
 
+from bpmncwpverify.builder.cbmc_bound import compute_bound
 from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.cwp import Cwp
 from bpmncwpverify.core.error import CbmcGeneratorError, Error, NotInitializedError
@@ -75,7 +76,9 @@ def _var_args(state: State) -> list[str]:
 # ── C file assembly ────────────────────────────────────────────────────────────
 
 
-def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
+def _generate_c(
+    state: State, cwp: Cwp, bpmn: Bpmn, max_retries: int
+) -> Result[str, Error]:
     # ── Run CWP visitor ──
     cwp_visitor = CwpCbmcVisitor()
     cwp.accept(cwp_visitor)
@@ -91,14 +94,12 @@ def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
         return Failure(CbmcGeneratorError("BPMN produced no transitions"))
 
     # ── Derived values ──
-    bound = bpmn_visitor.compute_bound()
+    bound = compute_bound(bpmn, max_retries)
     st_defines = _state_defines(state)
     v_decls = _var_decls(state)
     v_params = _var_params(state)
     v_args = _var_args(state)
 
-    initial_cwp = cwp_visitor.initial_cwp_state_define()
-    cwp_reached_init = cwp_visitor.cwp_reached_init_expr()
     cwp_define_names = cwp_visitor.reachable_state_define_names()
 
     # ── Assemble ──
@@ -126,9 +127,7 @@ def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
         bpmn_visitor.generate_main(
             var_decls=v_decls,
             var_args=v_args,
-            initial_cwp_state=initial_cwp,
             cwp_num_states_define="CWP_NUM_STATES",
-            cwp_reached_init=cwp_reached_init,
             cwp_state_define_names=cwp_define_names,
         )
     )
@@ -140,7 +139,7 @@ def _generate_c(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
 
 
 class CbmcBuilder:
-    __slots__ = ["bpmn", "cwp", "state"]
+    __slots__ = ["bpmn", "cwp", "state", "max_retries"]
 
     def __init__(self) -> None:
         self.bpmn: Result[Bpmn, Error] = Failure(
@@ -150,6 +149,7 @@ class CbmcBuilder:
         self.state: Result[State, Error] = Failure(
             NotInitializedError("CbmcBuilder.state")
         )
+        self.max_retries: int = 2
 
     def with_bpmn(self, bpmn: Bpmn) -> "CbmcBuilder":
         self.bpmn = Success(bpmn)
@@ -163,11 +163,16 @@ class CbmcBuilder:
         self.state = Success(state)
         return self
 
+    def with_max_retries(self, max_retries: int) -> "CbmcBuilder":
+        self.max_retries = max_retries
+        return self
+
     def build(self) -> Result[str, Error]:
+        max_retries = self.max_retries
         result: Result[str, Error] = self.state.bind(  # pyright: ignore[reportUnknownMemberType]
             lambda state: self.cwp.bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda cwp: self.bpmn.bind(  # pyright: ignore[reportUnknownMemberType]
-                    lambda bpmn: _generate_c(state, cwp, bpmn)
+                    lambda bpmn: _generate_c(state, cwp, bpmn, max_retries)
                 )
             )
         )
