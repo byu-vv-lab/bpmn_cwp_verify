@@ -1,0 +1,9 @@
+** coverage results:
+[main.coverage.1] file /tmp/verification.c line 299 function main condition 'Event_1y6wxsp_reached != FALSE': SATISFIED
+[main.coverage.2] file /tmp/verification.c line 300 function main condition 'Event_0wqympo_reached != FALSE': SATISFIED
+[main.coverage.3] file /tmp/verification.c line 301 function main condition 'cwp_reached[(signed long int)1] != FALSE': SATISFIED
+[main.coverage.4] file /tmp/verification.c line 302 function main condition 'cwp_reached[(signed long int)2] != FALSE': SATISFIED
+[main.coverage.5] file /tmp/verification.c line 303 function main condition 'cwp_reached[(signed long int)3] != FALSE': SATISFIED
+[main.coverage.6] file /tmp/verification.c line 304 function main condition 'cwp_reached[(signed long int)4] != FALSE': SATISFIED
+[main.coverage.7] file /tmp/verification.c line 305 function main condition 'cwp_reached[(signed long int)5] != FALSE': SATISFIED
+** 7 of 7 covered (100.0%)
