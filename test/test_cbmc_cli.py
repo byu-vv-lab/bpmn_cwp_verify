@@ -1,6 +1,7 @@
 # type: ignore
 import sys
 
+import pytest
 from returns.functions import not_
 from returns.io import IOSuccess
 from returns.pipeline import is_successful
@@ -106,9 +107,11 @@ def test_cloud_and_cbmc_together_prints_error_and_returns(capsys, mocker):
         "./test/resources/face2face/cwp.xml",
         "./test/resources/face2face/workflow.bpmn",
     ]
-    verify()
+    with pytest.raises(SystemExit) as exc_info:
+        verify()
+    assert exc_info.value.code == 2
     captured = capsys.readouterr()
-    assert "mutually exclusive" in captured.out
+    assert "not allowed with argument" in captured.err
     from bpmncwpverify.cli import (
         _verify_on_lambda_from_files,
         _verify_with_cbmc_from_files,

@@ -61,12 +61,13 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
         "bpmn_file",
         help="BPMN workflow file in XML",
     )
-    argument_parser.add_argument(
+    exclusive = argument_parser.add_mutually_exclusive_group()
+    exclusive.add_argument(
         "--cloud",
         action="store_true",
         help="Run verification remotely on AWS Lambda",
     )
-    argument_parser.add_argument(
+    exclusive.add_argument(
         "--cbmc",
         action="store_true",
         help="Run verification locally with CBMC",
@@ -208,10 +209,6 @@ def cli_verify(
 def verify() -> None:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
-
-    if args.cloud and args.cbmc:
-        print("ERROR: --cloud and --cbmc are mutually exclusive")
-        return
 
     if args.cloud:
         _print_result(

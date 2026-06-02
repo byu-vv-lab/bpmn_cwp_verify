@@ -14,6 +14,7 @@ The generated C file has this structure:
   8. int main()          (from BpmnCbmcVisitor)
 """
 
+from returns.pipeline import is_successful
 from returns.result import Failure, Result, Success
 
 from bpmncwpverify.builder.cbmc_bound import compute_bound
@@ -77,8 +78,8 @@ def _var_args(state: State) -> list[str]:
 
 
 def _generate_c(
-    state: State, cwp: Cwp, bpmn: Bpmn, max_retries: int, bound_out: list[int]
-) -> Result[str, Error]:
+    state: State, cwp: Cwp, bpmn: Bpmn, max_retries: int
+) -> Result[tuple[str, int], Error]:
     # ── Run CWP visitor ──
     cwp_visitor = CwpCbmcVisitor()
     cwp.accept(cwp_visitor)
@@ -95,7 +96,6 @@ def _generate_c(
 
     # ── Derived values ──
     bound = compute_bound(bpmn, max_retries)
-    bound_out[0] = bound
     st_defines = _state_defines(state)
     v_decls = _var_decls(state)
     v_params = _var_params(state)
@@ -133,7 +133,7 @@ def _generate_c(
         )
     )
 
-    return Success("\n".join(sections))
+    return Success(("\n".join(sections), bound))
 
 
 # ── Builder class ──────────────────────────────────────────────────────────────
@@ -172,13 +172,15 @@ class CbmcBuilder:
     def build(self) -> Result[str, Error]:
         max_retries = self.max_retries
         self.last_bound = 0
-        bound_out: list[int] = [0]
-        result: Result[str, Error] = self.state.bind(  # pyright: ignore[reportUnknownMemberType]
+        inner: Result[tuple[str, int], Error] = self.state.bind(  # pyright: ignore[reportUnknownMemberType]
             lambda state: self.cwp.bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda cwp: self.bpmn.bind(  # pyright: ignore[reportUnknownMemberType]
-                    lambda bpmn: _generate_c(state, cwp, bpmn, max_retries, bound_out)
+                    lambda bpmn: _generate_c(state, cwp, bpmn, max_retries)
                 )
             )
         )
-        self.last_bound = bound_out[0]
-        return result
+        if is_successful(inner):
+            c_code, bound = inner.unwrap()
+            self.last_bound = bound
+            return Success(c_code)
+        return Failure(inner.failure())
