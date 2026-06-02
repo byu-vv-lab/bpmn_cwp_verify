@@ -1,5 +1,6 @@
 # TODO: create a "match" function on Failure(Error) and create standard error messaging.
 import builtins
+import re
 import typing
 from xml.etree.ElementTree import Element
 
@@ -845,12 +846,40 @@ def get_error_message(error: Error) -> str:
         case CbmcGeneratorError(msg=msg):
             return f"CBMC GENERATOR ERROR: {msg}"
         case CbmcAssertionError(failures=failures):
-            return "CBMC CORRECTNESS FAILURE (P1-P3):\n" + "\n".join(failures)
+            lines = ["CBMC CORRECTNESS FAILURE (P1-P3):"]
+            lines.append(f"  {len(failures)} failing assertion(s):")
+            for i, raw in enumerate(failures, 1):
+                m = re.search(r"\] line (\d+) (.*): FAILURE$", raw)
+                if m:
+                    lines.append(f"  {i}. line {m.group(1)}: {m.group(2)}")
+                else:
+                    lines.append(f"  {i}. {raw}")
+            return "\n".join(lines)
         case CbmcReachabilityError(unsatisfied_goals=unsatisfied_goals):
-            return (
-                "CBMC REACHABILITY FAILURE (P4 - unreachable CWP state):\n"
-                + "\n".join(unsatisfied_goals)
-            )
+            lines = ["CBMC REACHABILITY FAILURE (P4 - unreachable goals):"]
+            lines.append(f"  {len(unsatisfied_goals)} goal(s) not covered:")
+            for i, raw in enumerate(unsatisfied_goals, 1):
+                m = re.search(
+                    r"\] file .* line (\d+) .* condition '(.*?) != FALSE': FAILED$",
+                    raw,
+                )
+                if m:
+                    line_num, cond = m.group(1), m.group(2)
+                    if cond.startswith("event_") and cond.endswith("_reached"):
+                        label = f"end event '{cond[6:-8]}' unreachable"
+                    elif cond.startswith("cwp_reached["):
+                        state_m = re.search(r"\d+", cond)
+                        label = (
+                            f"CWP state {state_m.group()} unreachable"
+                            if state_m
+                            else cond
+                        )
+                    else:
+                        label = cond
+                    lines.append(f"  {i}. line {line_num}: {label}")
+                else:
+                    lines.append(f"  {i}. {raw}")
+            return "\n".join(lines)
         case CbmcSubProcessError(command=command):
             return f"CBMC ERROR: failed to run '{command}'"
         case SubProcessRunError(process_name=process_name):
