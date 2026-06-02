@@ -14,7 +14,6 @@
     <bpmn:messageFlow id="Flow_1nuxvim" sourceRef="Activity_1la5hb0" targetRef="Event_0kxmtp6" />
   </bpmn:collaboration>
   <bpmn:process id="Process_1oqinmw" isExecutable="true">
-    <bpmn:laneSet id="LaneSet_13o5xjq" />
     <bpmn:startEvent id="StartEvent_1" name="Missing Person Call">
       <bpmn:outgoing>Flow_14ajlmh</bpmn:outgoing>
     </bpmn:startEvent>
