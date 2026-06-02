@@ -1,8 +1,6 @@
 # type: ignore
-import shutil
 import sys
 
-import pytest
 from returns.functions import not_
 from returns.io import IOSuccess
 from returns.pipeline import is_successful
@@ -163,7 +161,6 @@ def test_parser_reachability_subprocess_error_on_empty():
 # ── Integration tests (requires cbmc binary) ──────────────────────────────────
 
 
-@pytest.mark.skipif(shutil.which("cbmc") is None, reason="cbmc not installed")
 def test_face2face_with_cbmc_returns_success():
     result = _verify_with_cbmc_from_files(
         "./test/resources/face2face/state.txt",

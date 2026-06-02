@@ -244,7 +244,6 @@ class TestSimpleExampleGeneration:
 # ── CBMC execution tests (require cbmc to be installed) ────────────────────────
 
 
-@pytest.mark.skipif(shutil.which("cbmc") is None, reason="cbmc not installed")
 class TestSimpleExampleCbmc:
     """Runs the actual CBMC tool. Skipped automatically when cbmc is not installed."""
 
