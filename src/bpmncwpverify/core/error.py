@@ -586,6 +586,30 @@ class CbmcGeneratorError(Error):
         self.msg = msg
 
 
+class CbmcAssertionError(Error):
+    __slots__ = ["failures"]
+
+    def __init__(self, failures: list[str]) -> None:
+        super().__init__()
+        self.failures = failures
+
+
+class CbmcReachabilityError(Error):
+    __slots__ = ["unsatisfied_goals"]
+
+    def __init__(self, unsatisfied_goals: list[str]) -> None:
+        super().__init__()
+        self.unsatisfied_goals = unsatisfied_goals
+
+
+class CbmcSubProcessError(Error):
+    __slots__ = ["command"]
+
+    def __init__(self, command: str) -> None:
+        super().__init__()
+        self.command = command
+
+
 class SubProcessRunError(Error):
     __slots__ = "process_name"
 
@@ -820,6 +844,15 @@ def get_error_message(error: Error) -> str:
             return f"CBMC ERROR: unsupported element type '{element_type}' (id: {element_id})"
         case CbmcGeneratorError(msg=msg):
             return f"CBMC GENERATOR ERROR: {msg}"
+        case CbmcAssertionError(failures=failures):
+            return "CBMC CORRECTNESS FAILURE (P1-P3):\n" + "\n".join(failures)
+        case CbmcReachabilityError(unsatisfied_goals=unsatisfied_goals):
+            return (
+                "CBMC REACHABILITY FAILURE (P4 - unreachable CWP state):\n"
+                + "\n".join(unsatisfied_goals)
+            )
+        case CbmcSubProcessError(command=command):
+            return f"CBMC ERROR: failed to run '{command}'"
         case SubProcessRunError(process_name=process_name):
             return f"ERROR: failed to run '{process_name}'"
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
