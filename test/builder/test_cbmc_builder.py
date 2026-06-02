@@ -254,7 +254,7 @@ class TestSimpleExampleCbmc:
 
     @pytest.fixture(scope="class")
     def c_file_reachability(self):
-        # Reachability: max_retries=8 (BOUND=20) needed to reach x>5 (end event).
+        # Reachability: max_retries=8 (BOUND=14) needed to reach x>5 (end event).
         c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN, max_retries=8)
         with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
             f.write(c_code)
@@ -278,13 +278,13 @@ class TestSimpleExampleCbmc:
 
     def test_cbmc_reachability(self, c_file_reachability):
         """All CWP states and the end event must be reachable.
-        Uses max_retries=8 (BOUND=20) so x can exceed 5 and reach the end event."""
+        Uses max_retries=8 (BOUND=14) so x can exceed 5 and reach the end event."""
         result = subprocess.run(
             [
                 "cbmc",
                 str(c_file_reachability),
                 "--unwind",
-                "21",
+                "15",
                 "--cover",
                 "cover",
                 "-DREACHABILITY",
@@ -293,7 +293,7 @@ class TestSimpleExampleCbmc:
             text=True,
         )
         # Expect: 3 of 3 covered (end event + CWP_INCREMENT_X + CWP_END).
-        # CWP_START is excluded — its mapping is always false at runtime.
+        # CWP_START is excluded from reachability covers (it's the CWP start state).
         assert "3 of 3" in result.stdout or "COVERED" in result.stdout, (
             f"Reachability incomplete.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
