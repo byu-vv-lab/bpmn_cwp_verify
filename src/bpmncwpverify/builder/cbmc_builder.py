@@ -100,8 +100,6 @@ def _generate_c(
     v_params = _var_params(state)
     v_args = _var_args(state)
 
-    initial_cwp = cwp_visitor.initial_cwp_state_define()
-    cwp_reached_init = cwp_visitor.cwp_reached_init_expr()
     cwp_define_names = cwp_visitor.reachable_state_define_names()
 
     # ── Assemble ──
@@ -129,9 +127,7 @@ def _generate_c(
         bpmn_visitor.generate_main(
             var_decls=v_decls,
             var_args=v_args,
-            initial_cwp_state=initial_cwp,
             cwp_num_states_define="CWP_NUM_STATES",
-            cwp_reached_init=cwp_reached_init,
             cwp_state_define_names=cwp_define_names,
         )
     )

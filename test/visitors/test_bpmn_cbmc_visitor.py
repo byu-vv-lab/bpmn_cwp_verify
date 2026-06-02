@@ -18,7 +18,6 @@ from bpmncwpverify.core.bpmn import (
     StartEvent,
     Task,
 )
-from bpmncwpverify.core.error import CbmcUnsupportedElementError
 from bpmncwpverify.visitors.bpmn_cbmc_visitor import BpmnCbmcVisitor
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -247,12 +246,23 @@ def test_visit_parallel_gateway_deduplicates(visitor, mocker):
     assert len(visitor._transitions) == 1
 
 
-def test_visit_intermediate_event_sets_error(visitor, mocker):
+def test_visit_intermediate_event_registers_transition(visitor, mocker):
     event = mocker.Mock(spec=IntermediateEvent)
     event.id = "ev_int"
     result = visitor.visit_intermediate_event(event)
+    assert result is True
+    assert visitor.error is None
+    assert len(visitor._transitions) == 1
+    assert visitor._transitions[0] == (event, None)
+
+
+def test_visit_intermediate_event_deduplicates(visitor, mocker):
+    event = mocker.Mock(spec=IntermediateEvent)
+    event.id = "ev_int"
+    visitor.visit_intermediate_event(event)
+    result = visitor.visit_intermediate_event(event)
     assert result is False
-    assert isinstance(visitor.error, CbmcUnsupportedElementError)
+    assert len(visitor._transitions) == 1
 
 
 # ── transition body ───────────────────────────────────────────────────────────
@@ -372,6 +382,20 @@ def test_transition_body_parallel_gateway_join(visitor, mocker):
     assert any("p_task_2_FROM_gw_join = true;" in line for line in lines)
 
 
+def test_transition_body_intermediate_event(visitor, mocker):
+    event = mocker.Mock(spec=IntermediateEvent)
+    event.id = "ev_int"
+    in_flow = make_flow(mocker, "task_1", "ev_int", "f_in")
+    out_flow = make_flow(mocker, "ev_int", "task_2", "f_out")
+    event.in_flows = [in_flow]
+    event.out_flows = [out_flow]
+    lines = visitor._transition_body(event, None, [])
+    assert any("p_ev_int_FROM_task_1 = false;" in line for line in lines)
+    assert any("p_task_2_FROM_ev_int = true;" in line for line in lines)
+    assert not any("update_cwp_state" in line for line in lines)
+    assert not any("running = false;" in line for line in lines)
+
+
 # ── behavior translation ──────────────────────────────────────────────────────
 
 
@@ -465,6 +489,80 @@ class TestTranslateBehavior:
         assert result[3] == "int t1 = nondet_int();"
         assert result[6] == "int t2 = nondet_int();"
 
+    # ── conditional branches (Case A) ─────────────────────────────────────────
+
+    def test_conditional_branch_same_var(self):
+        # All branches assign same variable; conditional guards go into assume.
+        # Guards are wrapped in one extra () layer by the translator.
+        behavior = (
+            "if\n"
+            ":: true -> sevNeed = homeCare\n"
+            ":: (a || b) -> sevNeed = outsideHomeCare\n"
+            ":: (c && d) -> sevNeed = discharge\n"
+            "fi"
+        )
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume(t == homeCare || (t == outsideHomeCare && ((a || b))) || (t == discharge && ((c && d))));",
+            "sevNeed = t;",
+        ]
+
+    # ── no-op branches (Case B) ───────────────────────────────────────────────
+
+    def test_noop_branch_unconditional(self):
+        # One conditional assignment + one always-enabled no-op (:: true).
+        behavior = "if\n:: cond -> x = val\n:: true\nfi"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume((t == 0 && (cond)) || t == 1);",
+            "if (t == 0) { x = val; }",
+        ]
+
+    def test_noop_branch_else_treated_as_unconditional(self):
+        # Promela 'else' keyword normalized to always-enabled.
+        behavior = "if\n:: cond -> x = val\n:: else\nfi"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume((t == 0 && (cond)) || t == 1);",
+            "if (t == 0) { x = val; }",
+        ]
+
+    def test_noop_branch_with_condition(self):
+        # No-op branch with a guard condition (conditionally skip).
+        behavior = "if\n:: g1 -> x = a\n:: g2\nfi"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume((t == 0 && (g1)) || (t == 1 && (g2)));",
+            "if (t == 0) { x = a; }",
+        ]
+
+    # ── multi-line branch joining ──────────────────────────────────────────────
+
+    def test_join_continuation_lines_joins_arrow_with_next(self):
+        lines = [":: cond ->", "    x = val", ":: true"]
+        result = BpmnCbmcVisitor._join_continuation_lines(lines)
+        assert result == [":: cond -> x = val", ":: true"]
+
+    def test_join_continuation_lines_does_not_join_nested_if(self):
+        lines = [":: else ->", "    if", "    fi"]
+        result = BpmnCbmcVisitor._join_continuation_lines(lines)
+        # 'if' is a keyword — don't join; leave :: else -> as-is
+        assert result[0] == ":: else ->"
+
+    def test_multiline_branch_translated(self):
+        # Promela with guard and statement on separate lines (Activity_0pl73xy style).
+        behavior = "if\n:: cond ->\n    x = val\n:: true\nfi"
+        result = BpmnCbmcVisitor._translate_behavior(behavior)
+        assert result == [
+            "int t = nondet_int();",
+            "__CPROVER_assume((t == 0 && (cond)) || t == 1);",
+            "if (t == 0) { x = val; }",
+        ]
+
 
 # ── code generation ───────────────────────────────────────────────────────────
 
@@ -485,5 +583,3 @@ def test_num_transitions(visitor, mocker):
     task.id = "task_1"
     visitor.visit_task(task)
     assert visitor.num_transitions == 1
-
-
