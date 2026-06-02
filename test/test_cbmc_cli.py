@@ -16,11 +16,45 @@ from bpmncwpverify.core.error import (
     FileReadFileError,
 )
 
+CORRECTNESS_SUCCESS = """\
+** Results:
+/tmp/verification.c function update_cwp_state
+[update_cwp_state.assertion.1] line 83 CWP P1: transition follows valid CWP edge: SUCCESS
 
-def _read_fixture(name: str) -> str:
-    with open(f"./test/resources/cbmc/{name}") as f:
-        return f.read()
+** 0 of 1 failed (1 iterations)
+VERIFICATION SUCCESSFUL
+"""
 
+CORRECTNESS_FAILURE = """\
+** Results:
+/tmp/verification.c function update_cwp_state
+[update_cwp_state.assertion.1] line 83 CWP P1: transition follows valid CWP edge: FAILURE
+
+** 1 of 1 failed (2 iterations)
+VERIFICATION FAILED
+"""
+
+REACHABILITY_SUCCESS = """\
+** coverage results:
+[main.coverage.1] file /tmp/verification.c line 299 function main condition 'Event_1y6wxsp_reached != FALSE': SATISFIED
+[main.coverage.2] file /tmp/verification.c line 300 function main condition 'Event_0wqympo_reached != FALSE': SATISFIED
+[main.coverage.3] file /tmp/verification.c line 301 function main condition 'cwp_reached[(signed long int)1] != FALSE': SATISFIED
+[main.coverage.4] file /tmp/verification.c line 302 function main condition 'cwp_reached[(signed long int)2] != FALSE': SATISFIED
+[main.coverage.5] file /tmp/verification.c line 303 function main condition 'cwp_reached[(signed long int)3] != FALSE': SATISFIED
+[main.coverage.6] file /tmp/verification.c line 304 function main condition 'cwp_reached[(signed long int)4] != FALSE': SATISFIED
+[main.coverage.7] file /tmp/verification.c line 305 function main condition 'cwp_reached[(signed long int)5] != FALSE': SATISFIED
+** 7 of 7 covered (100.0%)
+"""
+
+REACHABILITY_FAILURE = """\
+** coverage results:
+[main.coverage.1] file /tmp/verification.c line 299 function main condition 'Event_1y6wxsp_reached != FALSE': FAILED
+[main.coverage.2] file /tmp/verification.c line 300 function main condition 'Event_0wqympo_reached != FALSE': SATISFIED
+[main.coverage.3] file /tmp/verification.c line 301 function main condition 'cwp_reached[(signed long int)1] != FALSE': SATISFIED
+** 0 of 3 covered (0.0%)
+"""
+
+SUBPROCESS_ERROR = ""
 
 # ── File-path error tests ──────────────────────────────────────────────────────
 
@@ -95,8 +129,8 @@ def test_cbmc_flag_routes_to_cbmc_verifier(mocker):
                 file_path="/tmp/verification.c",
                 c_code="",
                 bound=5,
-                correctness_output=_read_fixture("correctness_success.txt"),
-                reachability_output=_read_fixture("reachability_success.txt"),
+                correctness_output=CORRECTNESS_SUCCESS,
+                reachability_output=REACHABILITY_SUCCESS,
             )
         ),
     )
@@ -116,13 +150,13 @@ def test_cbmc_flag_routes_to_cbmc_verifier(mocker):
 
 def test_parser_correctness_success():
     parser = CbmcOutputParser()
-    result = parser.check_correctness(_read_fixture("correctness_success.txt"))
+    result = parser.check_correctness(CORRECTNESS_SUCCESS)
     assert is_successful(result)
 
 
 def test_parser_correctness_failure_returns_assertion_error():
     parser = CbmcOutputParser()
-    result = parser.check_correctness(_read_fixture("correctness_failure.txt"))
+    result = parser.check_correctness(CORRECTNESS_FAILURE)
     assert not is_successful(result)
     error = result.failure()
     assert isinstance(error, CbmcAssertionError)
@@ -131,20 +165,20 @@ def test_parser_correctness_failure_returns_assertion_error():
 
 def test_parser_correctness_subprocess_error_on_empty():
     parser = CbmcOutputParser()
-    result = parser.check_correctness(_read_fixture("subprocess_error.txt"))
+    result = parser.check_correctness(SUBPROCESS_ERROR)
     assert not is_successful(result)
     assert isinstance(result.failure(), CbmcSubProcessError)
 
 
 def test_parser_reachability_success():
     parser = CbmcOutputParser()
-    result = parser.check_reachability(_read_fixture("reachability_success.txt"))
+    result = parser.check_reachability(REACHABILITY_SUCCESS)
     assert is_successful(result)
 
 
 def test_parser_reachability_failure_returns_reachability_error():
     parser = CbmcOutputParser()
-    result = parser.check_reachability(_read_fixture("reachability_failure.txt"))
+    result = parser.check_reachability(REACHABILITY_FAILURE)
     assert not is_successful(result)
     error = result.failure()
     assert isinstance(error, CbmcReachabilityError)
@@ -153,7 +187,7 @@ def test_parser_reachability_failure_returns_reachability_error():
 
 def test_parser_reachability_subprocess_error_on_empty():
     parser = CbmcOutputParser()
-    result = parser.check_reachability(_read_fixture("subprocess_error.txt"))
+    result = parser.check_reachability(SUBPROCESS_ERROR)
     assert not is_successful(result)
     assert isinstance(result.failure(), CbmcSubProcessError)
 
