@@ -13,7 +13,6 @@
   ],
   "reportUnknownArgumentType": false,
   "extraPaths": [
-    "src",
-    "/var/lang/lib/python3.12/site-packages/"
+    "src"
   ]
 }
