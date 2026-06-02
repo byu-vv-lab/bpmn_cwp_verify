@@ -66,10 +66,8 @@ def validate_element_names(bpmn: Bpmn) -> Result[Bpmn, Error]:
         element_name = id.name
         element_id = id.id
 
-        if (
-            id.has_explicit_name
-            and element_name == element_id
-            and not (isinstance(id, SequenceFlow) or isinstance(id, MessageFlow))
+        if element_name == element_id and not (
+            isinstance(id, SequenceFlow) or isinstance(id, MessageFlow)
         ):
             no_name_ids.append(element_id)
 

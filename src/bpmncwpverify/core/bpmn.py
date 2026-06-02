@@ -20,7 +20,7 @@ class BpmnElement:
     Parent class for all BPMN elements
     """
 
-    __slots__ = ["name", "id", "has_explicit_name"]
+    __slots__ = ["name", "id"]
 
     def __init__(self, id: str, name: str) -> None:
         """
@@ -32,22 +32,17 @@ class BpmnElement:
         """
         self.id = id
         self.name = name
-        self.has_explicit_name = True
 
     @classmethod
     def from_xml(cls: type[T], element: Element) -> T:
         id = element.attrib.get("id")
         if not id:
             raise Exception("Id cannot be None")
-        raw_name: str | None = element.attrib.get("name")
-        has_explicit_name = raw_name is not None
-        name: str = raw_name if raw_name is not None else id
+        name: str = element.attrib.get("name", id)
 
         subclass_attrs = cls._extract_attributes(element)
 
-        obj = cls(id, name, **subclass_attrs)
-        obj.has_explicit_name = has_explicit_name
-        return obj
+        return cls(id, name, **subclass_attrs)
 
     @classmethod
     def _extract_attributes(cls, element: Element) -> dict[str, Any]:
