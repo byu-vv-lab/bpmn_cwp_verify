@@ -12,6 +12,10 @@ from returns.unsafe import unsafe_perform_io
 from bpmncwpverify.core.accessmethods import bpmnmethods
 from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.bpmn import Bpmn
+from bpmncwpverify.core.cbmc import (
+    CbmcVerificationReport,
+    verify_with_cbmc,
+)
 from bpmncwpverify.core.cwp import Cwp
 from bpmncwpverify.core.error import (
     Error,
@@ -57,6 +61,11 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
         "--cloud",
         action="store_true",
         help="Run verification remotely on AWS Lambda",
+    )
+    argument_parser.add_argument(
+        "--cbmc",
+        action="store_true",
+        help="Run verification locally with CBMC",
     )
     return argument_parser
 
@@ -122,6 +131,75 @@ def _verify_with_spin_from_files(
     return result
 
 
+def _verify_with_cbmc(
+    state_str: str,
+    cwp_xml: Element,
+    bpmn_xml: Element,
+) -> IOResult[CbmcVerificationReport, Error]:
+    logging.info("Verifying state and comparing against CWP and BPMN files 0/3")
+
+    def _verify_state(state_str: str) -> Result[State, Error]:
+        logging.info("    Verifying state file")
+        return State.from_str(state_str)
+
+    def _verify_cwp_with_state(cwp_xml: Element, state: State) -> IOResult[Cwp, Error]:
+        logging.info("    Verifying CWP against state")
+        return IOResult.from_result(CwpXmlParser.from_xml(cwp_xml, state))
+
+    def _verify_bpmn_with_state(
+        bpmn_xml: Element, state: State
+    ) -> IOResult[Bpmn, Error]:
+        logging.info("    Verifying BPMN against state")
+        return IOResult.from_result(bpmnmethods.from_xml(bpmn_xml, state))
+
+    def _run_cbmc(
+        state: State, cwp: Cwp, bpmn: Bpmn
+    ) -> IOResult[CbmcVerificationReport, Error]:
+        logging.info("Generating C model from BPMN, CWP, and state")
+        return verify_with_cbmc(state, cwp, bpmn)
+
+    result: IOResult[CbmcVerificationReport, Error] = IOResult.from_result(
+        _verify_state(state_str)
+    ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: _verify_cwp_with_state(cwp_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp: _verify_bpmn_with_state(bpmn_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn: _run_cbmc(state, cwp, bpmn)
+            )
+        )
+    )
+
+    return result
+
+
+def _verify_with_cbmc_from_files(
+    state_file: str, cwp_file: str, bpmn_file: str
+) -> IOResult[CbmcVerificationReport, Error]:
+    logging.info("Reading input files 0/3")
+
+    def _read_file_as_string(path: str) -> IOResult[str, Error]:
+        logging.info(f"    Reading file: {path}")
+        return read_file_as_string(path)
+
+    def _element_tree_from_string(input: str, type: str) -> IOResult[Element, Error]:
+        logging.info(f"    Converting {type} to XML tree")
+        return element_tree_from_string(input)
+
+    result: IOResult[CbmcVerificationReport, Error] = _read_file_as_string(
+        state_file
+    ).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: _read_file_as_string(cwp_file).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp_str: _read_file_as_string(bpmn_file).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn_str: _element_tree_from_string(cwp_str, "CWP").bind(  # pyright: ignore[reportUnknownMemberType]
+                    lambda cwp_xml: _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
+                        lambda bpmn_xml: _verify_with_cbmc(state, cwp_xml, bpmn_xml)
+                    )
+                )
+            )
+        )
+    )
+    return result
+
+
 def _trigger_lambda(
     state: str, cwp: str, bpmn: str
 ) -> IOResult[SpinVerificationReport, Error]:
@@ -180,20 +258,49 @@ def verify() -> None:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
 
+    if args.cloud and args.cbmc:
+        print("ERROR: --cloud and --cbmc are mutually exclusive")
+        return
+
     if args.cloud:
         result = _verify_on_lambda_from_files(
             args.state_file, args.cwp_file, args.bpmn_file
         )
-    else:
-        result = cli_verify(args.state_file, args.cwp_file, args.bpmn_file)
-
-    if not_(is_successful)(result):
-        error: Error = unsafe_perform_io(result.failure())
-        logging.error(f"{get_error_message(error)}")
+        if not_(is_successful)(result):
+            error: Error = unsafe_perform_io(result.failure())
+            print(get_error_message(error))
+            return
+        spin_report: SpinVerificationReport = unsafe_perform_io(result.unwrap())
+        print(spin_report.spin_report)
         return
 
+    if args.cbmc:
+        cbmc_result = _verify_with_cbmc_from_files(
+            args.state_file, args.cwp_file, args.bpmn_file
+        )
+        if not_(is_successful)(cbmc_result):
+            cbmc_error: Error = unsafe_perform_io(cbmc_result.failure())
+            print(get_error_message(cbmc_error))
+            return
+        report: CbmcVerificationReport = unsafe_perform_io(cbmc_result.unwrap())
+        satisfied_count = report.reachability_output.count(": SATISFIED")
+        print(
+            f"CBMC VERIFICATION SUCCESSFUL\n"
+            f"  Workflow:    {args.bpmn_file}\n"
+            f"  C file:      {report.file_path}\n"
+            f"  BOUND:       {report.bound}  (--unwind {report.bound + 1})\n"
+            f"  Properties:  P1-P3 passed (correctness)\n"
+            f"               P4 passed ({satisfied_count} CWP states reachable)"
+        )
+        return
+
+    spin_result = cli_verify(args.state_file, args.cwp_file, args.bpmn_file)
+    if not_(is_successful)(spin_result):
+        spin_error: Error = unsafe_perform_io(spin_result.failure())
+        print(get_error_message(spin_error))
+        return
     spin_verification_report: SpinVerificationReport = unsafe_perform_io(
-        result.unwrap()
+        spin_result.unwrap()
     )
     print(spin_verification_report.spin_report)
 
