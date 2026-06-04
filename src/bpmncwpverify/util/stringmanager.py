@@ -17,7 +17,6 @@ class StringManager:
     __slots__ = ["contents", "indent"]
 
     def __init__(self) -> None:
-        # self.contents: list[str] = []
         # (indent_level, text)
         self.contents: list[tuple[int, str]] = []
         self.indent = 0
