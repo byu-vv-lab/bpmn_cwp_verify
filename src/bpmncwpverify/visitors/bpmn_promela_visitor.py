@@ -31,39 +31,15 @@ class Context:
     __slots__ = [
         "_element",
         "_is_parallel",
-        "_behavior_model",
-        "_has_option",
         "_behavior",
-        "_end_event",
         "_boundary_events",
-        "_boundary_event_consume_locations",
     ]
 
     def __init__(self, element: Node) -> None:
         self._element = element
         self._is_parallel = False
-        self._has_option = False
-        self._behavior_model = True
         self._behavior = ""
-        self._end_event = False
         self._boundary_events: list[Task.BoundaryEvent] = []
-
-    @property
-    def has_option(self) -> bool:
-        return self._has_option
-
-    @has_option.setter
-    def has_option(self, new_val: bool) -> None:
-        assert isinstance(self._element, ExclusiveGatewayNode | EventBasedGatewayNode)
-        self._has_option = new_val
-
-    @property
-    def behavior_model(self) -> bool:
-        return self._behavior_model
-
-    @behavior_model.setter
-    def behavior_model(self, new_val: bool) -> None:
-        self._behavior_model = new_val
 
     @property
     def is_parallel(self) -> bool:
@@ -86,17 +62,6 @@ class Context:
             "only tasks can have a behavior associated with them."
         )
         self._behavior = new_val
-
-    @property
-    def end_event(self) -> bool:
-        return self._end_event
-
-    @end_event.setter
-    def end_event(self, new_val: bool) -> None:
-        assert isinstance(self._element, EndEvent), (
-            "end_event can only be set if element is of type EndEvent"
-        )
-        self._end_event = new_val
 
     @property
     def boundary_events(self) -> list[Task.BoundaryEvent]:
@@ -160,6 +125,51 @@ class TokenPositions:
             return []
 
 
+def generate_location_label(element: Node, flow_or_message: Flow | None = None) -> str:
+    """
+    Should only be called from _get_consume_locations and _get_put_locations.   REMOVE THIS LINE IF NOT TRUE
+    Generates a unique label for a node, indicating the source of flow.
+    If multiple flows lead into the node, the label specifies the source element
+    (e.g., 'Node1_FROM_Start'). If the node is a Task, the label ends with '_END'.
+    """
+    if flow_or_message:
+        return f"{element.id}_FROM_{flow_or_message.source_node.id}"
+    return element.id
+
+
+def get_consume_locations(element: Node) -> "TokenPositions":
+    """
+    Returns a list of labels representing all incoming flows to a node.
+    If there are no incoming flows, the node itself is returned as a label.
+    Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
+    """
+    if not (element.in_flows or element.in_msgs):
+        return TokenPositions(standalone=generate_location_label(element))
+    return TokenPositions(
+        seq_flows=[generate_location_label(element, flow) for flow in element.in_flows],
+        msg_flows=[generate_location_label(element, flow) for flow in element.in_msgs],
+    )
+
+
+def get_put_locations(element: Node) -> TokenPositions:
+    """
+    Returns a list of labels representing all outgoing flows from a node.
+    Each label indicates the target node and the current node as the source.
+    Example: ['Node2_FROM_Node1']
+    """
+    if not (element.out_flows or element.out_msgs):
+        return TokenPositions(standalone=generate_location_label(element))
+    return TokenPositions(
+        seq_flows=[
+            generate_location_label(flow.target_node, flow)
+            for flow in element.out_flows
+        ],
+        msg_flows=[
+            generate_location_label(flow.target_node, flow) for flow in element.out_msgs
+        ],
+    )
+
+
 class PromelaGenVisitor(BpmnVisitor):
     __slots__ = [
         "defs",
@@ -180,287 +190,8 @@ class PromelaGenVisitor(BpmnVisitor):
         self.init_proc_contents = StringManager()
         self.promela = StringManager()
 
-    def _generate_location_label(
-        self, element: Node, flow_or_message: Flow | None = None
-    ) -> str:
-        """
-        Should only be called from _get_consume_locations and _get_put_locations.
-        Generates a unique label for a node, indicating the source of flow.
-        If multiple flows lead into the node, the label specifies the source element
-        (e.g., 'Node1_FROM_Start'). If the node is a Task, the label ends with '_END'.
-        """
-        if flow_or_message:
-            return f"{element.id}_FROM_{flow_or_message.source_node.id}"
-        return element.id
-
-    def _get_consume_locations(self, element: Node) -> TokenPositions:
-        """
-        Returns a list of labels representing all incoming flows to a node.
-        If there are no incoming flows, the node itself is returned as a label.
-        Example: ['Node2_FROM_Start', 'Node2_FROM_Node1']
-        """
-        if not (element.in_flows or element.in_msgs):
-            return TokenPositions(standalone=self._generate_location_label(element))
-        return TokenPositions(
-            seq_flows=[
-                self._generate_location_label(element, flow)
-                for flow in element.in_flows
-            ],
-            msg_flows=[
-                self._generate_location_label(element, flow) for flow in element.in_msgs
-            ],
-        )
-
-    def _get_put_locations(self, element: Node) -> TokenPositions:
-        """
-        Returns a list of labels representing all outgoing flows from a node.
-        Each label indicates the target node and the current node as the source.
-        Example: ['Node2_FROM_Node1']
-        """
-        if not (element.out_flows or element.out_msgs):
-            return TokenPositions(standalone=self._generate_location_label(element))
-        return TokenPositions(
-            seq_flows=[
-                self._generate_location_label(flow.target_node, flow)
-                for flow in element.out_flows
-            ],
-            msg_flows=[
-                self._generate_location_label(flow.target_node, flow)
-                for flow in element.out_msgs
-            ],
-        )
-
-    def _out_seq_and_msg_flows(
-        self, string: StringManager, flows: TokenPositions
-    ) -> None:
-        for loc in flows.seq_flows:
-            string.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
-        for loc in flows.msg_flows:
-            string.write_str(f"sendToken({loc})", NL_SINGLE, IndentAction.NIL)
-
-    def _in_seq_and_msg_flows(
-        self, string: StringManager, flows: TokenPositions
-    ) -> None:
-        for loc in flows.seq_flows:
-            string.write_str(f"consumeToken({loc})", NL_SINGLE, IndentAction.NIL)
-        for loc in flows.msg_flows:
-            string.write_str(f"receiveToken({loc})", NL_SINGLE, IndentAction.NIL)
-
-    def _get_expressions(self, ctx: Context) -> list[str]:
-        """
-        Returns a list of the expressions that lie on the flows leaving a specific
-        node. Example: ["x > 5"]
-        """
-        return [flow.expression for flow in ctx.element.out_flows if flow.expression]
-
-    def _build_expr_conditional(self, ctx: Context) -> StringManager:
-        """
-        This function builds and returns a conditional block. This should be called
-        only by the _build_atomic_block function.
-        example:
-        if
-            :: x > 5 -> putToken(...)
-            :: ...
-        fi
-        """
-        sm = StringManager()
-        sm.write_str("if", NL_SINGLE)
-
-        if ctx.has_option:
-            for flow in ctx.element.out_flows:
-                if isinstance(ctx.element, EventBasedGatewayNode):
-                    sm.write_str(
-                        f":: hasToken({self._generate_location_label(flow.target_node, flow.target_node.in_msgs[0])}) -> putToken({self._generate_location_label(flow.target_node, flow)})",
-                        NL_SINGLE,
-                    )
-                else:
-                    if flow.expression:
-                        sm.write_str(
-                            f":: {flow.expression.replace('\n', '')} -> putToken({self._generate_location_label(flow.target_node, flow)})",
-                            NL_SINGLE,
-                        )
-
-        if ctx.boundary_events:
-            # 1) get all of the put locations [[end_from_boundevent, ...], ...]
-            # 2) get all of the consume locations for each boundevent [[end_from_boundevent, ...]]
-            # (hastoken(boundevent1consume1) || hastoken(boundevent1consume2)) ->
-            #     putToken(element1_from_boundevent1)
-            #     putToken(element2_from_boundevent1)
-            put_locations = [
-                self._get_put_locations(boundary_event)
-                for boundary_event in ctx.boundary_events
-            ]
-
-            consume_locations = [
-                self._get_consume_locations(boundary_event)
-                for boundary_event in ctx.boundary_events
-            ]
-
-            # We can zip these two together, because it will return a list n = len(ctx.boundary_events)
-            for put_locs, consume_locs in zip(put_locations, consume_locations):
-                sm.write_str(":: (")
-
-                sm.write_str(
-                    " || ".join(
-                        [
-                            f"hasToken({consume_loc})"
-                            for consume_loc in consume_locs.seq_flows
-                        ]
-                        + [f"{consume_loc}" for consume_loc in consume_locs.msg_flows]
-                    )
-                )
-
-                sm.write_str(") ->", NL_SINGLE, IndentAction.INC)
-                self._in_seq_and_msg_flows(sm, consume_locs)
-                self._out_seq_and_msg_flows(sm, put_locs)
-                sm.write_str("", indent_action=IndentAction.DEC)
-
-        sm.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
-
-        if isinstance(ctx.element, EventBasedGatewayNode):
-            sm.write_str("skip", NL_SINGLE)
-        else:
-            sm.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
-            sm.write_str("assert(false)", NL_SINGLE)
-
-        sm.write_str("fi", NL_SINGLE, IndentAction.DEC)
-        return sm
-
-    def _build_guard(
-        self, ctx: Context, consume_locations: TokenPositions
-    ) -> StringManager:
-        """
-        Constructs a guard condition for an atomic block in a process.
-        The guard checks whether a token exists at the current node, based on incoming flows.
-        Example: (hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)).
-        If the element of interest here is a triggerable event, then we make sure that it
-        has a token from one of its incoming sequence flows and one of its incoming message
-        flows.
-        Example: ((hasToken(Node2_FROM_Start) || hasToken(Node2_FROM_Node1)) && (hasToken(Node2_From_NodeInOtherProcess))).
-        """
-
-        guard: StringManager = StringManager()
-
-        inner_process_positions: list[str] = (
-            consume_locations.get_in_process_positions()
-        )
-        msg_positions: list[str] = consume_locations.msg_flows
-
-        if inner_process_positions:
-            guard.write_str("(")
-            tokens: list[str] = [f"hasToken({pos})" for pos in inner_process_positions]
-            if ctx.is_parallel:
-                guard.write_str(" && ".join(tokens))
-            else:
-                guard.write_str(" || ".join(tokens))
-            guard.write_str(")")
-
-        if msg_positions:
-            guard.write_str(" && (" if inner_process_positions else "(")
-            tokens_msg: list[str] = [f"{pos}" for pos in msg_positions]
-            guard.write_str(" && ".join(tokens_msg))
-            guard.write_str(")")
-
-        if ctx.boundary_events:
-            guard.write_str(" && (")
-            guards: list[str] = []
-
-            for boundary_event in ctx.boundary_events:
-                locations = self._get_consume_locations(boundary_event)
-
-                if locations.standalone:
-                    guards.append(f" hasToken({locations.standalone})")
-                else:
-                    guards.append(
-                        " || ".join(
-                            [f"hasToken({loc})" for loc in locations.seq_flows]
-                            + [f"{loc}" for loc in locations.msg_flows]
-                        )
-                    )
-
-            guard.write_str(" || ".join(guards))
-            guard.write_str(")")
-
-        return guard
-
-    def _build_atomic_block(self, ctx: Context) -> StringManager:
-        """
-        This function builds an atomic block to execute the element's behavior,
-        consume the token and move the token forward.
-        """
-
-        atomic_block = StringManager()
-        atomic_block.write_str(":: atomic { (")
-
-        in_locations = self._get_consume_locations(ctx.element)
-
-        guard = self._build_guard(ctx, in_locations)
-
-        atomic_block.write_str(guard)
-        atomic_block.write_str(") ->", NL_SINGLE, IndentAction.INC)
-        if ctx.behavior:
-            atomic_block.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
-
-        atomic_block.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-
-        atomic_block.write_str(f'DBG(printf("ID: {ctx.element.id}\\n"))', NL_SINGLE)
-        atomic_block.write_str("DBG(stateLogger())", NL_SINGLE)
-
-        # in_flows in d_step
-        if in_locations.standalone:
-            atomic_block.write_str(
-                f"consumeToken({in_locations.standalone})", NL_SINGLE
-            )
-        else:
-            self._in_seq_and_msg_flows(atomic_block, in_locations)
-
-        # out_flows in d_step
-        if ctx.has_option or ctx.boundary_events:
-            atomic_block.write_str(self._build_expr_conditional(ctx))
-        else:
-            out_locations = self._get_put_locations(ctx.element)
-            self._out_seq_and_msg_flows(atomic_block, out_locations)
-
-        atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
-
-        if ctx.end_event:
-            atomic_block.write_str("break", NL_SINGLE)
-
-        atomic_block.write_str("}", NL_SINGLE, IndentAction.DEC)
-
-        return atomic_block
-
-    def _gen_behavior_model(self, ctx: Context) -> None:
-        """
-        Writes to the behaviors field to make an inline behavior model for the
-        passed element.
-        """
-        if ctx.behavior:
-            start_block_key_words = {"if"}
-            end_block_key_words = {"fi"}
-            self.behaviors.write_str(
-                f"inline {ctx.element.id}_BehaviorModel() {{",
-                NL_SINGLE,
-                IndentAction.INC,
-            )
-            processed_str_list = [
-                line.strip() for line in ctx.behavior.split("\n") if line.strip()
-            ]
-
-            for line in processed_str_list:
-                if line in start_block_key_words:
-                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.INC)
-                elif line in end_block_key_words:
-                    self.behaviors.write_str(line, NL_SINGLE, IndentAction.DEC)
-                else:
-                    self.behaviors.write_str(line, NL_SINGLE)
-
-            self.behaviors.write_str("updateState()", NL_SINGLE)
-
-            self.behaviors.write_str("}", NL_DOUBLE, IndentAction.DEC)
-
-    def _gen_var_defs(self, ctx: Context) -> None:
-        locations = self._get_consume_locations(ctx.element)
+    def gen_var_defs(self, ctx: Context) -> None:
+        locations = get_consume_locations(ctx.element)
 
         if not locations.standalone:
             for var in locations.msg_flows:
@@ -479,93 +210,90 @@ class PromelaGenVisitor(BpmnVisitor):
 
     def visit_start_event(self, event: StartEvent) -> bool:
         context = Context(event)
-        self._gen_behavior_model(context)
-        self._gen_var_defs(context)
+        builder = StartEventBuilder()
 
-        flows = self._get_consume_locations(event)
-        if flows.standalone:
-            self.process.write_str(
-                f"putToken({flows.standalone})", NL_SINGLE, IndentAction.INC
-            )
-        else:
-            self._out_seq_and_msg_flows(self.process, flows)
+        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.gen_var_defs(context)
+
+        flows = get_consume_locations(event)
+        self.process.write_str(
+            builder.out_seq_and_msg_flows(flows), indent_action=IndentAction.INC
+        )
 
         # Close the d_step from the `visit_process`
-
         self.process.write_str("}", NL_SINGLE)
-
         self.process.write_str("do", NL_SINGLE)
 
-        atomic_block = self._build_atomic_block(context)
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
 
-        self.process.write_str(atomic_block)
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
         context = Context(event)
-        context.end_event = True
-        self._gen_behavior_model(context)
-        self._gen_var_defs(context)
+        builder = EndEventBuilder()
 
-        atomic_block = self._build_atomic_block(context)
+        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.gen_var_defs(context)
 
-        self.process.write_str(atomic_block)
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
         context = Context(event)
-        self._gen_behavior_model(context)
-        self._gen_var_defs(context)
+        builder = IntermediateEventBuilder()
 
-        atomic_block = self._build_atomic_block(context)
+        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.gen_var_defs(context)
 
-        self.process.write_str(atomic_block)
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+
         return True
 
     def visit_task(self, task: Task) -> bool:
         context = Context(task)
         context.behavior = task.behavior
         context.boundary_events = task.msg_boundary_events
-        self._gen_behavior_model(context)
-        self._gen_var_defs(context)
+        builder = TaskBuilder()
 
-        atomic_block = self._build_atomic_block(context)
+        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.gen_var_defs(context)
 
-        self.process.write_str(atomic_block)
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+
         return True
 
     def visit_event_based_gateway(self, gateway: EventBasedGatewayNode) -> bool:
         context = Context(gateway)
-        context.has_option = True
-        context.behavior_model = False
-        self._gen_var_defs(context)
+        builder = EventBasedGatewayBuilder()
 
-        atomic_block = self._build_atomic_block(context)
-        self.process.write_str(atomic_block)
+        self.gen_var_defs(context)
+
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+
         return True
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         context = Context(gateway)
-        context.has_option = True
-        context.behavior_model = False
-        self._gen_var_defs(context)
+        builder = ExclusiveGatewayBuilder()
 
-        atomic_block = self._build_atomic_block(context)
-        self.process.write_str(atomic_block)
+        self.gen_var_defs(context)
+
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+
         return True
-
-    def end_visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> None:
-        pass
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
         context = Context(gateway)
-        context.behavior_model = False
+        builder = ParallelGatewayBuilder()
+
         if not gateway.is_fork:
             context.is_parallel = True
-        self._gen_var_defs(context)
 
-        atomic_block = self._build_atomic_block(context)
-        self.process.write_str(atomic_block)
+        self.gen_var_defs(context)
+
+        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+
         return True
 
     def visit_message_flow(self, flow: MessageFlow) -> bool:
@@ -584,7 +312,7 @@ class PromelaGenVisitor(BpmnVisitor):
         return True
 
     def end_visit_process(self, process: Process) -> None:
-        self.promela.write_str(self.local_var_defs)
+        self.promela.write_str(self.local_var_defs, indent_offset=1)
         self.promela.write_str("", NL_SINGLE)
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
@@ -608,3 +336,338 @@ class PromelaGenVisitor(BpmnVisitor):
     def end_visit_bpmn(self, bpmn: Bpmn) -> None:
         self.init_proc_contents.write_str("}", NL_SINGLE, IndentAction.DEC)
         self.init_proc_contents.write_str("}", NL_DOUBLE, IndentAction.DEC)
+
+
+class AtomicBuilder:
+    def out_seq_and_msg_flows(self, flows: TokenPositions) -> StringManager:
+        outgoing = StringManager()
+
+        if flows.standalone:
+            outgoing.write_str(
+                f"putToken({flows.standalone})", NL_SINGLE, IndentAction.INC
+            )
+        else:
+            for loc in flows.seq_flows:
+                outgoing.write_str(f"putToken({loc})", NL_SINGLE, IndentAction.NIL)
+            for loc in flows.msg_flows:
+                outgoing.write_str(f"sendToken({loc})", NL_SINGLE, IndentAction.NIL)
+
+        return outgoing
+
+    def in_seq_and_msg_flows(self, flows: TokenPositions) -> StringManager:
+        in_going = StringManager()
+
+        if flows.standalone:
+            in_going.write_str(f"consumeToken({flows.standalone})", NL_SINGLE)
+        else:
+            for loc in flows.seq_flows:
+                in_going.write_str(f"consumeToken({loc})", NL_SINGLE, IndentAction.NIL)
+            for loc in flows.msg_flows:
+                in_going.write_str(f"receiveToken({loc})", NL_SINGLE, IndentAction.NIL)
+
+        return in_going
+
+    def build_atomic_block(self, ctx: Context) -> StringManager:
+        """
+        This function builds an atomic block to execute the element's behavior,
+        consume the token and move the token forward.
+        """
+        atomic = StringManager()
+        atomic.write_str(":: atomic { (")
+
+        in_locations = get_consume_locations(ctx.element)
+        out_locations = get_put_locations(ctx.element)
+
+        atomic.write_str(self.build_guard(ctx, in_locations))
+
+        atomic.write_str(self.add_structures(ctx), indent_offset=1)
+
+        atomic.write_str(self.add_in_flows(ctx, in_locations), indent_offset=2)
+
+        atomic.write_str(self.add_out_flows(ctx, out_locations), indent_offset=2)
+
+        atomic.write_str(self.add_end(), indent_offset=1)
+
+        atomic.write_str("}", NL_SINGLE)
+
+        return atomic
+
+    def add_out_flows(
+        self, ctx: Context, out_locations: TokenPositions
+    ) -> StringManager:
+        out_going = StringManager()
+
+        out_going.write_str(self.out_seq_and_msg_flows(out_locations))
+
+        return out_going
+
+    def add_end(self) -> StringManager:
+        end = StringManager()
+        end.write_str("}", NL_SINGLE)
+
+        return end
+
+    def add_in_flows(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+        consumption = StringManager()
+
+        consumption.write_str(self.in_seq_and_msg_flows(in_locations))
+
+        return consumption
+
+    def build_guard(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+        guard = StringManager()
+
+        if seq_locs := in_locations.get_in_process_positions():
+            guard.write_str("(")
+            tokens: list[str] = [f"hasToken({pos})" for pos in seq_locs]
+            guard.write_str(" || ".join(tokens))
+            guard.write_str(")")
+
+        if msg_locs := in_locations.msg_flows:
+            guard.write_str(" && (" if seq_locs else "(")
+            tokens_msg: list[str] = [f"{pos}" for pos in msg_locs]
+            guard.write_str(" && ".join(tokens_msg))
+            guard.write_str(")")
+
+        guard.write_str(") ->", NL_SINGLE, IndentAction.INC)
+
+        return guard
+
+    def add_structures(self, ctx: Context) -> StringManager:
+        structure = StringManager()
+        if ctx.behavior:
+            structure.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
+
+        structure.write_str("d_step {", NL_SINGLE, IndentAction.INC)
+        structure.write_str(f'DBG(printf("ID: {ctx.element.id}\\n"))', NL_SINGLE)
+        structure.write_str("DBG(stateLogger())", NL_SINGLE)
+        return structure
+
+    def gen_behavior_model(self, ctx: Context) -> StringManager:
+        """
+        Writes to the behaviors field to make an inline behavior model for the
+        passed element.
+        """
+        behavior = StringManager()
+        if ctx.behavior:
+            start_block_key_words = {"if"}
+            end_block_key_words = {"fi"}
+            behavior.write_str(
+                f"inline {ctx.element.id}_BehaviorModel() {{",
+                NL_SINGLE,
+                IndentAction.INC,
+            )
+            processed_str_list = [
+                line.strip() for line in ctx.behavior.split("\n") if line.strip()
+            ]
+
+            for line in processed_str_list:
+                if line in start_block_key_words:
+                    behavior.write_str(line, NL_SINGLE, IndentAction.INC)
+                elif line in end_block_key_words:
+                    behavior.write_str(line, NL_SINGLE, IndentAction.DEC)
+                else:
+                    behavior.write_str(line, NL_SINGLE)
+
+            behavior.write_str("updateState()", NL_SINGLE)
+
+            behavior.write_str("}", NL_DOUBLE, IndentAction.DEC)
+
+        return behavior
+
+
+class StartEventBuilder(AtomicBuilder):
+    pass
+
+
+class EndEventBuilder(AtomicBuilder):
+    def add_end(self) -> StringManager:
+        end = StringManager()
+
+        end.write_str("}", NL_SINGLE, IndentAction.NIL)
+        end.write_str("break", NL_SINGLE)
+
+        return end
+
+    def add_out_flows(
+        self, ctx: Context, out_locations: TokenPositions
+    ) -> StringManager:
+        out_going = StringManager()
+
+        return out_going
+
+
+class IntermediateEventBuilder(AtomicBuilder):
+    def add_in_flows(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+        consumption = StringManager()
+
+        if isinstance(ctx.element.in_flows[0].source_node, EventBasedGatewayNode):
+            gate = ctx.element.in_flows[0].source_node
+            gate_out_tokens = get_put_locations(gate)
+            consumption.write_str(self.in_seq_and_msg_flows(gate_out_tokens))
+
+            for msg_other_tokens in gate.out_flows:
+                token = get_consume_locations(msg_other_tokens.target_node)
+                for loc in token.msg_flows:
+                    consumption.write_str(
+                        f"receiveToken({loc})", NL_SINGLE, IndentAction.NIL
+                    )
+        else:
+            consumption.write_str(self.in_seq_and_msg_flows(in_locations))
+
+        return consumption
+
+
+class TaskBuilder(AtomicBuilder):
+    def add_out_flows(
+        self, ctx: Context, out_locations: TokenPositions
+    ) -> StringManager:
+        out_going = StringManager()
+
+        if ctx.boundary_events:
+            out_going.write_str(self.build_expression_conditional(ctx, out_locations))
+        else:
+            out_going.write_str(self.out_seq_and_msg_flows(out_locations))
+
+        return out_going
+
+    def build_expression_conditional(
+        self, ctx: Context, out_locations: TokenPositions
+    ) -> StringManager:
+        expr = StringManager()
+
+        expr.write_str("if", NL_SINGLE)
+
+        put_locations = [
+            get_put_locations(boundary_event) for boundary_event in ctx.boundary_events
+        ]
+        in_locations = [
+            get_consume_locations(boundary_event)
+            for boundary_event in ctx.boundary_events
+        ]
+
+        for put_locs, in_locs in zip(put_locations, in_locations):
+            expr.write_str(":: (")
+
+            expr.write_str(
+                " || ".join(
+                    [f"hasToken({in_loc})" for in_loc in in_locs.seq_flows]
+                    + [f"{in_loc}" for in_loc in in_locs.msg_flows]
+                )
+            )
+            expr.write_str(") ->", NL_SINGLE, IndentAction.INC)
+            expr.write_str(self.in_seq_and_msg_flows(in_locs), indent_offset=1)
+            expr.write_str(self.out_seq_and_msg_flows(put_locs), indent_offset=1)
+
+        expr.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
+        expr.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
+        expr.write_str("assert(false)", NL_SINGLE)
+        expr.write_str("fi", NL_SINGLE, IndentAction.DEC)
+
+        return expr
+
+    def build_guard(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+        guard = StringManager()
+
+        if seq_locs := in_locations.get_in_process_positions():
+            guard.write_str("(")
+            tokens: list[str] = [f"hasToken({pos})" for pos in seq_locs]
+            guard.write_str(" || ".join(tokens))
+
+        if msg_locs := in_locations.msg_flows:
+            guard.write_str(" && (" if seq_locs else "(")
+            tokens_msg: list[str] = [f"{pos}" for pos in msg_locs]
+            guard.write_str(" && ".join(tokens_msg))
+            guard.write_str(")")
+
+        guard.write_str(")")
+
+        guards: list[str] = []
+        for boundary_event in ctx.boundary_events:
+            in_locs = get_consume_locations(boundary_event)
+            if in_locs.standalone:
+                guards.append(f" hasToken({in_locs.standalone})")
+            else:
+                guards.append(
+                    " || ".join(
+                        [f"hasToken({loc})" for loc in in_locs.seq_flows]
+                        + [f"{loc}" for loc in in_locs.msg_flows]
+                    )
+                )
+
+        if guards:
+            guard.write_str(" && (")
+        guard.write_str(" || ".join(guards))
+
+        guard.write_str(") ->", NL_SINGLE, IndentAction.INC)
+
+        return guard
+
+
+class EventBasedGatewayBuilder(AtomicBuilder):
+    def add_in_flows(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+        consumption = StringManager()
+
+        consumption.write_str(self.in_seq_and_msg_flows(in_locations))
+
+        return consumption
+
+
+class ExclusiveGatewayBuilder(AtomicBuilder):
+    def add_out_flows(
+        self, ctx: Context, out_locations: TokenPositions
+    ) -> StringManager:
+        out_going = StringManager()
+
+        out_going.write_str(self.build_expression_conditional(ctx, out_locations))
+
+        return out_going
+
+    def build_expression_conditional(
+        self, ctx: Context, out_locations: TokenPositions
+    ) -> StringManager:
+        expr = StringManager()
+
+        expr.write_str("if", NL_SINGLE)
+
+        for flow in ctx.element.out_flows:
+            expr.write_str(
+                f":: {flow.expression.replace('\n', '')} -> putToken({generate_location_label(flow.target_node, flow)})",
+                NL_SINGLE,
+            )
+
+        expr.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
+        expr.write_str('DBG(printf("Assert: No viable path to take"))', NL_SINGLE)
+        expr.write_str("assert(false)", NL_SINGLE)
+        expr.write_str("fi", NL_SINGLE, IndentAction.DEC)
+
+        return expr
+
+
+class ParallelGatewayBuilder(AtomicBuilder):
+    def build_guard(
+        self, ctx: Context, in_locations: TokenPositions
+    ) -> StringManager:  # will this ever be not paralell?
+        guard = StringManager()
+
+        if seq_locs := in_locations.get_in_process_positions():
+            guard.write_str("(")
+            tokens: list[str] = [f"hasToken({pos})" for pos in seq_locs]
+            if ctx.is_parallel:
+                guard.write_str(" && ".join(tokens))
+            else:
+                guard.write_str(" || ".join(tokens))
+
+        if msg_locs := in_locations.msg_flows:
+            guard.write_str(" && (" if seq_locs else "(")
+            tokens_msg: list[str] = [f"{pos}" for pos in msg_locs]
+            guard.write_str(" && ".join(tokens_msg))
+            guard.write_str(")")
+
+        guard.write_str(")) ->", NL_SINGLE, IndentAction.INC)
+
+        return guard
+
+
+class MessageFlowBuilder(AtomicBuilder):
+    pass

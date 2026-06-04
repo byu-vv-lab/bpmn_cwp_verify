@@ -189,7 +189,7 @@ def verify() -> None:
 
     if not_(is_successful)(result):
         error: Error = unsafe_perform_io(result.failure())
-        print(get_error_message(error))
+        logging.error(f"{get_error_message(error)}")
         return
 
     spin_verification_report: SpinVerificationReport = unsafe_perform_io(
