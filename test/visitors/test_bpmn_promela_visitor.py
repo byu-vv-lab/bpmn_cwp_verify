@@ -6,9 +6,18 @@ from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
     NL_NONE,
     NL_SINGLE,
+    AtomicBuilder,
     Context,
+    ExclusiveGatewayBuilder,
+    IntermediateEventBuilder,
+    ParallelGatewayBuilder,
     PromelaGenVisitor,
+    StartEventBuilder,
+    TaskBuilder,
     TokenPositions,
+    generate_location_label,
+    get_consume_locations,
+    get_put_locations,
 )
 
 
@@ -42,18 +51,22 @@ def test_string_manager_write_str_no_tab(string_manager_factory):
     manager2: StringManager = string_manager_factory()
     manager1.contents = []
 
-    manager1.indent = 1
+    manager1.indent = 0
 
     manager1.write_str("hello", NL_NONE, IndentAction.NIL)
 
-    assert manager1.contents == ["hello"]
+    assert manager1.contents == [(0, "hello")]
 
     manager2.write_str("test string 1", NL_NONE, IndentAction.NIL)
     manager2.write_str("test string 2", NL_NONE, IndentAction.NIL)
 
     manager1.write_str(manager2, NL_NONE, IndentAction.NIL)
 
-    assert manager1.contents == ["hello", "test string 1", "test string 2"]
+    assert manager1.contents == [
+        (0, "hello"),
+        (0, "test string 1"),
+        (0, "test string 2"),
+    ]
 
 
 def test_string_manager_write_str_with_tab(string_manager_factory):
@@ -64,14 +77,18 @@ def test_string_manager_write_str_with_tab(string_manager_factory):
 
     manager1.write_str("hello", NL_SINGLE, IndentAction.NIL)
 
-    assert manager1.contents == ["hello\n"]
+    assert manager1.contents == [(1, "hello\n")]
 
     manager2.write_str("test string 1", NL_SINGLE, IndentAction.NIL)
     manager2.write_str("test string 2", NL_SINGLE, IndentAction.NIL)
 
-    manager1.write_str(manager2, NL_NONE, IndentAction.NIL)
+    manager1.write_str(manager2, indent_offset=1)
 
-    assert manager1.contents == ["hello\n", "\ttest string 1\n", "\ttest string 2\n"]
+    assert manager1.contents == [
+        (1, "hello\n"),
+        (1, "test string 1\n"),
+        (1, "test string 2\n"),
+    ]
 
 
 def test_string_manager_indent_increment(string_manager_factory):
@@ -91,13 +108,13 @@ def test_string_manager_indent_decrement(string_manager_factory):
 
 def test_string_manager_multiple_calls(string_manager_factory):
     manager = string_manager_factory()
-    manager.indent = 1
+    manager.indent = 0
     manager.write_str("line1", NL_SINGLE, IndentAction.INC)
     manager.write_str("line2", NL_SINGLE, IndentAction.INC)
     manager.write_str("line3", NL_SINGLE, IndentAction.NIL)
     manager.write_str("line4", NL_SINGLE, IndentAction.DEC)
 
-    expected_output = "line1\n\t\tline2\n\t\t\tline3\n\t\tline4\n"
+    expected_output = "line1\n\tline2\n\t\tline3\n\tline4\n"
     assert repr(manager) == expected_output
 
 
@@ -147,14 +164,14 @@ def test_generate_location_label(promela_visitor, mocker):
     flow_or_message = mocker.Mock()
     flow_or_message.source_node.id = "SRC"
 
-    ret_val = promela_visitor._generate_location_label(element, flow_or_message)
+    ret_val = generate_location_label(element, flow_or_message)
 
     assert ret_val == "TEST_FROM_SRC"
 
     element_no_spec = mocker.Mock()
     element_no_spec.id = "TEST"
 
-    ret_val = promela_visitor._generate_location_label(element_no_spec)
+    ret_val = generate_location_label(element_no_spec)
 
     assert ret_val == "TEST"
 
@@ -175,9 +192,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     ctx.element = node1
     ctx.task_end = False
 
-    assert promela_visitor._get_consume_locations(ctx.element).get_all_positions() == [
-        "NODE1"
-    ]
+    assert get_consume_locations(ctx.element).get_all_positions() == ["NODE1"]
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -188,7 +203,7 @@ def test_get_consume_locations(promela_visitor, mocker):
     node2.in_flows = [flow1]
     node2.in_msgs = [flow2]
 
-    assert promela_visitor._get_consume_locations(node2).get_all_positions() == [
+    assert get_consume_locations(node2).get_all_positions() == [
         "NODE2_FROM_NODE1",
         "NODE2_FROM_NODE3",
     ]
@@ -206,7 +221,7 @@ def test_get_put_locations(promela_visitor, mocker):
     node3 = mocker.Mock()
     node3.id = "NODE3"
 
-    assert promela_visitor._get_put_locations(node1).standalone == "NODE1"
+    assert get_put_locations(node1).standalone == "NODE1"
 
     flow1 = mocker.Mock()
     flow1.source_node = node1
@@ -219,8 +234,8 @@ def test_get_put_locations(promela_visitor, mocker):
     node1.out_flows = [flow1]
     node1.out_msgs = [flow2]
 
-    assert promela_visitor._get_put_locations(node1).seq_flows == ["NODE2_FROM_NODE1"]
-    assert promela_visitor._get_put_locations(node1).msg_flows == ["NODE3_FROM_NODE1"]
+    assert get_put_locations(node1).seq_flows == ["NODE2_FROM_NODE1"]
+    assert get_put_locations(node1).msg_flows == ["NODE3_FROM_NODE1"]
 
 
 def test_build_guard(promela_visitor, mocker):
@@ -230,14 +245,15 @@ def test_build_guard(promela_visitor, mocker):
     ctx.boundary_events = []
     ctx.is_parallel = False
 
-    guard = promela_visitor._build_guard(ctx, consume_locations)
+    builder = AtomicBuilder()
+    guard = builder.build_guard(ctx, consume_locations)
 
-    assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))"
+    assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))) ->\n"
 
 
 def test_build_guard_with_boundary_events(mocker):
     mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
+        "bpmncwpverify.visitors.bpmn_promela_visitor.get_consume_locations",
         side_effect=lambda x: x,
     )
 
@@ -248,13 +264,11 @@ def test_build_guard_with_boundary_events(mocker):
     ]  # Represents one boundary event
     ctx.is_parallel = False
 
-    guard = PromelaGenVisitor()._build_guard(
-        ctx, TokenPositions(seq_flows=["TEST1", "TEST2"])
-    )
+    guard = TaskBuilder().build_guard(ctx, TokenPositions(seq_flows=["TEST1", "TEST2"]))
 
     assert (
         str(guard)
-        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4))"
+        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4)) ->\n"
     )
 
     ctx.boundary_events = [
@@ -262,19 +276,17 @@ def test_build_guard_with_boundary_events(mocker):
         TokenPositions(seq_flows=["TEST5"]),
     ]  # Represents 2 boundary events
 
-    guard = PromelaGenVisitor()._build_guard(
-        ctx, TokenPositions(seq_flows=["TEST1", "TEST2"])
-    )
+    guard = TaskBuilder().build_guard(ctx, TokenPositions(seq_flows=["TEST1", "TEST2"]))
 
     assert (
         str(guard)
-        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4) || hasToken(TEST5))"  # TODO:  make it so that every boundary event is conjuncted (i.e (hasToken(TEST3) || hasToken(TEST4)) && (hasToken(TEST5))))
+        == "(hasToken(TEST1) || hasToken(TEST2)) && (hasToken(TEST3) || hasToken(TEST4) || hasToken(TEST5)) ->\n"  # TODO:  make it so that every boundary event is conjuncted (i.e (hasToken(TEST3) || hasToken(TEST4)) && (hasToken(TEST5))))
     )
 
 
 def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._get_consume_locations",
+        "bpmncwpverify.visitors.bpmn_promela_visitor.get_consume_locations",
         return_value=TokenPositions(seq_flows=["TEST1", "TEST2"]),
     )
 
@@ -282,11 +294,10 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     ctx.boundary_events = []
     ctx.is_parallel = True
 
-    guard = promela_visitor._build_guard(
-        ctx, TokenPositions(seq_flows=["TEST1", "TEST2"])
-    )
+    builder = ParallelGatewayBuilder()
+    guard = builder.build_guard(ctx, TokenPositions(seq_flows=["TEST1", "TEST2"]))
 
-    assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))"
+    assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))) ->\n"
 
 
 def test_build_guard_with_msg_flow(promela_visitor, mocker):
@@ -320,9 +331,10 @@ def test_build_guard_with_msg_flow(promela_visitor, mocker):
         seq_flows=["NODE1_FROM_NODE2"], msg_flows=["NODE1_FROM_NODE3"]
     )
 
-    guard = promela_visitor._build_guard(ctx, consume_locations)
+    builder = AtomicBuilder()
+    guard = builder.build_guard(ctx, consume_locations)
 
-    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (NODE1_FROM_NODE3)"
+    assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (NODE1_FROM_NODE3)) ->\n"
 
 
 def test_build_atomic_block(promela_visitor, mocker):
@@ -364,14 +376,15 @@ def test_build_atomic_block(promela_visitor, mocker):
     ctx.is_parallel = False
     ctx.has_option = False
 
-    atomic_block = promela_visitor._build_atomic_block(ctx)
+    builder = AtomicBuilder()
+    atomic_block = builder.build_atomic_block(ctx)
 
     expected_output = ':: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tDBG(printf("ID: NODE1\\n"))\n\t\tDBG(stateLogger())\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n'
     assert str(atomic_block) == expected_output
 
 
 def test_gen_behavior_model(mocker):
-    pv1 = PromelaGenVisitor()
+    builder1 = AtomicBuilder()
     node1 = mocker.Mock()
     node1.id = "TEST"
 
@@ -379,19 +392,20 @@ def test_gen_behavior_model(mocker):
     ctx.element = node1
     ctx.behavior = ""
 
-    pv1._gen_behavior_model(ctx)
-    assert str(pv1.behaviors) == ""
+    behavior_output1 = builder1.gen_behavior_model(ctx)
+    assert str(behavior_output1) == ""
 
-    pv2 = PromelaGenVisitor()
+    builder2 = AtomicBuilder()
     ctx.behavior = "content"
-    pv2._gen_behavior_model(ctx)
+    behavior_output2 = builder2.gen_behavior_model(ctx)
     assert (
-        str(pv2.behaviors)
+        str(behavior_output2)
         == "inline TEST_BehaviorModel() {\n\tcontent\n\tupdateState()\n}\n\n"
     )
 
 
 def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
+    builder = AtomicBuilder()
     node1 = mocker.Mock()
     node1.id = "TEST"
 
@@ -401,9 +415,9 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
         "\n\n\n\nif\n\n\n\n\t\t   :: true -> test\n\n :: true -> test2\n\nfi\n\n\n"
     )
 
-    promela_visitor._gen_behavior_model(ctx)
+    output = builder.gen_behavior_model(ctx)
     assert (
-        str(promela_visitor.behaviors)
+        str(output)
         == "inline TEST_BehaviorModel() {\n\tif\n\t\t:: true -> test\n\t\t:: true -> test2\n\tfi\n\tupdateState()\n}\n\n"
     )
 
@@ -413,9 +427,8 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
     mock_global_var_defs = mocker.Mock()
     promela_visitor.local_var_defs = mock_local_var_defs
     promela_visitor.global_var_defs = mock_global_var_defs
-    mock_get_consume_locations = mocker.patch.object(
-        promela_visitor,
-        "_get_consume_locations",
+    mock_get_consume_locations = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.get_consume_locations",
         return_value=TokenPositions(
             seq_flows=["VAL1", "VAL2"], msg_flows=["VAL3", "VAL4"]
         ),
@@ -426,7 +439,7 @@ def test_gen_var_defs(promela_visitor, mocker) -> None:
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
 
-    promela_visitor._gen_var_defs(ctx)
+    promela_visitor.gen_var_defs(ctx)
 
     mock_get_consume_locations.assert_called_once_with(node1)
 
@@ -472,7 +485,9 @@ def test_build_expr_conditional(promela_visitor, mocker):
     mock_sm.return_value = mocker.Mock()
     mock_sm.return_value.write_str = mock_write_str
 
-    promela_visitor._build_expr_conditional(ctx)
+    builder = ExclusiveGatewayBuilder()
+    out_locations = get_put_locations(ctx.element)
+    builder.build_expression_conditional(ctx, out_locations)
     mock_write_str.assert_has_calls(
         [
             mocker.call("if", NL_SINGLE),
@@ -488,50 +503,58 @@ def test_build_expr_conditional(promela_visitor, mocker):
 
 def test_build_conditional_with_boundary_event(promela_visitor, mocker):
     mock_sm = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.StringManager")
-    mocker.patch.object(
-        promela_visitor,
-        "_get_consume_locations",
-        side_effect=[
-            TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
-            TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
-        ],
-    )
-    mocker.patch.object(
-        promela_visitor,
-        "_get_put_locations",
-        side_effect=[
-            TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
-            TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
-        ],
-    )
 
-    mocker.patch.object(promela_visitor, "_in_seq_and_msg_flows")
-
-    mocker.patch.object(promela_visitor, "_out_seq_and_msg_flows")
+    # Setup element with boundary events
+    element = mocker.Mock()
+    element.id = "TASK1"
 
     ctx = mocker.Mock(spec=Context)
-    ctx.has_option = False
+    ctx.element = element
     ctx.boundary_events = [
         TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
         TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
     ]
 
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.get_consume_locations",
+        side_effect=[
+            TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
+            TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
+        ],
+    )
+    mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.get_put_locations",
+        side_effect=[
+            TokenPositions(seq_flows=["TEST1"], msg_flows=[]),
+            TokenPositions(seq_flows=["TEST2"], msg_flows=[]),
+        ],
+    )
+
     mock_write_str = mocker.Mock()
     mock_sm.return_value = mocker.Mock()
     mock_sm.return_value.write_str = mock_write_str
 
-    promela_visitor._build_expr_conditional(ctx)
+    builder = TaskBuilder()
+    out_locations = TokenPositions(seq_flows=["out_going"])
+    builder.build_expression_conditional(ctx, out_locations)
+
     mock_write_str.assert_has_calls(
         [
             mocker.call("if", NL_SINGLE),
             mocker.call(":: ("),
             mocker.call("hasToken(TEST1)"),
             mocker.call(") ->", NL_SINGLE, IndentAction.INC),
-            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call("consumeToken(TEST1)", NL_SINGLE, IndentAction.NIL),
+            mocker.call(mock_sm.return_value, indent_offset=1),
+            mocker.call("putToken(TEST1)", NL_SINGLE, IndentAction.NIL),
+            mocker.call(mock_sm.return_value, indent_offset=1),
             mocker.call(":: ("),
             mocker.call("hasToken(TEST2)"),
             mocker.call(") ->", NL_SINGLE, IndentAction.INC),
-            mocker.call("", indent_action=IndentAction.DEC),
+            mocker.call("consumeToken(TEST2)", NL_SINGLE, IndentAction.NIL),
+            mocker.call(mock_sm.return_value, indent_offset=1),
+            mocker.call("putToken(TEST2)", NL_SINGLE, IndentAction.NIL),
+            mocker.call(mock_sm.return_value, indent_offset=1),
             mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
             mocker.call(
                 'DBG(printf("Assert: No viable path to take"))',
@@ -541,25 +564,6 @@ def test_build_conditional_with_boundary_event(promela_visitor, mocker):
             mocker.call("fi", NL_SINGLE, IndentAction.DEC),
         ]
     )
-
-
-def test_get_expressions(promela_visitor, mocker):
-    node = mocker.Mock()
-
-    ctx = mocker.Mock()
-    ctx.element = node
-
-    flow1 = mocker.Mock()
-    flow1.expression = "TEST_EXPR1"
-    flow2 = mocker.Mock()
-    flow2.expression = "TEST_EXPR2"
-    flow3 = mocker.Mock()
-    flow3.expression = None
-
-    node.out_flows = [flow1, flow2, flow3]
-
-    result = promela_visitor._get_expressions(ctx)
-    assert result == ["TEST_EXPR1", "TEST_EXPR2"]
 
 
 def test_context_setters(mocker):
@@ -591,42 +595,72 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_context_object = mocker.Mock()
     mock_context_class.return_value = mock_context_object
 
-    mock_gen_behavior_model = mocker.patch.object(visitor, "_gen_behavior_model")
-    mock_gen_var_defs = mocker.patch.object(visitor, "_gen_var_defs")
-    mock_atomic_block = mocker.patch.object(
-        visitor, "_build_atomic_block", return_value="atomic_block"
+    mock_gen_behavior_model = mocker.patch.object(
+        StartEventBuilder,
+        "gen_behavior_model",
+        return_value="behavior_model",
     )
-    mock_sm = mocker.patch(
+
+    mock_out_s_and_m_flows = mocker.patch.object(
+        StartEventBuilder,
+        "out_seq_and_msg_flows",
+        return_value="putToken(test_loc)",
+    )
+
+    mock_atomic_block = mocker.patch.object(
+        StartEventBuilder,
+        "build_atomic_block",
+        return_value="atomic_block",
+    )
+
+    mock_gen_var_defs = mocker.patch.object(
+        visitor,
+        "gen_var_defs",
+    )
+
+    mock_write_str = mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.StringManager.write_str"
     )
-    mocker.patch.object(
-        visitor,
-        "_get_consume_locations",
+
+    mock_flows = mocker.patch(
+        "bpmncwpverify.visitors.bpmn_promela_visitor.get_consume_locations",
         return_value=TokenPositions(seq_flows=["test_loc"]),
     )
 
     mock_start_event = mocker.Mock()
+
     visitor.visit_start_event(mock_start_event)
 
     mock_context_class.assert_called_once_with(mock_start_event)
+
     mock_gen_behavior_model.assert_called_once_with(mock_context_object)
 
-    calls = [
-        mocker.call("putToken(test_loc)", NL_SINGLE, IndentAction.NIL),
-        mocker.call("}", NL_SINGLE),
-        mocker.call("do", NL_SINGLE),
-        mocker.call("atomic_block"),
-    ]
-    mock_sm.assert_has_calls(calls)
-    mock_atomic_block.assert_called_once_with(mock_context_object)
     mock_gen_var_defs.assert_called_once_with(mock_context_object)
+
+    mock_out_s_and_m_flows.assert_called_once_with(mock_flows.return_value)
+
+    mock_atomic_block.assert_called_once_with(mock_context_object)
+
+    mock_write_str.assert_has_calls(
+        [
+            mocker.call("behavior_model"),
+            mocker.call(
+                "putToken(test_loc)",
+                indent_action=IndentAction.INC,
+            ),
+            mocker.call("}", NL_SINGLE),
+            mocker.call("do", NL_SINGLE),
+            mocker.call("atomic_block", indent_offset=1),
+        ],
+        any_order=False,
+    )
 
 
 def test_visit_parallel_gateway(promela_visitor, mocker):
     mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
-    mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "_gen_var_defs")
+    mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "gen_var_defs")
     mock_build_atomic_block = mocker.patch.object(
-        PromelaGenVisitor, "_build_atomic_block"
+        ParallelGatewayBuilder, "build_atomic_block"
     )
     mock_gw = mocker.Mock(spec=ParallelGatewayNode)
     mock_gw.is_fork = False
@@ -641,11 +675,11 @@ def test_visit_parallel_gateway(promela_visitor, mocker):
 def test_visit_intermediate_event(promela_visitor, mocker):
     mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
     mock_gen_behavior_model = mocker.patch.object(
-        PromelaGenVisitor, "_gen_behavior_model"
+        IntermediateEventBuilder, "gen_behavior_model"
     )
-    mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "_gen_var_defs")
+    mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "gen_var_defs")
     mock_build_atomic_block = mocker.patch.object(
-        PromelaGenVisitor, "_build_atomic_block"
+        IntermediateEventBuilder, "build_atomic_block"
     )
     mock_event = mocker.Mock(spec=IntermediateEvent)
     mock_ctx.return_value = mocker.Mock()
@@ -659,13 +693,13 @@ def test_visit_intermediate_event(promela_visitor, mocker):
 
 def test_visit_task_with_behavior(promela_visitor, mocker):
     mock_gen_method = mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._gen_behavior_model"
+        "bpmncwpverify.visitors.bpmn_promela_visitor.AtomicBuilder.gen_behavior_model"
     )
     mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._gen_var_defs"
+        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor.gen_var_defs"
     )
     mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor._build_atomic_block"
+        "bpmncwpverify.visitors.bpmn_promela_visitor.AtomicBuilder.build_atomic_block"
     )
     mock_context_class = mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.Context"
