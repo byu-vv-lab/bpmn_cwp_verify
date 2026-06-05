@@ -210,9 +210,9 @@ class PromelaGenVisitor(BpmnVisitor):
 
     def visit_start_event(self, event: StartEvent) -> bool:
         context = Context(event)
-        builder = StartEventBuilder()
+        builder = StartEventBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.behaviors.write_str(builder.gen_behavior_model())
         self.gen_var_defs(context)
 
         flows = get_consume_locations(event)
@@ -224,29 +224,29 @@ class PromelaGenVisitor(BpmnVisitor):
         self.process.write_str("}", NL_SINGLE)
         self.process.write_str("do", NL_SINGLE)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
     def visit_end_event(self, event: EndEvent) -> bool:
         context = Context(event)
-        builder = EndEventBuilder()
+        builder = EndEventBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.behaviors.write_str(builder.gen_behavior_model())
         self.gen_var_defs(context)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
     def visit_intermediate_event(self, event: IntermediateEvent) -> bool:
         context = Context(event)
-        builder = IntermediateEventBuilder()
+        builder = IntermediateEventBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.behaviors.write_str(builder.gen_behavior_model())
         self.gen_var_defs(context)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
@@ -254,45 +254,45 @@ class PromelaGenVisitor(BpmnVisitor):
         context = Context(task)
         context.behavior = task.behavior
         context.boundary_events = task.msg_boundary_events
-        builder = TaskBuilder()
+        builder = TaskBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model(context))
+        self.behaviors.write_str(builder.gen_behavior_model())
         self.gen_var_defs(context)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
     def visit_event_based_gateway(self, gateway: EventBasedGatewayNode) -> bool:
         context = Context(gateway)
-        builder = EventBasedGatewayBuilder()
+        builder = EventBasedGatewayBuilder(context)
 
         self.gen_var_defs(context)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
         context = Context(gateway)
-        builder = ExclusiveGatewayBuilder()
+        builder = ExclusiveGatewayBuilder(context)
 
         self.gen_var_defs(context)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
     def visit_parallel_gateway(self, gateway: ParallelGatewayNode) -> bool:
         context = Context(gateway)
-        builder = ParallelGatewayBuilder()
+        builder = ParallelGatewayBuilder(context)
 
         if not gateway.is_fork:
             context.is_parallel = True
 
         self.gen_var_defs(context)
 
-        self.process.write_str(builder.build_atomic_block(context), indent_offset=1)
+        self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
         return True
 
@@ -339,6 +339,11 @@ class PromelaGenVisitor(BpmnVisitor):
 
 
 class AtomicBuilder:
+    __slots__ = ["context"]
+
+    def __init__(self, context: Context):
+        self.context = context
+
     def out_seq_and_msg_flows(self, flows: TokenPositions) -> StringManager:
         outgoing = StringManager()
 
@@ -367,7 +372,7 @@ class AtomicBuilder:
 
         return in_going
 
-    def build_atomic_block(self, ctx: Context) -> StringManager:
+    def build_atomic_block(self) -> StringManager:
         """
         This function builds an atomic block to execute the element's behavior,
         consume the token and move the token forward.
@@ -375,16 +380,16 @@ class AtomicBuilder:
         atomic = StringManager()
         atomic.write_str(":: atomic { (")
 
-        in_locations = get_consume_locations(ctx.element)
-        out_locations = get_put_locations(ctx.element)
+        in_locations = get_consume_locations(self.context.element)
+        out_locations = get_put_locations(self.context.element)
 
-        atomic.write_str(self.build_guard(ctx, in_locations))
+        atomic.write_str(self.build_guard(in_locations))
 
-        atomic.write_str(self.add_structures(ctx), indent_offset=1)
+        atomic.write_str(self.add_structures(), indent_offset=1)
 
-        atomic.write_str(self.add_in_flows(ctx, in_locations), indent_offset=2)
+        atomic.write_str(self.add_in_flows(in_locations), indent_offset=2)
 
-        atomic.write_str(self.add_out_flows(ctx, out_locations), indent_offset=2)
+        atomic.write_str(self.add_out_flows(out_locations), indent_offset=2)
 
         atomic.write_str(self.add_end(), indent_offset=1)
 
@@ -392,9 +397,7 @@ class AtomicBuilder:
 
         return atomic
 
-    def add_out_flows(
-        self, ctx: Context, out_locations: TokenPositions
-    ) -> StringManager:
+    def add_out_flows(self, out_locations: TokenPositions) -> StringManager:
         out_going = StringManager()
 
         out_going.write_str(self.out_seq_and_msg_flows(out_locations))
@@ -407,14 +410,14 @@ class AtomicBuilder:
 
         return end
 
-    def add_in_flows(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+    def add_in_flows(self, in_locations: TokenPositions) -> StringManager:
         consumption = StringManager()
 
         consumption.write_str(self.in_seq_and_msg_flows(in_locations))
 
         return consumption
 
-    def build_guard(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+    def build_guard(self, in_locations: TokenPositions) -> StringManager:
         guard = StringManager()
 
         if seq_locs := in_locations.get_in_process_positions():
@@ -433,32 +436,38 @@ class AtomicBuilder:
 
         return guard
 
-    def add_structures(self, ctx: Context) -> StringManager:
+    def add_structures(
+        self,
+    ) -> StringManager:
         structure = StringManager()
-        if ctx.behavior:
-            structure.write_str(f"{ctx.element.id}_BehaviorModel()", NL_SINGLE)
+        if self.context.behavior:
+            structure.write_str(f"{self.context.element.id}_BehaviorModel()", NL_SINGLE)
 
         structure.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-        structure.write_str(f'DBG(printf("ID: {ctx.element.id}\\n"))', NL_SINGLE)
+        structure.write_str(
+            f'DBG(printf("ID: {self.context.element.id}\\n"))', NL_SINGLE
+        )
         structure.write_str("DBG(stateLogger())", NL_SINGLE)
         return structure
 
-    def gen_behavior_model(self, ctx: Context) -> StringManager:
+    def gen_behavior_model(self) -> StringManager:
         """
         Writes to the behaviors field to make an inline behavior model for the
         passed element.
         """
         behavior = StringManager()
-        if ctx.behavior:
+        if self.context.behavior:
             start_block_key_words = {"if"}
             end_block_key_words = {"fi"}
             behavior.write_str(
-                f"inline {ctx.element.id}_BehaviorModel() {{",
+                f"inline {self.context.element.id}_BehaviorModel() {{",
                 NL_SINGLE,
                 IndentAction.INC,
             )
             processed_str_list = [
-                line.strip() for line in ctx.behavior.split("\n") if line.strip()
+                line.strip()
+                for line in self.context.behavior.split("\n")
+                if line.strip()
             ]
 
             for line in processed_str_list:
@@ -489,20 +498,20 @@ class EndEventBuilder(AtomicBuilder):
 
         return end
 
-    def add_out_flows(
-        self, ctx: Context, out_locations: TokenPositions
-    ) -> StringManager:
+    def add_out_flows(self, out_locations: TokenPositions) -> StringManager:
         out_going = StringManager()
 
         return out_going
 
 
 class IntermediateEventBuilder(AtomicBuilder):
-    def add_in_flows(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+    def add_in_flows(self, in_locations: TokenPositions) -> StringManager:
         consumption = StringManager()
 
-        if isinstance(ctx.element.in_flows[0].source_node, EventBasedGatewayNode):
-            gate = ctx.element.in_flows[0].source_node
+        if isinstance(
+            self.context.element.in_flows[0].source_node, EventBasedGatewayNode
+        ):
+            gate = self.context.element.in_flows[0].source_node
             gate_out_tokens = get_put_locations(gate)
             consumption.write_str(self.in_seq_and_msg_flows(gate_out_tokens))
 
@@ -519,31 +528,30 @@ class IntermediateEventBuilder(AtomicBuilder):
 
 
 class TaskBuilder(AtomicBuilder):
-    def add_out_flows(
-        self, ctx: Context, out_locations: TokenPositions
-    ) -> StringManager:
+    def add_out_flows(self, out_locations: TokenPositions) -> StringManager:
         out_going = StringManager()
 
-        if ctx.boundary_events:
-            out_going.write_str(self.build_expression_conditional(ctx, out_locations))
+        if self.context.boundary_events:
+            out_going.write_str(self.build_expression_conditional(out_locations))
         else:
             out_going.write_str(self.out_seq_and_msg_flows(out_locations))
 
         return out_going
 
     def build_expression_conditional(
-        self, ctx: Context, out_locations: TokenPositions
+        self, out_locations: TokenPositions
     ) -> StringManager:
         expr = StringManager()
 
         expr.write_str("if", NL_SINGLE)
 
         put_locations = [
-            get_put_locations(boundary_event) for boundary_event in ctx.boundary_events
+            get_put_locations(boundary_event)
+            for boundary_event in self.context.boundary_events
         ]
         in_locations = [
             get_consume_locations(boundary_event)
-            for boundary_event in ctx.boundary_events
+            for boundary_event in self.context.boundary_events
         ]
 
         for put_locs, in_locs in zip(put_locations, in_locations):
@@ -566,7 +574,7 @@ class TaskBuilder(AtomicBuilder):
 
         return expr
 
-    def build_guard(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+    def build_guard(self, in_locations: TokenPositions) -> StringManager:
         guard = StringManager()
 
         if seq_locs := in_locations.get_in_process_positions():
@@ -583,7 +591,7 @@ class TaskBuilder(AtomicBuilder):
         guard.write_str(")")
 
         guards: list[str] = []
-        for boundary_event in ctx.boundary_events:
+        for boundary_event in self.context.boundary_events:
             in_locs = get_consume_locations(boundary_event)
             if in_locs.standalone:
                 guards.append(f" hasToken({in_locs.standalone})")
@@ -605,7 +613,7 @@ class TaskBuilder(AtomicBuilder):
 
 
 class EventBasedGatewayBuilder(AtomicBuilder):
-    def add_in_flows(self, ctx: Context, in_locations: TokenPositions) -> StringManager:
+    def add_in_flows(self, in_locations: TokenPositions) -> StringManager:
         consumption = StringManager()
 
         consumption.write_str(self.in_seq_and_msg_flows(in_locations))
@@ -614,23 +622,21 @@ class EventBasedGatewayBuilder(AtomicBuilder):
 
 
 class ExclusiveGatewayBuilder(AtomicBuilder):
-    def add_out_flows(
-        self, ctx: Context, out_locations: TokenPositions
-    ) -> StringManager:
+    def add_out_flows(self, out_locations: TokenPositions) -> StringManager:
         out_going = StringManager()
 
-        out_going.write_str(self.build_expression_conditional(ctx, out_locations))
+        out_going.write_str(self.build_expression_conditional(out_locations))
 
         return out_going
 
     def build_expression_conditional(
-        self, ctx: Context, out_locations: TokenPositions
+        self, out_locations: TokenPositions
     ) -> StringManager:
         expr = StringManager()
 
         expr.write_str("if", NL_SINGLE)
 
-        for flow in ctx.element.out_flows:
+        for flow in self.context.element.out_flows:
             expr.write_str(
                 f":: {flow.expression.replace('\n', '')} -> putToken({generate_location_label(flow.target_node, flow)})",
                 NL_SINGLE,
@@ -646,14 +652,14 @@ class ExclusiveGatewayBuilder(AtomicBuilder):
 
 class ParallelGatewayBuilder(AtomicBuilder):
     def build_guard(
-        self, ctx: Context, in_locations: TokenPositions
+        self, in_locations: TokenPositions
     ) -> StringManager:  # will this ever be not paralell?
         guard = StringManager()
 
         if seq_locs := in_locations.get_in_process_positions():
             guard.write_str("(")
             tokens: list[str] = [f"hasToken({pos})" for pos in seq_locs]
-            if ctx.is_parallel:
+            if self.context.is_parallel:
                 guard.write_str(" && ".join(tokens))
             else:
                 guard.write_str(" || ".join(tokens))

@@ -245,8 +245,8 @@ def test_build_guard(promela_visitor, mocker):
     ctx.boundary_events = []
     ctx.is_parallel = False
 
-    builder = AtomicBuilder()
-    guard = builder.build_guard(ctx, consume_locations)
+    builder = AtomicBuilder(ctx)
+    guard = builder.build_guard(consume_locations)
 
     assert str(guard) == "(hasToken(TEST1) || hasToken(TEST2))) ->\n"
 
@@ -264,7 +264,7 @@ def test_build_guard_with_boundary_events(mocker):
     ]  # Represents one boundary event
     ctx.is_parallel = False
 
-    guard = TaskBuilder().build_guard(ctx, TokenPositions(seq_flows=["TEST1", "TEST2"]))
+    guard = TaskBuilder(ctx).build_guard(TokenPositions(seq_flows=["TEST1", "TEST2"]))
 
     assert (
         str(guard)
@@ -276,7 +276,7 @@ def test_build_guard_with_boundary_events(mocker):
         TokenPositions(seq_flows=["TEST5"]),
     ]  # Represents 2 boundary events
 
-    guard = TaskBuilder().build_guard(ctx, TokenPositions(seq_flows=["TEST1", "TEST2"]))
+    guard = TaskBuilder(ctx).build_guard(TokenPositions(seq_flows=["TEST1", "TEST2"]))
 
     assert (
         str(guard)
@@ -294,8 +294,8 @@ def test_build_guard_with_parallel_gw(promela_visitor, mocker):
     ctx.boundary_events = []
     ctx.is_parallel = True
 
-    builder = ParallelGatewayBuilder()
-    guard = builder.build_guard(ctx, TokenPositions(seq_flows=["TEST1", "TEST2"]))
+    builder = ParallelGatewayBuilder(ctx)
+    guard = builder.build_guard(TokenPositions(seq_flows=["TEST1", "TEST2"]))
 
     assert str(guard) == "(hasToken(TEST1) && hasToken(TEST2))) ->\n"
 
@@ -331,8 +331,8 @@ def test_build_guard_with_msg_flow(promela_visitor, mocker):
         seq_flows=["NODE1_FROM_NODE2"], msg_flows=["NODE1_FROM_NODE3"]
     )
 
-    builder = AtomicBuilder()
-    guard = builder.build_guard(ctx, consume_locations)
+    builder = AtomicBuilder(ctx)
+    guard = builder.build_guard(consume_locations)
 
     assert str(guard) == "(hasToken(NODE1_FROM_NODE2)) && (NODE1_FROM_NODE3)) ->\n"
 
@@ -376,15 +376,14 @@ def test_build_atomic_block(promela_visitor, mocker):
     ctx.is_parallel = False
     ctx.has_option = False
 
-    builder = AtomicBuilder()
-    atomic_block = builder.build_atomic_block(ctx)
+    builder = AtomicBuilder(ctx)
+    atomic_block = builder.build_atomic_block()
 
     expected_output = ':: atomic { ((hasToken(NODE1_FROM_NODE2) || hasToken(NODE1_FROM_NODE3))) ->\n\tNODE1_BehaviorModel()\n\td_step {\n\t\tDBG(printf("ID: NODE1\\n"))\n\t\tDBG(stateLogger())\n\t\tconsumeToken(NODE1_FROM_NODE2)\n\t\tconsumeToken(NODE1_FROM_NODE3)\n\t\tputToken(NODE4_FROM_NODE1)\n\t}\n}\n'
     assert str(atomic_block) == expected_output
 
 
 def test_gen_behavior_model(mocker):
-    builder1 = AtomicBuilder()
     node1 = mocker.Mock()
     node1.id = "TEST"
 
@@ -392,12 +391,13 @@ def test_gen_behavior_model(mocker):
     ctx.element = node1
     ctx.behavior = ""
 
-    behavior_output1 = builder1.gen_behavior_model(ctx)
+    builder1 = AtomicBuilder(ctx)
+    behavior_output1 = builder1.gen_behavior_model()
     assert str(behavior_output1) == ""
 
-    builder2 = AtomicBuilder()
     ctx.behavior = "content"
-    behavior_output2 = builder2.gen_behavior_model(ctx)
+    builder2 = AtomicBuilder(ctx)
+    behavior_output2 = builder2.gen_behavior_model()
     assert (
         str(behavior_output2)
         == "inline TEST_BehaviorModel() {\n\tcontent\n\tupdateState()\n}\n\n"
@@ -405,7 +405,6 @@ def test_gen_behavior_model(mocker):
 
 
 def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
-    builder = AtomicBuilder()
     node1 = mocker.Mock()
     node1.id = "TEST"
 
@@ -415,7 +414,8 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
         "\n\n\n\nif\n\n\n\n\t\t   :: true -> test\n\n :: true -> test2\n\nfi\n\n\n"
     )
 
-    output = builder.gen_behavior_model(ctx)
+    builder = AtomicBuilder(ctx)
+    output = builder.gen_behavior_model()
     assert (
         str(output)
         == "inline TEST_BehaviorModel() {\n\tif\n\t\t:: true -> test\n\t\t:: true -> test2\n\tfi\n\tupdateState()\n}\n\n"
@@ -485,9 +485,9 @@ def test_build_expr_conditional(promela_visitor, mocker):
     mock_sm.return_value = mocker.Mock()
     mock_sm.return_value.write_str = mock_write_str
 
-    builder = ExclusiveGatewayBuilder()
+    builder = ExclusiveGatewayBuilder(ctx)
     out_locations = get_put_locations(ctx.element)
-    builder.build_expression_conditional(ctx, out_locations)
+    builder.build_expression_conditional(out_locations)
     mock_write_str.assert_has_calls(
         [
             mocker.call("if", NL_SINGLE),
@@ -534,9 +534,9 @@ def test_build_conditional_with_boundary_event(promela_visitor, mocker):
     mock_sm.return_value = mocker.Mock()
     mock_sm.return_value.write_str = mock_write_str
 
-    builder = TaskBuilder()
+    builder = TaskBuilder(ctx)
     out_locations = TokenPositions(seq_flows=["out_going"])
-    builder.build_expression_conditional(ctx, out_locations)
+    builder.build_expression_conditional(out_locations)
 
     mock_write_str.assert_has_calls(
         [
@@ -633,13 +633,13 @@ def test_visit_start_state(promela_visitor, mocker):
 
     mock_context_class.assert_called_once_with(mock_start_event)
 
-    mock_gen_behavior_model.assert_called_once_with(mock_context_object)
+    mock_gen_behavior_model.assert_called_once_with()
 
     mock_gen_var_defs.assert_called_once_with(mock_context_object)
 
     mock_out_s_and_m_flows.assert_called_once_with(mock_flows.return_value)
 
-    mock_atomic_block.assert_called_once_with(mock_context_object)
+    mock_atomic_block.assert_called_once_with()
 
     mock_write_str.assert_has_calls(
         [
@@ -709,4 +709,4 @@ def test_visit_task_with_behavior(promela_visitor, mocker):
     mock_context_class.return_value = mock_context_object
 
     promela_visitor.visit_task(mocker.Mock())
-    mock_gen_method.assert_called_once_with(mock_context_object)
+    mock_gen_method.assert_called_once_with()
