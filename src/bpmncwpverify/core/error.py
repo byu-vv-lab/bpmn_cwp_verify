@@ -865,15 +865,15 @@ def get_error_message(error: Error) -> str:
                 )
                 if m:
                     line_num, cond = m.group(1), m.group(2)
-                    if cond.startswith("event_") and cond.endswith("_reached"):
-                        label = f"end event '{cond[6:-8]}' unreachable"
-                    elif cond.startswith("cwp_reached["):
+                    if cond.startswith("cwp_reached["):
                         state_m = re.search(r"\d+", cond)
                         label = (
                             f"CWP state {state_m.group()} unreachable"
                             if state_m
                             else cond
                         )
+                    elif cond.endswith("_reached"):
+                        label = f"end event '{cond[: -len('_reached')]}' unreachable"
                     else:
                         label = cond
                     lines.append(f"  {i}. line {line_num}: {label}")

@@ -30,6 +30,9 @@ from bpmncwpverify.core.error import (
     BpmnTaskFlowError,
     BpmnUnrecognizedElement,
     BpmnUnsupportedStartEvent,
+    CbmcAssertionError,
+    CbmcReachabilityError,
+    CbmcSubProcessError,
     CounterExampleError,
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
@@ -315,6 +318,38 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (SubProcessRunError("proc"), "ERROR: failed to run 'proc'"),
     (TypingNoTypeError("a"), "TYPING ERROR: literal 'a' has an unknown type"),
+    (
+        CbmcAssertionError(
+            [
+                "[update_cwp_state.assertion.1] line 83 CWP P1: transition follows valid CWP edge: FAILURE",
+                "[main.unwind.0] unwinding assertion loop 0: FAILURE",
+            ]
+        ),
+        "CBMC CORRECTNESS FAILURE (P1-P3):\n"
+        "  2 failing assertion(s):\n"
+        "  1. line 83: CWP P1: transition follows valid CWP edge\n"
+        "  2. [main.unwind.0] unwinding assertion loop 0: FAILURE",
+    ),
+    (
+        # Covers all three label branches: end-event goal ('Event_<id>_reached'),
+        # CWP-state goal ('cwp_reached[...]'), and the unparseable fallback.
+        CbmcReachabilityError(
+            [
+                "[main.coverage.1] file ./tmp/verification.c line 299 function main condition 'Event_1y6wxsp_reached != FALSE': FAILED",
+                "[main.coverage.3] file ./tmp/verification.c line 301 function main condition 'cwp_reached[(signed long int)2] != FALSE': FAILED",
+                "[main.coverage.9] FAILED",
+            ]
+        ),
+        "CBMC REACHABILITY FAILURE (P4 - unreachable goals):\n"
+        "  3 goal(s) not covered:\n"
+        "  1. line 299: end event 'Event_1y6wxsp' unreachable\n"
+        "  2. line 301: CWP state 2 unreachable\n"
+        "  3. [main.coverage.9] FAILED",
+    ),
+    (
+        CbmcSubProcessError("cbmc --cover"),
+        "CBMC ERROR: failed to run 'cbmc --cover'",
+    ),
 ]
 
 test_ids: list[str] = [
@@ -379,6 +414,9 @@ test_ids: list[str] = [
     "SubprocessRunError",
     "TypeingAssignCompatabilityError",
     "TypingNoTypeError",
+    "CbmcAssertionError",
+    "CbmcReachabilityError",
+    "CbmcSubProcessError",
 ]
 
 

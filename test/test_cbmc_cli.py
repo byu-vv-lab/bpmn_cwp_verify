@@ -3,12 +3,16 @@ import sys
 
 import pytest
 from returns.functions import not_
-from returns.io import IOSuccess
+from returns.io import IOFailure, IOSuccess
 from returns.pipeline import is_successful
 from returns.unsafe import unsafe_perform_io
 
 from bpmncwpverify.cli import _verify_with_cbmc_from_files, verify
-from bpmncwpverify.core.cbmc import CbmcOutputParser, CbmcVerificationReport
+from bpmncwpverify.core.cbmc import (
+    CbmcOutputParser,
+    CbmcVerificationReport,
+    _run_cbmc,
+)
 from bpmncwpverify.core.error import (
     CbmcAssertionError,
     CbmcReachabilityError,
@@ -208,3 +212,102 @@ def test_face2face_with_cbmc_returns_success():
     report = unsafe_perform_io(result.unwrap())
     assert isinstance(report, CbmcVerificationReport)
     assert report.bound > 0
+
+
+# ── Failure-path wiring (real build, cbmc mocked) ──────────────────────────────
+
+
+def test_correctness_failure_propagates_assertion_error(mocker):
+    # Only the correctness run should fire; reachability must be short-circuited
+    # (a second _run_cbmc call would exhaust side_effect and raise StopIteration).
+    mocker.patch(
+        "bpmncwpverify.core.cbmc._run_cbmc",
+        side_effect=[IOSuccess(CORRECTNESS_FAILURE)],
+    )
+    result = _verify_with_cbmc_from_files(
+        "./test/resources/face2face/state.txt",
+        "./test/resources/face2face/cwp.xml",
+        "./test/resources/face2face/workflow.bpmn",
+    )
+    assert not_(is_successful)(result)
+    error = unsafe_perform_io(result.failure())
+    assert isinstance(error, CbmcAssertionError)
+
+
+def test_reachability_failure_propagates_reachability_error(mocker):
+    mocker.patch(
+        "bpmncwpverify.core.cbmc._run_cbmc",
+        side_effect=[IOSuccess(CORRECTNESS_SUCCESS), IOSuccess(REACHABILITY_FAILURE)],
+    )
+    result = _verify_with_cbmc_from_files(
+        "./test/resources/face2face/state.txt",
+        "./test/resources/face2face/cwp.xml",
+        "./test/resources/face2face/workflow.bpmn",
+    )
+    assert not_(is_successful)(result)
+    error = unsafe_perform_io(result.failure())
+    assert isinstance(error, CbmcReachabilityError)
+
+
+# ── _run_cbmc subprocess-failure branch ────────────────────────────────────────
+
+
+def test_run_cbmc_subprocess_failure_returns_subprocess_error(mocker):
+    mocker.patch(
+        "bpmncwpverify.core.cbmc.subprocess.run",
+        side_effect=FileNotFoundError("cbmc not on PATH"),
+    )
+    result = _run_cbmc(["cbmc", "./tmp/verification.c"])
+    assert not_(is_successful)(result)
+    error = unsafe_perform_io(result.failure())
+    assert isinstance(error, CbmcSubProcessError)
+    assert error.command == "cbmc"
+
+
+# ── verify() printed output ────────────────────────────────────────────────────
+
+
+def test_verify_cbmc_success_prints_report(capsys, mocker):
+    mocker.patch(
+        "bpmncwpverify.cli._verify_with_cbmc_from_files",
+        return_value=IOSuccess(
+            CbmcVerificationReport(
+                file_path="./tmp/verification.c",
+                c_code="",
+                bound=5,
+                correctness_output=CORRECTNESS_SUCCESS,
+                reachability_output=REACHABILITY_SUCCESS,
+            )
+        ),
+    )
+    sys.argv = [
+        "verify",
+        "--cbmc",
+        "./test/resources/face2face/state.txt",
+        "./test/resources/face2face/cwp.xml",
+        "./test/resources/face2face/workflow.bpmn",
+    ]
+    verify()
+    out = capsys.readouterr().out
+    assert "CBMC VERIFICATION SUCCESSFUL" in out
+    assert "C file:      ./tmp/verification.c" in out
+    assert "BOUND:       5  (--unwind 6)" in out
+    # REACHABILITY_SUCCESS contains 7 ': SATISFIED' goals.
+    assert "7 CWP states reachable" in out
+
+
+def test_verify_cbmc_failure_prints_error_message(capsys, mocker):
+    mocker.patch(
+        "bpmncwpverify.cli._verify_with_cbmc_from_files",
+        return_value=IOFailure(CbmcSubProcessError("cbmc")),
+    )
+    sys.argv = [
+        "verify",
+        "--cbmc",
+        "./test/resources/face2face/state.txt",
+        "./test/resources/face2face/cwp.xml",
+        "./test/resources/face2face/workflow.bpmn",
+    ]
+    verify()
+    out = capsys.readouterr().out
+    assert "CBMC ERROR: failed to run 'cbmc'" in out
