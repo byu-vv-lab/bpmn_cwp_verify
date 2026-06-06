@@ -172,3 +172,5 @@ pan
 
 # vs-code workspaces
 work.code-workspace
+
+tmp/

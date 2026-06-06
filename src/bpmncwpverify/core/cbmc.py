@@ -16,7 +16,7 @@ from bpmncwpverify.core.error import (
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import write_file_contents
 
-OUTPUT_FILE = "/tmp/verification.c"
+OUTPUT_FILE = "./tmp/verification.c"
 
 
 class CbmcVerificationReport:

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import TextIO
 from xml.etree.ElementTree import Element
 
@@ -39,7 +40,9 @@ def _open_file_for_reading(filename: str) -> TextIO:
 
 
 def _open_file_for_writing(filename: str) -> TextIO:
-    return open(filename, "w")
+    path = Path(filename)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path.open("w")
 
 
 def _read_file(file_obj: TextIO) -> IOResultE[str]:
@@ -52,8 +55,8 @@ def _write_file(file_obj: TextIO, contents: str) -> IOResultE[None]:
 
 def element_tree_from_string(input: str) -> IOResult[Element, Error]:
     def _element_tree_from_string(input: str) -> Element:
-        element: Element = ElementTree.fromstring(input)
-        return element  # pyright: ignore[reportUnknownMemberType]
+        element: Element = ElementTree.fromstring(input)  # pyright: ignore[reportUnknownMemberType]
+        return element
 
     def _exception_to_xml_parsing_error(exc: Exception) -> Error:
         return FileXmlParseError(str(exc))
