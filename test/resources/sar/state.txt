@@ -1,6 +1,6 @@
 enum RiskState { riskInit acceptable notAcceptable }
 
-enum CommunicationState { communicationInit waiting sent }
+enum CommunicationState { communicationInit waiting wait sent }
 enum ConditionsState { conditionsInit changed same}
 
 enum MissingPersonState { missingPersonInit found missing }

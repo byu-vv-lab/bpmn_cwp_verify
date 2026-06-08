@@ -19,7 +19,7 @@
             <mxPoint x="460" y="440" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="dWC7u1PsDlPDUTVALTmd-76" connectable="0" parent="dWC7u1PsDlPDUTVALTmd-51" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == on &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == acceptable &amp;amp;&amp;amp; conditions == changed &amp;amp;&amp;amp; comms == waiting)" vertex="1">
+        <mxCell id="dWC7u1PsDlPDUTVALTmd-76" connectable="0" parent="dWC7u1PsDlPDUTVALTmd-51" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == on &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == acceptable &amp;amp;&amp;amp; conditions == changed &amp;amp;&amp;amp; (comms == wait || comms == waiting))" vertex="1">
           <mxGeometry relative="1" x="0.0514" y="-1" as="geometry">
             <mxPoint x="-51" y="-40" as="offset" />
           </mxGeometry>
@@ -37,29 +37,15 @@
         <mxCell id="dWC7u1PsDlPDUTVALTmd-48" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="ActiveSearch" vertex="1">
           <mxGeometry height="60" width="120" x="600" y="410" as="geometry" />
         </mxCell>
-        <mxCell id="dWC7u1PsDlPDUTVALTmd-60" edge="1" parent="1" source="zzKEAjI1_oLO3G-XxQyw-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="dWC7u1PsDlPDUTVALTmd-59">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="720" y="660" as="sourcePoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="dWC7u1PsDlPDUTVALTmd-78" connectable="0" parent="dWC7u1PsDlPDUTVALTmd-60" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == off &amp;amp;&amp;amp; missingPerson == found &amp;amp;&amp;amp; risk == acceptable &amp;amp;&amp;amp; conditions == same &amp;amp;&amp;amp; comms == waiting)" vertex="1">
-          <mxGeometry relative="1" x="-0.1" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="dWC7u1PsDlPDUTVALTmd-59" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="SearchOff" vertex="1">
           <mxGeometry height="60" width="140" x="590" y="740" as="geometry" />
         </mxCell>
-        <mxCell id="fCs90Bq06ikLqwhViVVq-5" edge="1" parent="1" source="zzKEAjI1_oLO3G-XxQyw-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" target="dWC7u1PsDlPDUTVALTmd-59">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="140" y="770" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="Hrn7Kr-2eRjpyOJcy7RP-9" edge="1" parent="1" source="zzKEAjI1_oLO3G-XxQyw-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="dWC7u1PsDlPDUTVALTmd-59">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="fCs90Bq06ikLqwhViVVq-6" connectable="0" parent="fCs90Bq06ikLqwhViVVq-5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == off &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == notAcceptable &amp;amp;&amp;amp; conditions == changed &amp;amp;&amp;amp; comms == waiting)" vertex="1">
-          <mxGeometry relative="1" x="0.4285" as="geometry">
-            <mxPoint x="-26" y="10" as="offset" />
+        <mxCell id="Hrn7Kr-2eRjpyOJcy7RP-10" connectable="0" parent="Hrn7Kr-2eRjpyOJcy7RP-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == off &amp;amp;&amp;amp; conditions == same &amp;amp;&amp;amp; comms == waiting &amp;amp;&amp;amp; (missingPerson == missing || missingPerson == found) &amp;amp;&amp;amp; (risk == notAcceptable || risk == acceptable))" vertex="1">
+          <mxGeometry relative="1" x="0.575" y="-1" as="geometry">
+            <mxPoint x="-146" y="-41" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="zzKEAjI1_oLO3G-XxQyw-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Return" vertex="1">
@@ -71,9 +57,9 @@
         <mxCell id="fCs90Bq06ikLqwhViVVq-1" edge="1" parent="1" source="zzKEAjI1_oLO3G-XxQyw-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="zzKEAjI1_oLO3G-XxQyw-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="fCs90Bq06ikLqwhViVVq-2" connectable="0" parent="fCs90Bq06ikLqwhViVVq-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == on &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == notAcceptable &amp;amp;&amp;amp; conditions == changed &amp;amp;&amp;amp; comms == sent)" vertex="1">
+        <mxCell id="fCs90Bq06ikLqwhViVVq-2" connectable="0" parent="fCs90Bq06ikLqwhViVVq-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == on &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == notAcceptable &amp;amp;&amp;amp; (conditions == changed || conditions == same) &amp;amp;&amp;amp; (comms == wait || comms == waiting || comms == sent))" vertex="1">
           <mxGeometry relative="1" x="0.1738" y="-2" as="geometry">
-            <mxPoint x="-198" y="-38" as="offset" />
+            <mxPoint x="-208" y="-38" as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="fCs90Bq06ikLqwhViVVq-10" edge="1" parent="1" source="zzKEAjI1_oLO3G-XxQyw-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="zzKEAjI1_oLO3G-XxQyw-4">
@@ -90,6 +76,14 @@
         <mxCell id="zzKEAjI1_oLO3G-XxQyw-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="DeployTroops" vertex="1">
           <mxGeometry height="60" width="120" x="600" y="200" as="geometry" />
         </mxCell>
+        <mxCell id="Hrn7Kr-2eRjpyOJcy7RP-7" edge="1" parent="1" source="zzKEAjI1_oLO3G-XxQyw-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="dWC7u1PsDlPDUTVALTmd-59">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hrn7Kr-2eRjpyOJcy7RP-8" connectable="0" parent="Hrn7Kr-2eRjpyOJcy7RP-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == off &amp;amp;&amp;amp; conditions == same &amp;amp;&amp;amp; comms == waiting &amp;amp;&amp;amp; (missingPerson == missing || missingPerson == found) &amp;amp;&amp;amp; (risk == notAcceptable || risk == acceptable))" vertex="1">
+          <mxGeometry relative="1" x="-0.1556" y="-2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="zzKEAjI1_oLO3G-XxQyw-6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="MissingPersonLocated" vertex="1">
           <mxGeometry height="60" width="120" x="600" y="590" as="geometry" />
         </mxCell>
@@ -99,7 +93,7 @@
             <mxPoint x="410" y="210" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="fCs90Bq06ikLqwhViVVq-9" connectable="0" parent="zzKEAjI1_oLO3G-XxQyw-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == on &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == acceptable &amp;amp;&amp;amp; conditions == changed &amp;amp;&amp;amp; comms == waiting)" vertex="1">
+        <mxCell id="fCs90Bq06ikLqwhViVVq-9" connectable="0" parent="zzKEAjI1_oLO3G-XxQyw-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="(search == on &amp;amp;&amp;amp; missingPerson == missing &amp;amp;&amp;amp; risk == acceptable &amp;amp;&amp;amp; conditions == changed &amp;amp;&amp;amp; comms == wait)" vertex="1">
           <mxGeometry relative="1" x="-0.02" y="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
