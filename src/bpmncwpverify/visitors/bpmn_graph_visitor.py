@@ -1,4 +1,4 @@
-import graphviz
+import graphviz  # pyright: ignore[reportMissingTypeStubs]
 
 from bpmncwpverify.core.bpmn import (
     Bpmn,
