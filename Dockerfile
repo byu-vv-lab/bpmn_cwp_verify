@@ -52,7 +52,7 @@ ENV PATH=/opt/bin:$PATH
 FROM base AS dev
 
 # Install Node.js (needed for pyright and other tooling)
-ARG NODE_VERSION=16.20.2
+ARG NODE_VERSION=18.20.8
 ARG TARGETARCH
 RUN case "${TARGETARCH}" in \
         "amd64") NODE_ARCH="x64" ;; \

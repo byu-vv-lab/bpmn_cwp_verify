@@ -1,4 +1,4 @@
-from typing import TextIO, cast
+from typing import TextIO
 from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
@@ -52,7 +52,8 @@ def _write_file(file_obj: TextIO, contents: str) -> IOResultE[None]:
 
 def element_tree_from_string(input: str) -> IOResult[Element, Error]:
     def _element_tree_from_string(input: str) -> Element:
-        return cast(Element, ElementTree.fromstring(input))  # pyright: ignore[reportUnknownMemberType]
+        element: Element = ElementTree.fromstring(input)
+        return element  # pyright: ignore[reportUnknownMemberType]
 
     def _exception_to_xml_parsing_error(exc: Exception) -> Error:
         return FileXmlParseError(str(exc))

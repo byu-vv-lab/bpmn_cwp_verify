@@ -1,4 +1,4 @@
-import graphviz
+import graphviz  # pyright: ignore[reportMissingTypeStubs]
 
 from bpmncwpverify.core.cwp import CwpEdge, CwpState, CwpVisitor
 from bpmncwpverify.visitors.bpmn_graph_visitor import dot_edge, dot_node

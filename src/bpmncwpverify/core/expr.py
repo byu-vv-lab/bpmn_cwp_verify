@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
@@ -275,7 +275,7 @@ class ExpressionListener(ExprListener):
         """
         listener = ExpressionListener(state)
         try:
-            walker: ParseTreeWalker = cast(ParseTreeWalker, ParseTreeWalker.DEFAULT)
+            walker: ParseTreeWalker = ParseTreeWalker.DEFAULT
             walker.walk(listener, context)
             result: Result[str, Error] = Success(listener.final_type)
             return result

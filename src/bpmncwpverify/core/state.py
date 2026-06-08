@@ -444,9 +444,7 @@ class State:
             """
             id: str = antlr_get_text(id_node)
             symbol: Token = id_node.getSymbol()
-            return AllowedValueDecl(
-                id, Some(cast(int, symbol.line)), Some(cast(int, symbol.column))
-            )
+            return AllowedValueDecl(id, Some(symbol.line), Some(symbol.column))
 
         @staticmethod
         def _get_values(
@@ -485,8 +483,8 @@ class State:
                 node = antlr_get_terminal_node_impl(ctx.ID())
                 symbol: Token = node.getSymbol()
                 id: str = State._Listener._get_id(node)
-                id_line = Some(cast(int, symbol.line))
-                id_col = Some(cast(int, symbol.column))
+                id_line = Some(symbol.line)
+                id_col = Some(symbol.column)
 
                 values: list[AllowedValueDecl] = State._Listener._get_values(
                     antlr_get_id_set_context(ctx.id_set()),
@@ -510,8 +508,8 @@ class State:
                 node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
                 id = State._Listener._get_id(node)
-                id_line = Some(cast(int, symbol.line))
-                id_col = Some(cast(int, symbol.column))
+                id_line = Some(symbol.line)
+                id_col = Some(symbol.column)
 
                 type_: str = antlr_get_type_from_type_context(ctx)
 
@@ -519,8 +517,8 @@ class State:
                 symbol = node.getSymbol()
                 init = AllowedValueDecl(
                     antlr_get_text(node),
-                    Some(cast(int, symbol.line)),
-                    Some(cast(int, symbol.column)),
+                    Some(symbol.line),
+                    Some(symbol.column),
                 )
 
                 return ConstDecl(id, type_, init, id_line, id_col)
@@ -541,8 +539,8 @@ class State:
                 node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
                 id: str = State._Listener._get_id(node)
-                id_line = Some(cast(int, symbol.line))
-                id_col = Some(cast(int, symbol.column))
+                id_line = Some(symbol.line)
+                id_col = Some(symbol.column)
 
                 type_: str = antlr_get_type_from_type_context(ctx)
 
@@ -550,8 +548,8 @@ class State:
                 symbol = node.getSymbol()
                 init: AllowedValueDecl = AllowedValueDecl(
                     antlr_get_text(node),
-                    Some(cast(int, symbol.line)),
-                    Some(cast(int, symbol.column)),
+                    Some(symbol.line),
+                    Some(symbol.column),
                 )
 
                 values: list[AllowedValueDecl] = State._Listener._get_values(
@@ -863,7 +861,7 @@ class State:
 
         @safe
         def walk_tree() -> State._Listener:
-            walker: ParseTreeWalker = cast(ParseTreeWalker, ParseTreeWalker.DEFAULT)
+            walker: ParseTreeWalker = ParseTreeWalker.DEFAULT
             listener = State._Listener()
             walker.walk(listener, context)
             return listener
