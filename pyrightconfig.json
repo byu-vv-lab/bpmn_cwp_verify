@@ -9,7 +9,9 @@
     "**/.venv",
     "**/.mypy_cache",
     "**/build",
-    "**/dist"
+    "**/dist",
+    "**/node_modules",
+    "**/.*"
   ],
   "reportUnknownArgumentType": false,
   "extraPaths": [
