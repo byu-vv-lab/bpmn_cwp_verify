@@ -4,6 +4,7 @@ from bpmncwpverify.core.bpmn import (
     Bpmn,
     BpmnVisitor,
     EndEvent,
+    EventBasedGatewayNode,
     ExclusiveGatewayNode,
     IntermediateEvent,
     MessageFlow,
@@ -42,6 +43,10 @@ class GraphVizVisitor(BpmnVisitor):
 
     def visit_task(self, task: Task) -> bool:
         dot_node(self.dot, task.id, task.name)
+        return True
+
+    def visit_event_based_gateway(self, gateway: EventBasedGatewayNode) -> bool:
+        dot_node(self.dot, gateway.id, gateway.name)
         return True
 
     def visit_exclusive_gateway(self, gateway: ExclusiveGatewayNode) -> bool:
