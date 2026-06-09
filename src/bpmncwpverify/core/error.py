@@ -1,5 +1,6 @@
 # TODO: create a "match" function on Failure(Error) and create standard error messaging.
 import builtins
+import re
 import typing
 from xml.etree.ElementTree import Element
 
@@ -586,6 +587,30 @@ class CbmcGeneratorError(Error):
         self.msg = msg
 
 
+class CbmcAssertionError(Error):
+    __slots__ = ["failures"]
+
+    def __init__(self, failures: list[str]) -> None:
+        super().__init__()
+        self.failures = failures
+
+
+class CbmcReachabilityError(Error):
+    __slots__ = ["unsatisfied_goals"]
+
+    def __init__(self, unsatisfied_goals: list[str]) -> None:
+        super().__init__()
+        self.unsatisfied_goals = unsatisfied_goals
+
+
+class CbmcSubProcessError(Error):
+    __slots__ = ["command"]
+
+    def __init__(self, command: str) -> None:
+        super().__init__()
+        self.command = command
+
+
 class SubProcessRunError(Error):
     __slots__ = "process_name"
 
@@ -820,6 +845,43 @@ def get_error_message(error: Error) -> str:
             return f"CBMC ERROR: unsupported element type '{element_type}' (id: {element_id})"
         case CbmcGeneratorError(msg=msg):
             return f"CBMC GENERATOR ERROR: {msg}"
+        case CbmcAssertionError(failures=failures):
+            lines = ["CBMC CORRECTNESS FAILURE (P1-P3):"]
+            lines.append(f"  {len(failures)} failing assertion(s):")
+            for i, raw in enumerate(failures, 1):
+                m = re.search(r"\] line (\d+) (.*): FAILURE$", raw)
+                if m:
+                    lines.append(f"  {i}. line {m.group(1)}: {m.group(2)}")
+                else:
+                    lines.append(f"  {i}. {raw}")
+            return "\n".join(lines)
+        case CbmcReachabilityError(unsatisfied_goals=unsatisfied_goals):
+            lines = ["CBMC REACHABILITY FAILURE (P4 - unreachable goals):"]
+            lines.append(f"  {len(unsatisfied_goals)} goal(s) not covered:")
+            for i, raw in enumerate(unsatisfied_goals, 1):
+                m = re.search(
+                    r"\] file .* line (\d+) .* condition '(.*?) != FALSE': FAILED$",
+                    raw,
+                )
+                if m:
+                    line_num, cond = m.group(1), m.group(2)
+                    if cond.startswith("cwp_reached["):
+                        state_m = re.search(r"\d+", cond)
+                        label = (
+                            f"CWP state {state_m.group()} unreachable"
+                            if state_m
+                            else cond
+                        )
+                    elif cond.endswith("_reached"):
+                        label = f"end event '{cond[: -len('_reached')]}' unreachable"
+                    else:
+                        label = cond
+                    lines.append(f"  {i}. line {line_num}: {label}")
+                else:
+                    lines.append(f"  {i}. {raw}")
+            return "\n".join(lines)
+        case CbmcSubProcessError(command=command):
+            return f"CBMC ERROR: failed to run '{command}'"
         case SubProcessRunError(process_name=process_name):
             return f"ERROR: failed to run '{process_name}'"
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
