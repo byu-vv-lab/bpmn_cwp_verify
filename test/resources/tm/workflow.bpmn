@@ -87,7 +87,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_13bmsdu" sourceRef="Activity_1ug8hu2" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_0h080ij" sourceRef="Event_1tog1f0" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_0wnarvi" sourceRef="Activity_1coqou1" targetRef="Gateway_1jzwwvy" />
-    <bpmn:sequenceFlow id="Flow_0nvndup" name="ptStatus == ptRecovered || ptStatus == deceased" sourceRef="Gateway_1jzwwvy" targetRef="Activity_0skgg00" />
+    <bpmn:sequenceFlow id="Flow_0nvndup" name="(ptStatus == ptRecovered || ptStatus == deceased) &#38;&#38; !(ptStatus == ptRecovered &#38;&#38; ptStatus == deceased" sourceRef="Gateway_1jzwwvy" targetRef="Activity_0skgg00" />
     <bpmn:sequenceFlow id="Flow_13s05ts" name="ptStatus == notStable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1pp8f77" />
     <bpmn:sequenceFlow id="Flow_0ff6pwd" name="ptStatus == stable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1ug8hu2" />
     <bpmn:sequenceFlow id="Flow_1mccybz" sourceRef="Activity_0skgg00" targetRef="Event_19axn1t" />
@@ -229,7 +229,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_19yplxf</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_09jxoxs" />
     </bpmn:boundaryEvent>
-    <bpmn:sequenceFlow id="Flow_02c599o" name="ptStatus == discharge || ptStatus == deceased" sourceRef="Event_0rtp6te" targetRef="Event_0da7srj" />
+    <bpmn:sequenceFlow id="Flow_02c599o" name="(ptStatus == discharge || ptStatus == deceased) &#38;&#38; !(ptStatus == discharge &#38;&#38; ptStatus == deceased)" sourceRef="Event_0rtp6te" targetRef="Event_0da7srj" />
     <bpmn:sequenceFlow id="Flow_1u5agdq" sourceRef="Activity_0osduuo" targetRef="Event_0da7srj" />
     <bpmn:sequenceFlow id="Flow_1denib1" name="hasCare == H-monitoring &#38;&#38; ptStatus == stable &#38;&#38; orderStatus == confirmed" sourceRef="Event_0h8gsq1" targetRef="Event_1wqlgdb" />
     <bpmn:sequenceFlow id="Flow_1xm172w" sourceRef="Event_1wqlgdb" targetRef="Activity_1v7t2tj" />
@@ -310,7 +310,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="645" y="181" />
         <di:waypoint x="865" y="181" />
         <bpmndi:BPMNLabel color:color="#831311">
-          <dc:Bounds x="677" y="123" width="72" height="53" />
+          <dc:Bounds x="689" y="77" width="81" height="106" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_13s05ts_di" bpmnElement="Flow_13s05ts">
@@ -562,7 +562,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="1376" y="487" />
         <di:waypoint x="1376" y="678" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="979" y="460" width="57" height="53" />
+          <dc:Bounds x="973" y="447" width="70" height="106" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1u5agdq_di" bpmnElement="Flow_1u5agdq">
@@ -625,13 +625,6 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <dc:Bounds x="1081" y="825" width="100" height="55" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_1dlx669_di" bpmnElement="Flow_1dlx669">
-        <di:waypoint x="230" y="282" />
-        <di:waypoint x="230" y="919" />
-        <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="227" y="310" width="85" height="80" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0nbpayu_di" bpmnElement="Flow_0nbpayu">
         <di:waypoint x="908" y="221" />
         <di:waypoint x="908" y="513" />
@@ -669,6 +662,13 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="746" y="490" />
         <di:waypoint x="400" y="490" />
         <di:waypoint x="400" y="199" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1dlx669_di" bpmnElement="Flow_1dlx669">
+        <di:waypoint x="230" y="282" />
+        <di:waypoint x="230" y="919" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="227" y="310" width="85" height="80" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
