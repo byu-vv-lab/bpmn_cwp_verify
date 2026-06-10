@@ -77,17 +77,20 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:messageEventDefinition id="MessageEventDefinition_0lxhmnu" />
     </bpmn:intermediateThrowEvent>
     <bpmn:userTask id="Activity_0d84g3i" name="Provider cares for patient">
+      <bpmn:documentation>orderNum = 20001
+ptID = KAB
+ptRm = B201</bpmn:documentation>
       <bpmn:incoming>Flow_1rgyzxq</bpmn:incoming>
       <bpmn:outgoing>Flow_1aaivaz</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:startEvent id="StartEvent_1" name="Start">
+    <bpmn:startEvent id="StartEvent_1" name="Provider Start">
       <bpmn:outgoing>Flow_1rgyzxq</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="Flow_13qmrkl" name="ptStatus == stable" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_13bmsdu" sourceRef="Activity_1ug8hu2" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_0h080ij" sourceRef="Event_1tog1f0" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_0wnarvi" sourceRef="Activity_1coqou1" targetRef="Gateway_1jzwwvy" />
-    <bpmn:sequenceFlow id="Flow_0nvndup" name="(!ptStatus == ptRecovered &#38;&#38; ptStatus == deceased) || (ptStatus == ptRecovered &#38;&#38; !ptStatus == deceased)" sourceRef="Gateway_1jzwwvy" targetRef="Activity_0skgg00" />
+    <bpmn:sequenceFlow id="Flow_0nvndup" name="(!(ptStatus == ptRecovered) &#38;&#38; ptStatus == deceased) || (ptStatus == ptRecovered &#38;&#38; !(ptStatus == deceased))" sourceRef="Gateway_1jzwwvy" targetRef="Activity_0skgg00" />
     <bpmn:sequenceFlow id="Flow_13s05ts" name="ptStatus == notStable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1pp8f77" />
     <bpmn:sequenceFlow id="Flow_0ff6pwd" name="ptStatus == stable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1ug8hu2" />
     <bpmn:sequenceFlow id="Flow_1mccybz" sourceRef="Activity_0skgg00" targetRef="Event_19axn1t" />
@@ -104,8 +107,8 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:messageEventDefinition id="MessageEventDefinition_1x925vj" />
     </bpmn:intermediateThrowEvent>
     <bpmn:task id="Activity_1sxp1vl" name="BioMed scheduler reads ptID order in EHR &#38; marks order for TM_panel">
-      <bpmn:incoming>Flow_1uesbis</bpmn:incoming>
       <bpmn:incoming>Flow_0su0uh6</bpmn:incoming>
+      <bpmn:incoming>Flow_1uesbis</bpmn:incoming>
       <bpmn:outgoing>Flow_1m8j3e9</bpmn:outgoing>
     </bpmn:task>
     <bpmn:exclusiveGateway id="Gateway_0t21fqs" name="Xor Ready">
@@ -114,11 +117,6 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_0mbez1w</bpmn:outgoing>
       <bpmn:outgoing>Flow_1c2vbab</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_07xoy9l" name="Wait">
-      <bpmn:incoming>Flow_1vt8b5e</bpmn:incoming>
-      <bpmn:outgoing>Flow_1uesbis</bpmn:outgoing>
-      <bpmn:timerEventDefinition id="TimerEventDefinition_087hga1" />
-    </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_105xj7y" name="TM Monitoring ptID[status]= monitored">
       <bpmn:incoming>Flow_1e6ilcp</bpmn:incoming>
       <bpmn:incoming>Flow_1pmml0x</bpmn:incoming>
@@ -141,19 +139,18 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     </bpmn:task>
     <bpmn:sequenceFlow id="Flow_1e23npb" name="boxStatus == installed &#38;&#38; boxLoc == ptRoom" sourceRef="Activity_0hly12e" targetRef="Event_0d9ncv3" />
     <bpmn:sequenceFlow id="Flow_1e6ilcp" sourceRef="Event_0d9ncv3" targetRef="Activity_105xj7y" />
-    <bpmn:sequenceFlow id="Flow_1uesbis" sourceRef="Event_07xoy9l" targetRef="Activity_1sxp1vl" />
     <bpmn:sequenceFlow id="Flow_1m8j3e9" sourceRef="Activity_1sxp1vl" targetRef="Gateway_0t21fqs" />
-    <bpmn:sequenceFlow id="Flow_1rcwdvq" name="boxNumb == 21 &#38;&#38; boxStatus == recovered" sourceRef="Gateway_0t21fqs" targetRef="Activity_1uycjpz" />
+    <bpmn:sequenceFlow id="Flow_1rcwdvq" name="boxNum == 21 &#38;&#38; boxStatus == recovered" sourceRef="Gateway_0t21fqs" targetRef="Activity_1uycjpz" />
     <bpmn:sequenceFlow id="Flow_0mbez1w" name="boxStatus == notReady" sourceRef="Gateway_0t21fqs" targetRef="Activity_1cpytw2" />
-    <bpmn:sequenceFlow id="Flow_1c2vbab" name="boxNumb == 21 &#38;&#38; boxStatus == ready" sourceRef="Gateway_0t21fqs" targetRef="Activity_0hly12e" />
+    <bpmn:sequenceFlow id="Flow_1c2vbab" name="boxNum == 21 &#38;&#38; boxStatus == ready" sourceRef="Gateway_0t21fqs" targetRef="Activity_0hly12e" />
     <bpmn:sequenceFlow id="Flow_1vt8b5e" sourceRef="Activity_1cpytw2" targetRef="Event_07xoy9l" />
     <bpmn:sequenceFlow id="Flow_1ovfcvr" name="boxStatus == recovered" sourceRef="Activity_1ipdodz" targetRef="Event_0npf1w8" />
     <bpmn:sequenceFlow id="Flow_09lwqmv" sourceRef="Activity_105xj7y" targetRef="Gateway_0clrxcu" />
-    <bpmn:sequenceFlow id="Flow_1pmml0x" name="alertStatus         == null" sourceRef="Gateway_0clrxcu" targetRef="Activity_105xj7y" />
+    <bpmn:sequenceFlow id="Flow_1pmml0x" name="alertStatus == null" sourceRef="Gateway_0clrxcu" targetRef="Activity_105xj7y" />
     <bpmn:sequenceFlow id="Flow_12yhm3t" name="alertStatus != null" sourceRef="Gateway_0clrxcu" targetRef="Event_1ya7hlb" />
-    <bpmn:sequenceFlow id="Flow_0oehx4h" name="boxNumb ==21 &#38;&#38; boxStatus == ready" sourceRef="Activity_1uycjpz" targetRef="Activity_0hly12e" />
+    <bpmn:sequenceFlow id="Flow_0oehx4h" name="boxNum ==21 &#38;&#38; boxStatus == ready" sourceRef="Activity_1uycjpz" targetRef="Activity_0hly12e" />
     <bpmn:sequenceFlow id="Flow_185v346" sourceRef="Event_05ubaqu" targetRef="Activity_1ipdodz" />
-    <bpmn:startEvent id="Event_10z6b2j" name="Start">
+    <bpmn:startEvent id="Event_10z6b2j" name="TM Start">
       <bpmn:outgoing>Flow_1n455zy</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:intermediateCatchEvent id="Event_01idezi" name="Start Monitoring">
@@ -187,6 +184,12 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:messageEventDefinition id="MessageEventDefinition_0zc1m8g" />
     </bpmn:intermediateThrowEvent>
     <bpmn:sequenceFlow id="Flow_09p0xi7" sourceRef="Event_1ya7hlb" targetRef="Activity_105xj7y" />
+    <bpmn:intermediateCatchEvent id="Event_07xoy9l" name="Wait">
+      <bpmn:incoming>Flow_1vt8b5e</bpmn:incoming>
+      <bpmn:outgoing>Flow_1uesbis</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_087hga1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1uesbis" sourceRef="Event_07xoy9l" targetRef="Activity_1sxp1vl" />
   </bpmn:process>
   <bpmn:process id="Process_ojbfa6o" isExecutable="false">
     <bpmn:endEvent id="Event_0da7srj" name="End Care">
@@ -206,7 +209,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_1r2q0pd</bpmn:outgoing>
       <bpmn:outgoing>Flow_07hl6o8</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_02c599o" name="(!ptStatus == discharge &#38;&#38; ptStatus == deceased) || (ptStatus == discharge &#38;&#38; !ptStatus == deceased)" sourceRef="Event_0rtp6te" targetRef="Event_0da7srj" />
+    <bpmn:sequenceFlow id="Flow_02c599o" name="(!(ptStatus == discharge) &#38;&#38; ptStatus == deceased) || (ptStatus == discharge &#38;&#38; !(ptStatus == deceased))" sourceRef="Event_0rtp6te" targetRef="Event_0da7srj" />
     <bpmn:sequenceFlow id="Flow_1u5agdq" sourceRef="Activity_0osduuo" targetRef="Event_0da7srj" />
     <bpmn:sequenceFlow id="Flow_0ciliok" name="hasCare == H_transport &#38;&#38; ptRm == new &#38;&#38; alertStatus == cancelled" sourceRef="Activity_1enq0qm" targetRef="Activity_0osduuo" />
     <bpmn:sequenceFlow id="Flow_07hl6o8" name="ptStatus == notStable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1a5lvl8" targetRef="Activity_1enq0qm" />
@@ -240,7 +243,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_1xm172w</bpmn:incoming>
       <bpmn:outgoing>Flow_0q84kz1</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:startEvent id="Event_0s17b9l" name="Start">
+    <bpmn:startEvent id="Event_0s17b9l" name="Room Care Start">
       <bpmn:outgoing>Flow_0vmjty0</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:intermediateCatchEvent id="Event_0qrp744" name="Start pt TM">
@@ -320,7 +323,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="167" y="88" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="174" y="125" width="24" height="14" />
+          <dc:Bounds x="152" y="125" width="68" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_13qmrkl_di" bpmnElement="Flow_13qmrkl">
@@ -349,7 +352,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="645" y="181" />
         <di:waypoint x="865" y="181" />
         <bpmndi:BPMNLabel color:color="#831311">
-          <dc:Bounds x="689" y="77" width="81" height="106" />
+          <dc:Bounds x="689" y="77" width="84" height="106" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_13s05ts_di" bpmnElement="Flow_13s05ts">
@@ -440,7 +443,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmndi:BPMNShape id="Event_10z6b2j_di" bpmnElement="Event_10z6b2j">
         <dc:Bounds x="172" y="844" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="178" y="820" width="24" height="14" />
+          <dc:Bounds x="169" y="820" width="43" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_01idezi_di" bpmnElement="Event_01idezi">
@@ -500,7 +503,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="414" y="962" />
         <di:waypoint x="414" y="1081" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="319" y="1023" width="83" height="40" />
+          <dc:Bounds x="316" y="1023" width="90" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0mbez1w_di" bpmnElement="Flow_0mbez1w">
@@ -517,7 +520,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="480" y="1091" />
         <di:waypoint x="580" y="1091" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="484" y="1047" width="83" height="40" />
+          <dc:Bounds x="481" y="1047" width="90" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1vt8b5e_di" bpmnElement="Flow_1vt8b5e">
@@ -541,7 +544,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="832" y="910" />
         <di:waypoint x="832" y="972" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="773" y="916" width="53" height="27" />
+          <dc:Bounds x="755" y="916" width="89" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_12yhm3t_di" bpmnElement="Flow_12yhm3t">
@@ -555,7 +558,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="464" y="1141" />
         <di:waypoint x="580" y="1141" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="484" y="1099" width="83" height="40" />
+          <dc:Bounds x="482" y="1099" width="87" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_185v346_di" bpmnElement="Flow_185v346">
@@ -633,7 +636,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmndi:BPMNShape id="Event_0s17b9l_di" bpmnElement="Event_0s17b9l">
         <dc:Bounds x="342" y="592" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="348" y="635" width="24" height="14" />
+          <dc:Bounds x="319" y="635" width="83" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0qrp744_di" bpmnElement="Event_0qrp744">
@@ -659,7 +662,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="1376" y="510" />
         <di:waypoint x="1376" y="678" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="898" y="483" width="66" height="106" />
+          <dc:Bounds x="897" y="483" width="70" height="106" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1u5agdq_di" bpmnElement="Flow_1u5agdq">

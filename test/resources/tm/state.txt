@@ -20,6 +20,6 @@ var orderNum: int = 20001
 var orderStatus: Status = statusInit
 var alertStatus: Status = statusInit
 
-var boxNumb: int = 21
+var boxNum: int = 21
 var boxStatus: Box = boxInit
 var boxLoc: Location = locationInit
