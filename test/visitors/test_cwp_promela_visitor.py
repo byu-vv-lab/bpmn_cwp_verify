@@ -40,15 +40,15 @@ class TestCwpPromelaVisitor:
 
         calls = [
             mocker.call("inline updateState() {", NL_SINGLE, IndentAction.INC),
-            mocker.call(prime_vars),
+            mocker.call(prime_vars, indent_offset=1),
             mocker.call("if", NL_SINGLE, IndentAction.INC),
-            mocker.call(proper_path_block),
+            mocker.call(proper_path_block, indent_offset=1),
             mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
             mocker.call('DBG(printf("Assert: Not a valid CWP transition"))', NL_SINGLE),
             mocker.call("assert(false)", NL_SINGLE),
             mocker.call("fi", NL_SINGLE, IndentAction.DECTWO),
-            mocker.call(var_reassignment),
-            mocker.call("test_val"),
+            mocker.call(var_reassignment, indent_offset=1),
+            mocker.call("test_val", indent_offset=1),
             mocker.call("}", NL_DOUBLE, IndentAction.DEC),
         ]
 
