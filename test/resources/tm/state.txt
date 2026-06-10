@@ -1,27 +1,25 @@
 enum ID { idInit KAB }
 enum Room { roomInit B201 new }
 enum PatientStatus { PatientStatusInit ptRecovered stable discharge deceased notStable stable_C_AddSvcs }
-enum Care { careInit H_monitoring transport H_addSvcs }
+enum Care { careInit H_monitoring H_transport H_addSvcs }
 enum Need { needInit N_immedAssmt N_moreAddSvcs }
 
-enum Order { orderInit 20001 }
 enum Status { statusInit confirmed cancelled null }
 
-enum Identification { boxIDInit 21 }
 enum Box { boxInit ready notReady installed recovered }
 enum Location { locationInit ptRoom }
 
 
 var ptID: ID = idInit
-var ptRM: Room = roomInit
+var ptRm: Room = roomInit
 var ptStatus: PatientStatus = PatientStatusInit
 var hasCare: Care = careInit
 var needsCare: Need = needInit
 
-var orderNum: Order = orderInit
+var orderNum: int = 20001
 var orderStatus: Status = statusInit
 var alertStatus: Status = statusInit
 
-var boxNumb: Identification = boxIDInit
+var boxNumb: int = 21
 var boxStatus: Box = boxInit
 var boxLoc: Location = locationInit

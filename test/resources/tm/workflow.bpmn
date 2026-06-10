@@ -39,18 +39,18 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_0h080ij</bpmn:incoming>
       <bpmn:outgoing>Flow_0wnarvi</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_1jzwwvy">
+    <bpmn:exclusiveGateway id="Gateway_1jzwwvy" name="Xor Stable/Care">
       <bpmn:incoming>Flow_0wnarvi</bpmn:incoming>
       <bpmn:outgoing>Flow_0nvndup</bpmn:outgoing>
       <bpmn:outgoing>Flow_13qmrkl</bpmn:outgoing>
       <bpmn:outgoing>Flow_13s05ts</bpmn:outgoing>
       <bpmn:outgoing>Flow_0ff6pwd</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sendTask id="Activity_0skgg00" name="Hospitalistr sends discharge order">
+    <bpmn:sendTask id="Activity_0skgg00" name="Hospitalist sends discharge order">
       <bpmn:incoming>Flow_0nvndup</bpmn:incoming>
       <bpmn:outgoing>Flow_1mccybz</bpmn:outgoing>
     </bpmn:sendTask>
-    <bpmn:endEvent id="Event_19axn1t">
+    <bpmn:endEvent id="Event_19axn1t" name="Pt Discharged">
       <bpmn:incoming>Flow_1mccybz</bpmn:incoming>
       <bpmn:incoming>Flow_14zt2ys</bpmn:incoming>
     </bpmn:endEvent>
@@ -66,12 +66,12 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_1hulz8j</bpmn:incoming>
       <bpmn:outgoing>Flow_14zt2ys</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:intermediateCatchEvent id="Event_1tog1f0">
+    <bpmn:intermediateCatchEvent id="Event_1tog1f0" name="Confirmation">
       <bpmn:incoming>Flow_0qbvhl0</bpmn:incoming>
       <bpmn:outgoing>Flow_0h080ij</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0cz04y9" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:intermediateThrowEvent id="Event_02g0pgw">
+    <bpmn:intermediateThrowEvent id="Event_02g0pgw" name="Send Monitor">
       <bpmn:incoming>Flow_1aaivaz</bpmn:incoming>
       <bpmn:outgoing>Flow_0qbvhl0</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0lxhmnu" />
@@ -80,7 +80,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_1rgyzxq</bpmn:incoming>
       <bpmn:outgoing>Flow_1aaivaz</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:startEvent id="StartEvent_1">
+    <bpmn:startEvent id="StartEvent_1" name="Start">
       <bpmn:outgoing>Flow_1rgyzxq</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="Flow_13qmrkl" name="ptStatus == stable" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1coqou1" />
@@ -98,7 +98,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_1rgyzxq" sourceRef="StartEvent_1" targetRef="Activity_0d84g3i" />
   </bpmn:process>
   <bpmn:process id="Process_gsl3g5w" isExecutable="false">
-    <bpmn:intermediateThrowEvent id="Event_0d9ncv3">
+    <bpmn:intermediateThrowEvent id="Event_0d9ncv3" name="Started Monitoring">
       <bpmn:incoming>Flow_1e23npb</bpmn:incoming>
       <bpmn:outgoing>Flow_1e6ilcp</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1x925vj" />
@@ -108,13 +108,13 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_0su0uh6</bpmn:incoming>
       <bpmn:outgoing>Flow_1m8j3e9</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_0t21fqs">
+    <bpmn:exclusiveGateway id="Gateway_0t21fqs" name="Xor Ready">
       <bpmn:incoming>Flow_1m8j3e9</bpmn:incoming>
       <bpmn:outgoing>Flow_1rcwdvq</bpmn:outgoing>
       <bpmn:outgoing>Flow_0mbez1w</bpmn:outgoing>
       <bpmn:outgoing>Flow_1c2vbab</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateCatchEvent id="Event_07xoy9l">
+    <bpmn:intermediateCatchEvent id="Event_07xoy9l" name="Wait">
       <bpmn:incoming>Flow_1vt8b5e</bpmn:incoming>
       <bpmn:outgoing>Flow_1uesbis</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_087hga1" />
@@ -163,7 +163,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_1n455zy" sourceRef="Event_10z6b2j" targetRef="Event_01idezi" />
     <bpmn:sequenceFlow id="Flow_0su0uh6" sourceRef="Event_01idezi" targetRef="Activity_1sxp1vl" />
-    <bpmn:endEvent id="Event_0npf1w8">
+    <bpmn:endEvent id="Event_0npf1w8" name="End Monitoring">
       <bpmn:incoming>Flow_1ovfcvr</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Activity_1ipdodz" name="TM recover TMbox">
@@ -176,12 +176,12 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_185v346</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1g6juyi" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:exclusiveGateway id="Gateway_0clrxcu">
+    <bpmn:exclusiveGateway id="Gateway_0clrxcu" name="Xor Alert">
       <bpmn:incoming>Flow_09lwqmv</bpmn:incoming>
       <bpmn:outgoing>Flow_1pmml0x</bpmn:outgoing>
       <bpmn:outgoing>Flow_12yhm3t</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:intermediateThrowEvent id="Event_1ya7hlb">
+    <bpmn:intermediateThrowEvent id="Event_1ya7hlb" name="Send Alert">
       <bpmn:incoming>Flow_12yhm3t</bpmn:incoming>
       <bpmn:outgoing>Flow_09p0xi7</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0zc1m8g" />
@@ -189,8 +189,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_09p0xi7" sourceRef="Event_1ya7hlb" targetRef="Activity_105xj7y" />
   </bpmn:process>
   <bpmn:process id="Process_ojbfa6o" isExecutable="false">
-    <bpmn:laneSet id="LaneSet_1viuw4l" />
-    <bpmn:endEvent id="Event_0da7srj">
+    <bpmn:endEvent id="Event_0da7srj" name="End Care">
       <bpmn:incoming>Flow_02c599o</bpmn:incoming>
       <bpmn:incoming>Flow_1u5agdq</bpmn:incoming>
     </bpmn:endEvent>
@@ -202,7 +201,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_07hl6o8</bpmn:incoming>
       <bpmn:outgoing>Flow_0ciliok</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:exclusiveGateway id="Gateway_1a5lvl8">
+    <bpmn:exclusiveGateway id="Gateway_1a5lvl8" name="Xor Stable">
       <bpmn:incoming>Flow_19yplxf</bpmn:incoming>
       <bpmn:outgoing>Flow_1r2q0pd</bpmn:outgoing>
       <bpmn:outgoing>Flow_07hl6o8</bpmn:outgoing>
@@ -212,7 +211,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_0ciliok" name="hasCare == H_transport &#38;&#38; ptRm == new &#38;&#38; alertStatus == cancelled" sourceRef="Activity_1enq0qm" targetRef="Activity_0osduuo" />
     <bpmn:sequenceFlow id="Flow_07hl6o8" name="ptStatus == notStable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1a5lvl8" targetRef="Activity_1enq0qm" />
     <bpmn:sequenceFlow id="Flow_19yplxf" sourceRef="Event_0dx6mxp" targetRef="Gateway_1a5lvl8" />
-    <bpmn:sequenceFlow id="Flow_1r2q0pd" name="ptStatus == stable &#38;&#38; hasCare == H_addSvcs &#38;&#38; alert == cancelled" sourceRef="Gateway_1a5lvl8" targetRef="Activity_1v7t2tj" />
+    <bpmn:sequenceFlow id="Flow_1r2q0pd" name="ptStatus == stable &#38;&#38; hasCare == H_addSvcs &#38;&#38; alertStatus == cancelled" sourceRef="Gateway_1a5lvl8" targetRef="Activity_1v7t2tj" />
     <bpmn:sequenceFlow id="Flow_0j6nxsn" name="needsCare == N_immedAssmt" sourceRef="Event_01d7kbv" targetRef="Activity_09jky14" />
     <bpmn:intermediateCatchEvent id="Event_01d7kbv" name="Receive Alert">
       <bpmn:incoming>Flow_0pgab9g</bpmn:incoming>
@@ -231,7 +230,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_0zh7ap1" sourceRef="Activity_09jky14" targetRef="Event_0dx6mxp" />
     <bpmn:sequenceFlow id="Flow_0pgab9g" sourceRef="Gateway_0i9x75u" targetRef="Event_01d7kbv" />
     <bpmn:sequenceFlow id="Flow_0bxmerx" sourceRef="Gateway_0i9x75u" targetRef="Event_0rtp6te" />
-    <bpmn:intermediateThrowEvent id="Event_1wqlgdb">
+    <bpmn:intermediateThrowEvent id="Event_1wqlgdb" name="Send Confirmation">
       <bpmn:incoming>Flow_0xsrov3</bpmn:incoming>
       <bpmn:outgoing>Flow_1xm172w</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0p0kuqd" />
@@ -249,12 +248,12 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_0xsrov3</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1nxqxgt" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:eventBasedGateway id="Gateway_0i9x75u">
+    <bpmn:eventBasedGateway id="Gateway_0i9x75u" name="Xor Message">
       <bpmn:incoming>Flow_0q84kz1</bpmn:incoming>
       <bpmn:outgoing>Flow_0pgab9g</bpmn:outgoing>
       <bpmn:outgoing>Flow_0bxmerx</bpmn:outgoing>
     </bpmn:eventBasedGateway>
-    <bpmn:sequenceFlow id="Flow_0xsrov3" name="hasCare == H-monitoring &#38;&#38; ptStatus == stable &#38;&#38; orderStatus == confirmed" sourceRef="Event_0qrp744" targetRef="Event_1wqlgdb" />
+    <bpmn:sequenceFlow id="Flow_0xsrov3" name="hasCare == H_monitoring &#38;&#38; ptStatus == stable &#38;&#38; orderStatus == confirmed" sourceRef="Event_0qrp744" targetRef="Event_1wqlgdb" />
     <bpmn:sequenceFlow id="Flow_1xm172w" sourceRef="Event_1wqlgdb" targetRef="Activity_1v7t2tj" />
     <bpmn:sequenceFlow id="Flow_0q84kz1" sourceRef="Activity_1v7t2tj" targetRef="Gateway_0i9x75u" />
     <bpmn:sequenceFlow id="Flow_0vmjty0" sourceRef="Event_0s17b9l" targetRef="Event_0qrp744" />
@@ -276,6 +275,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_060a3oi_di" bpmnElement="Gateway_1jzwwvy" isMarkerVisible="true">
         <dc:Bounds x="595" y="156" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="630" y="193" width="79" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1udo5pr_di" bpmnElement="Activity_0skgg00">
         <dc:Bounds x="865" y="141" width="100" height="80" />
@@ -283,6 +285,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_19axn1t_di" bpmnElement="Event_19axn1t">
         <dc:Bounds x="1025" y="163" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1008" y="133" width="70" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_15g83bj_di" bpmnElement="Activity_1ug8hu2">
         <dc:Bounds x="684" y="300" width="100" height="80" />
@@ -298,9 +303,15 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0vebup3_di" bpmnElement="Event_1tog1f0">
         <dc:Bounds x="382" y="163" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="368" y="143" width="63" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1clxoin_di" bpmnElement="Event_02g0pgw">
         <dc:Bounds x="212" y="246" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="237" y="283" width="66" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_06hb458_di" bpmnElement="Activity_0d84g3i">
         <dc:Bounds x="180" y="138" width="100" height="80" />
@@ -308,6 +319,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="167" y="88" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="174" y="125" width="24" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_13qmrkl_di" bpmnElement="Flow_13qmrkl">
         <di:waypoint x="620" y="156" />
@@ -387,6 +401,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0j4yc54_di" bpmnElement="Event_0d9ncv3">
         <dc:Bounds x="612" y="994" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="525" y="1002" width="90" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1sxp1vl_di" bpmnElement="Activity_1sxp1vl">
         <dc:Bounds x="270" y="897" width="100" height="80" />
@@ -394,9 +411,15 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0t21fqs_di" bpmnElement="Gateway_0t21fqs" isMarkerVisible="true">
         <dc:Bounds x="389" y="912" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="424" y="953" width="52" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1tk7w92_di" bpmnElement="Event_07xoy9l">
         <dc:Bounds x="302" y="816" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="309" y="803" width="22" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_105xj7y_di" bpmnElement="Activity_105xj7y">
         <dc:Bounds x="822" y="972" width="100" height="80" />
@@ -428,6 +451,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0npf1w8_di" bpmnElement="Event_0npf1w8">
         <dc:Bounds x="1272" y="994" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1253" y="1037" width="74" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1ipdodz_di" bpmnElement="Activity_1ipdodz">
         <dc:Bounds x="1090" y="972" width="100" height="80" />
@@ -441,9 +467,15 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0clrxcu_di" bpmnElement="Gateway_0clrxcu" isMarkerVisible="true">
         <dc:Bounds x="847" y="885" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="853" y="924" width="43" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0ob8jvp_di" bpmnElement="Event_1ya7hlb">
         <dc:Bounds x="854" y="812" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="801" y="825" width="52" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1e23npb_di" bpmnElement="Flow_1e23npb">
         <di:waypoint x="630" y="1081" />
@@ -554,6 +586,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0da7srj_di" bpmnElement="Event_0da7srj">
         <dc:Bounds x="1358" y="678" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1353" y="721" width="47" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0je3qtv_di" bpmnElement="Activity_0osduuo">
         <dc:Bounds x="1234" y="656" width="100" height="80" />
@@ -565,6 +600,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_1a5lvl8_di" bpmnElement="Gateway_1a5lvl8" isMarkerVisible="true">
         <dc:Bounds x="1017" y="540" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="984" y="543" width="52" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1eiym5p_di" bpmnElement="Event_01d7kbv">
         <dc:Bounds x="854" y="702" width="36" height="36" />
@@ -584,6 +622,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1v13hiq_di" bpmnElement="Event_1wqlgdb">
         <dc:Bounds x="532" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="538" y="635" width="63" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1v7t2tj_di" bpmnElement="Activity_1v7t2tj">
         <dc:Bounds x="620" y="570" width="100" height="80" />
@@ -603,6 +644,9 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_0i9x75u_di" bpmnElement="Gateway_0i9x75u">
         <dc:Bounds x="847" y="585" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="897" y="600" width="65" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0tuxo80_di" bpmnElement="Event_0rtp6te">
         <dc:Bounds x="854" y="492" width="36" height="36" />
@@ -647,7 +691,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="670" y="460" />
         <di:waypoint x="670" y="570" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="696" y="447" width="87" height="66" />
+          <dc:Bounds x="703" y="447" width="74" height="80" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0j6nxsn_di" bpmnElement="Flow_0j6nxsn">
@@ -673,7 +717,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="468" y="610" />
         <di:waypoint x="532" y="610" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="464" y="620" width="73" height="80" />
+          <dc:Bounds x="459" y="620" width="84" height="80" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1xm172w_di" bpmnElement="Flow_1xm172w">
