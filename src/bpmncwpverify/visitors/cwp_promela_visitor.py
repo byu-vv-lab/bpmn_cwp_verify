@@ -145,11 +145,11 @@ class CwpPromelaVisitor(CwpVisitor):
         new_str = "inline updateState() {"
         self.update_state_inline.write_str(new_str, NL_SINGLE, IndentAction.INC)
 
-        self.update_state_inline.write_str(self.prime_vars)
+        self.update_state_inline.write_str(self.prime_vars, indent_offset=1)
 
         self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
 
-        self.update_state_inline.write_str(self.proper_path_block)
+        self.update_state_inline.write_str(self.proper_path_block, indent_offset=1)
 
         self.update_state_inline.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
         self.update_state_inline.write_str(
@@ -159,9 +159,9 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DECTWO)
 
-        self.update_state_inline.write_str(self.var_reassignment)
+        self.update_state_inline.write_str(self.var_reassignment, indent_offset=1)
 
-        self.update_state_inline.write_str(self.build_XOR_block())
+        self.update_state_inline.write_str(self.build_XOR_block(), indent_offset=1)
 
         self.update_state_inline.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
@@ -170,7 +170,7 @@ class CwpPromelaVisitor(CwpVisitor):
             "inline caculateState() {", NL_SINGLE, IndentAction.INC
         )
 
-        self.caculate_state_inline.write_str(self.vars)
+        self.caculate_state_inline.write_str(self.vars, indent_offset=1)
 
         self.caculate_state_inline.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
