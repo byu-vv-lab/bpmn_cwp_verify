@@ -7,10 +7,10 @@
     <bpmn:messageFlow id="Flow_0nbpayu" sourceRef="Activity_0skgg00" targetRef="Event_0rtp6te" />
     <bpmn:messageFlow id="Flow_156l6t7" name="alertStatus == confirmed" sourceRef="Event_1ya7hlb" targetRef="Event_01d7kbv" />
     <bpmn:messageFlow id="Flow_1qyyu16" name="boxStatus == available" sourceRef="Activity_0osduuo" targetRef="Event_05ubaqu" />
-    <bpmn:messageFlow id="Flow_1dkgxv1" sourceRef="Event_0d9ncv3" targetRef="Event_0h8gsq1" />
     <bpmn:messageFlow id="Flow_1ru9u1h" sourceRef="Activity_1ug8hu2" targetRef="Event_0dx6mxp" />
     <bpmn:messageFlow id="Flow_02b49pl" sourceRef="Event_1wqlgdb" targetRef="Event_1tog1f0" />
     <bpmn:messageFlow id="Flow_1dlx669" name="orderNum == 20001 &#38;&#38; orderStatus == issued &#38;&#38; ptID == KAB &#38;&#38; ptRm == B201" sourceRef="Event_02g0pgw" targetRef="Event_01idezi" />
+    <bpmn:messageFlow id="Flow_191rv2u" sourceRef="Event_0d9ncv3" targetRef="Event_0qrp744" />
     <bpmn:textAnnotation id="TextAnnotation_1q2yylp">
       <bpmn:text>Performers
 - Provider
@@ -87,7 +87,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_13bmsdu" sourceRef="Activity_1ug8hu2" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_0h080ij" sourceRef="Event_1tog1f0" targetRef="Activity_1coqou1" />
     <bpmn:sequenceFlow id="Flow_0wnarvi" sourceRef="Activity_1coqou1" targetRef="Gateway_1jzwwvy" />
-    <bpmn:sequenceFlow id="Flow_0nvndup" name="(ptStatus == ptRecovered || ptStatus == deceased) &#38;&#38; !(ptStatus == ptRecovered &#38;&#38; ptStatus == deceased" sourceRef="Gateway_1jzwwvy" targetRef="Activity_0skgg00" />
+    <bpmn:sequenceFlow id="Flow_0nvndup" name="(!ptStatus == ptRecovered &#38;&#38; ptStatus == deceased) || (ptStatus == ptRecovered &#38;&#38; !ptStatus == deceased)" sourceRef="Gateway_1jzwwvy" targetRef="Activity_0skgg00" />
     <bpmn:sequenceFlow id="Flow_13s05ts" name="ptStatus == notStable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1pp8f77" />
     <bpmn:sequenceFlow id="Flow_0ff6pwd" name="ptStatus == stable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1jzwwvy" targetRef="Activity_1ug8hu2" />
     <bpmn:sequenceFlow id="Flow_1mccybz" sourceRef="Activity_0skgg00" targetRef="Event_19axn1t" />
@@ -119,22 +119,12 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_1uesbis</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_087hga1" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:endEvent id="Event_0npf1w8">
-      <bpmn:incoming>Flow_1ovfcvr</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:exclusiveGateway id="Gateway_0clrxcu">
-      <bpmn:incoming>Flow_09lwqmv</bpmn:incoming>
-      <bpmn:outgoing>Flow_1pmml0x</bpmn:outgoing>
-      <bpmn:outgoing>Flow_12yhm3t</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:intermediateThrowEvent id="Event_1ya7hlb">
-      <bpmn:incoming>Flow_12yhm3t</bpmn:incoming>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_0zc1m8g" />
-    </bpmn:intermediateThrowEvent>
     <bpmn:task id="Activity_105xj7y" name="TM Monitoring ptID[status]= monitored">
       <bpmn:incoming>Flow_1e6ilcp</bpmn:incoming>
       <bpmn:incoming>Flow_1pmml0x</bpmn:incoming>
+      <bpmn:incoming>Flow_09p0xi7</bpmn:incoming>
       <bpmn:outgoing>Flow_09lwqmv</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0xikubq</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1uycjpz" name="maintain box">
       <bpmn:incoming>Flow_1rcwdvq</bpmn:incoming>
@@ -149,14 +139,6 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_0mbez1w</bpmn:incoming>
       <bpmn:outgoing>Flow_1vt8b5e</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Activity_1ipdodz" name="TM recover TMbox">
-      <bpmn:incoming>Flow_185v346</bpmn:incoming>
-      <bpmn:outgoing>Flow_1ovfcvr</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:boundaryEvent id="Event_05ubaqu" attachedToRef="Activity_105xj7y">
-      <bpmn:outgoing>Flow_185v346</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1cybe1h" />
-    </bpmn:boundaryEvent>
     <bpmn:sequenceFlow id="Flow_1e23npb" name="boxStatus == installed &#38;&#38; boxLoc == ptRoom" sourceRef="Activity_0hly12e" targetRef="Event_0d9ncv3" />
     <bpmn:sequenceFlow id="Flow_1e6ilcp" sourceRef="Event_0d9ncv3" targetRef="Activity_105xj7y" />
     <bpmn:sequenceFlow id="Flow_1uesbis" sourceRef="Event_07xoy9l" targetRef="Activity_1sxp1vl" />
@@ -168,7 +150,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     <bpmn:sequenceFlow id="Flow_1ovfcvr" name="boxStatus == recovered" sourceRef="Activity_1ipdodz" targetRef="Event_0npf1w8" />
     <bpmn:sequenceFlow id="Flow_09lwqmv" sourceRef="Activity_105xj7y" targetRef="Gateway_0clrxcu" />
     <bpmn:sequenceFlow id="Flow_1pmml0x" name="alertStatus         == null" sourceRef="Gateway_0clrxcu" targetRef="Activity_105xj7y" />
-    <bpmn:sequenceFlow id="Flow_12yhm3t" sourceRef="Gateway_0clrxcu" targetRef="Event_1ya7hlb" />
+    <bpmn:sequenceFlow id="Flow_12yhm3t" name="alertStatus != null" sourceRef="Gateway_0clrxcu" targetRef="Event_1ya7hlb" />
     <bpmn:sequenceFlow id="Flow_0oehx4h" name="boxNumb ==21 &#38;&#38; boxStatus == ready" sourceRef="Activity_1uycjpz" targetRef="Activity_0hly12e" />
     <bpmn:sequenceFlow id="Flow_185v346" sourceRef="Event_05ubaqu" targetRef="Activity_1ipdodz" />
     <bpmn:startEvent id="Event_10z6b2j" name="Start">
@@ -181,6 +163,30 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_1n455zy" sourceRef="Event_10z6b2j" targetRef="Event_01idezi" />
     <bpmn:sequenceFlow id="Flow_0su0uh6" sourceRef="Event_01idezi" targetRef="Activity_1sxp1vl" />
+    <bpmn:endEvent id="Event_0npf1w8">
+      <bpmn:incoming>Flow_1ovfcvr</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Activity_1ipdodz" name="TM recover TMbox">
+      <bpmn:incoming>Flow_185v346</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ovfcvr</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_0xikubq" sourceRef="Activity_105xj7y" targetRef="Event_05ubaqu" />
+    <bpmn:intermediateCatchEvent id="Event_05ubaqu" name="Receive Notif">
+      <bpmn:incoming>Flow_0xikubq</bpmn:incoming>
+      <bpmn:outgoing>Flow_185v346</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1g6juyi" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_0clrxcu">
+      <bpmn:incoming>Flow_09lwqmv</bpmn:incoming>
+      <bpmn:outgoing>Flow_1pmml0x</bpmn:outgoing>
+      <bpmn:outgoing>Flow_12yhm3t</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="Event_1ya7hlb">
+      <bpmn:incoming>Flow_12yhm3t</bpmn:incoming>
+      <bpmn:outgoing>Flow_09p0xi7</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_0zc1m8g" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="Flow_09p0xi7" sourceRef="Event_1ya7hlb" targetRef="Activity_105xj7y" />
   </bpmn:process>
   <bpmn:process id="Process_ojbfa6o" isExecutable="false">
     <bpmn:laneSet id="LaneSet_1viuw4l" />
@@ -188,15 +194,6 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:incoming>Flow_02c599o</bpmn:incoming>
       <bpmn:incoming>Flow_1u5agdq</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:startEvent id="Event_0h8gsq1" name="start pt TM">
-      <bpmn:outgoing>Flow_1denib1</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1ywk51w" />
-    </bpmn:startEvent>
-    <bpmn:intermediateThrowEvent id="Event_1wqlgdb">
-      <bpmn:incoming>Flow_1denib1</bpmn:incoming>
-      <bpmn:outgoing>Flow_1xm172w</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_0p0kuqd" />
-    </bpmn:intermediateThrowEvent>
     <bpmn:sendTask id="Activity_0osduuo" name="Floor Admin notifies TMmgr boxStatus">
       <bpmn:incoming>Flow_0ciliok</bpmn:incoming>
       <bpmn:outgoing>Flow_1u5agdq</bpmn:outgoing>
@@ -210,34 +207,62 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:outgoing>Flow_1r2q0pd</bpmn:outgoing>
       <bpmn:outgoing>Flow_07hl6o8</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Activity_09jky14" name="FloorStaff does immediate eval &#38;&#38;/or AddSvcs">
-      <bpmn:incoming>Flow_0j6nxsn</bpmn:incoming>
-    </bpmn:task>
-    <bpmn:task id="Activity_1v7t2tj" name="FloorStaff care of ptID">
-      <bpmn:incoming>Flow_1r2q0pd</bpmn:incoming>
-      <bpmn:incoming>Flow_1xm172w</bpmn:incoming>
-    </bpmn:task>
-    <bpmn:boundaryEvent id="Event_0rtp6te" attachedToRef="Activity_1v7t2tj">
-      <bpmn:outgoing>Flow_02c599o</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1v4jcsq" />
-    </bpmn:boundaryEvent>
-    <bpmn:boundaryEvent id="Event_01d7kbv" attachedToRef="Activity_1v7t2tj">
-      <bpmn:outgoing>Flow_0j6nxsn</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_1lba4n8" />
-    </bpmn:boundaryEvent>
-    <bpmn:boundaryEvent id="Event_0dx6mxp" attachedToRef="Activity_09jky14">
-      <bpmn:outgoing>Flow_19yplxf</bpmn:outgoing>
-      <bpmn:messageEventDefinition id="MessageEventDefinition_09jxoxs" />
-    </bpmn:boundaryEvent>
-    <bpmn:sequenceFlow id="Flow_02c599o" name="(ptStatus == discharge || ptStatus == deceased) &#38;&#38; !(ptStatus == discharge &#38;&#38; ptStatus == deceased)" sourceRef="Event_0rtp6te" targetRef="Event_0da7srj" />
+    <bpmn:sequenceFlow id="Flow_02c599o" name="(!ptStatus == discharge &#38;&#38; ptStatus == deceased) || (ptStatus == discharge &#38;&#38; !ptStatus == deceased)" sourceRef="Event_0rtp6te" targetRef="Event_0da7srj" />
     <bpmn:sequenceFlow id="Flow_1u5agdq" sourceRef="Activity_0osduuo" targetRef="Event_0da7srj" />
-    <bpmn:sequenceFlow id="Flow_1denib1" name="hasCare == H-monitoring &#38;&#38; ptStatus == stable &#38;&#38; orderStatus == confirmed" sourceRef="Event_0h8gsq1" targetRef="Event_1wqlgdb" />
-    <bpmn:sequenceFlow id="Flow_1xm172w" sourceRef="Event_1wqlgdb" targetRef="Activity_1v7t2tj" />
     <bpmn:sequenceFlow id="Flow_0ciliok" name="hasCare == H_transport &#38;&#38; ptRm == new &#38;&#38; alertStatus == cancelled" sourceRef="Activity_1enq0qm" targetRef="Activity_0osduuo" />
     <bpmn:sequenceFlow id="Flow_07hl6o8" name="ptStatus == notStable &#38;&#38; needsCare == N_moreAddSvcs" sourceRef="Gateway_1a5lvl8" targetRef="Activity_1enq0qm" />
     <bpmn:sequenceFlow id="Flow_19yplxf" sourceRef="Event_0dx6mxp" targetRef="Gateway_1a5lvl8" />
     <bpmn:sequenceFlow id="Flow_1r2q0pd" name="ptStatus == stable &#38;&#38; hasCare == H_addSvcs &#38;&#38; alert == cancelled" sourceRef="Gateway_1a5lvl8" targetRef="Activity_1v7t2tj" />
     <bpmn:sequenceFlow id="Flow_0j6nxsn" name="needsCare == N_immedAssmt" sourceRef="Event_01d7kbv" targetRef="Activity_09jky14" />
+    <bpmn:intermediateCatchEvent id="Event_01d7kbv" name="Receive Alert">
+      <bpmn:incoming>Flow_0pgab9g</bpmn:incoming>
+      <bpmn:outgoing>Flow_0j6nxsn</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1htfmye" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:task id="Activity_09jky14" name="FloorStaff does immediate eval &#38;&#38;/or AddSvcs">
+      <bpmn:incoming>Flow_0j6nxsn</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zh7ap1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="Event_0dx6mxp" name="Receive Order">
+      <bpmn:incoming>Flow_0zh7ap1</bpmn:incoming>
+      <bpmn:outgoing>Flow_19yplxf</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1qupv4m" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_0zh7ap1" sourceRef="Activity_09jky14" targetRef="Event_0dx6mxp" />
+    <bpmn:sequenceFlow id="Flow_0pgab9g" sourceRef="Gateway_0i9x75u" targetRef="Event_01d7kbv" />
+    <bpmn:sequenceFlow id="Flow_0bxmerx" sourceRef="Gateway_0i9x75u" targetRef="Event_0rtp6te" />
+    <bpmn:intermediateThrowEvent id="Event_1wqlgdb">
+      <bpmn:incoming>Flow_0xsrov3</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xm172w</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_0p0kuqd" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:task id="Activity_1v7t2tj" name="FloorStaff care of ptID">
+      <bpmn:incoming>Flow_1r2q0pd</bpmn:incoming>
+      <bpmn:incoming>Flow_1xm172w</bpmn:incoming>
+      <bpmn:outgoing>Flow_0q84kz1</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:startEvent id="Event_0s17b9l" name="Start">
+      <bpmn:outgoing>Flow_0vmjty0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:intermediateCatchEvent id="Event_0qrp744" name="Start pt TM">
+      <bpmn:incoming>Flow_0vmjty0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0xsrov3</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1nxqxgt" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:eventBasedGateway id="Gateway_0i9x75u">
+      <bpmn:incoming>Flow_0q84kz1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0pgab9g</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0bxmerx</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:sequenceFlow id="Flow_0xsrov3" name="hasCare == H-monitoring &#38;&#38; ptStatus == stable &#38;&#38; orderStatus == confirmed" sourceRef="Event_0qrp744" targetRef="Event_1wqlgdb" />
+    <bpmn:sequenceFlow id="Flow_1xm172w" sourceRef="Event_1wqlgdb" targetRef="Activity_1v7t2tj" />
+    <bpmn:sequenceFlow id="Flow_0q84kz1" sourceRef="Activity_1v7t2tj" targetRef="Gateway_0i9x75u" />
+    <bpmn:sequenceFlow id="Flow_0vmjty0" sourceRef="Event_0s17b9l" targetRef="Event_0qrp744" />
+    <bpmn:intermediateCatchEvent id="Event_0rtp6te" name="Receive Discharge">
+      <bpmn:incoming>Flow_0bxmerx</bpmn:incoming>
+      <bpmn:outgoing>Flow_02c599o</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1vruazn" />
+    </bpmn:intermediateCatchEvent>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_08488ar">
@@ -373,15 +398,6 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmndi:BPMNShape id="Event_1tk7w92_di" bpmnElement="Event_07xoy9l">
         <dc:Bounds x="302" y="816" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0npf1w8_di" bpmnElement="Event_0npf1w8">
-        <dc:Bounds x="1196" y="993" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0clrxcu_di" bpmnElement="Gateway_0clrxcu" isMarkerVisible="true">
-        <dc:Bounds x="847" y="904" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0ob8jvp_di" bpmnElement="Event_1ya7hlb">
-        <dc:Bounds x="854" y="844" width="36" height="36" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_105xj7y_di" bpmnElement="Activity_105xj7y">
         <dc:Bounds x="822" y="972" width="100" height="80" />
         <bpmndi:BPMNLabel />
@@ -398,10 +414,6 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <dc:Bounds x="492" y="857" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1ipdodz_di" bpmnElement="Activity_1ipdodz">
-        <dc:Bounds x="981" y="972" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_10z6b2j_di" bpmnElement="Event_10z6b2j">
         <dc:Bounds x="172" y="844" width="36" height="36" />
         <bpmndi:BPMNLabel>
@@ -414,8 +426,24 @@ EHR[has-- TM_Order[pt#; Rm#;status]
           <dc:Bounds x="191" y="962" width="78" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0of8uc9_di" bpmnElement="Event_05ubaqu">
-        <dc:Bounds x="904" y="993" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_0npf1w8_di" bpmnElement="Event_0npf1w8">
+        <dc:Bounds x="1272" y="994" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ipdodz_di" bpmnElement="Activity_1ipdodz">
+        <dc:Bounds x="1090" y="972" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0zwa1g8_di" bpmnElement="Event_05ubaqu">
+        <dc:Bounds x="992" y="994" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="977" y="1037" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0clrxcu_di" bpmnElement="Gateway_0clrxcu" isMarkerVisible="true">
+        <dc:Bounds x="847" y="885" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ob8jvp_di" bpmnElement="Event_1ya7hlb">
+        <dc:Bounds x="854" y="812" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1e23npb_di" bpmnElement="Flow_1e23npb">
         <di:waypoint x="630" y="1081" />
@@ -466,29 +494,30 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="338" y="834" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1ovfcvr_di" bpmnElement="Flow_1ovfcvr">
-        <di:waypoint x="1081" y="1012" />
-        <di:waypoint x="1139" y="1012" />
-        <di:waypoint x="1139" y="1011" />
-        <di:waypoint x="1196" y="1011" />
+        <di:waypoint x="1190" y="1012" />
+        <di:waypoint x="1272" y="1012" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="1087" y="982" width="65" height="27" />
+          <dc:Bounds x="1212" y="982" width="65" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_09lwqmv_di" bpmnElement="Flow_09lwqmv">
         <di:waypoint x="872" y="972" />
-        <di:waypoint x="872" y="954" />
+        <di:waypoint x="872" y="935" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1pmml0x_di" bpmnElement="Flow_1pmml0x">
-        <di:waypoint x="847" y="929" />
-        <di:waypoint x="832" y="929" />
+        <di:waypoint x="847" y="910" />
+        <di:waypoint x="832" y="910" />
         <di:waypoint x="832" y="972" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="768" y="934" width="56" height="27" />
+          <dc:Bounds x="773" y="916" width="53" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_12yhm3t_di" bpmnElement="Flow_12yhm3t">
-        <di:waypoint x="872" y="904" />
-        <di:waypoint x="872" y="880" />
+        <di:waypoint x="872" y="885" />
+        <di:waypoint x="872" y="848" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="817" y="864" width="86" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0oehx4h_di" bpmnElement="Flow_0oehx4h">
         <di:waypoint x="464" y="1141" />
@@ -498,10 +527,8 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_185v346_di" bpmnElement="Flow_185v346">
-        <di:waypoint x="940" y="1011" />
-        <di:waypoint x="961" y="1011" />
-        <di:waypoint x="961" y="1012" />
-        <di:waypoint x="981" y="1012" />
+        <di:waypoint x="1028" y="1012" />
+        <di:waypoint x="1090" y="1012" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1n455zy_di" bpmnElement="Flow_1n455zy">
         <di:waypoint x="190" y="880" />
@@ -512,21 +539,21 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="248" y="937" />
         <di:waypoint x="270" y="937" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xikubq_di" bpmnElement="Flow_0xikubq">
+        <di:waypoint x="922" y="1012" />
+        <di:waypoint x="992" y="1012" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09p0xi7_di" bpmnElement="Flow_09p0xi7">
+        <di:waypoint x="890" y="830" />
+        <di:waypoint x="910" y="830" />
+        <di:waypoint x="910" y="972" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Participant_1g68nvv_di" bpmnElement="Participant_1g68nvv" isHorizontal="true">
         <dc:Bounds x="130" y="450" width="1320" height="330" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0da7srj_di" bpmnElement="Event_0da7srj">
         <dc:Bounds x="1358" y="678" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1nix2nt_di" bpmnElement="Event_0h8gsq1">
-        <dc:Bounds x="611" y="547" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="603" y="529" width="53" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1v13hiq_di" bpmnElement="Event_1wqlgdb">
-        <dc:Bounds x="728" y="547" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0je3qtv_di" bpmnElement="Activity_0osduuo">
         <dc:Bounds x="1234" y="656" width="100" height="80" />
@@ -539,49 +566,61 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmndi:BPMNShape id="Gateway_1a5lvl8_di" bpmnElement="Gateway_1a5lvl8" isMarkerVisible="true">
         <dc:Bounds x="1017" y="540" width="50" height="50" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1eiym5p_di" bpmnElement="Event_01d7kbv">
+        <dc:Bounds x="854" y="702" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="787" y="710" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_09jky14_di" bpmnElement="Activity_09jky14">
-        <dc:Bounds x="990" y="657" width="100" height="80" />
+        <dc:Bounds x="992" y="680" width="100" height="80" />
         <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hgvtmg_di" bpmnElement="Event_0dx6mxp">
+        <dc:Bounds x="1024" y="612" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="954" y="633" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1v13hiq_di" bpmnElement="Event_1wqlgdb">
+        <dc:Bounds x="532" y="592" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1v7t2tj_di" bpmnElement="Activity_1v7t2tj">
-        <dc:Bounds x="848" y="525" width="100" height="80" />
+        <dc:Bounds x="620" y="570" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1dose8d_di" bpmnElement="Event_0dx6mxp">
-        <dc:Bounds x="1024" y="639" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_0s17b9l_di" bpmnElement="Event_0s17b9l">
+        <dc:Bounds x="342" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="348" y="635" width="24" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0jso9bq_di" bpmnElement="Event_01d7kbv">
-        <dc:Bounds x="880" y="587" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_0qrp744_di" bpmnElement="Event_0qrp744">
+        <dc:Bounds x="432" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="422" y="568" width="55" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_09vvlk9_di" bpmnElement="Event_0rtp6te">
-        <dc:Bounds x="903" y="507" width="36" height="36" />
+      <bpmndi:BPMNShape id="Gateway_0i9x75u_di" bpmnElement="Gateway_0i9x75u">
+        <dc:Bounds x="847" y="585" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0tuxo80_di" bpmnElement="Event_0rtp6te">
+        <dc:Bounds x="854" y="492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="794" y="496.5" width="50" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_02c599o_di" bpmnElement="Flow_02c599o">
-        <di:waypoint x="921" y="507" />
-        <di:waypoint x="921" y="487" />
-        <di:waypoint x="1376" y="487" />
+        <di:waypoint x="890" y="510" />
+        <di:waypoint x="1376" y="510" />
         <di:waypoint x="1376" y="678" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="973" y="447" width="70" height="106" />
+          <dc:Bounds x="898" y="483" width="66" height="106" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1u5agdq_di" bpmnElement="Flow_1u5agdq">
         <di:waypoint x="1334" y="696" />
         <di:waypoint x="1358" y="696" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1denib1_di" bpmnElement="Flow_1denib1">
-        <di:waypoint x="647" y="565" />
-        <di:waypoint x="728" y="565" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="651" y="569" width="74" height="80" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1xm172w_di" bpmnElement="Flow_1xm172w">
-        <di:waypoint x="764" y="565" />
-        <di:waypoint x="848" y="565" />
-        <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="754" y="-200" width="73" height="80" />
-        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0ciliok_di" bpmnElement="Flow_0ciliok">
         <di:waypoint x="1205" y="605" />
@@ -595,27 +634,62 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <di:waypoint x="1067" y="565" />
         <di:waypoint x="1155" y="565" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="1060" y="506" width="84" height="53" />
+          <dc:Bounds x="1064" y="539" width="83" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_19yplxf_di" bpmnElement="Flow_19yplxf">
-        <di:waypoint x="1042" y="639" />
+        <di:waypoint x="1042" y="612" />
         <di:waypoint x="1042" y="590" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1r2q0pd_di" bpmnElement="Flow_1r2q0pd">
-        <di:waypoint x="1017" y="565" />
-        <di:waypoint x="948" y="565" />
+        <di:waypoint x="1042" y="540" />
+        <di:waypoint x="1042" y="460" />
+        <di:waypoint x="670" y="460" />
+        <di:waypoint x="670" y="570" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="944" y="566" width="87" height="66" />
+          <dc:Bounds x="696" y="447" width="87" height="66" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0j6nxsn_di" bpmnElement="Flow_0j6nxsn">
-        <di:waypoint x="908" y="620" />
-        <di:waypoint x="908" y="697" />
-        <di:waypoint x="990" y="697" />
+        <di:waypoint x="890" y="720" />
+        <di:waypoint x="992" y="720" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="909" y="662" width="79" height="27" />
+          <dc:Bounds x="898" y="703" width="78" height="27" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zh7ap1_di" bpmnElement="Flow_0zh7ap1">
+        <di:waypoint x="1042" y="680" />
+        <di:waypoint x="1042" y="648" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0pgab9g_di" bpmnElement="Flow_0pgab9g">
+        <di:waypoint x="872" y="635" />
+        <di:waypoint x="872" y="702" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bxmerx_di" bpmnElement="Flow_0bxmerx">
+        <di:waypoint x="872" y="585" />
+        <di:waypoint x="872" y="528" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xsrov3_di" bpmnElement="Flow_0xsrov3">
+        <di:waypoint x="468" y="610" />
+        <di:waypoint x="532" y="610" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="464" y="620" width="73" height="80" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xm172w_di" bpmnElement="Flow_1xm172w">
+        <di:waypoint x="568" y="610" />
+        <di:waypoint x="620" y="610" />
+        <bpmndi:BPMNLabel color:color="#205022">
+          <dc:Bounds x="754" y="-200" width="73" height="80" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0q84kz1_di" bpmnElement="Flow_0q84kz1">
+        <di:waypoint x="720" y="610" />
+        <di:waypoint x="847" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vmjty0_di" bpmnElement="Flow_0vmjty0">
+        <di:waypoint x="378" y="610" />
+        <di:waypoint x="432" y="610" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="TextAnnotation_1q2yylp_di" bpmnElement="TextAnnotation_1q2yylp">
         <dc:Bounds x="1200" y="215" width="200" height="168" />
@@ -626,40 +700,33 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0nbpayu_di" bpmnElement="Flow_0nbpayu">
-        <di:waypoint x="908" y="221" />
-        <di:waypoint x="908" y="513" />
+        <di:waypoint x="872" y="220" />
+        <di:waypoint x="872" y="492" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_156l6t7_di" bpmnElement="Flow_156l6t7">
-        <di:waypoint x="888" y="854" />
-        <di:waypoint x="888" y="620" />
+        <di:waypoint x="872" y="812" />
+        <di:waypoint x="872" y="738" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="893" y="816" width="70" height="27" />
+          <dc:Bounds x="874" y="755" width="69" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1qyyu16_di" bpmnElement="Flow_1qyyu16">
         <di:waypoint x="1284" y="736" />
         <di:waypoint x="1284" y="940" />
-        <di:waypoint x="932" y="940" />
-        <di:waypoint x="932" y="996" />
+        <di:waypoint x="1010" y="940" />
+        <di:waypoint x="1010" y="994" />
         <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="1291" y="741" width="66" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1dkgxv1_di" bpmnElement="Flow_1dkgxv1">
-        <di:waypoint x="629" y="994" />
-        <di:waypoint x="629" y="583" />
-        <bpmndi:BPMNLabel color:color="#205022">
-          <dc:Bounds x="636" y="-138" width="73" height="80" />
+          <dc:Bounds x="1292" y="741" width="65" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1ru9u1h_di" bpmnElement="Flow_1ru9u1h">
         <di:waypoint x="770" y="380" />
-        <di:waypoint x="770" y="650" />
-        <di:waypoint x="1026" y="650" />
+        <di:waypoint x="770" y="630" />
+        <di:waypoint x="1024" y="630" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_02b49pl_di" bpmnElement="Flow_02b49pl">
-        <di:waypoint x="746" y="547" />
-        <di:waypoint x="746" y="490" />
+        <di:waypoint x="550" y="592" />
+        <di:waypoint x="550" y="490" />
         <di:waypoint x="400" y="490" />
         <di:waypoint x="400" y="199" />
       </bpmndi:BPMNEdge>
@@ -669,6 +736,12 @@ EHR[has-- TM_Order[pt#; Rm#;status]
         <bpmndi:BPMNLabel color:color="#205022">
           <dc:Bounds x="227" y="310" width="85" height="80" />
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_191rv2u_di" bpmnElement="Flow_191rv2u">
+        <di:waypoint x="630" y="994" />
+        <di:waypoint x="630" y="789" />
+        <di:waypoint x="450" y="789" />
+        <di:waypoint x="450" y="628" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
