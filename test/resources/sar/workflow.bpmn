@@ -85,7 +85,7 @@ fi</bpmn:documentation>
     </bpmn:task>
     <bpmn:task id="Activity_0cute60" name="Check Risk">
       <bpmn:documentation>if
-:: true -&gt; risk = acceptable;
+:: true -&gt; risk = acceptable
 :: true -&gt; risk = notAcceptable
 fi</bpmn:documentation>
       <bpmn:incoming>Flow_03kyrim</bpmn:incoming>
@@ -143,10 +143,10 @@ conditions = same</bpmn:documentation>
     </bpmn:task>
     <bpmn:task id="Activity_06hrjre" name="Active Search">
       <bpmn:documentation>if
-:: comms != sent -&gt; skip;
+:: comms == wait -&gt; skip;
 :: else -&gt;
   if
-  :: search == on -&gt; missingPerson = found
+  :: true -&gt; missingPerson = found
   :: true -&gt; skip
   fi
 fi</bpmn:documentation>
