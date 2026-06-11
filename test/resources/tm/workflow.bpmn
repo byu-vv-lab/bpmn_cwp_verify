@@ -78,6 +78,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
     </bpmn:intermediateThrowEvent>
     <bpmn:userTask id="Activity_0d84g3i" name="Provider cares for patient">
       <bpmn:documentation>orderNum = 20001
+orderStatus = issued
 ptID = KAB
 ptRm = B201</bpmn:documentation>
       <bpmn:incoming>Flow_1rgyzxq</bpmn:incoming>
@@ -107,6 +108,12 @@ ptRm = B201</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1x925vj" />
     </bpmn:intermediateThrowEvent>
     <bpmn:task id="Activity_1sxp1vl" name="BioMed scheduler reads ptID order in EHR &#38; marks order for TM_panel">
+      <bpmn:documentation>boxNum = 21
+if
+:: true -&gt; boxStatus = ready
+:: true -&gt; boxStatus = recovered
+:: true -&gt; boxStatus = notReady
+fi</bpmn:documentation>
       <bpmn:incoming>Flow_0su0uh6</bpmn:incoming>
       <bpmn:incoming>Flow_1uesbis</bpmn:incoming>
       <bpmn:outgoing>Flow_1m8j3e9</bpmn:outgoing>
@@ -125,10 +132,13 @@ ptRm = B201</bpmn:documentation>
       <bpmn:outgoing>Flow_0xikubq</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1uycjpz" name="maintain box">
+      <bpmn:documentation>boxStatus = ready</bpmn:documentation>
       <bpmn:incoming>Flow_1rcwdvq</bpmn:incoming>
       <bpmn:outgoing>Flow_0oehx4h</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_0hly12e" name="complete box installation &#38; set-up">
+      <bpmn:documentation>boxStatus = installed
+boxLoc = ptRoom</bpmn:documentation>
       <bpmn:incoming>Flow_0oehx4h</bpmn:incoming>
       <bpmn:incoming>Flow_1c2vbab</bpmn:incoming>
       <bpmn:outgoing>Flow_1e23npb</bpmn:outgoing>
@@ -418,12 +428,6 @@ ptRm = B201</bpmn:documentation>
           <dc:Bounds x="424" y="953" width="52" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1tk7w92_di" bpmnElement="Event_07xoy9l">
-        <dc:Bounds x="302" y="816" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="309" y="803" width="22" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_105xj7y_di" bpmnElement="Activity_105xj7y">
         <dc:Bounds x="822" y="972" width="100" height="80" />
         <bpmndi:BPMNLabel />
@@ -480,6 +484,12 @@ ptRm = B201</bpmn:documentation>
           <dc:Bounds x="801" y="825" width="52" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1tk7w92_di" bpmnElement="Event_07xoy9l">
+        <dc:Bounds x="302" y="816" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="309" y="803" width="22" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1e23npb_di" bpmnElement="Flow_1e23npb">
         <di:waypoint x="630" y="1081" />
         <di:waypoint x="630" y="1030" />
@@ -490,10 +500,6 @@ ptRm = B201</bpmn:documentation>
       <bpmndi:BPMNEdge id="Flow_1e6ilcp_di" bpmnElement="Flow_1e6ilcp">
         <di:waypoint x="648" y="1012" />
         <di:waypoint x="822" y="1012" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1uesbis_di" bpmnElement="Flow_1uesbis">
-        <di:waypoint x="320" y="852" />
-        <di:waypoint x="320" y="897" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1m8j3e9_di" bpmnElement="Flow_1m8j3e9">
         <di:waypoint x="370" y="937" />
@@ -582,6 +588,10 @@ ptRm = B201</bpmn:documentation>
         <di:waypoint x="890" y="830" />
         <di:waypoint x="910" y="830" />
         <di:waypoint x="910" y="972" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1uesbis_di" bpmnElement="Flow_1uesbis">
+        <di:waypoint x="320" y="852" />
+        <di:waypoint x="320" y="897" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Participant_1g68nvv_di" bpmnElement="Participant_1g68nvv" isHorizontal="true">
         <dc:Bounds x="130" y="450" width="1320" height="330" />
