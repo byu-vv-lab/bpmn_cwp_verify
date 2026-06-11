@@ -1,6 +1,6 @@
 enum ID { idInit KAB }
 enum Room { roomInit B201 new }
-enum PatientStatus { PatientStatusInit ptRecovered stable discharge deceased notStable stable_C_AddSvcs }
+enum PatientStatus { PatientStatusInit ptRecovered stable discharge deceased notStable stable_C_addSvcs }
 enum Care { careInit H_monitoring H_transport H_addSvcs }
 enum Need { needInit N_immedAssmt N_moreAddSvcs }
 
