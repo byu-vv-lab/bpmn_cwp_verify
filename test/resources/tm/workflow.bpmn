@@ -109,9 +109,10 @@ ptRm = B201</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1x925vj" />
     </bpmn:intermediateThrowEvent>
     <bpmn:task id="Activity_1sxp1vl" name="BioMed scheduler reads ptID order in EHR &#38; marks order for TM_panel">
-      <bpmn:documentation>boxNum = 21
-if
-:: true -&gt; boxStatus = ready
+      <bpmn:documentation>if
+:: true -&gt;
+boxNum = 21
+boxStatus = ready
 :: true -&gt; boxStatus = recovered
 :: true -&gt; boxStatus = notReady
 fi</bpmn:documentation>
@@ -126,7 +127,8 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_1c2vbab</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:task id="Activity_1uycjpz" name="maintain box">
-      <bpmn:documentation>boxStatus = ready</bpmn:documentation>
+      <bpmn:documentation>boxStatus = ready
+boxNum = 21</bpmn:documentation>
       <bpmn:incoming>Flow_1rcwdvq</bpmn:incoming>
       <bpmn:outgoing>Flow_0oehx4h</bpmn:outgoing>
     </bpmn:task>
@@ -173,12 +175,6 @@ boxLoc = ptRoom</bpmn:documentation>
       <bpmn:outgoing>Flow_185v346</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1g6juyi" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:intermediateCatchEvent id="Event_07xoy9l" name="Wait">
-      <bpmn:incoming>Flow_1vt8b5e</bpmn:incoming>
-      <bpmn:outgoing>Flow_1uesbis</bpmn:outgoing>
-      <bpmn:timerEventDefinition id="TimerEventDefinition_087hga1" />
-    </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_1uesbis" sourceRef="Event_07xoy9l" targetRef="Activity_1sxp1vl" />
     <bpmn:task id="Activity_105xj7y" name="TM Monitoring ptID[status]= monitored">
       <bpmn:documentation>if
 :: ptStatus != discharge &amp;&amp; ptStatus != deceased -&gt;
@@ -212,6 +208,12 @@ fi</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_150fyet" />
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_1js2iad" sourceRef="Event_1cdhh1l" targetRef="Activity_105xj7y" />
+    <bpmn:intermediateCatchEvent id="Event_07xoy9l" name="Wait">
+      <bpmn:incoming>Flow_1vt8b5e</bpmn:incoming>
+      <bpmn:outgoing>Flow_1uesbis</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_087hga1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1uesbis" sourceRef="Event_07xoy9l" targetRef="Activity_1sxp1vl" />
   </bpmn:process>
   <bpmn:process id="Process_ojbfa6o" isExecutable="false">
     <bpmn:endEvent id="Event_0da7srj" name="End Care">
