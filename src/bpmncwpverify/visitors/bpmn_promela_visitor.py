@@ -314,9 +314,9 @@ class PromelaGenVisitor(BpmnVisitor):
     def end_visit_process(self, process: Process) -> None:
         self.promela.write_str(self.local_var_defs, indent_offset=1)
         self.promela.write_str("", NL_SINGLE)
+        self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-        self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
         self.promela.write_str("DBG(stateLogger())", NL_SINGLE)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
 
@@ -440,13 +440,14 @@ class AtomicBuilder:
         self,
     ) -> StringManager:
         structure = StringManager()
+        structure.write_str(
+            f'DBG(printf("ID: {self.context.element.id}\\n"))', NL_SINGLE
+        )
         if self.context.behavior:
             structure.write_str(f"{self.context.element.id}_BehaviorModel()", NL_SINGLE)
 
         structure.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-        structure.write_str(
-            f'DBG(printf("ID: {self.context.element.id}\\n"))', NL_SINGLE
-        )
+
         structure.write_str("DBG(stateLogger())", NL_SINGLE)
         return structure
 
