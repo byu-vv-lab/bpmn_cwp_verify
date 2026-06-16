@@ -1,12 +1,12 @@
 enum ID { idInit KAB }
 enum Room { roomInit B201 new }
-enum PatientStatus { PatientStatusInit ptRecovered stable discharge deceased notStable stable_C_addSvcs }
+enum PatientStatus { PatientStatusInit recovered stable discharge deceased notStable stable_C_addSvcs }
 enum Care { careInit H_monitoring H_transport H_addSvcs }
 enum Need { needInit N_immedAssmt N_moreAddSvcs }
 
 enum Status { statusInit issued confirmed cancelled null }
 
-enum Box { boxInit ready notReady installed recovered }
+enum Box { boxInit ready notReady installed boxRecovered }
 enum Location { locationInit ptRoom }
 
 
