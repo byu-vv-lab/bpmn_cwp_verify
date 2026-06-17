@@ -314,9 +314,9 @@ class PromelaGenVisitor(BpmnVisitor):
     def end_visit_process(self, process: Process) -> None:
         self.promela.write_str(self.local_var_defs, indent_offset=1)
         self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
+        self.promela.write_str(f'DBG(printf("ID: {process.id}\\n"))', NL_SINGLE)
         self.promela.write_str("DBG(stateLogger())", NL_SINGLE)
         self.promela.write_str("pid me = _pid", NL_SINGLE, IndentAction.NIL)
 
@@ -331,6 +331,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self.init_proc_contents.write_str("atomic {", NL_SINGLE, IndentAction.INC)
         self.init_proc_contents.write_str("DBG(stateDump())", NL_SINGLE)
         self.init_proc_contents.write_str("caculateState()", NL_SINGLE)
+        self.init_proc_contents.write_str("updateState()", NL_SINGLE)
         return True
 
     def end_visit_bpmn(self, bpmn: Bpmn) -> None:

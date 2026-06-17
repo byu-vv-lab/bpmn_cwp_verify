@@ -104,10 +104,11 @@ class CwpPromelaVisitor(CwpVisitor):
         nWayXor.write_str("if", NL_SINGLE, IndentAction.INC)
 
         nWayXor.write_str(":: (sumOfActiveStates != 1) ->", NL_SINGLE, IndentAction.INC)
+        nWayXor.write_str("DBG(stateLogger())", NL_SINGLE)
         nWayXor.write_str(
             'DBG(printf("Assert: In more that one or no state"))', NL_SINGLE
         )
-        nWayXor.write_str("DBG(stateLogger())", NL_SINGLE)
+
         nWayXor.write_str("assert(false)", NL_SINGLE)
 
         nWayXor.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
