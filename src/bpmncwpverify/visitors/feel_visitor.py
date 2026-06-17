@@ -1,43 +1,74 @@
-# from antlr4 import ParseTreeVisitor
+from typing import cast
 
-# from bpmncwpverify.antlr.FeelExprParser import FeelExprParser
-# from bpmncwpverify.core.feel_tree import *
+from bpmncwpverify.antlr.FeelExprParser import FeelExprParser
+from bpmncwpverify.antlr.FeelExprVisitor import FeelExprVisitor
+from bpmncwpverify.core.feel_tree import (
+    AddNode,
+    DivideNode,
+    ExpressionNode,
+    LiteralNode,
+    MultiplyNode,
+    SubNode,
+    VariableNode,
+)
 
 
-# class FeelExprVisitor(ParseTreeVisitor):
-#     """
-#     Tree visitor that builds an AST from the FEEL parse tree.
-#     Returns appropriate ExpressionNode subclasses for each rule.
-#     """
+class FeelExprBuilder(FeelExprVisitor):
+    """
+    Tree visitor that builds an AST from the FEEL parse tree.
+    Returns appropriate ExpressionNode subclasses for each rule.
+    """
 
-# def visitComplilation_unit(self, ctx: FeelExprParser.Compilation_unitContext):
-#     return self.visit(ctx.expression())
+    # def visitChildren(self, node):
+    #     print(f"visitChildren called for: {node.__class__.__name__}")
+    #     return super().visitChildren(node)
 
-# def visitExpresssionTextual(self, ctx: FeelExprParser.ExpressionTextualContext):
-#     return self.visit(ctx.textualExpression())
+    # def visit(self, tree):
+    #     method_name = "visit" + tree.__class__.__name__
+    #     print(f"Looking for method: {method_name}")
+    #     method = getattr(self, method_name, None)
+    #     print(f"Found method: {method}")
+    #     return super().visit(tree)
 
-# def visitAdditiveExpression(self, ctx: FeelExprParser.AdditiveExpressionContext):
-#     left = self.visit(ctx.additiveExpression())
-#     right = self.visit(ctx.multiplicativeExpression())
+    def visitCompilation_unitContext(self, ctx: FeelExprParser.Compilation_unitContext) -> ExpressionNode: # type: ignore[override]
+        expr = cast(FeelExprParser.ExpressionContext, ctx.expression())
+        return cast(ExpressionNode, self.visit(expr))
 
-#     if ctx.op == FeelExprParser.ADD:
-#         return AddNode(left, right)
-#     else:
-#         return SubNode(left, right)
+    def visitExpressionTextualContext(self, ctx: FeelExprParser.ExpressionTextualContext) -> ExpressionNode:   # type: ignore[override]
+        return cast(ExpressionNode, self.visit(cast(FeelExprParser.TextualExpressionContext, ctx.textualExpression())))
 
-# def visitLiteral(self, ctx: FeelExprParser.LiteralContext):
-#     return LiteralNode(ctx.getText())
+    def visitTextualExpressionContext(self, ctx: FeelExprParser.TextualExpressionContext) -> ExpressionNode:   # type: ignore[override]
+        return cast(ExpressionNode, self.visit(cast(FeelExprParser.ConditionalOrExpressionContext, ctx.conditionalOrExpression())))
 
-# def visitNameRef(self, ctx: FeelExprParser.NameRefContext):
-#     return VariableNode(ctx.Identifier())
+    def visitAddExpressionContext(self, ctx: FeelExprParser.AddExpressionContext) -> ExpressionNode:   # type: ignore[override]
+        left = cast(ExpressionNode, self.visit(cast(FeelExprParser.AdditiveExpressionContext, ctx.additiveExpression())))
+        right = cast(ExpressionNode, self.visit(cast(FeelExprParser.MultiplicativeExpressionContext, ctx.multiplicativeExpression())))
 
-# def visitMultiplicativeEpression(
-#     self, ctx: FeelExprParser.MultiplicativeExpressionContext
-# ):
-#     left = self.visit(ctx.left)
-#     right = self.visit(ctx.right)
+        if ctx.ADD():
+            return AddNode(left, right)
+        else:
+            return SubNode(left, right)
 
-#     if "*" in ctx.getText():
-#         return MultiplyNode(left, right)
-#     else:
-#         return DivideNode(left, right)
+    def visitAddExpressionMultContext(self, ctx: FeelExprParser.AddExpressionMultContext) -> ExpressionNode:   # type: ignore[override]
+        return cast(ExpressionNode, self.visit(cast(FeelExprParser.MultiplicativeExpressionContext, ctx.multiplicativeExpression())))
+
+    def visitNumberLiteralContext(self, ctx: FeelExprParser.NumberLiteralContext) -> ExpressionNode:   # type: ignore[override]
+        return LiteralNode(float(ctx.getText()))
+
+    def visitPrimaryNameContext(self, ctx: FeelExprParser.PrimaryNameContext) -> ExpressionNode:   # type: ignore[override]
+        return VariableNode(cast(str, ctx.qualifiedName()))
+
+    def visitMultExpressionContext(self, ctx: FeelExprParser.MultExpressionContext) -> ExpressionNode: # type: ignore[override]
+        left = cast(ExpressionNode, self.visit(cast(FeelExprParser.MultiplicativeExpressionContext, ctx.multiplicativeExpression())))
+        right = cast(ExpressionNode, self.visit(cast(FeelExprParser.PowerExpressionContext, ctx.powerExpression())))
+
+        if ctx.MUL():
+            return MultiplyNode(left, right)
+        else:
+            return DivideNode(left, right)
+
+    def visitCondOrAndContext(self, ctx:FeelExprParser.CondOrAndContext) -> ExpressionNode: # type: ignore[override]
+        return cast(ExpressionNode, self.visit(cast(FeelExprParser.ComparisonExpressionContext, ctx.conditionalAndExpression())))
+    
+    def visitCondAndCompContext(self, ctx:FeelExprParser.CondAndCompContext) -> ExpressionNode: # type: ignore[override]
+        pass
