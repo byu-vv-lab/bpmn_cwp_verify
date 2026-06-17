@@ -167,6 +167,7 @@ class TestCwpPromelaVisitor:
             mocker.call("state1 + state2 + state3", NL_DOUBLE),
             mocker.call("if", NL_SINGLE, IndentAction.INC),
             mocker.call(":: (sumOfActiveStates != 1) ->", NL_SINGLE, IndentAction.INC),
+            mocker.call("DBG(stateLogger())", NL_SINGLE),
             mocker.call(
                 'DBG(printf("Assert: In more that one or no state"))', NL_SINGLE
             ),
