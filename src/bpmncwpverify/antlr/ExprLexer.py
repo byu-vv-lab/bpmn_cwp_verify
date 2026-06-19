@@ -1,5 +1,4 @@
 # Generated from antlr/Expr.g4 by ANTLR 4.13.2
-# type: ignore
 from antlr4 import *
 from io import StringIO
 import sys

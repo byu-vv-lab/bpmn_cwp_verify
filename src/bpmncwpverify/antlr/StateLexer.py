@@ -1,5 +1,4 @@
 # Generated from antlr/State.g4 by ANTLR 4.13.1
-# type: ignore
 from antlr4 import *
 from io import StringIO
 import sys

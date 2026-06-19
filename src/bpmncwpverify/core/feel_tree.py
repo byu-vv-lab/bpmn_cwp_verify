@@ -1,3 +1,6 @@
+from typing import cast
+
+
 class ExpressionNode:
     def evaluate(self, variables: dict[str, float]) -> float:
         raise NotImplementedError
@@ -6,11 +9,18 @@ class ExpressionNode:
 class LiteralNode(ExpressionNode):
     __slots__ = ["value"]
 
-    def __init__(self, value: float):
+    def __init__(self, value: str):
         self.value = value
 
-    def evaluate(self, variables: dict[str, float]) -> float:
-        return self.value
+    # def evaluate(self, variables: dict[str, float]) -> float:
+    #     return self.value
+
+
+class BoolLiteralNode(ExpressionNode):
+    __slots__ = ["value"]
+
+    def __init__(self, value: bool):
+        self.value = value
 
 
 class VariableNode(ExpressionNode):
@@ -49,3 +59,80 @@ class MultiplyNode(BinaryOperatorNode):
 class DivideNode(BinaryOperatorNode):
     def evaluate(self, variables: dict[str, float]) -> float:
         return self.left.evaluate(variables) / self.right.evaluate(variables)
+
+
+class PowerNode(BinaryOperatorNode):
+    def evaluate(self, variables: dict[str, float]) -> float:
+        return cast(
+            float, self.left.evaluate(variables) ** self.right.evaluate(variables)
+        )
+
+
+class ComparisonOperatorNode(ExpressionNode):
+    __slots__ = ["left", "right"]
+
+    def __init__(self, left: ExpressionNode, right: ExpressionNode):
+        self.left = left
+        self.right = right
+
+
+class LTNode(ComparisonOperatorNode):
+    pass
+
+
+class GTNode(ComparisonOperatorNode):
+    pass
+
+
+class LENode(ComparisonOperatorNode):
+    pass
+
+
+class GENode(ComparisonOperatorNode):
+    pass
+
+
+class EqualNode(ComparisonOperatorNode):
+    pass
+
+
+class NotEqualNode(ComparisonOperatorNode):
+    pass
+
+
+class ConditionalOperatorNode(ExpressionNode):
+    __slots__ = ["left", "right"]
+
+    def __init__(self, left: ExpressionNode, right: ExpressionNode):
+        self.left = left
+        self.right = right
+
+
+class AndNode(ConditionalOperatorNode):
+    pass
+
+
+class OrNode(ConditionalOperatorNode):
+    pass
+
+
+class XOrNode(ConditionalOperatorNode):
+    pass
+
+
+class NotNode(ExpressionNode):
+    __slots__ = ["expression"]
+
+    def __init__(self, expression: ExpressionNode):
+        self.expression = expression
+
+
+class IfNode(ExpressionNode):
+    __slots__ = ["condition", "thendo", "elsedo"]
+
+    def __init__(
+        self, condition: ExpressionNode, thendo: ExpressionNode, elsedo: ExpressionNode
+    ):
+        self.condition = condition
+        self.thendo = thendo
+        self.elsedo = elsedo
