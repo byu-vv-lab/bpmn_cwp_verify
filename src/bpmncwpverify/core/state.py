@@ -14,7 +14,7 @@ from returns.result import Failure, Result, Success, safe
 
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
-from bpmncwpverify.antlr.StateParser import StateParser # type: ignore
+from bpmncwpverify.antlr.StateParser import StateParser  # type: ignore[attr-defined]
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
