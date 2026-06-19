@@ -763,7 +763,7 @@ def get_error_message(error: Error) -> str:
             errors.append(counter_example)
             return "\n".join(errors)
         case SpinCoverageError(coverage_errors=coverage_errors):
-            return "Sping Coverage Error:\n" + "\n".join(
+            return "Spin Coverage Error:\n" + "\n".join(
                 [
                     f"Proctype: {error['proctype']}, File: {error['file']}, Line: {str(error['line'])}, Message: {error['message']}"
                     for error in coverage_errors
