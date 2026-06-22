@@ -14,7 +14,7 @@ class ErrorTrace:
 
     __slots__ = ["id", "changed_vars", "cur_cwp_state", "related_variables"]
 
-    def __init__(self, id: str, changed_vars: list[str], cur_cwp_state: str):
+    def __init__(self, id: str, changed_vars: list[str], cur_cwp_state: list[str]):
         self.id = id
         self.changed_vars = changed_vars
         self.cur_cwp_state = cur_cwp_state
@@ -119,7 +119,7 @@ class CounterExample:
         steps: list[ErrorTrace] = []
         id = ""
         changed_variables: list[str] = []
-        state = ""
+        state: list[str] = []
         issue = ""
 
         while line_index < len(lines):
@@ -131,7 +131,7 @@ class CounterExample:
                 elif id in bpmn.id_to_element:
                     id = bpmn.id_to_element[id].name
 
-                state = ""
+                state = []
                 line_index += 1
 
             elif "Changed Vars:" in lines[line_index]:
@@ -143,7 +143,7 @@ class CounterExample:
                     line_index += 1
 
             elif "Current state:" in lines[line_index]:
-                state = lines[line_index].split(":", 1)[1].strip()
+                state.append(lines[line_index].split(":", 1)[1].strip())
                 line_index += 1
 
             else:

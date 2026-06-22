@@ -331,6 +331,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self.init_proc_contents.write_str("atomic {", NL_SINGLE, IndentAction.INC)
         self.init_proc_contents.write_str("DBG(stateDump())", NL_SINGLE)
         self.init_proc_contents.write_str("caculateState()", NL_SINGLE)
+        self.init_proc_contents.write_str("updateState()", NL_SINGLE)
         return True
 
     def end_visit_bpmn(self, bpmn: Bpmn) -> None:
@@ -440,13 +441,14 @@ class AtomicBuilder:
         self,
     ) -> StringManager:
         structure = StringManager()
+        structure.write_str(
+            f'DBG(printf("ID: {self.context.element.id}\\n"))', NL_SINGLE
+        )
         if self.context.behavior:
             structure.write_str(f"{self.context.element.id}_BehaviorModel()", NL_SINGLE)
 
         structure.write_str("d_step {", NL_SINGLE, IndentAction.INC)
-        structure.write_str(
-            f'DBG(printf("ID: {self.context.element.id}\\n"))', NL_SINGLE
-        )
+
         structure.write_str("DBG(stateLogger())", NL_SINGLE)
         return structure
 

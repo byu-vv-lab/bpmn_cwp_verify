@@ -269,7 +269,7 @@ test_inputs: list[tuple[Error, str]] = [
                 }
             ],
         ),
-        "Proctype: test_proctype, File: test_file, Line: test_line, Message: test_message",
+        "Spin Coverage Error:\nProctype: test_proctype, File: test_file, Line: test_line, Message: test_message",
     ),
     (
         SpinInvalidEndStateError("", [{"info": "test_info1"}, {"info": "test_info2"}]),

@@ -78,4 +78,4 @@ def test_counterexample_extract_steps(mocker):
     assert len(steps) == 1
     assert steps[0].id == "start"
     assert steps[0].changed_vars == ["test_var1", "test_var2"]
-    assert steps[0].cur_cwp_state == "test_state1"
+    assert steps[0].cur_cwp_state == ["test_state1"]
