@@ -622,6 +622,15 @@ class State:
     def enums(self) -> tuple[EnumDecl, ...]:
         return tuple(self._enums)
 
+    def is_variable(self, variable: str) -> bool:
+        assert self.vars != Nothing
+
+        for var in self.vars:
+            if var.id == variable:
+                return True
+
+        return False
+
     def is_defined(self, id: str) -> bool:
         """
         Determines if a variable is defined or not

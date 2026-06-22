@@ -18,7 +18,7 @@ from bpmncwpverify.core.feel_tree import (
     OrNode,
     PowerNode,
     QualifiedNameNode,
-    SubNode,
+    SubtractNode,
     TripleNode,
     XOrNode,
 )
@@ -53,7 +53,7 @@ def test_parse_addition() -> None:
 def test_parse_subtraction() -> None:
     feel = Feel.parse("5 - 3")
 
-    assert isinstance(feel.ast, SubNode)
+    assert isinstance(feel.ast, SubtractNode)
 
 
 def test_parse_multiplication() -> None:

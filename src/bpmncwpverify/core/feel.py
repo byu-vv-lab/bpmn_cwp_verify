@@ -26,7 +26,7 @@ from bpmncwpverify.core.feel_tree import (
     OrNode,
     PowerNode,
     QualifiedNameNode,
-    SubNode,
+    SubtractNode,
     TripleNode,
     XOrNode,
 )
@@ -71,10 +71,10 @@ class Feel:
             self.stack.append(NumberLiteralNode(ctx.getText()))
 
         def exitBoolLiteral(self, ctx: FeelExprParser.BoolLiteralContext) -> None:
-            if ctx.getText() == "true":
-                self.stack.append(BoolLiteralNode(True))
-            else:
-                self.stack.append(BoolLiteralNode(False))
+            # if ctx.getText() == "true":
+            #     self.stack.append(BoolLiteralNode("true"))
+            # else:
+            self.stack.append(BoolLiteralNode(ctx.getText()))
 
         def exitQualifiedName(self, ctx: FeelExprParser.QualifiedNameContext) -> None:
             self.stack.append(QualifiedNameNode(ctx.getText()))
@@ -86,7 +86,7 @@ class Feel:
             if ctx.ADD():
                 self.stack.append(AddNode(left, right))
             else:
-                self.stack.append(SubNode(left, right))
+                self.stack.append(SubtractNode(left, right))
 
         def exitMultExpression(self, ctx: FeelExprParser.MultExpressionContext) -> None:
             right = self.stack.pop()
@@ -148,12 +148,13 @@ class Feel:
             self.stack.append(IfNode(condition, thendo, elsedo))
 
         def exitFnInvocation(self, ctx: FeelExprParser.FnInvocationContext) -> None:
-            fn_name = cast(
-                FeelExprParser.UnaryExpressionContext, ctx.unaryExpression()
-            ).getText()
+            argument = self.stack.pop()
+            function = self.stack.pop()
 
-            if fn_name == "not":
-                self.stack.append(NotNode(self.stack.pop()))
+            assert isinstance(function, QualifiedNameNode)
+
+            if function.name == "not":
+                self.stack.append(NotNode(argument))
             else:
                 pass
 
