@@ -1,7 +1,7 @@
 grammar State;
 
 state
-  : (enum_type_decl)* (const_var_decl)* (var_decl)+ EOF
+  : (enum_type_decl)* (const_var_decl)* (var_array_decl)* (var_decl)+ EOF
   ;
 
 enum_type_decl
@@ -19,6 +19,9 @@ const_var_decl
 var_decl
   : VAR ID COLON type EQUALS ID (LCURLY id_set RCURLY)?
   ;
+
+var_array_decl
+  : VAR ID COLON type LBRACKET NUMBER RBRACKET EQUALS LBRACKET (type)+ (COMMA type)* RBRACKET
 
 type
   : primitive_type
@@ -39,6 +42,10 @@ primitive_type
 
 COLON
   : ':'
+  ;
+
+COMMA
+  : ','
   ;
 
 BIT
@@ -81,12 +88,24 @@ RCURLY
   : '}'
   ;
 
+LBRACKET
+  : '['
+  ;
+
+RBRACKET
+  : ']'
+  ;
+
 VAR
   : 'var'
   ;
 
 ID
   : [a-zA-Z0-9_]+
+  ;
+
+NUMBER
+  : [0-9]+
   ;
 
 WS : [ \t\n\r]+ -> skip ;
