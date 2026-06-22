@@ -37,7 +37,7 @@
     <bpmn:sequenceFlow id="Flow_1pssjxr" sourceRef="Activity_0njh5pz" targetRef="Activity_1rtgoh4" />
     <bpmn:task id="Activity_0hi7yqd" name="Plan Search">
       <bpmn:documentation>risk = acceptable
-comms = wait
+comms = standby
 conditions = changed
 missingPerson = missing
 search = on</bpmn:documentation>
@@ -60,7 +60,7 @@ conditions = same</bpmn:documentation>
 :: missingPerson == missing -&gt; conditions = same
 :: missingPerson == missing -&gt;
     conditions = changed;
-    comms = wait;
+    comms = standby;
 :: else -&gt; skip;
 fi</bpmn:documentation>
       <bpmn:incoming>Flow_11fweev</bpmn:incoming>
@@ -106,7 +106,7 @@ conditions = same</bpmn:documentation>
       <bpmn:outgoing>Flow_18f60u0</bpmn:outgoing>
     </bpmn:task>
     <bpmn:intermediateCatchEvent id="Event_1utm670" name="Receive Info">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>comms = listening</bpmn:documentation>
       <bpmn:incoming>Flow_18f60u0</bpmn:incoming>
       <bpmn:outgoing>Flow_0e82eik</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_14sqi8b" />
@@ -146,13 +146,13 @@ conditions = same</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_19zu7mv" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_0emt7o7" name="Send Confirmation">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>comms = listening</bpmn:documentation>
       <bpmn:incoming>Flow_12c494d</bpmn:incoming>
       <bpmn:outgoing>Flow_0pin0ry</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_06hrjre" name="Active Search">
       <bpmn:documentation>if
-:: comms != waiting -&gt; skip;
+:: comms != listening -&gt; skip;
 :: else -&gt;
   if
   :: missingPerson == missing -&gt; missingPerson = found
@@ -235,13 +235,13 @@ fi</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_139ob6o" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_11elja3" name="Send Confirmation">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>comms = listening</bpmn:documentation>
       <bpmn:incoming>Flow_0bjusry</bpmn:incoming>
       <bpmn:outgoing>Flow_0l7c97x</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_1qrr79b" name="Active Search">
       <bpmn:documentation>if
-:: comms == wait -&gt; skip;
+:: comms == standby -&gt; skip;
 :: else -&gt;
   if
   :: missingPerson == missing -&gt; missingPerson = found
@@ -276,7 +276,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_130odd8</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Activity_1oxa8hg" name="Update Info">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>comms = listening</bpmn:documentation>
       <bpmn:incoming>Flow_0gdvpp6</bpmn:incoming>
       <bpmn:outgoing>Flow_0sqvgr0</bpmn:outgoing>
     </bpmn:task>
