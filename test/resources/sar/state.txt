@@ -1,6 +1,6 @@
-enum RiskState { riskInit ground air both none }
+enum RiskState { riskInit acceptable notAcceptable }
 
-enum CommunicationState { communicationInit received failed }
+enum CommunicationState { communicationInit listening standby sent }
 enum ConditionsState { conditionsInit changed same}
 
 enum MissingPersonState { missingPersonInit found missing }
@@ -8,7 +8,7 @@ enum SearchState {searchInit on off }
 
 var risk: RiskState = riskInit
 
-var communication: CommunicationState = communicationInit
+var comms: CommunicationState = communicationInit
 var conditions: ConditionsState = conditionsInit
 
 var missingPerson: MissingPersonState = missingPersonInit
