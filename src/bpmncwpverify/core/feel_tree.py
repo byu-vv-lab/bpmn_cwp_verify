@@ -6,14 +6,11 @@ class ExpressionNode:
         raise NotImplementedError
 
 
-class LiteralNode(ExpressionNode):
+class NumberLiteralNode(ExpressionNode):
     __slots__ = ["value"]
 
     def __init__(self, value: str):
         self.value = value
-
-    # def evaluate(self, variables: dict[str, float]) -> float:
-    #     return self.value
 
 
 class BoolLiteralNode(ExpressionNode):
@@ -21,6 +18,20 @@ class BoolLiteralNode(ExpressionNode):
 
     def __init__(self, value: bool):
         self.value = value
+
+
+class QualifiedNameNode(ExpressionNode):
+    __slots__ = ["name"]
+
+    def __init__(self, name: str):
+        self.name = name
+
+
+class ListNode(ExpressionNode):
+    __slots__ = ["values"]
+
+    def __init__(self, values: list[ExpressionNode]):
+        self.values = values
 
 
 class VariableNode(ExpressionNode):
@@ -136,3 +147,19 @@ class IfNode(ExpressionNode):
         self.condition = condition
         self.thendo = thendo
         self.elsedo = elsedo
+
+
+class ChooseNode(ExpressionNode):
+    __slots__ = ["choices"]
+
+    def __init__(self, choices: ListNode):
+        self.choices = choices
+
+
+class TripleNode(ExpressionNode):
+    __slots__ = ["target", "inputs", "value"]
+
+    def __init__(self, target: ExpressionNode, inputs: ListNode, value: ExpressionNode):
+        self.target = target
+        self.inputs = inputs
+        self.value = value

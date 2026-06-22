@@ -9,6 +9,7 @@ from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
     BoolLiteralNode,
+    ChooseNode,
     DivideNode,
     EqualNode,
     ExpressionNode,
@@ -16,14 +17,18 @@ from bpmncwpverify.core.feel_tree import (
     GTNode,
     IfNode,
     LENode,
-    LiteralNode,
+    ListNode,
     LTNode,
     MultiplyNode,
     NotEqualNode,
     NotNode,
+    NumberLiteralNode,
     OrNode,
     PowerNode,
+    QualifiedNameNode,
     SubNode,
+    TripleNode,
+    XOrNode,
 )
 
 
@@ -63,13 +68,16 @@ class Feel:
             self.ast = self.stack.pop()
 
         def exitNumberLiteral(self, ctx: FeelExprParser.NumberLiteralContext) -> None:
-            self.stack.append(LiteralNode(ctx.getText()))
+            self.stack.append(NumberLiteralNode(ctx.getText()))
 
         def exitBoolLiteral(self, ctx: FeelExprParser.BoolLiteralContext) -> None:
             if ctx.getText() == "true":
                 self.stack.append(BoolLiteralNode(True))
             else:
                 self.stack.append(BoolLiteralNode(False))
+
+        def exitQualifiedName(self, ctx: FeelExprParser.QualifiedNameContext) -> None:
+            self.stack.append(QualifiedNameNode(ctx.getText()))
 
         def exitAddExpression(self, ctx: FeelExprParser.AddExpressionContext) -> None:
             right = self.stack.pop()
@@ -118,6 +126,12 @@ class Feel:
 
             self.stack.append(AndNode(left, right))
 
+        def exitCondXOr(self, ctx: FeelExprParser.CondXOrContext) -> None:
+            right = self.stack.pop()
+            left = self.stack.pop()
+
+            self.stack.append(XOrNode(left, right))
+
         def exitCondOr(self, ctx: FeelExprParser.CondOrContext) -> None:
             right = self.stack.pop()
             left = self.stack.pop()
@@ -142,3 +156,36 @@ class Feel:
                 self.stack.append(NotNode(self.stack.pop()))
             else:
                 pass
+
+        def exitPrimaryList(self, ctx: FeelExprParser.PrimaryListContext) -> None:
+            pass
+
+        def exitList(self, ctx: FeelExprParser.ListContext) -> None:
+            if ctx.expressionList() is None:
+                self.stack.append(ListNode([]))
+
+        def exitExpressionList(self, ctx: FeelExprParser.ExpressionListContext) -> None:
+            expressions = ctx.getTypedRuleContexts(FeelExprParser.ExpressionContext)
+
+            values: list[ExpressionNode] = []
+
+            for _ in expressions:
+                values.append(self.stack.pop())
+
+            values.reverse()
+
+            self.stack.append(ListNode(values))
+
+        def exitChooseExpression(
+            self, ctx: FeelExprParser.ChooseExpressionContext
+        ) -> None:
+            contents = cast(ListNode, self.stack.pop())
+
+            self.stack.append(ChooseNode(contents))
+
+        def exitTripExpression(self, ctx: FeelExprParser.TripExpressionContext) -> None:
+            value = self.stack.pop()
+            inputs = cast(ListNode, self.stack.pop())
+            target = self.stack.pop()
+
+            self.stack.append(TripleNode(target, inputs, value))

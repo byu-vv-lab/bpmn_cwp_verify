@@ -332,12 +332,30 @@ class FeelExprListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by FeelExprParser#condOrAnd.
-    def enterCondOrAnd(self, ctx:FeelExprParser.CondOrAndContext):
+    # Enter a parse tree produced by FeelExprParser#condOrXor.
+    def enterCondOrXor(self, ctx:FeelExprParser.CondOrXorContext):
         pass
 
-    # Exit a parse tree produced by FeelExprParser#condOrAnd.
-    def exitCondOrAnd(self, ctx:FeelExprParser.CondOrAndContext):
+    # Exit a parse tree produced by FeelExprParser#condOrXor.
+    def exitCondOrXor(self, ctx:FeelExprParser.CondOrXorContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#condXorAnd.
+    def enterCondXorAnd(self, ctx:FeelExprParser.CondXorAndContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#condXorAnd.
+    def exitCondXorAnd(self, ctx:FeelExprParser.CondXorAndContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#condXOr.
+    def enterCondXOr(self, ctx:FeelExprParser.CondXOrContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#condXOr.
+    def exitCondXOr(self, ctx:FeelExprParser.CondXOrContext):
         pass
 
 
@@ -539,6 +557,24 @@ class FeelExprListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by FeelExprParser#chooseExpression.
+    def enterChooseExpression(self, ctx:FeelExprParser.ChooseExpressionContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#chooseExpression.
+    def exitChooseExpression(self, ctx:FeelExprParser.ChooseExpressionContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#tripExpression.
+    def enterTripExpression(self, ctx:FeelExprParser.TripExpressionContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#tripExpression.
+    def exitTripExpression(self, ctx:FeelExprParser.TripExpressionContext):
+        pass
+
+
     # Enter a parse tree produced by FeelExprParser#primaryLiteral.
     def enterPrimaryLiteral(self, ctx:FeelExprParser.PrimaryLiteralContext):
         pass
@@ -575,6 +611,15 @@ class FeelExprListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by FeelExprParser#primaryTripleExpression.
+    def enterPrimaryTripleExpression(self, ctx:FeelExprParser.PrimaryTripleExpressionContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#primaryTripleExpression.
+    def exitPrimaryTripleExpression(self, ctx:FeelExprParser.PrimaryTripleExpressionContext):
+        pass
+
+
     # Enter a parse tree produced by FeelExprParser#primaryInterval.
     def enterPrimaryInterval(self, ctx:FeelExprParser.PrimaryIntervalContext):
         pass
@@ -599,6 +644,15 @@ class FeelExprListener(ParseTreeListener):
 
     # Exit a parse tree produced by FeelExprParser#primaryContext.
     def exitPrimaryContext(self, ctx:FeelExprParser.PrimaryContextContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#primaryChoose.
+    def enterPrimaryChoose(self, ctx:FeelExprParser.PrimaryChooseContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#primaryChoose.
+    def exitPrimaryChoose(self, ctx:FeelExprParser.PrimaryChooseContext):
         pass
 
 

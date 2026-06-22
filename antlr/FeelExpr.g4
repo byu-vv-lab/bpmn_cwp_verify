@@ -36,7 +36,7 @@ compilation_unit
 
 // #1
 expression
-    : expr=textualExpression  #expressionTextual
+    : textualExpression  #expressionTextual
     ;
 
 // #2
@@ -58,7 +58,7 @@ namedParameters
     ;
 
 namedParameter
-    : name=nameDefinition COLON value=expression
+    : nameDefinition COLON expression
     ;
 
 // #44
@@ -82,7 +82,7 @@ iterationContext
 
 // #47
 ifExpression
-    : IF c=expression THEN t=expression ELSE e=expression
+    : IF expression THEN expression ELSE expression
     ;
 
 // #48
@@ -93,12 +93,12 @@ quantifiedExpression
 
 // #54
 type
-    : sk=Identifier LT type GT                                                        #listType
-    | sk=Identifier LT type GT                                                        #rangeType
-    | sk=Identifier LT Identifier COLON type ( COMMA Identifier COLON type )* GT   #contextType
-    | FUNCTION                                                                                                        #qnType
-    | FUNCTION LT (type ( COMMA type )*)? GT RARROW type                                                              #functionType
-    | qualifiedName                                                                                                   #qnType
+    : Identifier LT type GT                                                     #listType
+    | Identifier LT type GT                                                     #rangeType
+    | Identifier LT Identifier COLON type ( COMMA Identifier COLON type )* GT   #contextType
+    | FUNCTION                                                                  #qnType
+    | FUNCTION LT (type ( COMMA type )*)? GT RARROW type                        #functionType
+    | qualifiedName                                                             #qnType
     ;
 
 // #56
@@ -109,7 +109,7 @@ list
 
 // #57
 functionDefinition
-    : FUNCTION LPAREN formalParameters? RPAREN external=EXTERNAL? body=expression
+    : FUNCTION LPAREN formalParameters? RPAREN EXTERNAL? expression
     ;
 
 formalParameters
@@ -182,31 +182,36 @@ additionalNameSymbol
     ;
 
 conditionalOrExpression
-    :   conditionalAndExpression                                                 #condOrAnd
-     |  left=conditionalOrExpression op=OR right=conditionalAndExpression    #condOr
+    :  conditionalXOrExpression                              #condOrXor
+    |  conditionalOrExpression OR conditionalXOrExpression   #condOr
+    ;
+
+conditionalXOrExpression
+    : conditionalAndExpression                                 #condXorAnd
+    | conditionalXOrExpression XOR conditionalAndExpression    #condXOr
     ;
 
 conditionalAndExpression
-    :   comparisonExpression                                                   #condAndComp
-    |   left=conditionalAndExpression op=AND right=comparisonExpression      #condAnd
+    :   comparisonExpression                                   #condAndComp
+    |   conditionalAndExpression AND comparisonExpression      #condAnd
     ;
 
 comparisonExpression
-    :   relationalExpression                                                                   #compExpressionRel
-    |   left=comparisonExpression op=(LT |
+    :   relationalExpression                                           #compExpressionRel
+    |   comparisonExpression (LT |
                                       GT |
                                       LE |
                                       GE |
                                       EQUAL |
-                                      NOTEQUAL) right=relationalExpression   #compExpression
+                                      NOTEQUAL) relationalExpression   #compExpression
     ;
 
 relationalExpression
-    :   additiveExpression                                                                           #relExpressionAdd
-    |   val=relationalExpression BETWEEN start=additiveExpression AND end=additiveExpression   #relExpressionBetween
-    |   val=relationalExpression IN LPAREN positiveUnaryTests RPAREN                                     #relExpressionTestList
-    |   val=relationalExpression IN expression                                                   #relExpressionValue
-    |   val=relationalExpression INSTANCE OF type                                            #relExpressionInstanceOf
+    :   additiveExpression                                                       #relExpressionAdd
+    |   relationalExpression BETWEEN additiveExpression AND additiveExpression   #relExpressionBetween
+    |   relationalExpression IN LPAREN positiveUnaryTests RPAREN                 #relExpressionTestList
+    |   relationalExpression IN expression                                       #relExpressionValue
+    |   relationalExpression INSTANCE OF type                                    #relExpressionInstanceOf
     ;
 
 expressionList
@@ -214,30 +219,30 @@ expressionList
     ;
 
 additiveExpression
-    :   multiplicativeExpression                            #addExpressionMult
-    |   additiveExpression op=ADD multiplicativeExpression  #addExpression
-    |   additiveExpression op=SUB multiplicativeExpression  #addExpression
+    :   multiplicativeExpression                         #addExpressionMult
+    |   additiveExpression ADD multiplicativeExpression  #addExpression
+    |   additiveExpression SUB multiplicativeExpression  #addExpression
     ;
 
 multiplicativeExpression
-    :   powerExpression                                              #multExpressionPow
-    |   multiplicativeExpression op=( MUL | DIV ) powerExpression    #multExpression
+    :   powerExpression                                           #multExpressionPow
+    |   multiplicativeExpression ( MUL | DIV ) powerExpression    #multExpression
     ;
 
 powerExpression
-    :   pathDescendantFilterExpression                          #powExpressionUnary
-    |   powerExpression op=POW pathDescendantFilterExpression   #powExpression
+    :   pathDescendantFilterExpression                       #powExpressionUnary
+    |   powerExpression POW pathDescendantFilterExpression   #powExpression
     ;
 
 // FEEL Grammar (2.g) (Path, Descendant, and Filter Expressions)
 pathDescendantFilterExpression
     :   unaryExpression
     // #50 Filter Expression
-    |   n0=pathDescendantFilterExpression LBRACK filter=expression RBRACK
+    |   pathDescendantFilterExpression LBRACK expression RBRACK
     // #43 Path Expression
-    |   n1=pathDescendantFilterExpression DOT qualifiedName
+    |   pathDescendantFilterExpression DOT qualifiedName
     // #68 Descendant Expression
-    |   n2=pathDescendantFilterExpression SPREAD qualifiedName
+    |   pathDescendantFilterExpression SPREAD qualifiedName
     ;
 
 unaryExpression
@@ -245,10 +250,18 @@ unaryExpression
     |   SUB unaryExpression                      #signedUnaryExpressionMinus
     |   unaryExpressionNotPlusMinus              #nonSignedUnaryExpression
     |   ADD unaryExpressionNotPlusMinus          #signedUnaryExpressionPlus
-      ;
+    ;
 
 unaryExpressionNotPlusMinus
     : primary (DOT qualifiedName parameters? )?   #uenpmPrimary
+    ;
+
+chooseExpression
+    : CHOOSE list
+    ;
+
+tripleExpression
+    : LPAREN qualifiedName COMMA list COMMA expression RPAREN    #tripExpression
     ;
 
 primary
@@ -256,12 +269,14 @@ primary
     | forExpression               #primaryForExpression
     | quantifiedExpression        #primaryQuantifiedExpression
     | ifExpression                #primaryIfExpression
+    | tripleExpression            #primaryTripleExpression
     | interval                    #primaryInterval
     | list                        #primaryList
     | context                     #primaryContext
-    | LPAREN expression RPAREN          #primaryParens
+    | chooseExpression            #primaryChoose
+    | LPAREN expression RPAREN    #primaryParens
     | simplePositiveUnaryTest     #primaryUnaryTest
-    | qualifiedName    #primaryName
+    | qualifiedName               #primaryName
     ;
 
 // #33 - #39
@@ -295,13 +310,13 @@ BooleanLiteral
 
 // #7
 simplePositiveUnaryTest
-    : op=LT endpoint   #positiveUnaryTestIneqInterval
-    | op=GT endpoint   #positiveUnaryTestIneqInterval
-    | op=LE endpoint   #positiveUnaryTestIneqInterval
-    | op=GE endpoint   #positiveUnaryTestIneqInterval
-    | op=EQUAL endpoint   #positiveUnaryTestIneqInterval
-    | op=NOTEQUAL endpoint   #positiveUnaryTestIneq
-    | interval           #positiveUnaryTestInterval
+    : LT endpoint         #positiveUnaryTestIneqInterval
+    | GT endpoint         #positiveUnaryTestIneqInterval
+    | LE endpoint         #positiveUnaryTestIneqInterval
+    | GE endpoint         #positiveUnaryTestIneqInterval
+    | EQUAL endpoint      #positiveUnaryTestIneqInterval
+    | NOTEQUAL endpoint   #positiveUnaryTestIneq
+    | interval            #positiveUnaryTestInterval
     ;
 
 
@@ -314,7 +329,7 @@ simplePositiveUnaryTests
 // #14
 simpleUnaryTests
     : simplePositiveUnaryTests                     #positiveSimplePositiveUnaryTests
-    | NOT LPAREN simplePositiveUnaryTests RPAREN     #negatedSimplePositiveUnaryTests
+    | NOT LPAREN simplePositiveUnaryTests RPAREN   #negatedSimplePositiveUnaryTests
     | SUB                                          #positiveUnaryTestDash
     ;
 
@@ -337,8 +352,8 @@ unaryTestsRoot
 unaryTests
     :
     NOT LPAREN positiveUnaryTests RPAREN #unaryTests_negated
-    | positiveUnaryTests               #unaryTests_positive
-    | SUB                              #unaryTests_empty
+    | positiveUnaryTests                 #unaryTests_positive
+    | SUB                                #unaryTests_empty
     ;
 
 // #18
@@ -348,15 +363,15 @@ endpoint
 
 // #8-#12
 interval
-    : low=LPAREN start=endpoint ELIPSIS end=endpoint up=RPAREN
-    | low=LPAREN start=endpoint ELIPSIS end=endpoint up=LBRACK
-    | low=LPAREN start=endpoint ELIPSIS end=endpoint up=RBRACK
-    | low=RBRACK start=endpoint ELIPSIS end=endpoint up=RPAREN
-    | low=RBRACK start=endpoint ELIPSIS end=endpoint up=LBRACK
-    | low=RBRACK start=endpoint ELIPSIS end=endpoint up=RBRACK
-    | low=LBRACK start=endpoint ELIPSIS end=endpoint up=RPAREN
-    | low=LBRACK start=endpoint ELIPSIS end=endpoint up=LBRACK
-    | low=LBRACK start=endpoint ELIPSIS end=endpoint up=RBRACK
+    : LPAREN endpoint ELIPSIS endpoint RPAREN
+    | LPAREN endpoint ELIPSIS endpoint LBRACK
+    | LPAREN endpoint ELIPSIS endpoint RBRACK
+    | RBRACK endpoint ELIPSIS endpoint RPAREN
+    | RBRACK endpoint ELIPSIS endpoint LBRACK
+    | RBRACK endpoint ELIPSIS endpoint RBRACK
+    | LBRACK endpoint ELIPSIS endpoint RPAREN
+    | LBRACK endpoint ELIPSIS endpoint LBRACK
+    | LBRACK endpoint ELIPSIS endpoint RBRACK
     ;
 
 // #20
@@ -365,7 +380,7 @@ qualifiedName
     ;
 
 nameRef
-    : ( st=Identifier | not_st=NOT ) nameRefOtherToken*
+    : ( Identifier | NOT ) nameRefOtherToken*
     ;
 
 nameRefOtherToken
@@ -383,6 +398,7 @@ reusableKeywords
     | ELSE
     | SOME
     | EVERY
+    | CHOOSE
     | SATISFIES
     | INSTANCE
     | OF
@@ -390,6 +406,7 @@ reusableKeywords
     | EXTERNAL
     | OR
     | AND
+    | XOR
     | BETWEEN
     | NOT
     | NULL
@@ -431,6 +448,10 @@ EVERY
     : 'every'
     ;
 
+CHOOSE
+    : 'choose'
+    ;
+
 SATISFIES
     : 'satisfies'
     ;
@@ -457,6 +478,10 @@ OR
 
 AND
     : 'and'
+    ;
+
+XOR
+    : 'Xor'
     ;
 
 BETWEEN

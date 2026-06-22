@@ -5,7 +5,7 @@ import pytest
 from antlr4.error.ErrorStrategy import ParseCancellationException
 from returns.pipeline import is_successful
 
-from bpmncwpverify.core.feel_expr import _get_parser
+from bpmncwpverify.core.feel import Feel
 
 
 @pytest.fixture(scope="module")
@@ -80,7 +80,7 @@ def bad_input_binaryInUnary() -> Iterable[str]:
 
 class Test_bad_inputs:
     def test_bad_Unaryinput(self, bad_input_unaryInBinary):
-        parser_result = _get_parser(bad_input_unaryInBinary)
+        parser_result = Feel().parse(bad_input_unaryInBinary)
         assert is_successful(parser_result)
         parser = parser_result.unwrap()
 
@@ -93,7 +93,7 @@ class Test_bad_inputs:
         assert parser.getNumberOfSyntaxErrors() == 1
 
     def test_bad_Binaryinput(self, bad_input_binaryInUnary):
-        parser_result = _get_parser(bad_input_binaryInUnary)
+        parser_result = Feel().parse(bad_input_binaryInUnary)
         assert is_successful(parser_result)
         parser = parser_result.unwrap()
 
@@ -106,7 +106,7 @@ class Test_bad_inputs:
         assert parser.getNumberOfSyntaxErrors() == 1
 
     def test_bad_Operatorinput(self, bad_input_badOperator):
-        parser_result = _get_parser(bad_input_badOperator)
+        parser_result = Feel().parse(bad_input_badOperator)
         assert is_successful(parser_result)
         parser = parser_result.unwrap()
 
@@ -120,21 +120,21 @@ class Test_bad_inputs:
 
 
 def test_parenthesis_input_test(parenthesis_input):
-    parser_result = _get_parser(parenthesis_input)
+    parser_result = Feel().parse(parenthesis_input)
     parser = parser_result.unwrap()
     tree = parser.compilation_unit()
     assert tree is not None
 
 
 def test_id_input_test(id_input):
-    parser_result = _get_parser(id_input)
+    parser_result = Feel().parse(id_input)
     parser = parser_result.unwrap()
     tree = parser.compilation_unit()
     assert tree is not None
 
 
 def test_negator_input_test(negator_input):
-    parser_result = _get_parser(negator_input)
+    parser_result = Feel().parse(negator_input)
     parser = parser_result.unwrap()
     # tree = parser.start()
     # print("Parse Tree Structure:", tree.toStringTree(recog=parser))
@@ -143,56 +143,56 @@ def test_negator_input_test(negator_input):
 
 
 def test_mult_input_test(mult_input):
-    parser_result = _get_parser(mult_input)
+    parser_result = Feel().parse(mult_input)
     parser = parser_result.unwrap()
     id = parser.multiplicativeExpression()
     assert id is not None
 
 
 def test_div_input_test(div_input):
-    parser_result = _get_parser(div_input)
+    parser_result = Feel().parse(div_input)
     parser = parser_result.unwrap()
     id = parser.multiplicativeExpression()
     assert id is not None
 
 
 def test_add_input_test(addition_input):
-    parser_result = _get_parser(addition_input)
+    parser_result = Feel().parse(addition_input)
     parser = parser_result.unwrap()
     id = parser.compilation_unit()
     assert id is not None
 
 
 def test_subtract_input_test(subtraction_input):
-    parser_result = _get_parser(subtraction_input)
+    parser_result = Feel().parse(subtraction_input)
     parser = parser_result.unwrap()
     id = parser.additiveExpression()
     assert id is not None
 
 
 def test_rel_input_test(rel_input):
-    parser_result = _get_parser(rel_input)
+    parser_result = Feel().parse(rel_input)
     parser = parser_result.unwrap()
     id = parser.compilation_unit()
     assert id is not None
 
 
 def test_not_input_test(not_input):
-    parser_result = _get_parser(not_input)
+    parser_result = Feel().parse(not_input)
     parser = parser_result.unwrap()
     id = parser.compilation_unit()
     assert id is not None
 
 
 def test_and_input_test(and_input):
-    parser_result = _get_parser(and_input)
+    parser_result = Feel().parse(and_input)
     parser = parser_result.unwrap()
     id = parser.conditionalAndExpression()
     assert id is not None
 
 
 def test_or_input_test(or_input):
-    parser_result = _get_parser(or_input)
+    parser_result = Feel().parse(or_input)
     parser = parser_result.unwrap()
     id = parser.conditionalOrExpression()
     assert id is not None
@@ -261,7 +261,7 @@ def test_or_input_test(or_input):
     ],
 )
 def test_valid_inputs(input_text):
-    parser_res = _get_parser(input_text)
+    parser_res = Feel().parse(input_text)
     parser = parser_res.unwrap()
 
     tree = parser.compilation_unit()
@@ -297,7 +297,7 @@ def test_valid_inputs(input_text):
 )
 def test_invalid_inputs(input_text):
     with pytest.raises(ParseCancellationException):
-        parser_res = _get_parser(input_text)
+        parser_res = Feel().parse(input_text)
         parser = parser_res.unwrap()
         tree = parser.compilation_unit()
         tree.toStringTree(recog=parser)
