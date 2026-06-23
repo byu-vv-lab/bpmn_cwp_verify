@@ -85,7 +85,9 @@ def antlr_get_text(node: HasText) -> str:
 
 
 def antlr_get_type_from_type_context(
-    ctx: StateParser.Const_var_declContext | StateParser.Var_declContext,
+    ctx: StateParser.Const_var_declContext
+    | StateParser.Var_declContext
+    | StateParser.Array_declContext,
 ) -> str:
     """
     Returns the type contained in a Type node
@@ -637,6 +639,35 @@ class State:
                 return result.map(builder.with_var_decl).alt(lambda error: error)
 
             self.state_builder = self.state_builder.bind(get_var_decl)  # pyright: ignore[reportUnknownMemberType]
+
+        def exitArray_decl(self, ctx: StateParser.Array_declContext) -> None:
+            """
+            Add new array variable to the list stored in StateBuilder object
+
+            Args:
+                ctx (StateParser.Array_declContext): Array variable to add
+            """
+
+            def get_array_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
+                node = antlr_get_terminal_node_impl(ctx.ID())  # type: ignore[no-untyped-call]
+                symbol: Token = node.getSymbol()
+                id: str = State._Listener._get_id(node)
+                id_line = Some(symbol.line)
+                id_col = Some(symbol.column)
+
+                type_: str = antlr_get_type_from_type_context(ctx)
+
+                number_node: TerminalNode = antlr_get_terminal_node_impl(ctx.NUMBER())  # type: ignore[no-untyped-call]
+                size: int = int(antlr_get_text(number_node))
+
+                values: list[AllowedValueDecl] = State._Listener._get_values(
+                    antlr_get_id_set_context(ctx.id_list()),  # type: ignore[no-untyped-call]
+                )
+
+                result = ArrayDecl.array_decl(id, type_, size, values, id_line, id_col)
+                return result.map(builder.with_array_decl).alt(lambda error: error)
+
+            self.state_builder = self.state_builder.bind(get_array_decl)  # pyright: ignore[reportUnknownMemberType]
 
     def __init__(
         self,
