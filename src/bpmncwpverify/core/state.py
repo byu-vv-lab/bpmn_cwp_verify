@@ -14,11 +14,12 @@ from returns.result import Failure, Result, Success, safe
 
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
-from bpmncwpverify.antlr.StateParser import StateParser  # type: ignore[attr-defined]
+from bpmncwpverify.antlr.StateParser import StateParser
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
     StateAntlrWalkerError,
+    StateArraySizeError,
     StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
@@ -92,7 +93,7 @@ def antlr_get_type_from_type_context(
     Args:
         ctx (StateParser.Const_var_declContext | StateParser.Var_declContext): The node to retrieve the type
     """
-    type_context = cast(StateParser.TypeContext, ctx.type_())
+    type_context = cast(StateParser.TypeContext, ctx.type_())  # type: ignore[no-untyped-call]
     assert isinstance(type_context, StateParser.TypeContext)
     return antlr_get_text(type_context)
 
@@ -161,10 +162,10 @@ def _parse_state(parser: StateParser) -> Result[StateParser.StateContext, Error]
     Args:
         parser (StateParser): Parser that will make sure tree is valid
     """
-    result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(  # type: ignore[no-untyped-call]
-        lambda exc: StateSyntaxError(str(exc))
+    result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(  # type: ignore[call-overload]
+        lambda exc: StateSyntaxError(str(exc))  # pyright: ignore[reportUnknownLambdaType]
     )
-    return result
+    return result  # pyright: ignore[reportUnknownVariableType]
 
 
 class DeclLoc:
@@ -267,6 +268,71 @@ class EnumDecl(DeclLoc):
         self.values = values
 
 
+class ArrayDecl(DeclLoc):
+    """
+    Represents array variable declaration using keyword array
+    """
+
+    __slots__ = ["id", "type_", "size", "values", "line", "col"]
+
+    def __init__(
+        self,
+        id: str,
+        type_: str,
+        size: int,
+        values: list[AllowedValueDecl],
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> None:
+        """
+        Initialize ArrayDecl object
+
+        Args:
+            id (str): Variable name
+            type_ (str): Variable type
+            size (int): Array size
+            values (list[AllowedValueDecl]): Initial variable values
+            line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
+            col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
+        """
+        super().__init__(line, col)
+        self.id = id
+        self.type_ = type_
+        self.size = size
+        self.values = values
+
+    @staticmethod
+    def array_decl(
+        id: str,
+        type_: str,
+        size: int,
+        values: list[AllowedValueDecl],
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> Result["ArrayDecl", Error]:
+        """
+        Returns an ArrayDecl object if the size of the list is 1 or greater and if init has a length of size, error otherwise
+
+        Args:
+            id (str): Variable name
+            type_ (str): Variable type
+            size (int): Array size
+            values (list[AllowedValueDecl]): Initial variable values
+            line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
+            col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
+        """
+
+        """
+        To Do:
+            [] Check if all elements in init_values have the same type as type_
+            [X] Check if the size of init_values matches the size parameter
+            [] Check if the type of the array is valid
+        """
+        if len(values) != size:
+            return Failure(StateArraySizeError(id, line, col, size, len(values)))
+        return Success(ArrayDecl(id, type_, size, values, line, col))
+
+
 class VarDecl(DeclLoc):
     """
     Represents variable declaration using keyword var
@@ -353,7 +419,7 @@ class StateBuilder:
     Store variable information
     """
 
-    __slots__ = ["_consts", "_enums", "_vars"]
+    __slots__ = ["_consts", "_enums", "_vars", "_arrays"]
 
     def __init__(self) -> None:
         """
@@ -362,6 +428,7 @@ class StateBuilder:
         self._consts: list[ConstDecl] = list()
         self._enums: list[EnumDecl] = list()
         self._vars: list[VarDecl] = list()
+        self._arrays: list[ArrayDecl] = list()
 
     def with_enum_type_decl(self, enum_decl: EnumDecl) -> "StateBuilder":
         """
@@ -383,6 +450,16 @@ class StateBuilder:
         self._consts.append(const_decl)
         return self
 
+    def with_array_decl(self, array_decl: ArrayDecl) -> "StateBuilder":
+        """
+        Add to list of array variables
+
+        Args:
+            array_decl (ArrayDecl): variable to add to list
+        """
+        self._arrays.append(array_decl)
+        return self
+
     def with_var_decl(self, var_decl: VarDecl) -> "StateBuilder":
         """
         Add to list of var variables
@@ -397,7 +474,7 @@ class StateBuilder:
         """
         Create a State object with the given lists of variables stored within itself
         """
-        state = State(self._consts, self._enums, self._vars)
+        state = State(self._consts, self._enums, self._vars, self._arrays)
         return state.type_check()
 
 
@@ -480,14 +557,14 @@ class State:
             """
 
             def get_enum_type_decl() -> EnumDecl:
-                node = antlr_get_terminal_node_impl(ctx.ID())
+                node = antlr_get_terminal_node_impl(ctx.ID())  # type: ignore[no-untyped-call]
                 symbol: Token = node.getSymbol()
                 id: str = State._Listener._get_id(node)
                 id_line = Some(symbol.line)
                 id_col = Some(symbol.column)
 
                 values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_set_context(ctx.id_set()),
+                    antlr_get_id_set_context(ctx.id_set()),  # type: ignore[no-untyped-call]
                 )
 
                 return EnumDecl(id, values, id_line, id_col)
@@ -553,7 +630,7 @@ class State:
                 )
 
                 values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_set_context(ctx.id_set()),
+                    antlr_get_id_set_context(ctx.id_set()),  # type: ignore[no-untyped-call]
                 )
 
                 result = VarDecl.var_decl(id, type_, init, values, id_line, id_col)
@@ -562,7 +639,11 @@ class State:
             self.state_builder = self.state_builder.bind(get_var_decl)  # pyright: ignore[reportUnknownMemberType]
 
     def __init__(
-        self, consts: list[ConstDecl], enums: list[EnumDecl], vars: list[VarDecl]
+        self,
+        consts: list[ConstDecl],
+        enums: list[EnumDecl],
+        vars: list[VarDecl],
+        arrays: list[ArrayDecl],
     ) -> None:
         """
         Initialize State object
@@ -571,6 +652,7 @@ class State:
             consts (list[ConstDecl]): List containing const variable declarations
             enums (list[EnumDecl]): List containing enum variable declarations
             vars (list[VarDecl]): List containing var variable declarations
+            arrays (list[ArrayDecl]): List containing array variable declarations
         """
         self._consts = consts
         self._enums = enums
@@ -578,6 +660,7 @@ class State:
         self._str2var: Maybe[dict[str, VarDecl]] = Nothing
         self._str2enum: Maybe[dict[str, EnumDecl]] = Nothing
         self._vars = vars
+        self._arrays = arrays
 
     def __str__(self) -> str:
         """
@@ -592,6 +675,19 @@ class State:
                     continue
                 state_str += " " + enum.values[vals].value
             state_str += "}\n"
+        for array in self._arrays:
+            state_str += (
+                "array "
+                + array.id
+                + " : "
+                + array.type_
+                + "["
+                + str(array.size)
+                + "] = \n{\n"
+            )
+            for val in array.values:
+                state_str += "  " + val.value
+                state_str += "}\n"
         for const in self._consts:
             state_str += (
                 "const "
@@ -681,6 +777,10 @@ class State:
     @property
     def vars(self) -> tuple[VarDecl, ...]:
         return tuple(self._vars)
+
+    @property
+    def arrays(self) -> tuple[ArrayDecl, ...]:
+        return tuple(self._arrays)
 
     def _build_id_2_type_consts(self) -> Result[None, Error]:
         """

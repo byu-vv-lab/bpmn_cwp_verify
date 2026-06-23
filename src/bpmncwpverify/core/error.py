@@ -605,6 +605,36 @@ class StateMultipleDefinitionError(Error):
         return False
 
 
+class StateArraySizeError(Error):
+    __slots__ = ["id", "line", "column", "expected_size", "actual_size"]
+
+    def __init__(
+        self,
+        id: str,
+        line: Maybe[int],
+        column: Maybe[int],
+        expected_size: int,
+        actual_size: int,
+    ) -> None:
+        super().__init__()
+        self.id = id
+        self.line = line
+        self.column = column
+        self.expected_size = expected_size
+        self.actual_size = actual_size
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, StateArraySizeError):
+            return (
+                self.id == other.id
+                and self.line == other.line
+                and self.column == other.column
+                and self.expected_size == other.expected_size
+                and self.actual_size == other.actual_size
+            )
+        return False
+
+
 class StateSyntaxError(Error):
     __slots__ = "msg"
 
