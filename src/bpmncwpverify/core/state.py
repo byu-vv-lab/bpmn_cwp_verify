@@ -923,6 +923,22 @@ class State:
                 return result
         return Success(None)
 
+    def _type_check_arrays(self) -> Result[None, Error]:
+        """
+        Verify array variable declarations are type safe
+
+        Args:
+            state (State): State object to retrieve initial type
+
+        To Do: Check the type of the array and compare against the types of its elements
+        """
+        for array_decl in self._arrays:
+            values = array_decl.values
+            result = self._type_check_assigns(array_decl.type_, values)
+            if not_(is_successful)(result):
+                return result
+        return Success(None)
+
     def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result[None, Error]:
         """
         Ensures that enum variable declarations do not use previously declared variable names
@@ -982,6 +998,32 @@ class State:
             )
         id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
         str2var[var_decl.id] = var_decl
+        return Success(None)
+
+    def _build_id_2_type_array(self, array_decl: ArrayDecl) -> Result[None, Error]:
+        """
+        Ensures that array variable declarations do not use previously declared variable names
+
+        Args:
+            array_decl (ArrayDecl): Array variable declaration to check
+        """
+        # requires
+        assert self._id2type != Nothing
+
+        id2type = self._id2type.unwrap()
+        if array_decl.id in id2type:
+            first = (id2type[array_decl.id]).decl_loc
+            return Failure(
+                StateMultipleDefinitionError(
+                    array_decl.id,
+                    array_decl.line,
+                    array_decl.col,
+                    first.line,
+                    first.col,
+                )
+            )
+        id2type[array_decl.id] = TypeWithDeclLoc(array_decl.type_, array_decl)
+
         return Success(None)
 
     @staticmethod
