@@ -324,12 +324,6 @@ class ArrayDecl(DeclLoc):
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
 
-        """
-        To Do:
-            [] Check if all elements in init_values have the same type as type_
-            [X] Check if the size of init_values matches the size parameter
-            [] Check if the type of the array is valid
-        """
         if len(values) != size:
             return Failure(StateArraySizeError(id, line, col, size, len(values)))
         return Success(ArrayDecl(id, type_, size, values, line, col))
@@ -799,6 +793,7 @@ class State:
             self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
             .bind(lambda _: self._build_id_2_type_consts())
             .bind(lambda _: self._build_id_2_type_vars())
+            .bind(lambda _: self._build_id_2_type_arrays())
             .bind(lambda _: self._type_check_consts())
             .bind(lambda _: self._type_check_vars())
             .map(lambda _: self)
@@ -877,6 +872,24 @@ class State:
 
         return Success(None)
 
+    def _build_id_2_type_arrays(self) -> Result[None, Error]:
+        """
+        Adds array variables into id2type dictionary
+        Verifies there are no two variables with the same name being declared twice
+
+        Args:
+            state (State): State object to modify
+        """
+        # requires
+        assert self._id2type != Nothing
+
+        for i in self._arrays:
+            result = self._build_id_2_type_array(i)
+            if not_(is_successful)(result):
+                return result
+
+        return Success(None)
+
     def _type_check_assigns(
         self, ltype: str, values: Iterable[AllowedValueDecl]
     ) -> Result[None, Error]:
@@ -929,8 +942,6 @@ class State:
 
         Args:
             state (State): State object to retrieve initial type
-
-        To Do: Check the type of the array and compare against the types of its elements
         """
         for array_decl in self._arrays:
             values = array_decl.values
