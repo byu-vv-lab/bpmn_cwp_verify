@@ -18,7 +18,6 @@ class ErrorException(Exception):
 
     def __init__(self, error: Error) -> None:
         self.error = error
-        super().__init__(str(error))
 
 
 class BpmnUnsupportedStartEvent(Error):
@@ -303,15 +302,15 @@ class ExpressionComputationCompatabilityError(Error):
 
 
 class ExpressionNegatorError(Error):
-    __slots__ = ["_type"]
+    __slots__ = ["type"]
 
     def __init__(self, type: str) -> None:
         super().__init__()
-        self._type = type
+        self.type = type
 
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, ExpressionNegatorError):
-            return self._type == other._type
+            return self.type == other.type
         return False
 
 
@@ -369,7 +368,7 @@ class ExpressionLogicalCompatibilityError(Error):
 
 
 class ExpressionRelationalNotError(Error):
-    __slots__ = ["_type"]
+    __slots__ = ["type"]
 
     def __init__(self, type: str) -> None:
         super().__init__()
@@ -807,8 +806,8 @@ def get_error_message(error: Error) -> str:
             return "CWP ERROR: No start states found."
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be computed with something of type '{ltype}'"
-        case ExpressionNegatorError(_type=_type):
-            return f"EXPR ERROR: sometiong of type '{_type}' cannot be used with a mathmatical negator"
+        case ExpressionNegatorError(type=type):
+            return f"EXPR ERROR: sometiong of type '{type}' cannot be used with a mathmatical negator"
         case ExpressionParseError(exception_str=exception_str):
             return f"Error while parsing expression: {exception_str}"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):

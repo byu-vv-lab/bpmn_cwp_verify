@@ -64,7 +64,7 @@ def test_decimal_number_literal() -> None:
     with pytest.raises(ErrorException) as error:
         node.accept(visitor)
 
-    assert isinstance(error.value.error, TypingNoTypeError)  # check on this
+    assert isinstance(error.value.error, TypingNoTypeError)
     assert error.value.error.id == "1.5"
 
 

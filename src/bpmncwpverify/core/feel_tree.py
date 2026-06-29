@@ -10,6 +10,7 @@ class NumberLiteralNode(ExpressionNode):
         self.value = value
 
     def accept(self, visitor: "FeelVisitor") -> None:
+        visitor.visit_number_literal(self)
         visitor.end_visit_number_literal(self)
 
 
@@ -20,6 +21,7 @@ class BoolLiteralNode(ExpressionNode):
         self.value = value
 
     def accept(self, visitor: "FeelVisitor") -> None:
+        visitor.visit_bool_literal(self)
         visitor.end_visit_bool_literal(self)
 
 
@@ -30,6 +32,7 @@ class QualifiedNameNode(ExpressionNode):
         self.name = name
 
     def accept(self, visitor: "FeelVisitor") -> None:
+        visitor.visit_qualified_name(self)
         visitor.end_visit_qualified_name(self)
 
 
@@ -57,8 +60,11 @@ class BinaryOperatorNode(ExpressionNode):
         self.right = right
 
     def accept(self, visitor: "FeelVisitor") -> None:
-        self.left.accept(visitor)
-        self.right.accept(visitor)
+        result = visitor.visit_binary_operator(self)
+
+        if result:
+            self.left.accept(visitor)
+            self.right.accept(visitor)
         visitor.end_visit_binary_operator(self)
 
 
@@ -90,8 +96,11 @@ class ComparisonOperatorNode(ExpressionNode):
         self.right = right
 
     def accept(self, visitor: "FeelVisitor") -> None:
-        self.left.accept(visitor)
-        self.right.accept(visitor)
+        result = visitor.visit_comparision(self)
+
+        if result:
+            self.left.accept(visitor)
+            self.right.accept(visitor)
         visitor.end_visit_comparision(self)
 
 
@@ -127,8 +136,11 @@ class ConditionalOperatorNode(ExpressionNode):
         self.right = right
 
     def accept(self, visitor: "FeelVisitor") -> None:
-        self.left.accept(visitor)
-        self.right.accept(visitor)
+        result = visitor.visit_conditional(self)
+
+        if result:
+            self.left.accept(visitor)
+            self.right.accept(visitor)
         visitor.end_visit_conditional(self)
 
 
@@ -151,7 +163,10 @@ class NotNode(ExpressionNode):
         self.expression = expression
 
     def accept(self, visitor: "FeelVisitor") -> None:
-        self.expression.accept(visitor)
+        result = visitor.visit_not(self)
+
+        if result:
+            self.expression.accept(visitor)
         visitor.end_visit_not(self)
 
 
@@ -213,11 +228,20 @@ class TripleNode(ExpressionNode):
 
 
 class FeelVisitor:
+    def visit_number_literal(self, node: NumberLiteralNode) -> bool:
+        return True
+
     def end_visit_number_literal(self, node: NumberLiteralNode) -> None:
         pass
 
+    def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
+        return True
+
     def end_visit_bool_literal(self, node: BoolLiteralNode) -> None:
         pass
+
+    def visit_qualified_name(self, node: QualifiedNameNode) -> bool:
+        return True
 
     def end_visit_qualified_name(self, node: QualifiedNameNode) -> None:
         pass
@@ -228,29 +252,56 @@ class FeelVisitor:
     def end_visit_list(self, node: ListNode) -> None:
         pass
 
+    def visit_binary_operator(self, node: BinaryOperatorNode) -> bool:
+        return True
+
     def end_visit_binary_operator(self, node: BinaryOperatorNode) -> None:
         pass
+
+    def visit_add(self, node: AddNode) -> bool:
+        return True
 
     def end_visit_add(self, node: AddNode) -> None:
         pass
 
+    def visit_subtract(self, node: SubtractNode) -> bool:
+        return True
+
     def end_visit_subtract(self, node: SubtractNode) -> None:
         pass
+
+    def visit_multiply(self, node: MultiplyNode) -> bool:
+        return True
 
     def end_visit_multiply(self, node: MultiplyNode) -> None:
         pass
 
+    def visit_divide(self, node: DivideNode) -> bool:
+        return True
+
     def end_visit_divide(self, node: DivideNode) -> None:
         pass
+
+    def visit_pow(self, node: PowerNode) -> bool:
+        return True
 
     def end_visit_pow(self, node: PowerNode) -> None:
         pass
 
+    def visit_comparision(self, node: ComparisonOperatorNode) -> bool:
+        return True
+
     def end_visit_comparision(self, node: ComparisonOperatorNode) -> None:
         pass
 
+    def visit_conditional(self, node: ConditionalOperatorNode) -> bool:
+        return True
+
     def end_visit_conditional(self, node: ConditionalOperatorNode) -> None:
         pass
+
+    def visit_not(self, node: NotNode) -> bool:
+        return True
 
     def end_visit_not(self, node: NotNode) -> None:
         pass
