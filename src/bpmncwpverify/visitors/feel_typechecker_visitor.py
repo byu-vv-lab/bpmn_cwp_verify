@@ -49,7 +49,7 @@ from bpmncwpverify.core.typechecking import (
 
 
 class TypeCheckerVisitor(FeelVisitor):
-    __slots__ = ["state", "stack", "scope", "triple"]
+    __slots__ = ["state", "stack"]
 
     def __init__(self, state: State):
         self.state = state
