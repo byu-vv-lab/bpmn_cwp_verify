@@ -631,6 +631,16 @@ class State:
 
         return False
 
+    def is_enum(self, variable: str) -> bool:
+        assert self.enums != Nothing
+
+        for enum in self.enums:
+            for enum_val in enum.values:
+                if enum_val.value == variable:
+                    return True
+
+        return False
+
     def is_defined(self, id: str) -> bool:
         """
         Determines if a variable is defined or not

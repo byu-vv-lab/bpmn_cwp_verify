@@ -13,6 +13,14 @@ class Error:
         pass
 
 
+class ErrorException(Exception):
+    __slots__ = ["error"]
+
+    def __init__(self, error: Error) -> None:
+        self.error = error
+        super().__init__(str(error))
+
+
 class BpmnUnsupportedStartEvent(Error):
     __slots__ = ["id"]
 
@@ -329,30 +337,74 @@ class ExpressionRelationCompatabilityError(Error):
         return False
 
 
+class ExpressionIfBranchCompatabilityError(Error):
+    __slots__ = ["thentype", "elsetype"]
+
+    def __init__(self, thentype: str, elsetype: str) -> None:
+        super().__init__()
+        self.thentype = thentype
+        self.elsetype = elsetype
+
+
+class ExpressionIfConditionError(Error):
+    __slots__ = ["type"]
+
+    def __init__(self, type: str) -> None:
+        super().__init__()
+        self.type = type
+
+
+class ExpressionLogicalCompatibilityError(Error):
+    __slots__ = ["ltype", "rtype"]
+
+    def __init__(self, ltype: str, rtype: str) -> None:
+        super().__init__()
+        self.ltype = ltype
+        self.rtype = rtype
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, ExpressionComputationCompatabilityError):
+            return self.ltype == other.ltype and self.rtype == other.rtype
+        return False
+
+
 class ExpressionRelationalNotError(Error):
     __slots__ = ["_type"]
 
     def __init__(self, type: str) -> None:
         super().__init__()
-        self._type = type
+        self.type = type
 
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, ExpressionRelationalNotError):
-            return self._type == other._type
+            return self.type == other.type
         return False
 
 
 class ExpressionUnrecognizedID(Error):
-    __slots__ = ["_id"]
+    __slots__ = ["id"]
 
     def __init__(self, id: str) -> None:
         super().__init__()
-        self._id = id
+        self.id = id
 
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, ExpressionUnrecognizedID):
-            return self._id == other._id
+            return self.id == other.id
         return False
+
+
+class ExpressionOutOfScope(Error):
+    __slots__ = ["id"]
+
+    def __init__(self, id: str) -> None:
+        super().__init__()
+        self.id = id
+
+
+class ExpressionTripleInputError(Error):
+    def __init__(self) -> None:
+        super().__init__()
 
 
 class FileReadFileError(Error):
@@ -633,6 +685,23 @@ class TypingAssignCompatabilityError(Error):
         return False
 
 
+class TypingTripleVariableError(Error):
+    __slots__ = ["id"]
+
+    def __init__(self, id: str) -> None:
+        super().__init__()
+        self.id = id
+
+
+class TypingListCompatibiltiyError(Error):
+    __slots__ = ["first_type", "second_type"]
+
+    def __init__(self, first_type: str, second_type: str) -> None:
+        super().__init__()
+        self.first_type = first_type
+        self.second_type = second_type
+
+
 class TypingNegateBoolError(Error):
     __slots__ = ["expr_type"]
 
@@ -737,17 +806,27 @@ def get_error_message(error: Error) -> str:
         case CwpNoStartStateError():
             return "CWP ERROR: No start states found."
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
-            return f"EXPR ERROR: sometion of type '{rtype}' cannot be computed with something of type '{ltype}'"
+            return f"EXPR ERROR: something of type '{rtype}' cannot be computed with something of type '{ltype}'"
         case ExpressionNegatorError(_type=_type):
             return f"EXPR ERROR: sometiong of type '{_type}' cannot be used with a mathmatical negator"
         case ExpressionParseError(exception_str=exception_str):
             return f"Error while parsing expression: {exception_str}"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
-            return f"EXPR ERROR: sometion of type '{rtype}' cannot be related with something of type '{ltype}'"
-        case ExpressionRelationalNotError(_type=_type):
-            return f"EXPR ERROR: sometiong of type '{_type}' cannot be used with a relational not"
-        case ExpressionUnrecognizedID(_id=_id):
-            return f"EXPR ERROR: '{_id}' is not recognized as a literal or something stored in the symbol table"
+            return f"EXPR ERROR: something of type '{rtype}' cannot be related with something of type '{ltype}'"
+        case ExpressionIfBranchCompatabilityError(thentype=thentype, elsetype=elsetype):
+            return f"EXPR ERROR: if must have same or compatible return types on branchs,'{thentype}' and '{elsetype}' are not compatible"
+        case ExpressionIfConditionError(type=type):
+            return f"EXPR ERROR: if statement must have a conditional expression result in a bool, not a '{type}'"
+        case ExpressionLogicalCompatibilityError(ltype=ltype, rtype=rtype):
+            return f"EXPR ERROR: cannot perform logical operation on types '{ltype}' and '{rtype}'"
+        case ExpressionRelationalNotError(type=type):
+            return f"EXPR ERROR: something of type '{type}' cannot be used with a relational not"
+        case ExpressionUnrecognizedID(id=id):
+            return f"EXPR ERROR: '{id}' is not recognized as a literal or something stored in the symbol table"
+        case ExpressionOutOfScope(id=id):
+            return f"EXPR ERROR: '{id}' is out of scope"
+        case ExpressionTripleInputError():
+            return "EXPR ERROR: input in triple is not valid and can only be a list of varibles"
         case FileReadFileError(msg=msg):
             return f"FILE ERROR: '{msg}'"
         case FileWriteFileError(msg=msg):
@@ -886,6 +965,12 @@ def get_error_message(error: Error) -> str:
             return f"ERROR: failed to run '{process_name}'"
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
             return f"TYPING ERROR: something of type '{rtype}' cannot by assigned to something of type '{ltype}'"
+        case TypingTripleVariableError(id=id):
+            return f"TYPING ERROR: '{id}' is not a variable and cannot be used as input"
+        case TypingListCompatibiltiyError(
+            first_type=first_type, second_type=second_type
+        ):
+            return f"TYPING ERROR: list of type '{first_type}' is not compatible with '{second_type}'"
         case TypingNoTypeError(id=id):
             return f"TYPING ERROR: literal '{id}' has an unknown type"
 

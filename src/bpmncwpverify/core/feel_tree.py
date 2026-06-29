@@ -40,6 +40,9 @@ class ListNode(ExpressionNode):
         self.values = values
 
     def accept(self, visitor: "FeelVisitor") -> None:
+        for item in self.values:
+            item.accept(visitor)
+
         visitor.end_visit_list(self)
 
 
@@ -174,6 +177,7 @@ class NotNode(ExpressionNode):
         self.expression = expression
 
     def accept(self, visitor: "FeelVisitor") -> None:
+        self.expression.accept(visitor)
         visitor.end_visit_not(self)
 
 
@@ -200,7 +204,8 @@ class ChooseNode(ExpressionNode):
     def __init__(self, choices: ListNode):
         self.choices = choices
 
-    def accept(self, visitor: "FeelVisitor") -> None:  # need to accept on items?
+    def accept(self, visitor: "FeelVisitor") -> None:
+        self.choices.accept(visitor)
         visitor.end_visit_choose(self)
 
 
@@ -213,9 +218,12 @@ class TripleNode(ExpressionNode):
         self.value = value
 
     def accept(self, visitor: "FeelVisitor") -> None:
-        self.target.accept(visitor)
-        self.inputs.accept(visitor)
-        self.value.accept(visitor)
+        result = visitor.visit_triple(self)
+
+        if result:
+            self.target.accept(visitor)
+            self.inputs.accept(visitor)
+            self.value.accept(visitor)
         visitor.end_visit_triple(self)
 
 
@@ -269,6 +277,9 @@ class FeelVisitor:
 
     def end_visit_choose(self, node: ChooseNode) -> None:
         pass
+
+    def visit_triple(self, node: TripleNode) -> bool:
+        return True
 
     def end_visit_triple(self, node: TripleNode) -> None:
         pass
