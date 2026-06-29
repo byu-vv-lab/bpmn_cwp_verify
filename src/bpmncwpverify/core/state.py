@@ -60,24 +60,6 @@ def antlr_get_id_set_context(ctx: Any) -> Maybe[StateParser.Id_setContext]:
     return Some(ctx)
 
 
-def antlr_get_id_list_context(ctx: Any) -> Maybe[StateParser.Id_listContext]:
-    """
-    Verifies if node is of type ID list
-
-    Args:
-        ctx (Any): The node to check if it is of type ID list
-
-    Returns:
-        StateParser.Id_listContext: Node if node is of type ID list
-        None: If node is of type None
-        AssertionError: If node is not None and not of type ID list
-    """
-    if ctx is None:
-        return Nothing
-    assert isinstance(ctx, StateParser.Id_listContext)
-    return Some(ctx)
-
-
 def antlr_get_terminal_node_impl(node: TerminalNode | None) -> TerminalNodeImpl:
     """
     Verifies and returns the node if node is a terminal node/leaf node, AssertionError otherwise
@@ -661,7 +643,7 @@ class State:
             """
 
             def get_array_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
-                node = antlr_get_terminal_node_impl(ctx.ID())  # type: ignore[no-untyped-call]
+                node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
                 id: str = State._Listener._get_id(node)
                 id_line = Some(symbol.line)
@@ -669,11 +651,11 @@ class State:
 
                 type_: str = antlr_get_type_from_type_context(ctx)
 
-                number_node: TerminalNode = antlr_get_terminal_node_impl(ctx.NUMBER())  # type: ignore[no-untyped-call]
+                number_node: TerminalNode = antlr_get_terminal_node_impl(ctx.ID(1))
                 size: int = int(antlr_get_text(number_node))
 
                 values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_list_context(ctx.id_list()),  # type: ignore[no-untyped-call]
+                    antlr_get_id_set_context(ctx.id_set()),  # type: ignore[no-untyped-call]
                 )
 
                 result = ArrayDecl.array_decl(id, type_, size, values, id_line, id_col)

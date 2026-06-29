@@ -62,15 +62,6 @@ class StateListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by StateParser#id_list.
-    def enterId_list(self, ctx:StateParser.Id_listContext):
-        pass
-
-    # Exit a parse tree produced by StateParser#id_list.
-    def exitId_list(self, ctx:StateParser.Id_listContext):
-        pass
-
-
     # Enter a parse tree produced by StateParser#type.
     def enterType(self, ctx:StateParser.TypeContext):
         pass

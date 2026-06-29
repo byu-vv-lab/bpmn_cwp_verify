@@ -21,12 +21,7 @@ var_decl
   ;
 
 array_decl
-  : ARRAY ID COLON type LBRACKET NUMBER RBRACKET EQUALS LBRACKET id_list RBRACKET
-  ;
-
-id_list
-  : ID+
-  | NUMBER+
+  : ARRAY ID COLON type LBRACKET ID RBRACKET EQUALS LBRACKET id_set RBRACKET
   ;
 
 type
@@ -111,11 +106,7 @@ ARRAY
   ;
 
 ID
-  : [a-zA-Z][a-zA-Z0-9_]*
-  ;
-
-NUMBER
-  : [0-9]+
+  : [a-zA-Z0-9_]+
   ;
 
 WS : [ \t\n\r]+ -> skip ;
