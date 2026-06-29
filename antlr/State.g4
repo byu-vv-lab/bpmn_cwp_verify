@@ -21,11 +21,12 @@ var_decl
   ;
 
 array_decl
-  : VAR ID COLON type LBRACKET NUMBER RBRACKET EQUALS LBRACKET id_list RBRACKET
+  : ARRAY ID COLON type LBRACKET NUMBER RBRACKET EQUALS LBRACKET id_list RBRACKET
   ;
 
 id_list
   : ID (COMMA ID)*
+  | NUMBER (COMMA NUMBER)*
   ;
 
 type
@@ -105,8 +106,12 @@ VAR
   : 'var'
   ;
 
+ARRAY
+  : 'array'
+  ;
+
 ID
-  : [a-zA-Z0-9_]+
+  : [a-zA-Z][a-zA-Z0-9_]*
   ;
 
 NUMBER
