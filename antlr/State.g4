@@ -25,8 +25,8 @@ array_decl
   ;
 
 id_list
-  : ID (COMMA ID)*
-  | NUMBER (COMMA NUMBER)*
+  : ID+
+  | NUMBER+
   ;
 
 type

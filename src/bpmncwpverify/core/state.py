@@ -60,6 +60,24 @@ def antlr_get_id_set_context(ctx: Any) -> Maybe[StateParser.Id_setContext]:
     return Some(ctx)
 
 
+def antlr_get_id_list_context(ctx: Any) -> Maybe[StateParser.Id_listContext]:
+    """
+    Verifies if node is of type ID list
+
+    Args:
+        ctx (Any): The node to check if it is of type ID list
+
+    Returns:
+        StateParser.Id_listContext: Node if node is of type ID list
+        None: If node is of type None
+        AssertionError: If node is not None and not of type ID list
+    """
+    if ctx is None:
+        return Nothing
+    assert isinstance(ctx, StateParser.Id_listContext)
+    return Some(ctx)
+
+
 def antlr_get_terminal_node_impl(node: TerminalNode | None) -> TerminalNodeImpl:
     """
     Verifies and returns the node if node is a terminal node/leaf node, AssertionError otherwise
@@ -164,7 +182,7 @@ def _parse_state(parser: StateParser) -> Result[StateParser.StateContext, Error]
     Args:
         parser (StateParser): Parser that will make sure tree is valid
     """
-    result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(  # type: ignore[call-overload]
+    result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(
         lambda exc: StateSyntaxError(str(exc))  # pyright: ignore[reportUnknownLambdaType]
     )
     return result  # pyright: ignore[reportUnknownVariableType]
@@ -324,7 +342,7 @@ class ArrayDecl(DeclLoc):
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
 
-        if len(values) != size:
+        if len(values) != size or len(values) == 0:
             return Failure(StateArraySizeError(id, line, col, size, len(values)))
         return Success(ArrayDecl(id, type_, size, values, line, col))
 
@@ -655,7 +673,7 @@ class State:
                 size: int = int(antlr_get_text(number_node))
 
                 values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_set_context(ctx.id_list()),  # type: ignore[no-untyped-call]
+                    antlr_get_id_list_context(ctx.id_list()),  # type: ignore[no-untyped-call]
                 )
 
                 result = ArrayDecl.array_decl(id, type_, size, values, id_line, id_col)
