@@ -563,7 +563,7 @@ def test_triple() -> None:
     assert type == BYTE
 
 
-def test_triple_bool_input() -> None:  # unsure if this is a worth while test
+def test_triple_bool_input() -> None:
     builder = StateBuilder()
     builder.with_var_decl(
         VarDecl(
