@@ -247,6 +247,3 @@ def web_verify(
             lambda bpmn: _verify_inputs(state, cwp, bpmn, verify_with_spin)
         )
     )
-
-
-verify()
