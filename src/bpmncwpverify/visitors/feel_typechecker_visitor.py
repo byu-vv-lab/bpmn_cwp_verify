@@ -13,6 +13,7 @@ from bpmncwpverify.core.error import (
     ExpressionUnrecognizedID,
     TypingAssignCompatabilityError,
     TypingListCompatibiltiyError,
+    TypingListOfExpressionsError,
     TypingNoTypeError,
     TypingTripleVariableError,
 )
@@ -24,6 +25,7 @@ from bpmncwpverify.core.feel_tree import (
     ComparisonOperatorNode,
     ConditionalOperatorNode,
     DivideNode,
+    ExpressionNode,
     FeelVisitor,
     IfNode,
     ListNode,
@@ -53,6 +55,16 @@ class TypeCheckerVisitor(FeelVisitor):
         self.state = state
         self.stack: list[str] = []
 
+    def is_leaf(self, node: ExpressionNode) -> bool:
+        if isinstance(node, NumberLiteralNode):
+            return True
+        elif isinstance(node, BoolLiteralNode):
+            return True
+        elif isinstance(node, QualifiedNameNode):
+            return True
+        else:
+            return False
+
     def end_visit_number_literal(self, node: NumberLiteralNode) -> None:
         type = get_type_literal(node.value)
 
@@ -74,6 +86,13 @@ class TypeCheckerVisitor(FeelVisitor):
             self.stack.append(self.state.get_type(node.name).unwrap())
         else:
             raise ErrorException(ExpressionUnrecognizedID(node.name))
+
+    def visit_list(self, node: ListNode) -> bool:
+        for item in node.values:
+            if not self.is_leaf(item):
+                raise ErrorException(TypingListOfExpressionsError())
+
+        return True
 
     def end_visit_list(self, node: ListNode) -> None:
         items = len(node.values)

@@ -72,6 +72,7 @@ from bpmncwpverify.core.error import (
     SubProcessRunError,
     TypingAssignCompatabilityError,
     TypingListCompatibiltiyError,
+    TypingListOfExpressionsError,
     TypingNoTypeError,
     TypingTripleVariableError,
     get_error_message,
@@ -344,6 +345,10 @@ test_inputs: list[tuple[Error, str]] = [
         "TYPING ERROR: list of type 'first_type' is not compatible with 'second_type'",
     ),
     (
+        TypingListOfExpressionsError(),
+        "TYPING ERROR: list has an expresssion that is not a number, bool, or variable and is not allowed",
+    ),
+    (
         TypingTripleVariableError("id"),
         "TYPING ERROR: 'id' is not a variable and cannot be used as input",
     ),
@@ -448,6 +453,7 @@ test_ids: list[str] = [
     "SubprocessRunError",
     "TypeingAssignCompatabilityError",
     "TypingListCompatibiltiyError",
+    "TypingListOfExpressionsError",
     "TypingTripleVariableError",
     "TypingNoTypeError",
     "CbmcAssertionError",

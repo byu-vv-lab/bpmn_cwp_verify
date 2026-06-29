@@ -701,6 +701,11 @@ class TypingListCompatibiltiyError(Error):
         self.second_type = second_type
 
 
+class TypingListOfExpressionsError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+
+
 class TypingNegateBoolError(Error):
     __slots__ = ["expr_type"]
 
@@ -970,6 +975,8 @@ def get_error_message(error: Error) -> str:
             first_type=first_type, second_type=second_type
         ):
             return f"TYPING ERROR: list of type '{first_type}' is not compatible with '{second_type}'"
+        case TypingListOfExpressionsError():
+            return "TYPING ERROR: list has an expresssion that is not a number, bool, or variable and is not allowed"
         case TypingNoTypeError(id=id):
             return f"TYPING ERROR: literal '{id}' has an unknown type"
 

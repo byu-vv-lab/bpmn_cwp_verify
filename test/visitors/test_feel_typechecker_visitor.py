@@ -12,6 +12,7 @@ from bpmncwpverify.core.error import (
     ExpressionUnrecognizedID,
     TypingAssignCompatabilityError,
     TypingListCompatibiltiyError,
+    TypingListOfExpressionsError,
     TypingNoTypeError,
     TypingTripleVariableError,
 )
@@ -225,6 +226,23 @@ def test_list_of_bool_and_number_literals() -> None:
     assert isinstance(error.value.error, TypingListCompatibiltiyError)
     assert error.value.error.first_type == BOOL
     assert error.value.error.second_type == BYTE
+
+
+def test_list_of_none_leaf_nodes() -> None:
+    node = ListNode(
+        [
+            ListNode([NumberLiteralNode("2")]),
+            NumberLiteralNode("3"),
+            NumberLiteralNode("4"),
+        ]
+    )
+    state = State([], [], [])
+    visitor = TypeCheckerVisitor(state)
+
+    with pytest.raises(ErrorException) as error:
+        node.accept(visitor)
+
+    assert isinstance(error.value.error, TypingListOfExpressionsError)
 
 
 def test_binary_add_2_bytes() -> None:
