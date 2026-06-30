@@ -708,11 +708,11 @@ class State:
                 + array.type_
                 + "["
                 + str(array.size)
-                + "] = \n{\n"
+                + "] = \n[\n"
             )
             for val in array.values:
-                state_str += "  " + val.value
-                state_str += "}\n"
+                state_str += "  " + val.value + "\n"
+            state_str += "]\n"
         for const in self._consts:
             state_str += (
                 "const "
