@@ -1,2 +1,2 @@
-array myList: int[3] = [0 1 2]
+array myList[3]: int = {0 1 2}
 var x: int = 0

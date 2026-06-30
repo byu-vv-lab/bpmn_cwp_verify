@@ -704,11 +704,12 @@ class State:
             state_str += (
                 "array "
                 + array.id
-                + " : "
+                + " "
                 + array.type_
                 + "["
                 + str(array.size)
                 + "] = \n[\n"
+                + ": "
             )
             for val in array.values:
                 state_str += "  " + val.value + "\n"
