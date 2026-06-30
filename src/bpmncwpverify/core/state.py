@@ -407,7 +407,7 @@ class State:
     Contains interface method used to interact with code outside of variable declaration checking functionality
     """
 
-    __slots__ = ["_consts", "_enums", "_id2type", "_vars"]
+    __slots__ = ["_consts", "_enums", "_id2type", "_str2var", "_str2enum", "_vars"]
 
     class _Listener(StateListener):
         """
@@ -575,6 +575,8 @@ class State:
         self._consts = consts
         self._enums = enums
         self._id2type: Maybe[dict[str, TypeWithDeclLoc]] = Nothing
+        self._str2var: Maybe[dict[str, VarDecl]] = Nothing
+        self._str2enum: Maybe[dict[str, EnumDecl]] = Nothing
         self._vars = vars
 
     def __str__(self) -> str:
@@ -622,6 +624,14 @@ class State:
     def enums(self) -> tuple[EnumDecl, ...]:
         return tuple(self._enums)
 
+    def is_variable(self, variable: str) -> bool:
+        assert self._str2var != Nothing
+        return variable in self._str2var.unwrap()
+
+    def is_enum(self, variable: str) -> bool:
+        assert self._str2enum != Nothing
+        return variable in self._str2enum.unwrap()
+
     def is_defined(self, id: str) -> bool:
         """
         Determines if a variable is defined or not
@@ -656,6 +666,8 @@ class State:
         Run the given State object through various tests to make sure all variable declarations are type safe
         """
         self._id2type = Some(dict())
+        self._str2var = Some(dict())
+        self._str2enum = Some(dict())
         result: Result[State, Error] = (
             self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
             .bind(lambda _: self._build_id_2_type_consts())
@@ -789,8 +801,11 @@ class State:
         """
         # requires
         assert self._id2type != Nothing
+        assert self._str2enum != Nothing
 
         id2type = self._id2type.unwrap()
+        str2enum = self._str2enum.unwrap()
+
         if enum_decl.id in id2type:
             first = (id2type[enum_decl.id]).decl_loc
             return Failure(
@@ -810,6 +825,7 @@ class State:
                 )
             else:
                 id2type[v.value] = TypeWithDeclLoc(enum_decl.id, v)
+                str2enum[v.value] = enum_decl
 
         return Success(None)
 
@@ -822,8 +838,10 @@ class State:
         """
         # requires
         assert self._id2type != Nothing
+        assert self._str2var != Nothing
 
         id2type = self._id2type.unwrap()
+        str2var = self._str2var.unwrap()
         if var_decl.id in id2type:
             first = (id2type[var_decl.id]).decl_loc
             return Failure(
@@ -832,7 +850,7 @@ class State:
                 )
             )
         id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
-
+        str2var[var_decl.id] = var_decl
         return Success(None)
 
     @staticmethod

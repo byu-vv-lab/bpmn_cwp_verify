@@ -38,6 +38,9 @@ from bpmncwpverify.core.state import State
         ),
         ("var i: int = 0 var j: short = 1 var k: bit = 0", "(i + j) > k", "bool"),
         ("var a: int = 5 var b: short = 3 var c: bool = true", "(a > b) && !c", "bool"),
+        ("const a: bit = 0 var b: short = 1", "b + a", "short"),
+        ("const x: int = 0 var y: short = 1 var z: bit = 0", "x + y - z", "int"),
+        ("const a: bit = 0 var b: short = 1 var c: int = 1", "a + (b * c)", "int"),
     ],
 )
 def test_given_good_state_when_build_then_success(state, expression, expression_type):
@@ -57,21 +60,6 @@ def test_given_good_state_when_build_then_success(state, expression, expression_
     "state, expression, error",
     [
         ("const a: bit = 0 var b: short = 1", "b + c", ExpressionUnrecognizedID),
-        (
-            "const a: bit = 0 var b: short = 1",
-            "b + a",
-            ExpressionComputationCompatabilityError,
-        ),
-        (
-            "const x: int = 0 var y: short = 1 var z: bit = 0",
-            "x + y - z",
-            ExpressionComputationCompatabilityError,
-        ),
-        (
-            "const a: bit = 0 var b: short = 1 var c: int = 1",
-            "a + (b * c)",
-            ExpressionComputationCompatabilityError,
-        ),
         (
             "const a: short = 0 var b: short = 1 var c: short = 1",
             "a + (b > c)",

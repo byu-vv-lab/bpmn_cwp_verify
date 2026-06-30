@@ -45,10 +45,14 @@ from bpmncwpverify.core.error import (
     CwpUnsupportedElementError,
     Error,
     ExpressionComputationCompatabilityError,
+    ExpressionIfBranchCompatabilityError,
+    ExpressionIfConditionError,
     ExpressionNegatorError,
+    ExpressionOutOfScope,
     ExpressionParseError,
     ExpressionRelationalNotError,
     ExpressionRelationCompatabilityError,
+    ExpressionTripleInputError,
     ExpressionUnrecognizedID,
     FileReadFileError,
     FileWriteFileError,
@@ -67,7 +71,10 @@ from bpmncwpverify.core.error import (
     StateSyntaxError,
     SubProcessRunError,
     TypingAssignCompatabilityError,
+    TypingListCompatibiltiyError,
+    TypingListOfExpressionsError,
     TypingNoTypeError,
+    TypingTripleVariableError,
     get_error_message,
 )
 
@@ -210,7 +217,7 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         ExpressionComputationCompatabilityError("ltype", "rtype"),
-        "EXPR ERROR: sometion of type 'rtype' cannot be computed with something of type 'ltype'",
+        "EXPR ERROR: something of type 'rtype' cannot be computed with something of type 'ltype'",
     ),
     (
         ExpressionNegatorError("_type"),
@@ -222,15 +229,31 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         ExpressionRelationCompatabilityError("ltype", "rtype"),
-        "EXPR ERROR: sometion of type 'rtype' cannot be related with something of type 'ltype'",
+        "EXPR ERROR: something of type 'rtype' cannot be related with something of type 'ltype'",
+    ),
+    (
+        ExpressionIfBranchCompatabilityError("thentype", "elsetype"),
+        "EXPR ERROR: if must have same or compatible return types on branchs,'thentype' and 'elsetype' are not compatible",
+    ),
+    (
+        ExpressionIfConditionError("type"),
+        "EXPR ERROR: if statement must have a conditional expression result in a bool, not a 'type'",
     ),
     (
         ExpressionRelationalNotError("_type"),
-        "EXPR ERROR: sometiong of type '_type' cannot be used with a relational not",
+        "EXPR ERROR: something of type '_type' cannot be used with a relational not",
     ),
     (
         ExpressionUnrecognizedID("_id"),
         "EXPR ERROR: '_id' is not recognized as a literal or something stored in the symbol table",
+    ),
+    (
+        ExpressionOutOfScope("id"),
+        "EXPR ERROR: 'id' is out of scope",
+    ),
+    (
+        ExpressionTripleInputError(),
+        "EXPR ERROR: input in triple is not valid and can only be a list of varibles",
     ),
     (
         FileReadFileError("file_name"),
@@ -317,6 +340,18 @@ test_inputs: list[tuple[Error, str]] = [
         "TYPING ERROR: something of type 'int' cannot by assigned to something of type 'enum'",
     ),
     (SubProcessRunError("proc"), "ERROR: failed to run 'proc'"),
+    (
+        TypingListCompatibiltiyError("first_type", "second_type"),
+        "TYPING ERROR: list of type 'first_type' is not compatible with 'second_type'",
+    ),
+    (
+        TypingListOfExpressionsError(),
+        "TYPING ERROR: list has an expresssion that is not a number, bool, or variable and is not allowed",
+    ),
+    (
+        TypingTripleVariableError("id"),
+        "TYPING ERROR: 'id' is not a variable and cannot be used as input",
+    ),
     (TypingNoTypeError("a"), "TYPING ERROR: literal 'a' has an unknown type"),
     (
         CbmcAssertionError(
@@ -392,7 +427,11 @@ test_ids: list[str] = [
     "ExpressionParseError",
     "ExpressionRelationCompatabilityError",
     "ExpressionRelationalNotError",
+    "ExpressionIfBranchCompatabilityError",
+    "ExpressionIfConditionError",
     "ExpressionUnrecognizedID",
+    "ExpressionOutOfScope",
+    "ExpressionTripleInputError",
     "FileReadFileError",
     "FileWriteFileError",
     "FileXmlParseError",
@@ -413,6 +452,9 @@ test_ids: list[str] = [
     "StateSyntaxError",
     "SubprocessRunError",
     "TypeingAssignCompatabilityError",
+    "TypingListCompatibiltiyError",
+    "TypingListOfExpressionsError",
+    "TypingTripleVariableError",
     "TypingNoTypeError",
     "CbmcAssertionError",
     "CbmcReachabilityError",
