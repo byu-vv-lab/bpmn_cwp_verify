@@ -1,13 +1,43 @@
 from bpmncwpverify.core.feel_tree import (
+    AndNode,
     BoolLiteralNode,
     ChooseNode,
     ComparisonOperatorNode,
     IfNode,
     ListNode,
+    OrNode,
     QualifiedNameNode,
     TripleNode,
+    XOrNode,
 )
 from bpmncwpverify.visitors.feel_to_promela_visitor import FeelToPromelaVisitor
+
+
+def test_and() -> None:
+    node = AndNode(BoolLiteralNode("true"), QualifiedNameNode("something"))
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "true && something"
+
+
+def test_or() -> None:
+    node = OrNode(QualifiedNameNode("x"), QualifiedNameNode("y"))
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "true || something"
+
+
+def test_xor() -> None:
+    node = XOrNode(QualifiedNameNode("x"), QualifiedNameNode("y"))
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == ""
 
 
 def test_if() -> None:
