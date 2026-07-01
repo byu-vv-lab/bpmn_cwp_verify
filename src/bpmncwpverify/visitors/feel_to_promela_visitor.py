@@ -6,6 +6,7 @@ from bpmncwpverify.core.feel_tree import (
     ChooseNode,
     ComparisonOperatorNode,
     ConditionalOperatorNode,
+    DivideNode,
     EqualNode,
     FeelVisitor,
     GENode,
@@ -15,12 +16,14 @@ from bpmncwpverify.core.feel_tree import (
     ListNode,
     LTNode,
     MultiplyNode,
+    NotEqualNode,
     NotNode,
     NumberLiteralNode,
     OrNode,
     QualifiedNameNode,
     SubtractNode,
     TripleNode,
+    XOrNode,
 )
 from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
@@ -65,14 +68,17 @@ class FeelToPromelaVisitor(FeelVisitor):
         self.promela.write_str("(")
         node.left.accept(self)
 
-        if isinstance(node, AddNode):
-            self.promela.write_str(" + ")
-        elif isinstance(node, SubtractNode):
-            self.promela.write_str(" - ")
-        elif isinstance(node, MultiplyNode):
-            self.promela.write_str(" * ")
-        else:
-            self.promela.write_str(" / ")
+        match node:
+            case AddNode():
+                self.promela.write_str(" + ")
+            case SubtractNode():
+                self.promela.write_str(" - ")
+            case MultiplyNode():
+                self.promela.write_str(" * ")
+            case DivideNode():
+                self.promela.write_str(" / ")
+            case _:
+                self.promela.write_str("unknown")
 
         node.right.accept(self)
         self.promela.write_str(")")
@@ -86,18 +92,21 @@ class FeelToPromelaVisitor(FeelVisitor):
         self.promela.write_str("(")
         node.left.accept(self)
 
-        if isinstance(node, LTNode):
-            self.promela.write_str(" < ")
-        elif isinstance(node, GTNode):
-            self.promela.write_str(" > ")
-        elif isinstance(node, LENode):
-            self.promela.write_str("<=")
-        elif isinstance(node, GENode):
-            self.promela.write_str(" >= ")
-        elif isinstance(node, EqualNode):
-            self.promela.write_str(" == ")
-        else:
-            self.promela.write_str(" != ")
+        match node:
+            case LTNode():
+                self.promela.write_str(" < ")
+            case GTNode():
+                self.promela.write_str(" > ")
+            case LENode():
+                self.promela.write_str("<=")
+            case GENode():
+                self.promela.write_str(" >= ")
+            case EqualNode():
+                self.promela.write_str(" == ")
+            case NotEqualNode():
+                self.promela.write_str(" != ")
+            case _:
+                self.promela.write_str("unknown")
 
         node.right.accept(self)
         self.promela.write_str(")")
@@ -107,18 +116,21 @@ class FeelToPromelaVisitor(FeelVisitor):
         self.promela.write_str("(")
         node.left.accept(self)
 
-        if isinstance(node, AndNode):
-            self.promela.write_str(" && ")
-        elif isinstance(node, OrNode):
-            self.promela.write_str(" || ")
-        else:
-            self.promela.write_str(" && ")
-            self.promela.write_str("!")
-            node.right.accept(self)
-            self.promela.write_str(" || ")
-            self.promela.write_str("!")
-            node.left.accept(self)
-            self.promela.write_str(" && ")
+        match node:
+            case AndNode():
+                self.promela.write_str(" && ")
+            case OrNode():
+                self.promela.write_str(" || ")
+            case XOrNode():
+                self.promela.write_str(" && ")
+                self.promela.write_str("!")
+                node.right.accept(self)
+                self.promela.write_str(" || ")
+                self.promela.write_str("!")
+                node.left.accept(self)
+                self.promela.write_str(" && ")
+            case _:
+                self.promela.write_str("unknown")
 
         node.right.accept(self)
         self.promela.write_str(")")
