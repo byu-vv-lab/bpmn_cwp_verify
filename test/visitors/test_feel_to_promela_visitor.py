@@ -6,6 +6,7 @@ from bpmncwpverify.core.feel_tree import (
     EqualNode,
     IfNode,
     ListNode,
+    MultiplyNode,
     NotNode,
     NumberLiteralNode,
     OrNode,
@@ -36,6 +37,18 @@ def test_add() -> None:
     assert str(visitor.promela) == "(2 + 3)"
 
 
+def test_multiply_and_add() -> None:
+    node = AddNode(
+        NumberLiteralNode("5"),
+        MultiplyNode(NumberLiteralNode("2"), QualifiedNameNode("3")),
+    )
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "(5 + (2 * 3))"
+
+
 def test_and() -> None:
     node = AndNode(BoolLiteralNode("true"), QualifiedNameNode("something"))
     visitor = FeelToPromelaVisitor()
@@ -54,13 +67,28 @@ def test_or() -> None:
     assert str(visitor.promela) == "(x || y)"
 
 
-def test_xor() -> None:  # (A && !B) || (!A && B) or A != B
+def test_xor() -> None:
     node = XOrNode(QualifiedNameNode("X"), QualifiedNameNode("Y"))
     visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
     assert str(visitor.promela) == "(X && !Y || !X && Y)"
+
+
+def test_or_and() -> None:
+    node = OrNode(
+        AndNode(QualifiedNameNode("this"), QualifiedNameNode("that")),
+        XOrNode(QualifiedNameNode("this"), QualifiedNameNode("notthis")),
+    )
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert (
+        str(visitor.promela)
+        == "((this && that) || (this && !notthis || !this && notthis))"
+    )
 
 
 def test_if() -> None:
@@ -83,6 +111,15 @@ def test_not() -> None:
     node.accept(visitor)
 
     assert str(visitor.promela) == "!true"
+
+
+def test_true_and_not_false() -> None:
+    node = AndNode(BoolLiteralNode("true"), NotNode(BoolLiteralNode("false")))
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "(true && !false)"
 
 
 def test_choose() -> None:
