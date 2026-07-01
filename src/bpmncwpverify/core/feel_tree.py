@@ -37,10 +37,11 @@ class QualifiedNameNode(ExpressionNode):
 
 
 class ListNode(ExpressionNode):
-    __slots__ = ["values"]
+    __slots__ = ["values", "type"]
 
     def __init__(self, values: list[ExpressionNode]):
         self.values = values
+        self.type = "none"
 
     def accept(self, visitor: "FeelVisitor") -> None:
         result = visitor.visit_list(self)

@@ -6,7 +6,6 @@ from bpmncwpverify.core.feel_tree import (
     ChooseNode,
     ComparisonOperatorNode,
     ConditionalOperatorNode,
-    DivideNode,
     EqualNode,
     FeelVisitor,
     GENode,
@@ -23,31 +22,46 @@ from bpmncwpverify.core.feel_tree import (
     SubtractNode,
     TripleNode,
 )
-from bpmncwpverify.util.stringmanager import NL_SINGLE, IndentAction, StringManager
+from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
 
 class FeelToPromelaVisitor(FeelVisitor):
-    __slots__ = ["promela"]
+    __slots__ = ["promela", "tripletarget", "triplechoose"]
 
     def __init__(self) -> None:
         self.promela = StringManager()
+        self.tripletarget = ""
+        self.triplechoose = StringManager()
 
-    def end_visit_number_literal(self, node: NumberLiteralNode) -> None:
-        pass
-
-    def end_visit_bool_literal(self, node: BoolLiteralNode) -> None:
+    def visit_number_literal(self, node: NumberLiteralNode) -> bool:
         self.promela.write_str(node.value)
+        return True
 
-    def end_visit_qualified_name(self, node: QualifiedNameNode) -> None:
+    def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
+        self.promela.write_str(node.value)
+        return True
+
+    def visit_qualified_name(self, node: QualifiedNameNode) -> bool:
         self.promela.write_str(node.name)
+        return True
 
     def visit_list(self, node: ListNode) -> bool:
-        return True
+        self.promela.write_str("{")
+
+        for item in node.values:
+            item.accept(self)
+
+            if node.values.index(item) != len(node.values) - 1:
+                self.promela.write_str(", ")
+
+        self.promela.write_str("}")
+        return False
 
     def end_visit_list(self, node: ListNode) -> None:
         pass
 
     def visit_binary_operator(self, node: BinaryOperatorNode) -> bool:
+        self.promela.write_str("(")
         node.left.accept(self)
 
         if isinstance(node, AddNode):
@@ -56,10 +70,11 @@ class FeelToPromelaVisitor(FeelVisitor):
             self.promela.write_str(" - ")
         elif isinstance(node, MultiplyNode):
             self.promela.write_str(" * ")
-        elif isinstance(node, DivideNode):
-            self.promela.write_str(" / ")  # need to work this out
         else:
-            self.promela.write_str(" ** ")
+            self.promela.write_str(" / ")
+
+        node.right.accept(self)
+        self.promela.write_str(")")
 
         return False
 
@@ -67,6 +82,7 @@ class FeelToPromelaVisitor(FeelVisitor):
         pass
 
     def visit_comparision(self, node: ComparisonOperatorNode) -> bool:
+        self.promela.write_str("(")
         node.left.accept(self)
 
         if isinstance(node, LTNode):
@@ -78,17 +94,16 @@ class FeelToPromelaVisitor(FeelVisitor):
         elif isinstance(node, GENode):
             self.promela.write_str(" >= ")
         elif isinstance(node, EqualNode):
-            self.promela.write_str(" = ")
+            self.promela.write_str(" == ")
         else:
             self.promela.write_str(" != ")
 
         node.right.accept(self)
+        self.promela.write_str(")")
         return False
 
-    def end_visit_comparision(self, node: ComparisonOperatorNode) -> None:
-        pass
-
     def visit_conditional(self, node: ConditionalOperatorNode) -> bool:
+        self.promela.write_str("(")
         node.left.accept(self)
 
         if isinstance(node, AndNode):
@@ -96,23 +111,30 @@ class FeelToPromelaVisitor(FeelVisitor):
         elif isinstance(node, OrNode):
             self.promela.write_str(" || ")
         else:
-            self.promela.write_str("")  # need to figure this one out
+            self.promela.write_str(" && ")
+            self.promela.write_str("!")
+            node.right.accept(self)
+            self.promela.write_str(" || ")
+            self.promela.write_str("!")
+            node.left.accept(self)
+            self.promela.write_str(" && ")
 
         node.right.accept(self)
+        self.promela.write_str(")")
         return False
 
     def end_visit_conditional(self, node: ConditionalOperatorNode) -> None:
         pass
 
     def visit_not(self, node: NotNode) -> bool:
+        self.promela.write_str("!")
         return True
 
     def end_visit_not(self, node: NotNode) -> None:
         pass
 
     def visit_if(self, node: IfNode) -> bool:
-        self.promela.write_str("if", NL_SINGLE)
-        self.promela.write_str(":: ")
+        self.promela.write_str("(")
 
         node.condition.accept(self)
 
@@ -120,13 +142,11 @@ class FeelToPromelaVisitor(FeelVisitor):
 
         node.thendo.accept(self)
 
-        self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str(":: else -> ")
+        self.promela.write_str(" : ")
 
         node.elsedo.accept(self)
 
-        self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str("fi")
+        self.promela.write_str(")")
 
         return False
 
@@ -134,35 +154,86 @@ class FeelToPromelaVisitor(FeelVisitor):
         pass
 
     def visit_choose(self, node: ChooseNode) -> bool:
-        self.promela.write_str("if", NL_SINGLE, IndentAction.INC)
+        name = self.tripletarget
 
-        for item in node.choices.values:
-            self.promela.write_str(":: True -> ")
-            item.accept(self)
-            self.promela.write_str("= ")
+        self.promela.write_str(f"choose_{name}[choose_{name}_i]")
 
-        return True
+        return False
 
     def end_visit_choose(self, node: ChooseNode) -> None:
         pass
 
     def visit_triple(self, node: TripleNode) -> bool:
-        return True
+        assert isinstance(node.target, QualifiedNameNode)
+        self.tripletarget = node.target.name
+
+        choose_visitor = FeelToPromelaChooseVisitor(
+            self.tripletarget, self.triplechoose
+        )
+        node.value.accept(choose_visitor)
+
+        self.promela.write_str(self.triplechoose)
+        node.target.accept(self)
+        self.promela.write_str(" = ")
+        node.value.accept(self)
+
+        return False
 
     def end_visit_triple(self, node: TripleNode) -> None:
+        self.tripletarget = ""
+        self.triplechoose = StringManager()
         pass
 
 
-class FeelToPromelaTripleVisitor(FeelVisitor):
-    slots = ["target", "inputs", "promela"]
+class FeelToPromelaChooseVisitor(FeelVisitor):
+    slots = ["target", "promela", "found_choose"]
 
-    def __init__(self, promela: StringManager) -> None:
+    def __init__(self, target: str, promela: StringManager) -> None:
         self.promela = promela
-        self.target: str = ""
-        self.inputs: list[str] = []
+        self.target = target
+        self.found_choose: bool = False
 
-    def visit_triple(self, node: TripleNode) -> bool:
+    def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
+        if self.found_choose:
+            self.promela.write_str(node.value)
         return True
 
-    def end_visit_triple(self, node: TripleNode) -> None:
-        pass
+    def visit_qualified_name(self, node: QualifiedNameNode) -> bool:
+        if self.found_choose:
+            self.promela.write_str(node.name)
+        return True
+
+    def visit_list(self, node: ListNode) -> bool:
+        if self.found_choose:
+            self.promela.write_str("{")
+
+            for item in node.values:
+                item.accept(self)
+
+                if node.values.index(item) != len(node.values) - 1:
+                    self.promela.write_str(", ")
+
+            self.promela.write_str("}")
+        return False
+
+    def visit_choose(self, node: ChooseNode) -> bool:
+        self.found_choose = True
+        type = node.choices.type
+        name = self.target
+
+        self.promela.write_str(
+            f"mytype:{type} choose_{name}[{len(node.choices.values) - 1}] = "
+        )
+
+        node.choices.accept(self)
+
+        self.promela.write_str("", NL_SINGLE)
+        self.promela.write_str(f"byte choose_{name}_i = 0", NL_SINGLE)
+        self.promela.write_str("atomic{")
+        self.promela.write_str(
+            f"select(choose_{name}_i : 0..{len(node.choices.values) - 1})"
+        )
+        self.promela.write_str("}", NL_SINGLE)
+
+        self.found_choose = False
+        return False

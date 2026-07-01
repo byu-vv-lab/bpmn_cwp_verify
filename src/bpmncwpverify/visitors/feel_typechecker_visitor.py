@@ -107,6 +107,7 @@ class TypeCheckerVisitor(FeelVisitor):
                     raise ErrorException(TypingListCompatibiltiyError(first, next))
                 first = new_type.unwrap()
             self.stack.append(first)
+            node.type = first
 
     def end_visit_binary_operator(self, node: BinaryOperatorNode) -> None:
         right = self.stack.pop()
@@ -243,6 +244,7 @@ class TypeCheckerTripleInputTargetVisitor(TypeCheckerVisitor):
             for _ in range(items):
                 self.stack.pop()
             self.stack.append("inputVars")
+            node.type = "inputVars"
 
 
 class TypeCheckerTripleValueVisitor(TypeCheckerVisitor):
@@ -277,3 +279,4 @@ class TypeCheckerTripleValueVisitor(TypeCheckerVisitor):
                     raise ErrorException(TypingListCompatibiltiyError(first, next))
                 first = new_type.unwrap()
             self.stack.append(first)
+            node.type = first
