@@ -138,7 +138,7 @@ def test_choose() -> None:
 
     node.accept(visitor)
 
-    assert str(visitor.promela) == "choose_comms[choose_comms_i]"
+    assert str(visitor.promela) == "choose_comms_0[choose_comms_0]"
 
 
 def test_triple_with_if() -> None:
@@ -182,7 +182,7 @@ def test_triple_with_choose() -> None:
 
     assert (
         str(visitor.promela)
-        == "mytype:commsState choose_comms[2] = {standby, waiting, off}\nbyte choose_comms_i = 0\natomic{select(choose_comms_i : 0..2)}\ncomms = choose_comms[choose_comms_i]"
+        == "mytype:commsState choose_comms_0[2] = {standby, waiting, off}\nbyte choose_comms_0 = 0\natomic{select(choose_comms_0 : 0..2)}\ncomms = choose_comms_0[choose_comms_0]"
     )
 
 
@@ -242,5 +242,36 @@ def test_input_if_choose() -> None:
 
     assert (
         str(visitor.promela)
-        == "mytype:Cond choose_conditions[1] = {same, changed}\nbyte choose_conditions_i = 0\natomic{select(choose_conditions_i : 0..1)}\nconditions = ((blackBox == missing) -> choose_conditions[choose_conditions_i] : conditions)"
+        == "mytype:Cond choose_conditions_0[1] = {same, changed}\nbyte choose_conditions_0 = 0\natomic{select(choose_conditions_0 : 0..1)}\nconditions = ((blackBox == missing) -> choose_conditions_0[choose_conditions_0] : conditions)"
+    )
+
+
+def test_input_if_then_choose_else() -> None:
+    # (conditions, [blackBox, conditions], if blackBox = missing then choose [same, changed] else choose [same, notgood])
+    node = TripleNode(
+        QualifiedNameNode("conditions"),
+        ListNode([QualifiedNameNode("blackBox"), QualifiedNameNode("conditions")]),
+        IfNode(
+            EqualNode(QualifiedNameNode("blackBox"), QualifiedNameNode("missing")),
+            ChooseNode(
+                ListNode([QualifiedNameNode("same"), QualifiedNameNode("changed")])
+            ),
+            ChooseNode(
+                ListNode([QualifiedNameNode("same"), QualifiedNameNode("notgood")])
+            ),
+        ),
+    )
+
+    visitor = FeelToPromelaVisitor()
+    assert isinstance(node.value, IfNode)
+    assert isinstance(node.value.thendo, ChooseNode)
+    assert isinstance(node.value.elsedo, ChooseNode)
+    node.value.thendo.choices.type = "Cond"
+    node.value.elsedo.choices.type = "Cond"
+
+    node.accept(visitor)
+
+    assert (
+        str(visitor.promela)
+        == "mytype:Cond choose_conditions_0[1] = {same, changed}\nbyte choose_conditions_0 = 0\natomic{select(choose_conditions_0 : 0..1)}\nmytype:Cond choose_conditions_1[1] = {same, notgood}\nbyte choose_conditions_1 = 0\natomic{select(choose_conditions_1 : 0..1)}\nconditions = ((blackBox == missing) -> choose_conditions_0[choose_conditions_0] : choose_conditions_1[choose_conditions_1])"
     )
