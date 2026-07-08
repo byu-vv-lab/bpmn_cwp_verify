@@ -270,6 +270,14 @@ def test_parse_qualified_name() -> None:
     assert feel.ast.name == "x"
 
 
+def test_parse_qualified_name_with_path() -> None:
+    feel = Feel.parse("a.b.c")
+
+    assert isinstance(feel.ast, QualifiedNameNode)
+
+    assert feel.ast.name == "a.b.c"
+
+
 def test_parse_triple_no_inputs() -> None:
     feel = Feel.parse("(x, [], 1)")
 

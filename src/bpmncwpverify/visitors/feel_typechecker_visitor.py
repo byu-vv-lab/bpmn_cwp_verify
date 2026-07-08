@@ -1,3 +1,4 @@
+from returns.maybe import Nothing, Some
 from returns.pipeline import is_successful
 
 from bpmncwpverify.core.error import (
@@ -14,6 +15,7 @@ from bpmncwpverify.core.error import (
     TypingAssignCompatabilityError,
     TypingListCompatibiltiyError,
     TypingListOfExpressionsError,
+    TypingNotCaughtError,
     TypingNoTypeError,
     TypingTripleVariableError,
 )
@@ -107,7 +109,7 @@ class TypeCheckerVisitor(FeelVisitor):
                     raise ErrorException(TypingListCompatibiltiyError(first, next))
                 first = new_type.unwrap()
             self.stack.append(first)
-            node.type = first
+            node.type = Some(first)
 
     def end_visit_binary_operator(self, node: BinaryOperatorNode) -> None:
         right = self.stack.pop()
@@ -203,7 +205,12 @@ class TypeCheckerVisitor(FeelVisitor):
         node.inputs.accept(target_input_visitor)
         node.value.accept(value_visitor)
 
-        assert isinstance(node.target, QualifiedNameNode)
+        if not isinstance(node.target, QualifiedNameNode):
+            raise ErrorException(
+                TypingNotCaughtError(
+                    "TYPE ERROR: frist argument in triple needs to be a qualifiedNameNode and typechecker did not catch it."
+                )
+            )
         node.target.accept(target_input_visitor)
 
         return False
@@ -243,8 +250,8 @@ class TypeCheckerTripleInputTargetVisitor(TypeCheckerVisitor):
         else:
             for _ in range(items):
                 self.stack.pop()
-            self.stack.append("inputVars")
-            node.type = "inputVars"
+            self.stack.append("None")
+            node.type = Nothing
 
 
 class TypeCheckerTripleValueVisitor(TypeCheckerVisitor):
@@ -279,4 +286,4 @@ class TypeCheckerTripleValueVisitor(TypeCheckerVisitor):
                     raise ErrorException(TypingListCompatibiltiyError(first, next))
                 first = new_type.unwrap()
             self.stack.append(first)
-            node.type = first
+            node.type = Some(first)

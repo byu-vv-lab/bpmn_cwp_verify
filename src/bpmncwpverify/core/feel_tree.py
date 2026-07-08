@@ -1,3 +1,6 @@
+from returns.maybe import Maybe, Nothing
+
+
 class ExpressionNode:
     def accept(self, visitor: "FeelVisitor") -> None:
         pass
@@ -41,7 +44,7 @@ class ListNode(ExpressionNode):
 
     def __init__(self, values: list[ExpressionNode]):
         self.values = values
-        self.type = "none"
+        self.type: Maybe[str] = Nothing
 
     def accept(self, visitor: "FeelVisitor") -> None:
         result = visitor.visit_list(self)

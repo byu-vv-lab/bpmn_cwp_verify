@@ -1,3 +1,6 @@
+from returns.maybe import Nothing
+
+from bpmncwpverify.core.error import ErrorException, TypingNotCaughtError
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
@@ -29,12 +32,11 @@ from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
 
 class FeelToPromelaVisitor(FeelVisitor):
-    __slots__ = ["promela", "tripletarget", "triplechoose", "index"]
+    __slots__ = ["promela", "choose", "index"]
 
     def __init__(self) -> None:
         self.promela = StringManager()
-        self.tripletarget = ""
-        self.triplechoose = StringManager()
+        self.choose = StringManager()
         self.index: int = 0
 
     def visit_number_literal(self, node: NumberLiteralNode) -> bool:
@@ -61,9 +63,6 @@ class FeelToPromelaVisitor(FeelVisitor):
         self.promela.write_str("}")
         return False
 
-    def end_visit_list(self, node: ListNode) -> None:
-        pass
-
     def visit_binary_operator(self, node: BinaryOperatorNode) -> bool:
         self.promela.write_str("(")
         node.left.accept(self)
@@ -78,15 +77,16 @@ class FeelToPromelaVisitor(FeelVisitor):
             case DivideNode():
                 self.promela.write_str(" / ")
             case _:
-                self.promela.write_str("unknown")
+                raise ErrorException(
+                    TypingNotCaughtError(
+                        "TYPE ERROR: Type checker did not catch none valid symbol"
+                    )
+                )
 
         node.right.accept(self)
         self.promela.write_str(")")
 
         return False
-
-    def end_visit_binary_operator(self, node: BinaryOperatorNode) -> None:
-        pass
 
     def visit_comparision(self, node: ComparisonOperatorNode) -> bool:
         self.promela.write_str("(")
@@ -106,7 +106,11 @@ class FeelToPromelaVisitor(FeelVisitor):
             case NotEqualNode():
                 self.promela.write_str(" != ")
             case _:
-                self.promela.write_str("unknown")
+                raise ErrorException(
+                    TypingNotCaughtError(
+                        "TYPE ERROR: Type checker did not catch none valid symbol"
+                    )
+                )
 
         node.right.accept(self)
         self.promela.write_str(")")
@@ -130,21 +134,19 @@ class FeelToPromelaVisitor(FeelVisitor):
                 node.left.accept(self)
                 self.promela.write_str(" && ")
             case _:
-                self.promela.write_str("unknown")
+                raise ErrorException(
+                    TypingNotCaughtError(
+                        "TYPE ERROR: Type checker did not catch none valid symbol"
+                    )
+                )
 
         node.right.accept(self)
         self.promela.write_str(")")
         return False
 
-    def end_visit_conditional(self, node: ConditionalOperatorNode) -> None:
-        pass
-
     def visit_not(self, node: NotNode) -> bool:
         self.promela.write_str("!")
         return True
-
-    def end_visit_not(self, node: NotNode) -> None:
-        pass
 
     def visit_if(self, node: IfNode) -> bool:
         self.promela.write_str("(")
@@ -163,31 +165,15 @@ class FeelToPromelaVisitor(FeelVisitor):
 
         return False
 
-    def end_visit_if(self, node: IfNode) -> None:
-        pass
-
     def visit_choose(self, node: ChooseNode) -> bool:
-        name = self.tripletarget
+        choose_visitor = FeelToPromelaChooseVisitor(self.choose, self.index)
+        node.accept(choose_visitor)
 
-        self.promela.write_str(
-            f"choose_{name}_{self.index}[choose_{name}_{self.index}]"
-        )
+        self.promela.write_str(f"choose_{self.index}[choose_{self.index}]")
         self.index += 1
         return False
 
-    def end_visit_choose(self, node: ChooseNode) -> None:
-        pass
-
     def visit_triple(self, node: TripleNode) -> bool:
-        assert isinstance(node.target, QualifiedNameNode)
-        self.tripletarget = node.target.name
-
-        choose_visitor = FeelToPromelaChooseVisitor(
-            self.tripletarget, self.triplechoose
-        )
-        node.value.accept(choose_visitor)
-
-        self.promela.write_str(self.triplechoose)
         node.target.accept(self)
         self.promela.write_str(" = ")
         node.value.accept(self)
@@ -195,19 +181,16 @@ class FeelToPromelaVisitor(FeelVisitor):
         return False
 
     def end_visit_triple(self, node: TripleNode) -> None:
-        self.tripletarget = ""
-        self.triplechoose = StringManager()
         pass
 
 
 class FeelToPromelaChooseVisitor(FeelVisitor):
-    slots = ["target", "promela", "found_choose", "index"]
+    slots = ["promela", "found_choose", "index"]
 
-    def __init__(self, target: str, promela: StringManager) -> None:
+    def __init__(self, promela: StringManager, index: int) -> None:
         self.promela = promela
-        self.target = target
         self.found_choose: bool = False
-        self.index: int = 0
+        self.index = index
 
     def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
         if self.found_choose:
@@ -234,23 +217,27 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
 
     def visit_choose(self, node: ChooseNode) -> bool:
         self.found_choose = True
-        type = node.choices.type
-        name = self.target
+        if node.choices.type == Nothing:
+            raise ErrorException(
+                TypingNotCaughtError(
+                    "TYPE ERROR: list does not have a type and was not caught by the type checker"
+                )
+            )
+        type = node.choices.type.unwrap()
 
         self.promela.write_str(
-            f"mytype:{type} choose_{name}_{self.index}[{len(node.choices.values) - 1}] = "
+            f"mytype:{type} choose_{self.index}[{len(node.choices.values) - 1}] = "
         )
 
         node.choices.accept(self)
 
         self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str(f"byte choose_{name}_{self.index} = 0", NL_SINGLE)
+        self.promela.write_str(f"byte choose_{self.index} = 0", NL_SINGLE)
         self.promela.write_str("atomic{")
         self.promela.write_str(
-            f"select(choose_{name}_{self.index} : 0..{len(node.choices.values) - 1})"
+            f"select(choose_{self.index} : 0..{len(node.choices.values) - 1})"
         )
         self.promela.write_str("}", NL_SINGLE)
 
         self.found_choose = False
-        self.index += 1
         return False

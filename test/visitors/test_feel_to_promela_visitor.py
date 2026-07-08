@@ -1,3 +1,5 @@
+from returns.maybe import Some
+
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
@@ -91,6 +93,26 @@ def test_or_and() -> None:
     )
 
 
+def test_equal_comparision_with_chooose() -> None:
+    node = EqualNode(
+        QualifiedNameNode("b"),
+        ChooseNode(ListNode([BoolLiteralNode("true"), BoolLiteralNode("false")])),
+    )
+
+    visitor = FeelToPromelaVisitor()
+
+    assert isinstance(node.right, ChooseNode)
+    node.right.choices.type = Some("bool")
+
+    node.accept(visitor)
+
+    assert (
+        str(visitor.choose)
+        == "mytype:bool choose_0[1] = {true, false}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
+    )
+    assert str(visitor.promela) == "(b == choose_0[choose_0])"
+
+
 def test_if() -> None:
     node = IfNode(
         BoolLiteralNode("true"),
@@ -132,13 +154,16 @@ def test_choose() -> None:
             ]
         )
     )
-    node.choices.type = "commsState"
+    node.choices.type = Some("commsState")
     visitor = FeelToPromelaVisitor()
-    visitor.tripletarget = "comms"
 
     node.accept(visitor)
 
-    assert str(visitor.promela) == "choose_comms_0[choose_comms_0]"
+    assert (
+        str(visitor.choose)
+        == "mytype:commsState choose_0[2] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
+    )
+    assert str(visitor.promela) == "choose_0[choose_0]"
 
 
 def test_triple_with_if() -> None:
@@ -174,16 +199,17 @@ def test_triple_with_choose() -> None:
     )
 
     assert isinstance(node.value, ChooseNode)
-    node.value.choices.type = "commsState"
+    node.value.choices.type = Some("commsState")
 
     visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
     assert (
-        str(visitor.promela)
-        == "mytype:commsState choose_comms_0[2] = {standby, waiting, off}\nbyte choose_comms_0 = 0\natomic{select(choose_comms_0 : 0..2)}\ncomms = choose_comms_0[choose_comms_0]"
+        str(visitor.choose)
+        == "mytype:commsState choose_0[2] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
     )
+    assert str(visitor.promela) == "comms = choose_0[choose_0]"
 
 
 def test_triple() -> None:
@@ -236,13 +262,17 @@ def test_input_if_choose() -> None:
     visitor = FeelToPromelaVisitor()
     assert isinstance(node.value, IfNode)
     assert isinstance(node.value.thendo, ChooseNode)
-    node.value.thendo.choices.type = "Cond"
+    node.value.thendo.choices.type = Some("Cond")
 
     node.accept(visitor)
 
     assert (
+        str(visitor.choose)
+        == "mytype:Cond choose_0[1] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
+    )
+    assert (
         str(visitor.promela)
-        == "mytype:Cond choose_conditions_0[1] = {same, changed}\nbyte choose_conditions_0 = 0\natomic{select(choose_conditions_0 : 0..1)}\nconditions = ((blackBox == missing) -> choose_conditions_0[choose_conditions_0] : conditions)"
+        == "conditions = ((blackBox == missing) -> choose_0[choose_0] : conditions)"
     )
 
 
@@ -266,12 +296,16 @@ def test_input_if_then_choose_else() -> None:
     assert isinstance(node.value, IfNode)
     assert isinstance(node.value.thendo, ChooseNode)
     assert isinstance(node.value.elsedo, ChooseNode)
-    node.value.thendo.choices.type = "Cond"
-    node.value.elsedo.choices.type = "Cond"
+    node.value.thendo.choices.type = Some("Cond")
+    node.value.elsedo.choices.type = Some("Cond")
 
     node.accept(visitor)
 
     assert (
+        str(visitor.choose)
+        == "mytype:Cond choose_0[1] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\nmytype:Cond choose_1[1] = {same, notgood}\nbyte choose_1 = 0\natomic{select(choose_1 : 0..1)}\n"
+    )
+    assert (
         str(visitor.promela)
-        == "mytype:Cond choose_conditions_0[1] = {same, changed}\nbyte choose_conditions_0 = 0\natomic{select(choose_conditions_0 : 0..1)}\nmytype:Cond choose_conditions_1[1] = {same, notgood}\nbyte choose_conditions_1 = 0\natomic{select(choose_conditions_1 : 0..1)}\nconditions = ((blackBox == missing) -> choose_conditions_0[choose_conditions_0] : choose_conditions_1[choose_conditions_1])"
+        == "conditions = ((blackBox == missing) -> choose_0[choose_0] : choose_1[choose_1])"
     )

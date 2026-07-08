@@ -71,9 +71,6 @@ class Feel:
             self.stack.append(NumberLiteralNode(ctx.getText()))
 
         def exitBoolLiteral(self, ctx: FeelExprParser.BoolLiteralContext) -> None:
-            # if ctx.getText() == "true":
-            #     self.stack.append(BoolLiteralNode("true"))
-            # else:
             self.stack.append(BoolLiteralNode(ctx.getText()))
 
         def exitQualifiedName(self, ctx: FeelExprParser.QualifiedNameContext) -> None:
