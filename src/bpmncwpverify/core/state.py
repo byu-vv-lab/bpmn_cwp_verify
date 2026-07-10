@@ -93,10 +93,14 @@ def antlr_get_type_from_type_context(
     Returns the type contained in a Type node
 
     Args:
-        ctx (StateParser.Const_var_declContext | StateParser.Var_declContext): The node to retrieve the type
+        ctx (StateParser.Const_var_declContext | StateParser.Var_declContext | StateParser.Array_declContext): The node to retrieve the type
     """
-    type_context = cast(StateParser.TypeContext, ctx.type_())  # type: ignore[no-untyped-call]
-    assert isinstance(type_context, StateParser.TypeContext)
+    if isinstance(ctx, StateParser.Array_declContext):
+        type_context = cast(StateParser.Primitive_typeContext, ctx.primitive_type())  # type: ignore[no-untyped-call]
+        assert isinstance(type_context, StateParser.Primitive_typeContext)
+    else:
+        type_context = cast(StateParser.TypeContext, ctx.type_())  # type: ignore[no-untyped-call]
+        assert isinstance(type_context, StateParser.TypeContext)
     return antlr_get_text(type_context)
 
 
@@ -324,7 +328,7 @@ class ArrayDecl(DeclLoc):
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
 
-        if len(values) != size or len(values) == 0:
+        if len(values) != size or size < 1:
             return Failure(StateArraySizeError(id, line, col, size, len(values)))
         return Success(ArrayDecl(id, type_, size, values, line, col))
 
@@ -797,6 +801,7 @@ class State:
             .bind(lambda _: self._build_id_2_type_arrays())
             .bind(lambda _: self._type_check_consts())
             .bind(lambda _: self._type_check_vars())
+            .bind(lambda _: self._type_check_arrays())
             .map(lambda _: self)
         )
         return result

@@ -1,4 +1,4 @@
-# Generated from ./Desktop/bpmn_cwp_verify/antlr/State.g4 by ANTLR 4.13.2
+# Generated from antlr/State.g4 by ANTLR 4.13.2
 from antlr4 import *
 from io import StringIO
 import sys

@@ -1,4 +1,4 @@
-# Generated from ./Desktop/bpmn_cwp_verify/antlr/State.g4 by ANTLR 4.13.2
+# Generated from antlr/State.g4 by ANTLR 4.13.2
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -33,7 +33,7 @@ def serializedATN():
         63,5,1,0,0,63,64,3,12,6,0,64,65,5,10,0,0,65,70,5,17,0,0,66,67,5,
         11,0,0,67,68,3,4,2,0,68,69,5,12,0,0,69,71,1,0,0,0,70,66,1,0,0,0,
         70,71,1,0,0,0,71,9,1,0,0,0,72,73,5,16,0,0,73,74,5,17,0,0,74,75,5,
-        13,0,0,75,76,5,17,0,0,76,77,5,14,0,0,77,78,5,1,0,0,78,79,3,12,6,
+        13,0,0,75,76,5,17,0,0,76,77,5,14,0,0,77,78,5,1,0,0,78,79,3,14,7,
         0,79,80,5,10,0,0,80,81,5,11,0,0,81,82,3,4,2,0,82,83,5,12,0,0,83,
         11,1,0,0,0,84,87,3,14,7,0,85,87,5,17,0,0,86,84,1,0,0,0,86,85,1,0,
         0,0,87,13,1,0,0,0,88,89,7,0,0,0,89,15,1,0,0,0,7,19,25,31,37,51,70,
@@ -509,8 +509,8 @@ class StateParser ( Parser ):
         def COLON(self):
             return self.getToken(StateParser.COLON, 0)
 
-        def type_(self):
-            return self.getTypedRuleContext(StateParser.TypeContext,0)
+        def primitive_type(self):
+            return self.getTypedRuleContext(StateParser.Primitive_typeContext,0)
 
 
         def EQUALS(self):
@@ -559,7 +559,7 @@ class StateParser ( Parser ):
             self.state = 77
             self.match(StateParser.COLON)
             self.state = 78
-            self.type_()
+            self.primitive_type()
             self.state = 79
             self.match(StateParser.EQUALS)
             self.state = 80

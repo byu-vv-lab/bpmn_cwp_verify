@@ -21,7 +21,7 @@ var_decl
   ;
 
 array_decl
-  : ARRAY ID LBRACKET ID RBRACKET COLON type EQUALS LCURLY id_set RCURLY
+  : ARRAY ID LBRACKET ID RBRACKET COLON primitive_type EQUALS LCURLY id_set RCURLY
   ;
 
 type

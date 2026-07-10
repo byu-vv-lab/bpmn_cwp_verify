@@ -48,25 +48,24 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
 
     for array in state.arrays:
         loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
-        holder: str = "::"
+        and_: str = " && "
+        expression: str = ":: "
         for i in range(len(array.values)):
-            if i == 1:
-                holder = "  &&"
-            loggerFunction.write_str(
-                f"{holder} {array.id}[{i}] == old_{array.id}[{i}]", NL_SINGLE
-            )
-        loggerFunction.write_str("-> skip", NL_SINGLE)
+            if i == len(array.values) - 1:
+                and_ = " -> skip"
+            expression += f"{array.id}[{i}] == old_{array.id}[{i}]" + and_
+        loggerFunction.write_str(expression, NL_SINGLE)
 
         loggerFunction.write_str(":: else ->", NL_SINGLE, IndentAction.INC)
         typeString: str = ""
         valString: str = ""
         counter: int = 0
         comma: str = ", "
-        for valDecl in array.values:
+        for i in range(len(array.values)):
             if counter == len(array.values) - 1:
                 comma = ""
             typeString += f"{_get_print_type(array.type_)}" + comma
-            valString += f"{valDecl.value}" + comma
+            valString += f"{array.id}[{i}]" + comma
             counter += 1
         loggerFunction.write_str(
             f'printf("{array.id} = [{typeString}]\\n", {valString})',
@@ -103,12 +102,16 @@ def _generate_state_dump(state: State) -> str:
         )
 
     for array in state.arrays:
-        valList: list[str] = []
-        for ValDecl in array.values:
-            valList.append(ValDecl.value)
+        valTypeList: str = ""
+        valDeclList: str = ""
+        comma: str = ", "
+        for i in range(len(array.values)):
+            if i == len(array.values) - 1:
+                comma = ""
+            valTypeList += f"{_get_print_type(array.type_)}" + comma
+            valDeclList += f"{array.id}[{i}]" + comma
         state_dump.write_str(
-            f'printf("{array.id} = {_get_print_type(array.type_)}\\n", {valList})',
-            NL_SINGLE,
+            f'printf("{array.id} = {{{valTypeList}}}", {valDeclList})', NL_SINGLE
         )
 
     state_dump.write_str("}", NL_DOUBLE, IndentAction.DEC)

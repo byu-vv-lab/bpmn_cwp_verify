@@ -1019,5 +1019,18 @@ def get_error_message(error: Error) -> str:
             return f"TYPING ERROR: literal '{id}' has an unknown type"
         case TypingNotCaughtError(explination=explination):
             return explination
+        case StateArraySizeError(
+            id=id,
+            line=line,
+            column=column,
+            expected_size=expected_size,
+            actual_size=actual_size,
+        ):
+            if expected_size < 1:
+                return f"STATE ARRAY SIZE ERROR: array '{id}' at line {line.unwrap()}:{column.unwrap()}. Array size must be greater than 0."
+            else:
+                return f"STATE ARRAY SIZE ERROR: array '{id}' at line {line.unwrap()}:{column.unwrap()} has size {actual_size}, expected size {expected_size}"
         case _:
-            raise builtins.NotImplementedError
+            raise builtins.NotImplementedError(
+                f"Error message not implemented for error type: {error.__class__.__name__}"
+            )
