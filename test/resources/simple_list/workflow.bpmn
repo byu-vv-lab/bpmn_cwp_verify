@@ -12,8 +12,7 @@
 :: true -&gt; myList[0] = 1
 :: true -&gt; myList[1] = 15
 :: true -&gt; myList[2] = 30
-fi
-assert(myList[0] == 2)</bpmn:documentation>
+fi</bpmn:documentation>
       <bpmn:incoming>Flow_0lwmmu8</bpmn:incoming>
       <bpmn:incoming>Flow_0s6jwoa</bpmn:incoming>
       <bpmn:outgoing>Flow_0xcnidh</bpmn:outgoing>

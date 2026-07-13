@@ -484,7 +484,15 @@ class State:
     Contains interface method used to interact with code outside of variable declaration checking functionality
     """
 
-    __slots__ = ["_consts", "_enums", "_id2type", "_str2var", "_str2enum", "_vars"]
+    __slots__ = [
+        "_consts",
+        "_enums",
+        "_id2type",
+        "_str2var",
+        "_str2enum",
+        "_arrays",
+        "_vars",
+    ]
 
     class _Listener(StateListener):
         """
