@@ -4,7 +4,7 @@ from returns.result import Failure, Result, Success
 
 from bpmncwpverify.core.bpmn import Node, Process, SequenceFlow, Task
 from bpmncwpverify.core.error import Error, FlowExpressionError, get_error_message
-from bpmncwpverify.core.expr import ExpressionListener
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmnchecks.bpmnvalidate import validate_process
 
@@ -44,7 +44,7 @@ class ProcessBuilder:
         flow_id: str,
         source_ref: str,
         target_ref: str,
-        expression: str | None,
+        expression: str,
     ) -> Result["ProcessBuilder", Error]:
         flow = self._process[flow_id]
         source_node = self._process[source_ref]
@@ -55,17 +55,22 @@ class ProcessBuilder:
         assert isinstance(target_node, Node)
 
         if expression:
-            result = ExpressionListener.type_check(expression, self._state)
-            if not_(is_successful)(result):
+            feel_expression = Feel.parse(expression)
+            type_result = feel_expression.type_check(self._state)
+
+            if not_(is_successful)(type_result):
                 return Failure(
                     FlowExpressionError(
-                        flow_id, expression, get_error_message(result.failure())
+                        flow_id, expression, get_error_message(type_result.failure())
                     )
                 )
-            assert result.unwrap() == "bool", (
-                f"Expected Expression type to be bool on flow: {flow_id}"
-            )
-            flow.expression = expression
+            if type_result.unwrap() != "bool":
+                return Failure(
+                    FlowExpressionError(
+                        flow_id, expression, "Flow expression must evaluate to a bool"
+                    )
+                )
+            flow.expression = feel_expression
 
         flow.source_node = source_node
         flow.target_node = target_node

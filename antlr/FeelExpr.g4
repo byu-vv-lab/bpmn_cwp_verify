@@ -264,12 +264,17 @@ tripleExpression
     : LPAREN qualifiedName COMMA list COMMA expression RPAREN    #tripExpression
     ;
 
+tripleList
+    : tripleExpression (COMMA tripleExpression)*
+    ;
+
 primary
     : literal                     #primaryLiteral
     | forExpression               #primaryForExpression
     | quantifiedExpression        #primaryQuantifiedExpression
     | ifExpression                #primaryIfExpression
     | tripleExpression            #primaryTripleExpression
+    | tripleList                  #primaryTripleList
     | interval                    #primaryInterval
     | list                        #primaryList
     | context                     #primaryContext
@@ -384,7 +389,32 @@ nameRef
     ;
 
 nameRefOtherToken
-    : ~(LPAREN|RPAREN|LBRACK|RBRACK|LBRACE|RBRACE|LT|GT|EQUAL|BANG|COMMA)
+    : ~(
+        LPAREN
+        | RPAREN
+        | LBRACK
+        | RBRACK
+        | LBRACE
+        | RBRACE
+        | LT
+        | GT
+        | EQUAL
+        | LE
+        | GE
+        | NOTEQUAL
+        | ADD
+        | SUB
+        | MUL
+        | DIV
+        | POW
+        | COMMA
+        | COLON
+        | OR
+        | AND
+        | XOR
+        | BETWEEN
+        | NOT
+      )
     ;
 
 /********************************

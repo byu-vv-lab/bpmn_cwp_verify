@@ -9,6 +9,7 @@ from bpmncwpverify.core.error import (
     BpmnUnsupportedStartEvent,
     Error,
 )
+from bpmncwpverify.core.feel import Feel
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
@@ -402,7 +403,7 @@ class SequenceFlow(Flow):
         Initialize SequenceFlow object
         """
         super().__init__(id, name)
-        self.expression: str = ""
+        self.expression: str | Feel = ""
 
     def accept(self, visitor: "BpmnVisitor") -> None:
         if visitor.visit_sequence_flow(self) and not self.is_leaf:

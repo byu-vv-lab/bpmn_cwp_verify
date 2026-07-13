@@ -124,9 +124,9 @@ def test_givin_good_files_when_verify_then_success(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/face2face/state.txt",
-        "./test/resources/face2face/cwp.xml",
-        "./test/resources/face2face/workflow.bpmn",
+        "./test/resources/face2face/feel/state.txt",
+        "./test/resources/face2face/feel/cwp.xml",
+        "./test/resources/face2face/feel/workflow.bpmn",
     ]
     sys.argv = test_args
 
