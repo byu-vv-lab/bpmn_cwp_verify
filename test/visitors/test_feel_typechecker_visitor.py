@@ -22,6 +22,7 @@ from bpmncwpverify.core.feel_tree import (
     ChooseNode,
     ComparisonOperatorNode,
     ConditionalOperatorNode,
+    EqualNode,
     IfNode,
     ListNode,
     NotNode,
@@ -918,3 +919,61 @@ def test_triple_out_of_scope() -> None:
 
     assert isinstance(error.value.error, ExpressionOutOfScope)
     assert error.value.error.id == "deployed"
+
+
+def test_triple_equal_to_self() -> None:
+    builder = StateBuilder()
+    builder.with_var_decl(
+        VarDecl(
+            "conditions",
+            "Cond",
+            AllowedValueDecl("same"),
+            [
+                AllowedValueDecl("same"),
+                AllowedValueDecl("off"),
+            ],
+        )
+    )
+    builder.with_enum_type_decl(
+        EnumDecl(
+            "Cond",
+            [
+                AllowedValueDecl("same"),
+                AllowedValueDecl("off"),
+            ],
+        )
+    )
+    builder.with_var_decl(
+        VarDecl(
+            "risk",
+            "riskState",
+            AllowedValueDecl("acceptable"),
+            [AllowedValueDecl("acceptable"), AllowedValueDecl("unacceptable")],
+        )
+    )
+    builder.with_enum_type_decl(
+        EnumDecl(
+            "riskState",
+            [
+                AllowedValueDecl("acceptable"),
+                AllowedValueDecl("unacceptable"),
+            ],
+        )
+    )
+    state = builder.build().unwrap()
+    node = TripleNode(
+        QualifiedNameNode("conditions"),
+        ListNode([QualifiedNameNode("risk"), QualifiedNameNode("conditions")]),
+        IfNode(
+            EqualNode(QualifiedNameNode("risk"), QualifiedNameNode("acceptable")),
+            QualifiedNameNode("same"),
+            QualifiedNameNode("conditions"),
+        ),
+    )
+
+    visitor = TypeCheckerVisitor(state)
+
+    node.accept(visitor)
+    assert len(visitor.stack) == 1
+    type = visitor.stack.pop()
+    assert type == "Cond"

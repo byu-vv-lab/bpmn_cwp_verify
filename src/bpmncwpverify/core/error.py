@@ -735,6 +735,14 @@ class TypingNotNonBoolError(Error):
         self.expr_type = expr_type
 
 
+class TypingNotCaughtError(Error):
+    __slpts__ = ["explination"]
+
+    def __init__(self, explination: str) -> None:
+        super().__init__()
+        self.explination = explination
+
+
 def get_error_message(error: Error) -> str:
     match error:
         case BpmnNoElementNameError(ids=ids):
@@ -979,6 +987,7 @@ def get_error_message(error: Error) -> str:
             return "TYPING ERROR: list has an expresssion that is not a number, bool, or variable and is not allowed"
         case TypingNoTypeError(id=id):
             return f"TYPING ERROR: literal '{id}' has an unknown type"
-
+        case TypingNotCaughtError(explination=explination):
+            return explination
         case _:
             raise builtins.NotImplementedError
