@@ -10,6 +10,7 @@ from bpmncwpverify.core.bpmn import (
     Node,
     Process,
     SequenceFlow,
+    Task,
     get_element_type,
 )
 from bpmncwpverify.core.error import Error
@@ -27,12 +28,16 @@ def get_process_name(id: str, parts: list[Element]) -> str:
 
 def parse_and_typecheck_optional_feel(
     text: str | None, state: State
-) -> Result[str, Error]:
+) -> Result[str | Feel, Error]:
     if not text:
-        return Success("")  # need to review
+        return Success("")  # nothing to do
 
     feel = Feel.parse(text)
-    return feel.type_check(state)
+    type_result = feel.type_check(state)
+    if not is_successful(type_result):
+        return Failure(type_result.failure())
+
+    return Success(feel)
 
 
 def from_xml(
@@ -56,17 +61,31 @@ def from_xml(
 
         class_object = element_type.from_xml(sub_element)
 
+        # expression
         feel_result = parse_and_typecheck_optional_feel(
             getattr(class_object, "expression", None), state
         )
         if not is_successful(feel_result):
             return Failure(feel_result.failure())
 
+        parsed = feel_result.unwrap()
+        if (
+            parsed
+            and isinstance(parsed, Feel)
+            and isinstance(class_object, SequenceFlow)
+        ):
+            class_object.expression = parsed
+
+        # behavior
         feel_result = parse_and_typecheck_optional_feel(
             getattr(class_object, "behavior", None), state
         )
         if not is_successful(feel_result):
             return Failure(feel_result.failure())
+
+        parsed = feel_result.unwrap()
+        if parsed and isinstance(parsed, Feel) and isinstance(class_object, Task):
+            class_object.behavior = parsed
 
         # mainly to check if the Start Event is supported
         verified_result = class_object.verify_element(sub_element, class_object.id)

@@ -13,6 +13,7 @@ from bpmncwpverify.core.feel_tree import (
     NumberLiteralNode,
     OrNode,
     QualifiedNameNode,
+    TripleListNode,
     TripleNode,
     XOrNode,
 )
@@ -309,3 +310,21 @@ def test_input_if_then_choose_else() -> None:
         str(visitor.promela)
         == "conditions = ((blackBox == missing) -> choose_0[choose_0] : choose_1[choose_1])"
     )
+
+
+def test_triple_list() -> None:
+    node = TripleListNode(
+        [
+            TripleNode(
+                QualifiedNameNode("uuvComms"), ListNode([]), QualifiedNameNode("sent")
+            ),
+            TripleNode(QualifiedNameNode("x"), ListNode([]), QualifiedNameNode("y")),
+        ]
+    )
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert isinstance(node.triples[0], TripleNode)
+    assert isinstance(node.triples[1], TripleNode)
+    assert str(visitor.promela) == "uuvComms = sent\nx = y\n"

@@ -25,6 +25,7 @@ from bpmncwpverify.core.feel_tree import (
     OrNode,
     QualifiedNameNode,
     SubtractNode,
+    TripleListNode,
     TripleNode,
     XOrNode,
 )
@@ -181,6 +182,16 @@ class FeelToPromelaVisitor(FeelVisitor):
         return False
 
     def end_visit_triple(self, node: TripleNode) -> None:
+        pass
+
+    def visit_triple_list(self, node: TripleListNode) -> bool:
+        for triple in node.triples:
+            triple.accept(self)
+            self.promela.write_str("", NL_SINGLE)
+
+        return False
+
+    def end_visit_triple_list(self, node: TripleListNode) -> None:
         pass
 
 

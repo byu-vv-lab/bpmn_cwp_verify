@@ -1,10 +1,12 @@
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState, CwpVisitor
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.util.stringmanager import (
     NL_DOUBLE,
     NL_SINGLE,
     IndentAction,
     StringManager,
 )
+from bpmncwpverify.visitors.feel_to_promela_visitor import FeelToPromelaVisitor
 
 START_STR = "//**********CWP VARIABLE DECLARATION************//"
 END_STR = "//**********************************************//"
@@ -18,6 +20,7 @@ class CwpPromelaVisitor(CwpVisitor):
         "caculate_state_inline",
         "prime_vars",
         "vars",
+        "chooses",
         "proper_path_block",
         "var_reassignment",
         "list_of_cwp_states",
@@ -29,6 +32,7 @@ class CwpPromelaVisitor(CwpVisitor):
         self.caculate_state_inline = StringManager()
         self.prime_vars = StringManager()
         self.vars = StringManager()
+        self.chooses = StringManager()
         self.proper_path_block = StringManager()
         self.var_reassignment = StringManager()
         self.list_of_cwp_states: list[str] = []
@@ -37,22 +41,33 @@ class CwpPromelaVisitor(CwpVisitor):
         guard = StringManager()
 
         guard.write_str("(")
+
+        edges: list[str] = []
+        for edge in state.in_edges:
+            source_changer = FeelToPromelaVisitor()
+            if isinstance(edge.expression, Feel):
+                edge.expression.ast.accept(source_changer)
+                edges.append(str(source_changer.promela))
+                self.chooses.write_str(source_changer.choose)
+            else:
+                edges.append(str(edge.expression))
         guard.write_str(
-            " && ".join(
-                [f"{edge.expression}" for edge in state.in_edges]
-                if state.in_edges
-                else ["true"]
-            )
+            " && ".join(edges if state.in_edges else ["true"])
         )  # ["true"] in case no in edges
 
         guard.write_str(") && !(")
 
+        edges = []
+        for edge in state.out_edges:
+            source_changer = FeelToPromelaVisitor()
+            if isinstance(edge.expression, Feel):
+                edge.expression.ast.accept(source_changer)
+                edges.append(str(source_changer.promela))
+                self.chooses.write_str(source_changer.choose)
+            else:
+                edges.append(str(edge.expression))
         guard.write_str(
-            " || ".join(
-                [f"{edge.expression}" for edge in state.out_edges]
-                if state.out_edges
-                else ["false"]
-            )
+            " && ".join(edges if state.out_edges else ["false"])
         )  # ["false"] in case no out edges
 
         guard.write_str(")")
@@ -189,6 +204,4 @@ class CwpPromelaVisitor(CwpVisitor):
         self.create_caculate_state_inline()
 
     def __repr__(self) -> str:
-        return (
-            f"{self.cwp_states}{self.update_state_inline}{self.caculate_state_inline}"
-        )
+        return f"{self.cwp_states}{self.chooses}{self.update_state_inline}{self.caculate_state_inline}"

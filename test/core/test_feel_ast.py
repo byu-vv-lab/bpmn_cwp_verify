@@ -283,6 +283,17 @@ def test_parse_xor() -> None:
     assert feel.ast.right.value == "2"
 
 
+def test_parse_or_names() -> None:
+    feel = Feel.parse("this or that")
+
+    assert isinstance(feel.ast, OrNode)
+    assert isinstance(feel.ast.left, QualifiedNameNode)
+    assert isinstance(feel.ast.right, QualifiedNameNode)
+
+    assert feel.ast.left.name == "this"
+    assert feel.ast.right.name == "that"
+
+
 def test_parse_qualified_name() -> None:
     feel = Feel.parse("x")
 
