@@ -634,6 +634,13 @@ class StateArraySizeError(Error):
             )
         return False
 
+    def __str__(self) -> str:
+        return (
+            f"StateArraySizeError: Array '{self.id}' has size {self.actual_size}, "
+            f"but expected size is {self.expected_size}. "
+            f"Location: line {self.line}, column {self.column}."
+        )
+
 
 class StateSyntaxError(Error):
     __slots__ = "msg"
