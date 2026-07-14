@@ -128,11 +128,16 @@ def test_generate_promela(mocker):
     var3 = mocker.Mock(id="var3_id", type_="bool", init=mocker.Mock(value="0"))
     var4 = mocker.Mock(id="var4_id", type_="bit", init=mocker.Mock(value="0"))
 
+    array = mocker.Mock(
+        id="array_id", type_="int", size=5, values=mocker.Mock(value="1 2 3 4 5")
+    )
+
     _consts = [const]
     _vars = [var1, var2, var3, var4]
     _enums = [enum]
+    _arrays = [array]
 
-    state = State(_consts, _enums, _vars)
+    state = State(_consts, _enums, _vars, _arrays)
 
     result = _generate_state_promela(state)
 
@@ -147,7 +152,9 @@ def test_generate_promela(mocker):
         "bool var3_id = 0\n"
         "bool old_var3_id = var3_id\n"
         "bit var4_id = 0\n"
-        "bit old_var4_id = var4_id\n\n"
+        "bit old_var4_id = var4_id\n"
+        "int array_id[5] = {1, 2, 3, 4, 5}\n"
+        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n"
     )
     assert result == expected
 
@@ -159,6 +166,7 @@ def mock_state(mocker):
     state._consts = []
     state._enums = []
     state._vars = []
+    state._arrays = []
     return state
 
 
@@ -183,9 +191,16 @@ def test_generate_promela_with_full_state(mocker, mock_state):
     mock_var_int.id = "counter"
     mock_var_int.init.value = "0"
 
+    mock_array = mocker.MagicMock()
+    mock_array.type_ = "int"
+    mock_array.id = "array_id"
+    mock_array.size = 5
+    mock_array.values = mocker.MagicMock(value="1 2 3 4 5")
+
     mock_state.consts = [mock_const]
     mock_state.enums = [mock_enum]
     mock_state.vars = [mock_var_enum, mock_var_int]
+    mock_state.arrays = [mock_array]
 
     result = _generate_state_promela(mock_state)
 
@@ -196,7 +211,9 @@ def test_generate_promela_with_full_state(mocker, mock_state):
         "int state_var = START\n"
         "hidden int old_state_var = state_var\n"
         "int counter = 0\n"
-        "hidden int old_counter = counter\n\n"
+        "hidden int old_counter = counter\n"
+        "int array_id[5] = {1, 2, 3, 4, 5}\n"
+        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n"
     )
 
     assert result == expected_output
@@ -237,6 +254,28 @@ def test_generate_promela_with_only_enums(mocker, mock_state):
     expected_output = (
         "//**********VARIABLE DECLARATION************//\n"
         "mtype:TestEnum = {IDLE RUNNING}\n\n"
+    )
+
+    assert result == expected_output
+
+
+def test_generate_promela_with_only_arrays(mocker, mock_state):
+    """Test generate_promela with only arrays."""
+
+    mock_array = mocker.MagicMock()
+    mock_array.type_ = "int"
+    mock_array.id = "array_id"
+    mock_array.size = 5
+    mock_array.values = mocker.MagicMock(value="1 2 3 4 5")
+
+    mock_state.arrays = [mock_array]
+
+    result = _generate_state_promela(mock_state)
+
+    expected_output = (
+        "//**********VARIABLE DECLARATION************//\n"
+        "int array_id[5] = {1, 2, 3, 4, 5}\n"
+        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n\n"
     )
 
     assert result == expected_output
