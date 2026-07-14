@@ -66,6 +66,7 @@ from bpmncwpverify.core.error import (
     SpinInvalidEndStateError,
     SpinSyntaxError,
     StateAntlrWalkerError,
+    StateArraySizeError,
     StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
@@ -315,6 +316,14 @@ test_inputs: list[tuple[Error, str]] = [
         "STATE ERROR: error",
     ),
     (
+        StateArraySizeError("array_name", Some(0), Some(12), 5, 4),
+        "STATE ARRAY SIZE ERROR: array 'array_name' at line 0:12 has size 4, expected size 5",
+    ),
+    (
+        StateArraySizeError("array_name", Some(0), Some(12), 0, 0),
+        "STATE ARRAY SIZE ERROR: array 'array_name' at line 0:12. Array size must be greater than 0.",
+    ),
+    (
         StateInitNotInValues("a", Some(0), Some(1), {"b", "c"}),
         "STATE ERROR: init value 'a' at line 0:1 not in allowed values ['b', 'c']",
     ),
@@ -444,6 +453,8 @@ test_ids: list[str] = [
     "SpinInvalidEndStateError",
     "SpinSyntaxError",
     "StateAntlrWalkerError",
+    "StateArraySizeMissmatchError",
+    "StateArraySizeZeroError",
     "StateInitNotInValues",
     "StateInitNotInValuesLineCol",
     "StateMultipleDefinitionError",
