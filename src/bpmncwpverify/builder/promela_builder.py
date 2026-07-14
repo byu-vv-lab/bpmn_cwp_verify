@@ -135,7 +135,7 @@ def _generate_state_promela(state: State) -> str:
         str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
     for enum_decl in state.enums:
         str_builder.append(
-            f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}};"
+            f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
         )
     for array_decl in state.arrays:
         arrayBuilder: str = (
@@ -158,29 +158,29 @@ def _generate_state_promela(state: State) -> str:
             arrayBuilder += f"{valDecl.value}{comma}"
             hiddenBuilder += f"{valDecl.value}{comma}"
             index += 1
-        str_builder.append(arrayBuilder + "};")
-        str_builder.append(hiddenBuilder + "};")
+        str_builder.append(arrayBuilder + "}")
+        str_builder.append(hiddenBuilder + "}")
     for var_decl in state.vars:
         if var_decl.type_ in {enum.id for enum in state.enums}:
             str_builder.append(
-                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value};"
+                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
             )
             if "bit" not in var_decl.type_:
                 str_builder.append(
-                    f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id};"
+                    f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
                 )
         else:
             str_builder.append(
-                f"{var_decl.type_} {var_decl.id} = {var_decl.init.value};"
+                f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
             )
 
             if "bit" not in var_decl.type_ and "bool" not in var_decl.type_:
                 str_builder.append(
-                    f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id};"
+                    f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id}"
                 )
             else:
                 str_builder.append(
-                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id};"
+                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
                 )
 
     return "\n".join(str_builder) + "\n\n"
