@@ -143,6 +143,7 @@ class ExprListener(ParseTreeListener):
         pass
 
 
+<<<<<<< HEAD
     # Enter a parse tree produced by ExprParser#ToPostfix.
     def enterToPostfix(self, ctx:ExprParser.ToPostfixContext):
         pass
@@ -158,6 +159,23 @@ class ExprListener(ParseTreeListener):
 
     # Exit a parse tree produced by ExprParser#ArrayAccess.
     def exitArrayAccess(self, ctx:ExprParser.ArrayAccessContext):
+=======
+    # Enter a parse tree produced by ExprParser#ToPostFixExpr.
+    def enterToPostFixExpr(self, ctx:ExprParser.ToPostFixExprContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#ToPostFixExpr.
+    def exitToPostFixExpr(self, ctx:ExprParser.ToPostFixExprContext):
+        pass
+
+
+    # Enter a parse tree produced by ExprParser#FieldAccess.
+    def enterFieldAccess(self, ctx:ExprParser.FieldAccessContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#FieldAccess.
+    def exitFieldAccess(self, ctx:ExprParser.FieldAccessContext):
+>>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
         pass
 
 

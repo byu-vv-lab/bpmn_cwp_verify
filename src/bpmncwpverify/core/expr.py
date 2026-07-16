@@ -297,6 +297,26 @@ class ExpressionListener(ExprListener):
             raise Exception(ExpressionUnrecognizedID(identifier))
         self.type_stack.append(type.unwrap())
 
+    def exitFieldAccess(self, ctx: ExprParser.FieldAccessContext) -> None:
+        """
+        Retrieve variable type of given ID, raise ExpressionUnrecognizedID otherwise
+
+        Args:
+            ctx (ExprParser.FieldAccessContext): Type of node that parser is traversing through
+        """
+        nodes = ctx.ID()
+        assert nodes is not None
+        nodes = [antlr_get_terminal_node_impl(node) for node in nodes]  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
+        path = ""
+        for node in nodes:
+            path += antlr_get_text(node) + "."
+        path = path[:-1]  # Remove the trailing "."
+
+        type = self.state.get_type(path)  # Variable type retrieval method
+        if not_(is_successful)(type):
+            raise Exception(ExpressionUnrecognizedID(path))
+        self.type_stack.append(type.unwrap())
+
     @staticmethod
     def _build(state: State, context: ExprParser.ExprContext) -> Result[str, Error]:
         """

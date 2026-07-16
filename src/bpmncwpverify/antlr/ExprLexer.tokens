@@ -14,10 +14,16 @@ T__12=13
 T__13=14
 T__14=15
 T__15=16
+<<<<<<< HEAD
 T__16=17
 T__17=18
 ID=19
 WS=20
+=======
+PERIOD=17
+ID=18
+WS=19
+>>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 '||'=1
 '&&'=2
 '!'=3
@@ -32,7 +38,13 @@ WS=20
 '*'=12
 '/'=13
 '%'=14
+<<<<<<< HEAD
 '['=15
 ']'=16
 '('=17
 ')'=18
+=======
+'('=15
+')'=16
+'.'=17
+>>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
