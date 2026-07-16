@@ -22,9 +22,11 @@ from bpmncwpverify.core.error import (
     NotInitializedError,
     StateAntlrWalkerError,
     StateArraySizeError,
+    StateInheritanceError,
     StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
+    TypedefPathError,
 )
 
 
@@ -71,6 +73,19 @@ def antlr_get_terminal_node_impl(node: TerminalNode | None) -> TerminalNodeImpl:
     """
     assert node is not None
     assert isinstance(node, TerminalNodeImpl)
+    return node
+
+
+def antlr_get_var_decl(
+    node: list[StateParser.Var_declContext] | None,
+) -> list[StateParser.Var_declContext]:
+    """
+    Verifies and returns the node if node is not None, AssertionError otherwise
+
+    Args:
+        ctx (StateParser.Var_declContext | None): The node to check if it is not none
+    """
+    assert node is not None
     return node
 
 
@@ -171,7 +186,7 @@ def _parse_state(parser: StateParser) -> Result[StateParser.StateContext, Error]
         parser (StateParser): Parser that will make sure tree is valid
     """
     result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(
-        lambda exc: StateSyntaxError(str(exc))  # pyright: ignore[reportUnknownLambdaType]
+        lambda exc: StateSyntaxError(str(exc))
     )
     return result  # pyright: ignore[reportUnknownVariableType]
 
@@ -397,6 +412,72 @@ class VarDecl(DeclLoc):
             )
 
 
+class TypeDefDecl(DeclLoc):
+    """
+    Represents typedef variable declaration using keyword typedef
+    """
+
+    __slots__ = ["id", "fields", "nested_typedefs", "typedef_inits", "type_"]
+
+    def __init__(
+        self,
+        id: str,
+        fields: list[VarDecl],
+        nested_typedefs: list["TypeDefDecl"],
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> None:
+        """
+        Initialize TypeDefDecl object
+
+        Args:
+            id (str): Variable name
+            fields (list[VarDecl]): List of field declarations
+            nested_typedefs (list[TypeDefDecl]): List of nested typedef declarations
+            line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
+            col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
+        """
+        super().__init__(line, col)
+        self.id = id
+        self.fields = fields
+        self.nested_typedefs = nested_typedefs
+
+    @staticmethod
+    def typedef_decl(
+        id: str,
+        fields: list[VarDecl],
+        nested_typedefs: list["TypeDefDecl"],
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> Result["TypeDefDecl", Error]:
+        """
+        Returns a TypeDefDecl object
+
+        Args:
+            id (str): Variable name
+            fields (list[VarDecl]): List of field declarations
+            nested_typedefs (list[TypeDefDecl]): List of nested typedef declarations
+            line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
+            col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
+        """
+        return Success(TypeDefDecl(id, fields, nested_typedefs, line, col))
+
+    def set_id(self, id: str) -> None:
+        self.id = id
+
+    def set_fields(self, fields: list[VarDecl]) -> None:
+        self.fields = fields
+
+    def set_nested_typedefs(self, nested_typedefs: list["TypeDefDecl"]) -> None:
+        self.nested_typedefs = nested_typedefs
+
+    def set_line(self, line: Maybe[int]) -> None:
+        self.line = line
+
+    def set_col(self, col: Maybe[int]) -> None:
+        self.col = col
+
+
 class TypeWithDeclLoc:
     """
     Stores type related to variable in stored location
@@ -421,7 +502,7 @@ class StateBuilder:
     Store variable information
     """
 
-    __slots__ = ["_arrays", "_consts", "_enums", "_vars"]
+    __slots__ = ["_arrays", "_consts", "_enums", "_vars", "_typedefs"]
 
     def __init__(self) -> None:
         """
@@ -431,6 +512,7 @@ class StateBuilder:
         self._enums: list[EnumDecl] = list()
         self._vars: list[VarDecl] = list()
         self._arrays: list[ArrayDecl] = list()
+        self._typedefs: list[TypeDefDecl] = list()
 
     def with_enum_type_decl(self, enum_decl: EnumDecl) -> "StateBuilder":
         """
@@ -472,11 +554,21 @@ class StateBuilder:
         self._vars.append(var_decl)
         return self
 
+    def with_typedef_decl(self, typedef_decl: TypeDefDecl) -> "StateBuilder":
+        """
+        Add to list of typedef variables
+
+        Args:
+            typedef_decl (TypeDefDecl): variable to add to list
+        """
+        self._typedefs.append(typedef_decl)
+        return self
+
     def build(self) -> Result["State", Error]:
         """
         Create a State object with the given lists of variables stored within itself
         """
-        state = State(self._consts, self._enums, self._vars, self._arrays)
+        state = State(self._consts, self._enums, self._vars, self._arrays, self._typedefs)
         return state.type_check()
 
 
@@ -495,6 +587,8 @@ class State:
         "_str2var",
         "_str2const",
         "_vars",
+        "_typedefs",
+        "_str2typedef",
     ]
 
     class _Listener(StateListener):
@@ -510,6 +604,7 @@ class State:
             """
             super().__init__()
             self.state_builder: Result[StateBuilder, Error] = Success(StateBuilder())
+            self.typedefStack: list[TypeDefDecl] = []
 
         @staticmethod
         def _get_id(id_node: TerminalNodeImpl) -> str:
@@ -623,6 +718,12 @@ class State:
                 ctx (StateParser.Var_declContext): Var variable to add
             """
 
+            def attach_var_decl_to_typedef(var_decl: VarDecl) -> Result[VarDecl, Error]:
+                if not self.typedefStack:
+                    return Failure(TypedefPathError(var_decl.id))
+                self.typedefStack[-1].fields.append(var_decl)
+                return Success(var_decl)
+
             def get_var_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
                 node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
@@ -645,7 +746,18 @@ class State:
                 )
 
                 result = VarDecl.var_decl(id, type_, init, values, id_line, id_col)
-                return result.map(builder.with_var_decl).alt(lambda error: error)
+
+                if (
+                    ctx.parentCtx is not None
+                    and ctx.parentCtx.parentCtx is not None
+                    and isinstance(
+                        ctx.parentCtx.parentCtx, StateParser.Typedef_declContext
+                    )
+                ):
+                    result.bind_result(attach_var_decl_to_typedef)
+                    return result.map(lambda _: builder).alt(lambda error: error)
+                else:
+                    return result.map(builder.with_var_decl).alt(lambda error: error)
 
             self.state_builder = self.state_builder.bind(get_var_decl)  # pyright: ignore[reportUnknownMemberType]
 
@@ -678,12 +790,57 @@ class State:
 
             self.state_builder = self.state_builder.bind(get_array_decl)  # pyright: ignore[reportUnknownMemberType]
 
+        def enterTypedef_decl(self, ctx: StateParser.Typedef_declContext) -> None:
+            """
+            Add new typedef variable to the list stored in StateBuilder object
+
+            Args:
+                ctx (StateParser.Typedef_declContext): Typedef variable to add
+            """
+            self.typedefStack.append(TypeDefDecl("", [], []))
+
+        def exitTypedef_decl(self, ctx: StateParser.Typedef_declContext) -> None:
+            """
+            Add new typedef variable to the list stored in StateBuilder object
+
+            Args:
+                ctx (StateParser.Typedef_declContext): Typedef variable to add
+            """
+
+            def result_or_error(typeDefDecl: TypeDefDecl) -> Result[TypeDefDecl, Error]:
+                try:
+                    return Success(self.typedefStack.pop())
+                except IndexError:
+                    return Failure(TypedefPathError("Index Error at " + typeDefDecl.id))
+
+            def get_typedef_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
+                node = antlr_get_terminal_node_impl(ctx.ID())  # type: ignore[no-untyped-call]
+                symbol: Token = node.getSymbol()
+                id: str = State._Listener._get_id(node)
+                self.typedefStack[-1].set_id(id)
+
+                id_line = Some(symbol.line)
+                id_col = Some(symbol.column)
+                self.typedefStack[-1].set_line(id_line)
+                self.typedefStack[-1].set_col(id_col)
+
+                if ctx.parentCtx is not None and isinstance(
+                    ctx.parentCtx, StateParser.Typedef_decl_setContext
+                ):
+                    self.typedefStack[-2].nested_typedefs.append(self.typedefStack[-1])
+
+                result = result_or_error(self.typedefStack[-1])
+                return result.map(builder.with_typedef_decl).alt(lambda error: error)
+
+            self.state_builder = self.state_builder.bind(get_typedef_decl)  # pyright: ignore[reportUnknownMemberType]
+
     def __init__(
         self,
         consts: list[ConstDecl],
         enums: list[EnumDecl],
         vars: list[VarDecl],
         arrays: list[ArrayDecl],
+        typedefs: list[TypeDefDecl],
     ) -> None:
         """
         Initialize State object
@@ -693,6 +850,7 @@ class State:
             enums (list[EnumDecl]): List containing enum variable declarations
             vars (list[VarDecl]): List containing var variable declarations
             arrays (list[ArrayDecl]): List containing array variable declarations
+            typedefs (list[TypeDefDecl]): List containing typedef variable declarations
         """
         self._consts = consts
         self._enums = enums
@@ -702,6 +860,8 @@ class State:
         self._str2const: Maybe[dict[str, ConstDecl]] = Nothing
         self._vars = vars
         self._arrays = arrays
+        self._typedefs = typedefs
+        self._str2typedef: Maybe[dict[str, TypeDefDecl]] = Nothing
 
     @staticmethod
     def _enums_to_str(enums: list[EnumDecl]) -> str:
@@ -791,6 +951,22 @@ class State:
                 state_str += "\n"
         return state_str
 
+    @staticmethod
+    def _typedefs_to_str(typedefs: list[TypeDefDecl]) -> str:
+        """
+        Return string representation of list of TypeDefDecl objects
+
+        Args:
+            typedefs (list[TypeDefDecl]): List of TypeDefDecl objects to convert to string
+        """
+        state_str = ""
+        for typedef in typedefs:
+            state_str += "typedef " + typedef.id + " {\n"
+            state_str += State._vars_to_str(typedef.fields)
+            state_str += State._typedefs_to_str(typedef.nested_typedefs)
+            state_str += "}\n"
+        return state_str
+
     def __str__(self) -> str:
         """
         Return string representation of State object
@@ -800,6 +976,7 @@ class State:
         state_str += State._consts_to_str(self._consts)
         state_str += State._vars_to_str(self._vars)
         state_str += State._arrays_to_str(self._arrays)
+        state_str += State._typedefs_to_str(self._typedefs)
         return state_str
 
     @property
@@ -810,6 +987,24 @@ class State:
     def enums(self) -> tuple[EnumDecl, ...]:
         return tuple(self._enums)
 
+    @property
+    def typedefs(self) -> tuple[TypeDefDecl, ...]:
+        return tuple(self._typedefs)
+
+    @property
+    def vars(self) -> tuple[VarDecl, ...]:
+        return tuple(self._vars)
+
+    @property
+    def arrays(self) -> tuple[ArrayDecl, ...]:
+        return tuple(self._arrays)
+
+    @property
+    def str2var(self) -> dict[str, VarDecl]:
+        if self._str2var == Nothing:
+            return dict()
+        return self._str2var.unwrap()
+
     def is_variable(self, variable: str) -> bool:
         return self._str2var.map(lambda d: variable in d).value_or(False)
 
@@ -818,6 +1013,9 @@ class State:
 
     def is_constant(self, variable: str) -> bool:
         return self._str2const.map(lambda d: variable in d).value_or(False)
+
+    def is_typedef(self, variable: str) -> bool:
+        return self._str2typedef.map(lambda d: variable in d).value_or(False)
 
     def is_defined(self, id: str) -> bool:
         """
@@ -843,7 +1041,10 @@ class State:
         def _lookup(id2type: dict[str, TypeWithDeclLoc]) -> Result[str, Error]:
             if id in id2type:
                 return Success(id2type[id].type_)
-            return typechecking.get_type_literal(id)
+            elif "." in id:
+                return Failure(TypedefPathError(id))
+            else:
+                return typechecking.get_type_literal(id)
 
         return maybe_to_result(self._id2type, Error()).bind(_lookup)  # pyright: ignore[reportUnknownMemberType]
 
@@ -855,25 +1056,21 @@ class State:
         self._str2var = Some(dict())
         self._str2enum = Some(dict())
         self._str2const = Some(dict())
+        self._str2typedef = Some(dict())
         result: Result[State, Error] = (
             self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
             .bind(lambda _: self._build_id_2_type_consts())
+            .bind(lambda _: self._build_id_2_type_typedefs())
             .bind(lambda _: self._build_id_2_type_vars())
             .bind(lambda _: self._build_id_2_type_arrays())
             .bind(lambda _: self._type_check_consts())
             .bind(lambda _: self._type_check_vars())
             .bind(lambda _: self._type_check_arrays())
+            .bind(lambda _: self._type_check_typedefs())
+            .bind(lambda _: self._build_typedef_paths())
             .map(lambda _: self)
         )
         return result
-
-    @property
-    def vars(self) -> tuple[VarDecl, ...]:
-        return tuple(self._vars)
-
-    @property
-    def arrays(self) -> tuple[ArrayDecl, ...]:
-        return tuple(self._arrays)
 
     def _build_id_2_type_consts(self) -> Result[None, Error]:
         """
@@ -960,6 +1157,25 @@ class State:
 
         return Success(None)
 
+    def _build_id_2_type_typedefs(self) -> Result[None, Error]:
+        """
+        Adds typedef variables into id2type dictionary
+        Verifies there are no two variables with the same name being declared twice
+
+        Args:
+            state (State): State object to modify
+        """
+        # requires
+        assert self._id2type != Nothing
+        # ensures that all typedefs are properly initialized.
+
+        for i in self._typedefs:
+            result = self._build_id_2_type_typedef(i)
+            if not_(is_successful)(result):
+                return result
+
+        return Success(None)
+
     def _type_check_assigns(
         self, ltype: str, values: Iterable[AllowedValueDecl]
     ) -> Result[None, Error]:
@@ -1020,6 +1236,32 @@ class State:
                 return result
         return Success(None)
 
+    def _type_check_typedefs(self) -> Result[None, Error]:
+        """
+        Verify typedef variable declarations are type safe, including nested variable declarations
+
+        Args:
+            state (State): State object to retrieve initial type
+        """
+
+        def _type_check_typedef(typedef_decl: TypeDefDecl) -> Result[None, Error]:
+            for var_decl in typedef_decl.fields:
+                values = var_decl.values + [var_decl.init]
+                result = self._type_check_assigns(var_decl.type_, values)
+                if not_(is_successful)(result):
+                    return result
+            for nested_typedef in typedef_decl.nested_typedefs:
+                result = _type_check_typedef(nested_typedef)
+                if not_(is_successful)(result):
+                    return result
+            return Success(None)
+
+        for typedef_decl in self._typedefs:
+            result = _type_check_typedef(typedef_decl)
+            if not_(is_successful)(result):
+                return result
+        return Success(None)
+
     def _build_id_2_type_enum(self, enum_decl: EnumDecl) -> Result[None, Error]:
         """
         Ensures that enum variable declarations do not use previously declared variable names
@@ -1063,6 +1305,80 @@ class State:
             )
         )
 
+    def _build_typedef_paths(self) -> Result[None, Error]:
+        assert self._id2type != Nothing
+        assert self._str2typedef != Nothing
+
+        str2typedef = self._str2typedef.unwrap()
+
+        for var_decl in self._vars:
+            if var_decl.type_ != typechecking.TYPEDEF:
+                continue
+            if var_decl.init.value not in str2typedef:
+                return Failure(
+                    StateInheritanceError(
+                        var_decl.id,
+                        var_decl.init.value,
+                        var_decl.line,
+                        var_decl.col,
+                    )
+                )
+
+            result = self._build_typedef_path(
+                var_decl.id, str2typedef[var_decl.init.value]
+            )
+            if not_(is_successful)(result):
+                return result
+
+        return Success(None)
+
+    def _build_typedef_path(
+        self, id: str, typedef_decl: TypeDefDecl
+    ) -> Result[None, Error]:
+        """
+        Builds the paths for each field in a typedef declaration.
+
+        Args:
+            id (str): The ID of the var
+            typedef_decl (TypeDefDecl): Typedef variable declaration to build paths for
+        """
+        # requires
+        assert self._id2type != Nothing
+        assert self._str2var != Nothing
+
+        id2type = self._id2type.unwrap()
+        str2var = self._str2var.unwrap()
+
+        for var_decl in typedef_decl.fields:
+            if var_decl.type_ == typechecking.TYPEDEF:
+                nested_path = f"{id}.{var_decl.id}"
+                nested_typedef_decl = next(
+                    (
+                        td
+                        for td in typedef_decl.nested_typedefs
+                        if td.id == var_decl.init.value
+                    ),
+                    None,
+                )
+                if nested_typedef_decl is None:
+                    return Failure(
+                        StateInheritanceError(
+                            nested_path,
+                            var_decl.init.value,
+                            var_decl.line,
+                            var_decl.col,
+                        )
+                    )
+                result = self._build_typedef_path(nested_path, nested_typedef_decl)
+                if not_(is_successful)(result):
+                    return result
+            else:
+                full_path = f"{id}.{var_decl.id}"
+                id2type[full_path] = TypeWithDeclLoc(var_decl.type_, var_decl)
+                str2var[full_path] = var_decl
+
+        return Success(None)
+
     def _build_id_2_type_var(self, var_decl: VarDecl) -> Result[None, Error]:
         """
         Ensures that var variable declarations do not use previously declared variable names
@@ -1083,7 +1399,61 @@ class State:
                 )
             id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
             str2var[var_decl.id] = var_decl
-            return Success(None)
+    
+        return Success(None)
+
+    def _build_id_2_type_typedef(
+        self, typedef_decl: TypeDefDecl
+    ) -> Result[None, Error]:
+        """
+        Ensures that typedef variable declarations do not use previously declared variable names
+
+        Args:
+            typedef_decl (TypeDefDecl): Typedef variable declaration to check
+        """
+        # requires
+        assert self._id2type != Nothing
+        assert self._str2typedef != Nothing
+
+        # unwrap the Maybe objects to get the underlying dictionaries
+        id2type = self._id2type.unwrap()
+        str2typedef = self._str2typedef.unwrap()
+
+        # check for duplicate typedef name in global declarations
+        if typedef_decl.id in id2type:
+            first = (id2type[typedef_decl.id]).decl_loc
+            return Failure(
+                StateMultipleDefinitionError(
+                    typedef_decl.id,
+                    typedef_decl.line,
+                    typedef_decl.col,
+                    first.line,
+                    first.col,
+                )
+            )
+
+        # add the typedef to the id2type and str2typedef dictionaries
+        id2type[typedef_decl.id] = TypeWithDeclLoc(typechecking.TYPEDEF, typedef_decl)
+        str2typedef[typedef_decl.id] = typedef_decl
+
+        # check inside the typedef for duplicate field names
+        field_names = [var_decl.id for var_decl in typedef_decl.fields]
+        for var_decl in typedef_decl.fields:
+            field_names.remove(var_decl.id)
+            if var_decl.id in field_names:
+                first = DeclLoc(var_decl.line, var_decl.col)
+                return Failure(
+                    StateMultipleDefinitionError(
+                        var_decl.id,
+                        typedef_decl.line,
+                        typedef_decl.col,
+                        first.line,
+                        first.col,
+                    )
+                )
+            field_names.append(var_decl.id)
+
+        return Success(None)
 
         return maybe_to_result(self._id2type, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda id2type: maybe_to_result(self._str2var, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
