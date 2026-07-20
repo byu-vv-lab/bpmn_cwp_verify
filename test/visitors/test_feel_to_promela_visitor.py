@@ -109,7 +109,7 @@ def test_equal_comparision_with_chooose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:bool choose_0[1] = {true, false}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
+        == "mytype:bool choose_0[2] = {true, false}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
     )
     assert str(visitor.promela) == "(b == choose_0[choose_0])"
 
@@ -162,7 +162,7 @@ def test_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:commsState choose_0[2] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
+        == "mytype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
     )
     assert str(visitor.promela) == "choose_0[choose_0]"
 
@@ -208,7 +208,7 @@ def test_triple_with_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:commsState choose_0[2] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
+        == "mytype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
     )
     assert str(visitor.promela) == "comms = choose_0[choose_0]"
 
@@ -269,7 +269,7 @@ def test_input_if_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:Cond choose_0[1] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
+        == "mytype:Cond choose_0[2] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
     )
     assert (
         str(visitor.promela)
@@ -304,7 +304,7 @@ def test_input_if_then_choose_else() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:Cond choose_0[1] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\nmytype:Cond choose_1[1] = {same, notgood}\nbyte choose_1 = 0\natomic{select(choose_1 : 0..1)}\n"
+        == "mytype:Cond choose_0[2] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\nmytype:Cond choose_1[2] = {same, notgood}\nbyte choose_1 = 0\natomic{select(choose_1 : 0..1)}\n"
     )
     assert (
         str(visitor.promela)

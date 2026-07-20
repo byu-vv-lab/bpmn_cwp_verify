@@ -476,7 +476,7 @@ class AtomicBuilder:
 
         if self.context.behavior:
             if isinstance(self.context.behavior, Feel):
-                source_changer = FeelToPromelaVisitor()
+                source_changer = FeelToPromelaVisitor(self.context.element.id)
                 self.context.behavior.ast.accept(source_changer)
                 behavior_source = str(source_changer.promela)
                 chooses.write_str(source_changer.choose)
@@ -662,7 +662,7 @@ class ExclusiveGatewayBuilder(AtomicBuilder):
 
         for flow in self.context.element.out_flows:
             if isinstance(flow.expression, Feel):
-                source_changer = FeelToPromelaVisitor()
+                source_changer = FeelToPromelaVisitor(flow.id)
                 flow.expression.ast.accept(source_changer)
                 flow_expression = str(source_changer.promela)
             else:

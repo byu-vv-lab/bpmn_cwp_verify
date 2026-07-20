@@ -44,7 +44,7 @@ class CwpPromelaVisitor(CwpVisitor):
 
         edges: list[str] = []
         for edge in state.in_edges:
-            source_changer = FeelToPromelaVisitor()
+            source_changer = FeelToPromelaVisitor(edge.id)
             if isinstance(edge.expression, Feel):
                 edge.expression.ast.accept(source_changer)
                 edges.append(str(source_changer.promela))
@@ -59,7 +59,7 @@ class CwpPromelaVisitor(CwpVisitor):
 
         edges = []
         for edge in state.out_edges:
-            source_changer = FeelToPromelaVisitor()
+            source_changer = FeelToPromelaVisitor(edge.id)
             if isinstance(edge.expression, Feel):
                 edge.expression.ast.accept(source_changer)
                 edges.append(str(source_changer.promela))
