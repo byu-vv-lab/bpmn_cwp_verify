@@ -171,7 +171,9 @@ class FeelToPromelaVisitor(FeelVisitor):
         choose_visitor = FeelToPromelaChooseVisitor(self.choose, self.choose_id)
         node.accept(choose_visitor)
 
-        self.promela.write_str(f"choose_{self.choose_id}[choose_{self.choose_id}_i]")
+        self.promela.write_str(
+            f"choose_{self.choose_id}[choose_{self.choose_id}_i]", NL_SINGLE
+        )
         self.promela.write_str("atomic{")
         self.promela.write_str(
             f"select(choose_{self.choose_id}_i : 0..{len(node.choices.values) - 1})"
