@@ -177,7 +177,7 @@ class PromelaGenVisitor(BpmnVisitor):
         "defs",
         "process",
         "local_var_defs",
-        "chooses",
+        "local_chooseschooses",
         "global_var_defs",
         "behaviors",
         "init_proc_contents",
@@ -189,6 +189,7 @@ class PromelaGenVisitor(BpmnVisitor):
         self.process = StringManager()
         self.chooses = StringManager()
         self.local_var_defs = StringManager()
+        self.local_chooses = StringManager()
         self.global_var_defs = StringManager()
         self.behaviors = StringManager()
         self.init_proc_contents = StringManager()

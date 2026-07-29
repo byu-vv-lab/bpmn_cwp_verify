@@ -24,7 +24,7 @@ def test_list() -> None:
     node = ListNode(
         [NumberLiteralNode("2"), NumberLiteralNode("1"), NumberLiteralNode("0")]
     )
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -33,7 +33,7 @@ def test_list() -> None:
 
 def test_add() -> None:
     node = AddNode(NumberLiteralNode("2"), QualifiedNameNode("3"))
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -45,7 +45,7 @@ def test_multiply_and_add() -> None:
         NumberLiteralNode("5"),
         MultiplyNode(NumberLiteralNode("2"), QualifiedNameNode("3")),
     )
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -54,7 +54,7 @@ def test_multiply_and_add() -> None:
 
 def test_and() -> None:
     node = AndNode(BoolLiteralNode("true"), QualifiedNameNode("something"))
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -63,7 +63,7 @@ def test_and() -> None:
 
 def test_or() -> None:
     node = OrNode(QualifiedNameNode("x"), QualifiedNameNode("y"))
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -72,7 +72,7 @@ def test_or() -> None:
 
 def test_xor() -> None:
     node = XOrNode(QualifiedNameNode("X"), QualifiedNameNode("Y"))
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -84,7 +84,7 @@ def test_or_and() -> None:
         AndNode(QualifiedNameNode("this"), QualifiedNameNode("that")),
         XOrNode(QualifiedNameNode("this"), QualifiedNameNode("notthis")),
     )
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -100,7 +100,7 @@ def test_equal_comparision_with_chooose() -> None:
         ChooseNode(ListNode([BoolLiteralNode("true"), BoolLiteralNode("false")])),
     )
 
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("0")
 
     assert isinstance(node.right, ChooseNode)
     node.right.choices.type = Some("bool")
@@ -109,9 +109,10 @@ def test_equal_comparision_with_chooose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:bool choose_0[2] = {true, false}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
+        == "mtype:bool choose_0[2] = {true, false}\nbyte choose_0_i = 0\n"
     )
-    assert str(visitor.promela) == "(b == choose_0[choose_0])"
+    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..1)}\n"
+    assert str(visitor.promela) == "(b == choose_0[choose_0_i])"
 
 
 def test_if() -> None:
@@ -120,7 +121,7 @@ def test_if() -> None:
         QualifiedNameNode("missing"),
         QualifiedNameNode("found"),
     )
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -129,7 +130,7 @@ def test_if() -> None:
 
 def test_not() -> None:
     node = NotNode(BoolLiteralNode("true"))
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -138,7 +139,7 @@ def test_not() -> None:
 
 def test_true_and_not_false() -> None:
     node = AndNode(BoolLiteralNode("true"), NotNode(BoolLiteralNode("false")))
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -156,15 +157,16 @@ def test_choose() -> None:
         )
     )
     node.choices.type = Some("commsState")
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("0")
 
     node.accept(visitor)
 
     assert (
         str(visitor.choose)
-        == "mytype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
+        == "mtype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0_i = 0\n"
     )
-    assert str(visitor.promela) == "choose_0[choose_0]"
+    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..2)}\n"
+    assert str(visitor.promela) == "choose_0[choose_0_i]"
 
 
 def test_triple_with_if() -> None:
@@ -177,7 +179,7 @@ def test_triple_with_if() -> None:
             QualifiedNameNode("found"),
         ),
     )
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -202,15 +204,16 @@ def test_triple_with_choose() -> None:
     assert isinstance(node.value, ChooseNode)
     node.value.choices.type = Some("commsState")
 
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("0")
 
     node.accept(visitor)
 
     assert (
         str(visitor.choose)
-        == "mytype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..2)}\n"
+        == "mtype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0_i = 0\n"
     )
-    assert str(visitor.promela) == "comms = choose_0[choose_0]"
+    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..2)}\n"
+    assert str(visitor.promela) == "comms = choose_0[choose_0_i]"
 
 
 def test_triple() -> None:
@@ -218,7 +221,7 @@ def test_triple() -> None:
         QualifiedNameNode("uuvComms"), ListNode([]), QualifiedNameNode("sent")
     )
 
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -236,7 +239,7 @@ def test_if_equal_to_self() -> None:
         ),
     )
 
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
@@ -260,7 +263,7 @@ def test_input_if_choose() -> None:
         ),
     )
 
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("0")
     assert isinstance(node.value, IfNode)
     assert isinstance(node.value.thendo, ChooseNode)
     node.value.thendo.choices.type = Some("Cond")
@@ -269,11 +272,12 @@ def test_input_if_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:Cond choose_0[2] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\n"
+        == "mtype:Cond choose_0[2] = {same, changed}\nbyte choose_0_i = 0\n"
     )
+    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..1)}\n"
     assert (
         str(visitor.promela)
-        == "conditions = ((blackBox == missing) -> choose_0[choose_0] : conditions)"
+        == "conditions = ((blackBox == missing) -> choose_0[choose_0_i] : conditions)"
     )
 
 
@@ -293,7 +297,7 @@ def test_input_if_then_choose_else() -> None:
         ),
     )
 
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("0")
     assert isinstance(node.value, IfNode)
     assert isinstance(node.value.thendo, ChooseNode)
     assert isinstance(node.value.elsedo, ChooseNode)
@@ -304,11 +308,15 @@ def test_input_if_then_choose_else() -> None:
 
     assert (
         str(visitor.choose)
-        == "mytype:Cond choose_0[2] = {same, changed}\nbyte choose_0 = 0\natomic{select(choose_0 : 0..1)}\nmytype:Cond choose_1[2] = {same, notgood}\nbyte choose_1 = 0\natomic{select(choose_1 : 0..1)}\n"
+        == "mtype:Cond choose_0[2] = {same, changed}\nbyte choose_0_i = 0\nmtype:Cond choose_0[2] = {same, notgood}\nbyte choose_0_i = 0\n"
+    )
+    assert (
+        str(visitor.selects)
+        == "atomic{select(choose_0_i : 0..1)}\natomic{select(choose_0_i : 0..1)}\n"
     )
     assert (
         str(visitor.promela)
-        == "conditions = ((blackBox == missing) -> choose_0[choose_0] : choose_1[choose_1])"
+        == "conditions = ((blackBox == missing) -> choose_0[choose_0_i] : choose_0[choose_0_i])"
     )
 
 
@@ -321,7 +329,7 @@ def test_triple_list() -> None:
             TripleNode(QualifiedNameNode("x"), ListNode([]), QualifiedNameNode("y")),
         ]
     )
-    visitor = FeelToPromelaVisitor()
+    visitor = FeelToPromelaVisitor("")
 
     node.accept(visitor)
 
