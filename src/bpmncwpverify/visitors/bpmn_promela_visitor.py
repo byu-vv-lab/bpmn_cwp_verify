@@ -206,7 +206,7 @@ class PromelaGenVisitor(BpmnVisitor):
             self.local_var_defs.write_str(f"bit {locations.standalone} = 0", NL_SINGLE)
 
     def __repr__(self) -> str:
-        return f"{self.defs}{self.global_var_defs}{self.chooses}{self.behaviors}{self.init_proc_contents}{self.promela}"
+        return f"{self.defs}{self.global_var_defs}{self.behaviors}{self.init_proc_contents}{self.promela}"
 
     ####################
     # Visitor Methods
@@ -219,7 +219,7 @@ class PromelaGenVisitor(BpmnVisitor):
         behavior, choose = builder.gen_behavior_model()
         self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
-        self.chooses.write_str(choose)
+        self.local_chooses.write_str(choose)
 
         flows = get_consume_locations(event)
         self.process.write_str(
@@ -241,7 +241,7 @@ class PromelaGenVisitor(BpmnVisitor):
         behavior, choose = builder.gen_behavior_model()
         self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
-        self.chooses.write_str(choose)
+        self.local_chooses.write_str(choose)
 
         self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
@@ -254,7 +254,7 @@ class PromelaGenVisitor(BpmnVisitor):
         behavior, choose = builder.gen_behavior_model()
         self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
-        self.chooses.write_str(choose)
+        self.local_chooses.write_str(choose)
 
         self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
@@ -269,7 +269,7 @@ class PromelaGenVisitor(BpmnVisitor):
         behavior, choose = builder.gen_behavior_model()
         self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
-        self.chooses.write_str(choose)
+        self.local_chooses.write_str(choose)
 
         self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
@@ -314,6 +314,7 @@ class PromelaGenVisitor(BpmnVisitor):
     def visit_process(self, process: Process) -> bool:
         self.process = StringManager()
         self.local_var_defs = StringManager()
+        self.local_chooses = StringManager()
 
         self.init_proc_contents.write_str(
             f"run {process.id}()", NL_SINGLE, IndentAction.NIL
@@ -325,7 +326,9 @@ class PromelaGenVisitor(BpmnVisitor):
 
     def end_visit_process(self, process: Process) -> None:
         self.promela.write_str(self.local_var_defs, indent_offset=1)
+        self.promela.write_str("", NL_SINGLE)
 
+        self.promela.write_str(self.local_chooses, indent_offset=1)
         self.promela.write_str("", NL_SINGLE)
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
@@ -473,6 +476,7 @@ class AtomicBuilder:
         """
         behavior = StringManager()
         chooses = StringManager()
+        selects = StringManager()
 
         if self.context.behavior:
             if isinstance(self.context.behavior, Feel):
@@ -480,6 +484,7 @@ class AtomicBuilder:
                 self.context.behavior.ast.accept(source_changer)
                 behavior_source = str(source_changer.promela)
                 chooses.write_str(source_changer.choose)
+                selects.write_str(source_changer.selects)
             else:
                 behavior_source = str(self.context.behavior)
 
@@ -490,6 +495,7 @@ class AtomicBuilder:
                 NL_SINGLE,
                 IndentAction.INC,
             )
+            behavior.write_str(selects, indent_offset=1)
             processed_str_list = [
                 line.strip() for line in behavior_source.split("\n") if line.strip()
             ]

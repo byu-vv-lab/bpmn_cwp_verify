@@ -67,7 +67,7 @@ class CwpPromelaVisitor(CwpVisitor):
             else:
                 edges.append(str(edge.expression))
         guard.write_str(
-            " && ".join(edges if state.out_edges else ["false"])
+            " || ".join(edges if state.out_edges else ["false"])
         )  # ["false"] in case no out edges
 
         guard.write_str(")")

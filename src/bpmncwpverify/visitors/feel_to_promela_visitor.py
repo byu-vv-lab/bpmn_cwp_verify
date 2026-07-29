@@ -33,11 +33,12 @@ from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
 
 class FeelToPromelaVisitor(FeelVisitor):
-    __slots__ = ["promela", "choose", "choose_id", "index"]
+    __slots__ = ["promela", "choose", "selects", "choose_id", "index"]
 
     def __init__(self, choose_id: str) -> None:
         self.promela = StringManager()
         self.choose = StringManager()
+        self.selects = StringManager()
         self.choose_id = choose_id
         self.index: int = 0
 
@@ -171,14 +172,12 @@ class FeelToPromelaVisitor(FeelVisitor):
         choose_visitor = FeelToPromelaChooseVisitor(self.choose, self.choose_id)
         node.accept(choose_visitor)
 
-        self.promela.write_str(
-            f"choose_{self.choose_id}[choose_{self.choose_id}_i]", NL_SINGLE
-        )
-        self.promela.write_str("atomic{")
-        self.promela.write_str(
+        self.promela.write_str(f"choose_{self.choose_id}[choose_{self.choose_id}_i]")
+        self.selects.write_str("atomic{")
+        self.selects.write_str(
             f"select(choose_{self.choose_id}_i : 0..{len(node.choices.values) - 1})"
         )
-        self.promela.write_str("}", NL_SINGLE)
+        self.selects.write_str("}", NL_SINGLE)
         self.index += 1
         return False
 
