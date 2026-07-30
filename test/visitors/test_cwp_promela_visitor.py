@@ -36,17 +36,11 @@ class TestCwpPromelaVisitor:
         cpv.proper_path_block = proper_path_block
         cpv.var_reassignment = var_reassignment
 
-        prime_arrays = mocker.Mock()
-        array_reassignment = mocker.Mock()
-        cpv.prime_arrays = prime_arrays
-        cpv.array_reassignment = array_reassignment
-
         cpv.create_update_state_inline()
 
         calls = [
             mocker.call("inline updateState() {", NL_SINGLE, IndentAction.INC),
             mocker.call(prime_vars, indent_offset=1),
-            mocker.call(prime_arrays, indent_offset=1),
             mocker.call("if", NL_SINGLE, IndentAction.INC),
             mocker.call(proper_path_block, indent_offset=1),
             mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
@@ -54,7 +48,6 @@ class TestCwpPromelaVisitor:
             mocker.call("assert(false)", NL_SINGLE),
             mocker.call("fi", NL_SINGLE, IndentAction.DECTWO),
             mocker.call(var_reassignment, indent_offset=1),
-            mocker.call(array_reassignment, indent_offset=1),
             mocker.call("test_val", indent_offset=1),
             mocker.call("}", NL_DOUBLE, IndentAction.DEC),
         ]
@@ -83,11 +76,8 @@ class TestCwpPromelaVisitor:
         visitor = CwpPromelaVisitor()
         mocker.patch.object(visitor, "_build_prime_var")
         mocker.patch.object(visitor, "_build_vars")
-        mocker.patch.object(visitor, "_build_prime_arrays")
-        mocker.patch.object(visitor, "_build_arrays")
         mocker.patch.object(visitor, "_build_proper_path_block")
         mocker.patch.object(visitor, "_reassign_vars_to_primes")
-        mocker.patch.object(visitor, "_reassign_arrays_to_primes")
         mocker.patch.object(visitor, "_add_stationary_state")
         visitor.visit_state(mock_state)
         mock_write_str.assert_called_once_with("bool test = false", 1)
