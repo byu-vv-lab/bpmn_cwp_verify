@@ -1,7 +1,7 @@
 grammar State;
 
 state
-  : (enum_type_decl)* (const_var_decl)* (array_decl)* (var_decl)* EOF
+  : (enum_type_decl)* (const_var_decl)* (array_decl)* (var_decl)+ EOF
   ;
 
 enum_type_decl
