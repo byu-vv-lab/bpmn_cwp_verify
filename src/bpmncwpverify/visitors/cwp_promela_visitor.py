@@ -18,11 +18,8 @@ class CwpPromelaVisitor(CwpVisitor):
         "caculate_state_inline",
         "prime_vars",
         "vars",
-        "prime_arrays",
-        "arrays",
         "proper_path_block",
         "var_reassignment",
-        "array_reassignment",
         "list_of_cwp_states",
     ]
 
@@ -32,11 +29,8 @@ class CwpPromelaVisitor(CwpVisitor):
         self.caculate_state_inline = StringManager()
         self.prime_vars = StringManager()
         self.vars = StringManager()
-        self.prime_arrays = StringManager()
-        self.arrays = StringManager()
         self.proper_path_block = StringManager()
         self.var_reassignment = StringManager()
-        self.array_reassignment = StringManager()
         self.list_of_cwp_states: list[str] = []
 
     def _build_mapping_function(self, state: CwpState) -> StringManager:
@@ -75,16 +69,6 @@ class CwpPromelaVisitor(CwpVisitor):
         mapping_func = self._build_mapping_function(state)
         self.vars.write_str(f"{state.name} = {mapping_func}", NL_SINGLE)
 
-    def _build_prime_arrays(self, state: CwpState) -> None:
-        mapping_func = self._build_mapping_function(state)
-        self.prime_arrays.write_str(
-            f"bool {state.name}{PRIME_SUFFIX} = {mapping_func}", NL_SINGLE
-        )
-
-    def _build_arrays(self, state: CwpState) -> None:
-        mapping_func = self._build_mapping_function(state)
-        self.arrays.write_str(f"{state.name} = {mapping_func}", NL_SINGLE)
-
     def _build_proper_path_block(self, state: CwpState) -> None:
         for out_edge in state.out_edges:
             self.proper_path_block.write_str(
@@ -102,11 +86,6 @@ class CwpPromelaVisitor(CwpVisitor):
 
     def _reassign_vars_to_primes(self, state: CwpState) -> None:
         self.var_reassignment.write_str(
-            f"{state.name} = {state.name}{PRIME_SUFFIX}", NL_SINGLE
-        )
-
-    def _reassign_arrays_to_primes(self, state: CwpState) -> None:
-        self.array_reassignment.write_str(
             f"{state.name} = {state.name}{PRIME_SUFFIX}", NL_SINGLE
         )
 
@@ -146,16 +125,13 @@ class CwpPromelaVisitor(CwpVisitor):
 
             self._build_prime_var(state)
             self._build_vars(state)
-            self._build_arrays(state)
             self._build_proper_path_block(state)
             self._add_stationary_state(state)
             self._reassign_vars_to_primes(state)
-            self._reassign_arrays_to_primes(state)
         else:
             self.cwp_states.write_str(f"bool {state.name} = true", NL_SINGLE)
             self._build_proper_path_block(state)
             self.var_reassignment.write_str(f"{state.name} = false", NL_SINGLE)
-            self.array_reassignment.write_str(f"{state.name} = false", NL_SINGLE)
 
         return True
 
@@ -173,8 +149,6 @@ class CwpPromelaVisitor(CwpVisitor):
 
         self.update_state_inline.write_str(self.prime_vars, indent_offset=1)
 
-        self.update_state_inline.write_str(self.prime_arrays, indent_offset=1)
-
         self.update_state_inline.write_str("if", NL_SINGLE, IndentAction.INC)
 
         self.update_state_inline.write_str(self.proper_path_block, indent_offset=1)
@@ -188,8 +162,6 @@ class CwpPromelaVisitor(CwpVisitor):
         self.update_state_inline.write_str("fi", NL_SINGLE, IndentAction.DECTWO)
 
         self.update_state_inline.write_str(self.var_reassignment, indent_offset=1)
-
-        self.update_state_inline.write_str(self.array_reassignment, indent_offset=1)
 
         self.update_state_inline.write_str(self.build_XOR_block(), indent_offset=1)
 
