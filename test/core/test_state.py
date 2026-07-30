@@ -238,11 +238,11 @@ class Test_SymbolTable_build:
             ),
             # Array initialized with bad size
             (
-                "array a[0]: int = {0 1}",
+                "array a[0]: int = {0 1} var a: int = 0",
                 StateArraySizeError("a", Some(1), Some(6), 0, 2),
             ),
             (
-                "array b[2]: int = {0 1 2}",
+                "array b[2]: int = {0 1 2} var a: int = 0",
                 StateArraySizeError("b", Some(1), Some(6), 2, 3),
             ),
         ],
