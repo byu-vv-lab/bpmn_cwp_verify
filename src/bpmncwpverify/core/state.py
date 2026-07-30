@@ -179,7 +179,7 @@ class DeclLoc:
     Parent class for all types of variable declarations, stores location of variable declaration
     """
 
-    __slots__ = ["line", "col"]
+    __slots__ = ["col", "line"]
 
     def __init__(self, line: Maybe[int], col: Maybe[int]) -> None:
         """
@@ -220,7 +220,7 @@ class ConstDecl(DeclLoc):
     Represents constant varaible declaration using keyword const
     """
 
-    __slots__ = ["id", "type_", "init"]
+    __slots__ = ["id", "init", "type_"]
 
     def __init__(
         self,
@@ -279,7 +279,7 @@ class ArrayDecl(DeclLoc):
     Represents array variable declaration using keyword array
     """
 
-    __slots__ = ["id", "type_", "size", "values", "line", "col"]
+    __slots__ = ["col", "id", "line", "size", "type_", "values"]
 
     def __init__(
         self,
@@ -338,7 +338,7 @@ class VarDecl(DeclLoc):
     Represents variable declaration using keyword var
     """
 
-    __slots__ = ["id", "type_", "init", "values", "line", "col"]
+    __slots__ = ["col", "id", "init", "line", "type_", "values"]
 
     def __init__(
         self,
@@ -400,7 +400,7 @@ class TypeWithDeclLoc:
     Stores type related to variable in stored location
     """
 
-    __slots__ = ["type_", "decl_loc"]
+    __slots__ = ["decl_loc", "type_"]
 
     def __init__(self, type_: str, decl_loc: DeclLoc) -> None:
         """
@@ -419,7 +419,7 @@ class StateBuilder:
     Store variable information
     """
 
-    __slots__ = ["_consts", "_enums", "_vars", "_arrays"]
+    __slots__ = ["_arrays", "_consts", "_enums", "_vars"]
 
     def __init__(self) -> None:
         """
@@ -485,12 +485,12 @@ class State:
     """
 
     __slots__ = [
+        "_arrays",
         "_consts",
         "_enums",
         "_id2type",
-        "_str2var",
         "_str2enum",
-        "_arrays",
+        "_str2var",
         "_vars",
     ]
 
@@ -699,12 +699,16 @@ class State:
         self._vars = vars
         self._arrays = arrays
 
-    def __str__(self) -> str:
+    @staticmethod
+    def _enums_to_str(enums: list[EnumDecl]) -> str:
         """
-        Return string representation of State object
+        Return string representation of list of EnumDecl objects
+
+        Args:
+            enums (list[EnumDecl]): List of EnumDecl objects to convert to string
         """
         state_str = ""
-        for enum in self._enums:
+        for enum in enums:
             state_str += "enum " + enum.id + " {"
             for vals in range(len(enum.values)):
                 if vals == 0:
@@ -712,7 +716,18 @@ class State:
                     continue
                 state_str += " " + enum.values[vals].value
             state_str += "}\n"
-        for array in self._arrays:
+        return state_str
+
+    @staticmethod
+    def _arrays_to_str(arrays: list[ArrayDecl]) -> str:
+        """
+        Return string representation of list of ArrayDecl objects
+
+        Args:
+            arrays (list[ArrayDecl]): List of ArrayDecl objects to convert to string
+        """
+        state_str = ""
+        for array in arrays:
             state_str += (
                 "array "
                 + array.id
@@ -726,7 +741,18 @@ class State:
             for val in array.values:
                 state_str += "  " + val.value + "\n"
             state_str += "]\n"
-        for const in self._consts:
+        return state_str
+
+    @staticmethod
+    def _consts_to_str(consts: list[ConstDecl]) -> str:
+        """
+        Return string representation of list of ConstDecl objects
+
+        Args:
+            consts (list[ConstDecl]): List of ConstDecl objects to convert to string
+        """
+        state_str = ""
+        for const in consts:
             state_str += (
                 "const "
                 + const.id
@@ -736,7 +762,18 @@ class State:
                 + const.init.value
                 + "\n"
             )
-        for var in self._vars:
+        return state_str
+
+    @staticmethod
+    def _vars_to_str(vars: list[VarDecl]) -> str:
+        """
+        Return string representation of list of VarDecl objects
+
+        Args:
+            vars (list[VarDecl]): List of VarDecl objects to convert to string
+        """
+        state_str = ""
+        for var in vars:
             state_str += "var " + var.id + " : " + var.type_ + " = " + var.init.value
             if len(var.values) != 0:
                 state_str += " {"
@@ -748,6 +785,17 @@ class State:
                 state_str += "}\n"
             else:
                 state_str += "\n"
+        return state_str
+
+    def __str__(self) -> str:
+        """
+        Return string representation of State object
+        """
+        state_str = ""
+        state_str += State._enums_to_str(self._enums)
+        state_str += State._consts_to_str(self._consts)
+        state_str += State._vars_to_str(self._vars)
+        state_str += State._arrays_to_str(self._arrays)
         return state_str
 
     @property
