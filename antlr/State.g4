@@ -45,10 +45,6 @@ COLON
   : ':'
   ;
 
-COMMA
-  : ','
-  ;
-
 BIT
   : 'bit'
   ;
