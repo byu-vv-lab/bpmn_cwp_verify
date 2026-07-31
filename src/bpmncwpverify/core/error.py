@@ -605,6 +605,43 @@ class StateMultipleDefinitionError(Error):
         return False
 
 
+class StateArraySizeError(Error):
+    __slots__ = ["id", "line", "column", "expected_size", "actual_size"]
+
+    def __init__(
+        self,
+        id: str,
+        line: Maybe[int],
+        column: Maybe[int],
+        expected_size: int,
+        actual_size: int,
+    ) -> None:
+        super().__init__()
+        self.id = id
+        self.line = line
+        self.column = column
+        self.expected_size = expected_size
+        self.actual_size = actual_size
+
+    def __eq__(self, other: typing.Any) -> bool:
+        if isinstance(other, StateArraySizeError):
+            return (
+                self.id == other.id
+                and self.line == other.line
+                and self.column == other.column
+                and self.expected_size == other.expected_size
+                and self.actual_size == other.actual_size
+            )
+        return False
+
+    def __str__(self) -> str:
+        return (
+            f"StateArraySizeError: Array '{self.id}' has size {self.actual_size}, "
+            f"but expected size is {self.expected_size}. "
+            f"Location: line {self.line}, column {self.column}."
+        )
+
+
 class StateSyntaxError(Error):
     __slots__ = "msg"
 
@@ -989,5 +1026,18 @@ def get_error_message(error: Error) -> str:
             return f"TYPING ERROR: literal '{id}' has an unknown type"
         case TypingNotCaughtError(explination=explination):
             return explination
+        case StateArraySizeError(
+            id=id,
+            line=line,
+            column=column,
+            expected_size=expected_size,
+            actual_size=actual_size,
+        ):
+            if expected_size < 1:
+                return f"STATE ARRAY SIZE ERROR: array '{id}' at line {line.unwrap()}:{column.unwrap()}. Array size must be greater than 0."
+            else:
+                return f"STATE ARRAY SIZE ERROR: array '{id}' at line {line.unwrap()}:{column.unwrap()} has size {actual_size}, expected size {expected_size}"
         case _:
-            raise builtins.NotImplementedError
+            raise builtins.NotImplementedError(
+                f"Error message not implemented for error type: {error.__class__.__name__}"
+            )

@@ -46,6 +46,24 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
         loggerFunction.write_str(":: else", NL_SINGLE, IndentAction.DEC)
         loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
 
+    for array in state.arrays:
+        for i in range(len(array.values)):
+            loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
+            loggerFunction.write_str(
+                f":: {array.id}[{i}] != old_{array.id}[{i}] ->",
+                NL_SINGLE,
+                IndentAction.INC,
+            )
+            loggerFunction.write_str(
+                f'printf("{array.id}[{i}] = {_get_print_type(array.type_)}\\n", {array.id}[{i}])',
+                NL_SINGLE,
+            )
+            loggerFunction.write_str(
+                f"old_{array.id}[{i}] = {array.id}[{i}]", NL_SINGLE
+            )
+            loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
+            loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
+
     for cwp_state in cwp.states.values():
         loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
         loggerFunction.write_str(
@@ -67,6 +85,19 @@ def _generate_state_dump(state: State) -> str:
     for var in state.vars:
         state_dump.write_str(
             f'printf("{var.id} = {_get_print_type(var.type_)}\\n", {var.id})', NL_SINGLE
+        )
+
+    for array in state.arrays:
+        valTypeList: str = ""
+        valDeclList: str = ""
+        comma: str = ", "
+        for i in range(len(array.values)):
+            if i == len(array.values) - 1:
+                comma = ""
+            valTypeList += f"{_get_print_type(array.type_)}" + comma
+            valDeclList += f"{array.id}[{i}]" + comma
+        state_dump.write_str(
+            f'printf("{array.id} = {{{valTypeList}}}", {valDeclList})', NL_SINGLE
         )
 
     state_dump.write_str("}", NL_DOUBLE, IndentAction.DEC)
@@ -92,6 +123,29 @@ def _generate_state_promela(state: State) -> str:
         str_builder.append(
             f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
         )
+    for array_decl in state.arrays:
+        arrayBuilder: str = (
+            f"{array_decl.type_} {array_decl.id}[{array_decl.size}] = {{"
+        )
+        if "bit" not in array_decl.type_ and "bool" not in array_decl.type_:
+            hiddenBuilder: str = (
+                f"hidden {array_decl.type_} old_{array_decl.id}[{array_decl.size}] = {{"
+            )
+        else:
+            hiddenBuilder = (
+                f"{array_decl.type_} old_{array_decl.id}[{array_decl.size}] = {{"
+            )
+
+        index: int = 0
+        comma: str = ", "
+        for valDecl in array_decl.values:
+            if index == len(array_decl.values) - 1:
+                comma = ""
+            arrayBuilder += f"{valDecl.value}{comma}"
+            hiddenBuilder += f"{valDecl.value}{comma}"
+            index += 1
+        str_builder.append(arrayBuilder + "}")
+        str_builder.append(hiddenBuilder + "}")
     for var_decl in state.vars:
         if var_decl.type_ in {enum.id for enum in state.enums}:
             str_builder.append(
