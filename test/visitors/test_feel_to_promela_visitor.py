@@ -109,10 +109,10 @@ def test_equal_comparision_with_chooose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:bool choose_0[2] = {true, false}\nbyte choose_0_i = 0\n"
+        == "mtype:bool choose_0_0[2] = {true, false}\nbyte choose_0_0_i = 0\n"
     )
-    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..1)}\n"
-    assert str(visitor.promela) == "(b == choose_0[choose_0_i])"
+    assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..1)}\n"
+    assert str(visitor.promela) == "(b == choose_0_0[choose_0_0_i])"
 
 
 def test_if() -> None:
@@ -163,10 +163,10 @@ def test_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0_i = 0\n"
+        == "mtype:commsState choose_0_0[3] = {standby, waiting, off}\nbyte choose_0_0_i = 0\n"
     )
-    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..2)}\n"
-    assert str(visitor.promela) == "choose_0[choose_0_i]"
+    assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..2)}\n"
+    assert str(visitor.promela) == "choose_0_0[choose_0_0_i]"
 
 
 def test_triple_with_if() -> None:
@@ -210,10 +210,10 @@ def test_triple_with_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:commsState choose_0[3] = {standby, waiting, off}\nbyte choose_0_i = 0\n"
+        == "mtype:commsState choose_0_0[3] = {standby, waiting, off}\nbyte choose_0_0_i = 0\n"
     )
-    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..2)}\n"
-    assert str(visitor.promela) == "comms = choose_0[choose_0_i]"
+    assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..2)}\n"
+    assert str(visitor.promela) == "comms = choose_0_0[choose_0_0_i]"
 
 
 def test_triple() -> None:
@@ -272,12 +272,12 @@ def test_input_if_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:Cond choose_0[2] = {same, changed}\nbyte choose_0_i = 0\n"
+        == "mtype:Cond choose_0_0[2] = {same, changed}\nbyte choose_0_0_i = 0\n"
     )
-    assert str(visitor.selects) == "atomic{select(choose_0_i : 0..1)}\n"
+    assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..1)}\n"
     assert (
         str(visitor.promela)
-        == "conditions = ((blackBox == missing) -> choose_0[choose_0_i] : conditions)"
+        == "conditions = ((blackBox == missing) -> choose_0_0[choose_0_0_i] : conditions)"
     )
 
 
@@ -297,7 +297,7 @@ def test_input_if_then_choose_else() -> None:
         ),
     )
 
-    visitor = FeelToPromelaVisitor("0")
+    visitor = FeelToPromelaVisitor("activity")
     assert isinstance(node.value, IfNode)
     assert isinstance(node.value.thendo, ChooseNode)
     assert isinstance(node.value.elsedo, ChooseNode)
@@ -308,15 +308,15 @@ def test_input_if_then_choose_else() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:Cond choose_0[2] = {same, changed}\nbyte choose_0_i = 0\nmtype:Cond choose_0[2] = {same, notgood}\nbyte choose_0_i = 0\n"
+        == "mtype:Cond choose_activity_0[2] = {same, changed}\nbyte choose_activity_0_i = 0\nmtype:Cond choose_activity_1[2] = {same, notgood}\nbyte choose_activity_1_i = 0\n"
     )
     assert (
         str(visitor.selects)
-        == "atomic{select(choose_0_i : 0..1)}\natomic{select(choose_0_i : 0..1)}\n"
+        == "atomic{select(choose_activity_0_i : 0..1)}\natomic{select(choose_activity_1_i : 0..1)}\n"
     )
     assert (
         str(visitor.promela)
-        == "conditions = ((blackBox == missing) -> choose_0[choose_0_i] : choose_0[choose_0_i])"
+        == "conditions = ((blackBox == missing) -> choose_activity_0[choose_activity_0_i] : choose_activity_1[choose_activity_1_i])"
     )
 
 

@@ -169,13 +169,17 @@ class FeelToPromelaVisitor(FeelVisitor):
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
-        choose_visitor = FeelToPromelaChooseVisitor(self.choose, self.choose_id)
+        choose_visitor = FeelToPromelaChooseVisitor(
+            self.choose, self.choose_id, self.index
+        )
         node.accept(choose_visitor)
 
-        self.promela.write_str(f"choose_{self.choose_id}[choose_{self.choose_id}_i]")
+        self.promela.write_str(
+            f"choose_{self.choose_id}_{self.index}[choose_{self.choose_id}_{self.index}_i]"
+        )
         self.selects.write_str("atomic{")
         self.selects.write_str(
-            f"select(choose_{self.choose_id}_i : 0..{len(node.choices.values) - 1})"
+            f"select(choose_{self.choose_id}_{self.index}_i : 0..{len(node.choices.values) - 1})"
         )
         self.selects.write_str("}", NL_SINGLE)
         self.index += 1
@@ -203,12 +207,13 @@ class FeelToPromelaVisitor(FeelVisitor):
 
 
 class FeelToPromelaChooseVisitor(FeelVisitor):
-    slots = ["promela", "found_choose", "choose_id"]
+    slots = ["promela", "found_choose", "choose_id", "index"]
 
-    def __init__(self, promela: StringManager, choose_id: str) -> None:
+    def __init__(self, promela: StringManager, choose_id: str, index: int) -> None:
         self.promela = promela
         self.found_choose: bool = False
         self.choose_id = choose_id
+        self.index = index
 
     def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
         if self.found_choose:
@@ -245,17 +250,19 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
 
         if type == "byte":
             self.promela.write_str(
-                f"{type} choose_{self.choose_id}[{len(node.choices.values)}] = "
+                f"{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}] = "
             )
         else:
             self.promela.write_str(
-                f"mtype:{type} choose_{self.choose_id}[{len(node.choices.values)}] = "
+                f"mtype:{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}] = "
             )
 
         node.choices.accept(self)
 
         self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str(f"byte choose_{self.choose_id}_i = 0", NL_SINGLE)
+        self.promela.write_str(
+            f"byte choose_{self.choose_id}_{self.index}_i = 0", NL_SINGLE
+        )
 
         self.found_choose = False
         return False
