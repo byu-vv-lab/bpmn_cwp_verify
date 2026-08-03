@@ -24,7 +24,7 @@ def test_list() -> None:
     node = ListNode(
         [NumberLiteralNode("2"), NumberLiteralNode("1"), NumberLiteralNode("0")]
     )
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -33,7 +33,7 @@ def test_list() -> None:
 
 def test_add() -> None:
     node = AddNode(NumberLiteralNode("2"), QualifiedNameNode("3"))
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -45,7 +45,7 @@ def test_multiply_and_add() -> None:
         NumberLiteralNode("5"),
         MultiplyNode(NumberLiteralNode("2"), QualifiedNameNode("3")),
     )
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -54,7 +54,7 @@ def test_multiply_and_add() -> None:
 
 def test_and() -> None:
     node = AndNode(BoolLiteralNode("true"), QualifiedNameNode("something"))
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -63,7 +63,7 @@ def test_and() -> None:
 
 def test_or() -> None:
     node = OrNode(QualifiedNameNode("x"), QualifiedNameNode("y"))
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -72,7 +72,7 @@ def test_or() -> None:
 
 def test_xor() -> None:
     node = XOrNode(QualifiedNameNode("X"), QualifiedNameNode("Y"))
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -84,7 +84,7 @@ def test_or_and() -> None:
         AndNode(QualifiedNameNode("this"), QualifiedNameNode("that")),
         XOrNode(QualifiedNameNode("this"), QualifiedNameNode("notthis")),
     )
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -121,7 +121,7 @@ def test_if() -> None:
         QualifiedNameNode("missing"),
         QualifiedNameNode("found"),
     )
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -130,7 +130,7 @@ def test_if() -> None:
 
 def test_not() -> None:
     node = NotNode(BoolLiteralNode("true"))
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -139,7 +139,7 @@ def test_not() -> None:
 
 def test_true_and_not_false() -> None:
     node = AndNode(BoolLiteralNode("true"), NotNode(BoolLiteralNode("false")))
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -179,7 +179,7 @@ def test_triple_with_if() -> None:
             QualifiedNameNode("found"),
         ),
     )
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -221,7 +221,7 @@ def test_triple() -> None:
         QualifiedNameNode("uuvComms"), ListNode([]), QualifiedNameNode("sent")
     )
 
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -239,7 +239,7 @@ def test_if_equal_to_self() -> None:
         ),
     )
 
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
@@ -329,7 +329,7 @@ def test_triple_list() -> None:
             TripleNode(QualifiedNameNode("x"), ListNode([]), QualifiedNameNode("y")),
         ]
     )
-    visitor = FeelToPromelaVisitor("")
+    visitor = FeelToPromelaVisitor()
 
     node.accept(visitor)
 
