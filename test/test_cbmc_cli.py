@@ -204,9 +204,9 @@ def test_parser_reachability_subprocess_error_on_empty():
 
 def test_face2face_with_cbmc_returns_success():
     result = _verify_with_cbmc_from_files(
-        "./test/resources/face2face/state.txt",
-        "./test/resources/face2face/cwp.xml",
-        "./test/resources/face2face/workflow.bpmn",
+        "./test/resources/face2face/feel/state.txt",
+        "./test/resources/face2face/feel/cwp.xml",
+        "./test/resources/face2face/feel/workflow.bpmn",
     )
     assert is_successful(result)
     report = unsafe_perform_io(result.unwrap())
@@ -225,9 +225,9 @@ def test_correctness_failure_propagates_assertion_error(mocker):
         side_effect=[IOSuccess(CORRECTNESS_FAILURE)],
     )
     result = _verify_with_cbmc_from_files(
-        "./test/resources/face2face/state.txt",
-        "./test/resources/face2face/cwp.xml",
-        "./test/resources/face2face/workflow.bpmn",
+        "./test/resources/face2face/feel/state.txt",
+        "./test/resources/face2face/feel/cwp.xml",
+        "./test/resources/face2face/feel/workflow.bpmn",
     )
     assert not_(is_successful)(result)
     error = unsafe_perform_io(result.failure())
@@ -240,9 +240,9 @@ def test_reachability_failure_propagates_reachability_error(mocker):
         side_effect=[IOSuccess(CORRECTNESS_SUCCESS), IOSuccess(REACHABILITY_FAILURE)],
     )
     result = _verify_with_cbmc_from_files(
-        "./test/resources/face2face/state.txt",
-        "./test/resources/face2face/cwp.xml",
-        "./test/resources/face2face/workflow.bpmn",
+        "./test/resources/face2face/feel/state.txt",
+        "./test/resources/face2face/feel/cwp.xml",
+        "./test/resources/face2face/feel/workflow.bpmn",
     )
     assert not_(is_successful)(result)
     error = unsafe_perform_io(result.failure())
