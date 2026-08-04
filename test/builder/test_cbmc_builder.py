@@ -32,9 +32,11 @@ SIMPLE = RESOURCES / "simple_example"
 FACE2FACE = RESOURCES / "face2face"
 
 # Resource filenames (matches existing test conventions)
-SIMPLE_STATE = SIMPLE / "state.txt"
-SIMPLE_CWP = SIMPLE / "test_cwp.xml"
-SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
+# simple_open.bpmn's task behavior is FEEL syntax, so this points at the
+# feel/ sibling directory (task_MWMokA: `x = x + 1` -> `(x, [x], x + 1)`).
+SIMPLE_STATE = SIMPLE / "feel" / "state.txt"
+SIMPLE_CWP = SIMPLE / "feel" / "test_cwp.xml"
+SIMPLE_BPMN = SIMPLE / "feel" / "simple_open.bpmn"
 
 FACE2FACE_FEEL_STATE = FACE2FACE / "feel" / "state.txt"
 FACE2FACE_FEEL_CWP = FACE2FACE / "feel" / "cwp.xml"
@@ -218,7 +220,8 @@ class TestSimpleExampleGeneration:
         assert "__CPROVER_assume(" in c_code
 
     def test_task_behavior_executed(self, c_code):
-        assert "x = x + 1;" in c_code
+        # FeelToCbmcVisitor always parenthesizes binary operators.
+        assert "x = (x + 1);" in c_code
 
     def test_update_cwp_state_called_after_task(self, c_code):
         assert "update_cwp_state(&cwp_state, cwp_reached, x);" in c_code
