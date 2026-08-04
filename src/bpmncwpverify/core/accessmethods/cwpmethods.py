@@ -5,6 +5,7 @@ from returns.result import Failure, Result
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
+    CwpEdgeNoExpressionError,
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
@@ -89,14 +90,14 @@ class CwpXmlParser:
         state: State,
     ) -> None:
         for itm in all_items:
-            style = itm.get(
-                "style"
-            )  # TODO: if edge does not have expression, then throw error
+            style = itm.get("style")
             if style and "edgeLabel" in style:
                 parent = itm.get("parent")
                 expression = itm.get("value")
                 if not (parent and expression):
                     raise Exception(CwpEdgeNoParentExprError(itm))
+                if not expression:
+                    raise Exception(CwpEdgeNoExpressionError(itm))
                 builder.check_expression(expr_lstnr, expression, parent, state)
 
     @staticmethod

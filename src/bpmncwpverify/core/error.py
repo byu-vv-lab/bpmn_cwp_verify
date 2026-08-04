@@ -239,6 +239,14 @@ class CwpEdgeNoStateError(Error):
         self.edge = edge
 
 
+class CwpEdgeNoExpressionError(Error):
+    __slots__ = ["edge"]
+
+    def __init__(self, edge: Element) -> None:
+        super().__init__()
+        self.edge = edge
+
+
 class CwpUnsupportedElementError(Error):
     __slots__ = ["number_of_elements", "element"]
 
