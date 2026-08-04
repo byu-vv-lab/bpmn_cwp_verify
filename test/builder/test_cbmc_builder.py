@@ -36,6 +36,10 @@ SIMPLE_STATE = SIMPLE / "state.txt"
 SIMPLE_CWP = SIMPLE / "test_cwp.xml"
 SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
 
+FACE2FACE_FEEL_STATE = FACE2FACE / "feel" / "state.txt"
+FACE2FACE_FEEL_CWP = FACE2FACE / "feel" / "cwp.xml"
+FACE2FACE_FEEL_BPMN = FACE2FACE / "feel" / "workflow.bpmn"
+
 
 def _build_c(
     state_path: Path, cwp_path: Path, bpmn_path: Path, max_retries: int = 2
@@ -239,6 +243,84 @@ class TestSimpleExampleGeneration:
             f.write(c_code)
             path = f.name
         assert Path(path).stat().st_size > 0
+
+
+# ── face2face/feel tests (Task.behavior / expressions as real Feel ASTs) ──────
+
+
+class TestFace2FaceFeelGeneration:
+    """End-to-end C generation from face2face/feel — the FEEL-wired fixture set.
+
+    Task behaviors here are real `(target, [], value)` triples (including
+    choose(...)-valued ones) and flow/edge guards are real FEEL boolean
+    expressions, so this is the test that exercises Task.behavior/
+    SequenceFlow.expression/CwpEdge.expression all being `Feel` end-to-end
+    through the CBMC backend, not just plain strings.
+    """
+
+    @pytest.fixture(scope="class")
+    def c_code(self):
+        return _build_c(FACE2FACE_FEEL_STATE, FACE2FACE_FEEL_CWP, FACE2FACE_FEEL_BPMN)
+
+    def test_produces_non_empty_output(self, c_code):
+        assert len(c_code) > 100
+
+    def test_no_leftover_promela_syntax(self, c_code):
+        assert "::" not in c_code
+        assert "mtype" not in c_code
+        assert not any(line.strip() == "if" for line in c_code.splitlines())
+        assert not any(line.strip() == "fi" for line in c_code.splitlines())
+
+    def test_no_feel_object_reprs(self, c_code):
+        assert "Feel object at" not in c_code
+
+    def test_triple_assignment_behavior(self, c_code):
+        assert "backpackOwner = sellerName;" in c_code
+        assert "paymentOwner = buyerName;" in c_code
+
+    def test_choose_behavior_translated(self, c_code):
+        assert "nondet_int()" in c_code
+        assert "__CPROVER_assume(" in c_code
+        assert "terms = t_choose_Activity_1unsjkg_0;" in c_code
+
+    def test_flow_guard_expression_translated(self, c_code):
+        assert "paymentOffered == paymentAmount" in c_code
+        assert "terms == agreed" in c_code
+
+    def test_edge_condition_expression_translated(self, c_code):
+        assert "paymentOwner == buyerName" in c_code
+        assert "backpackOwner == sellerName" in c_code
+
+
+class TestFace2FaceFeelCbmc:
+    """Runs the actual CBMC tool against the feel fixture. Skipped when cbmc isn't installed."""
+
+    @pytest.fixture(scope="class")
+    def c_file(self):
+        c_code = _build_c(
+            FACE2FACE_FEEL_STATE,
+            FACE2FACE_FEEL_CWP,
+            FACE2FACE_FEEL_BPMN,
+            max_retries=2,
+        )
+        with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
+            f.write(c_code)
+            return Path(f.name)
+
+    def test_cbmc_installed(self):
+        assert shutil.which("cbmc") is not None, (
+            "cbmc not found in PATH — install with: brew install cbmc"
+        )
+
+    def test_cbmc_verification_successful(self, c_file):
+        result = subprocess.run(
+            ["cbmc", str(c_file), "--unwind", "26"],
+            capture_output=True,
+            text=True,
+        )
+        assert "VERIFICATION SUCCESSFUL" in result.stdout, (
+            f"CBMC failed.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
+        )
 
 
 # ── CBMC execution tests (require cbmc to be installed) ────────────────────────
