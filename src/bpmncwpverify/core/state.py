@@ -6,6 +6,7 @@ from antlr4.error.ErrorListener import ConsoleErrorListener, ErrorListener
 from antlr4.error.ErrorStrategy import ParseCancellationException
 from antlr4.Token import Token
 from antlr4.tree.Tree import TerminalNode, TerminalNodeImpl
+from returns.converters import maybe_to_result
 from returns.functions import not_
 from returns.maybe import Maybe, Nothing, Some
 from returns.pipeline import flow, is_successful
@@ -18,6 +19,7 @@ from bpmncwpverify.antlr.StateParser import StateParser
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
+    NotInitializedError,
     StateAntlrWalkerError,
     StateArraySizeError,
     StateInitNotInValues,
@@ -1080,24 +1082,27 @@ class State:
         Args:
             array_decl (ArrayDecl): Array variable declaration to check
         """
-        # requires
-        assert self._id2type != Nothing
+        result = cast(
+            "Result[dict[str, TypeWithDeclLoc], Error]",
+            maybe_to_result(self._id2type, NotInitializedError("_id2type")),
+        )
 
-        id2type = self._id2type.unwrap()
-        if array_decl.id in id2type:
-            first = (id2type[array_decl.id]).decl_loc
-            return Failure(
-                StateMultipleDefinitionError(
-                    array_decl.id,
-                    array_decl.line,
-                    array_decl.col,
-                    first.line,
-                    first.col,
+        def insert(id2type: dict[str, TypeWithDeclLoc]) -> Result[None, Error]:
+            if array_decl.id in id2type:
+                first = id2type[array_decl.id].decl_loc
+                return Failure(
+                    StateMultipleDefinitionError(
+                        array_decl.id,
+                        array_decl.line,
+                        array_decl.col,
+                        first.line,
+                        first.col,
+                    )
                 )
-            )
-        id2type[array_decl.id] = TypeWithDeclLoc(array_decl.type_, array_decl)
+            id2type[array_decl.id] = TypeWithDeclLoc(array_decl.type_, array_decl)
+            return Success(None)
 
-        return Success(None)
+        return result.bind(insert)  # pyright: ignore[reportUnknownMemberType]
 
     @staticmethod
     def from_str(state_def: str) -> Result["State", Error]:
