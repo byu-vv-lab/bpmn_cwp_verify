@@ -219,7 +219,9 @@ class TestCwpXmlParser:
         mock_expr_lstnr = mocker.Mock()
         mock_state = mocker.Mock()
         element = mocker.Mock()
-        element.get.side_effect = lambda x: {"parent": "parentLabel"}.get(x)
+        element.get.side_effect = lambda x: {"style": "edgeLabel", "parent": True}.get(
+            x
+        )
 
         mock_all_items = [element]
         with pytest.raises(Exception) as exc_info:
