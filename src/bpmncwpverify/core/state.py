@@ -877,25 +877,24 @@ class State:
         Args:
             state (State): State object to modify
         """
-        # requires
-        assert self._id2type != Nothing
 
-        id2type = self._id2type.unwrap()
-        for const_decl in self._consts:
-            if const_decl.id in id2type:
-                first = (id2type[const_decl.id]).decl_loc
-                return Failure(
-                    StateMultipleDefinitionError(
-                        const_decl.id,
-                        const_decl.line,
-                        const_decl.col,
-                        first.line,
-                        first.col,
+        def _find(id2type: dict[str, TypeWithDeclLoc]) -> Result[None, Error]:
+            for const_decl in self._consts:
+                if const_decl.id in id2type:
+                    first = (id2type[const_decl.id]).decl_loc
+                    return Failure(
+                        StateMultipleDefinitionError(
+                            const_decl.id,
+                            const_decl.line,
+                            const_decl.col,
+                            first.line,
+                            first.col,
+                        )
                     )
-                )
-            id2type[const_decl.id] = TypeWithDeclLoc(const_decl.type_, const_decl)
+                id2type[const_decl.id] = TypeWithDeclLoc(const_decl.type_, const_decl)
+            return Success(None)
 
-        return Success(None)
+        return maybe_to_result(self._id2type, Error()).bind(_find)  # pyright: ignore[reportUnknownMemberType]
 
     def _build_id_2_type_enums(self) -> Result[None, Error]:
         """
@@ -1018,35 +1017,41 @@ class State:
         Args:
             enum_decl (EnumDecl): Enum variable declaration to check
         """
-        # requires
-        assert self._id2type != Nothing
-        assert self._str2enum != Nothing
 
-        id2type = self._id2type.unwrap()
-        str2enum = self._str2enum.unwrap()
-
-        if enum_decl.id in id2type:
-            first = (id2type[enum_decl.id]).decl_loc
-            return Failure(
-                StateMultipleDefinitionError(
-                    enum_decl.id, enum_decl.line, enum_decl.col, first.line, first.col
-                )
-            )
-        id2type[enum_decl.id] = TypeWithDeclLoc(typechecking.ENUM, enum_decl)
-
-        for v in enum_decl.values:
-            if v.value in id2type:
-                first = id2type[v.value].decl_loc
+        def _find(
+            id2type: dict[str, TypeWithDeclLoc], str2enum: dict[str, EnumDecl]
+        ) -> Result[None, Error]:
+            if enum_decl.id in id2type:
+                first = id2type[enum_decl.id].decl_loc
                 return Failure(
                     StateMultipleDefinitionError(
-                        v.value, v.line, v.col, first.line, first.col
+                        enum_decl.id,
+                        enum_decl.line,
+                        enum_decl.col,
+                        first.line,
+                        first.col,
                     )
                 )
-            else:
+            id2type[enum_decl.id] = TypeWithDeclLoc(typechecking.ENUM, enum_decl)
+
+            for v in enum_decl.values:
+                if v.value in id2type:
+                    first = id2type[v.value].decl_loc
+                    return Failure(
+                        StateMultipleDefinitionError(
+                            v.value, v.line, v.col, first.line, first.col
+                        )
+                    )
                 id2type[v.value] = TypeWithDeclLoc(enum_decl.id, v)
                 str2enum[v.value] = enum_decl
 
-        return Success(None)
+            return Success(None)
+
+        return maybe_to_result(self._id2type, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: maybe_to_result(self._str2enum, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2enum: _find(id2type, str2enum)
+            )
+        )
 
     def _build_id_2_type_var(self, var_decl: VarDecl) -> Result[None, Error]:
         """
@@ -1055,22 +1060,26 @@ class State:
         Args:
             VarDecl (VarDecl): Var variable declaration to check
         """
-        # requires
-        assert self._id2type != Nothing
-        assert self._str2var != Nothing
 
-        id2type = self._id2type.unwrap()
-        str2var = self._str2var.unwrap()
-        if var_decl.id in id2type:
-            first = (id2type[var_decl.id]).decl_loc
-            return Failure(
-                StateMultipleDefinitionError(
-                    var_decl.id, var_decl.line, var_decl.col, first.line, first.col
+        def _find(
+            id2type: dict[str, TypeWithDeclLoc], str2var: dict[str, VarDecl]
+        ) -> Result[None, Error]:
+            if var_decl.id in id2type:
+                first = (id2type[var_decl.id]).decl_loc
+                return Failure(
+                    StateMultipleDefinitionError(
+                        var_decl.id, var_decl.line, var_decl.col, first.line, first.col
+                    )
                 )
+            id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
+            str2var[var_decl.id] = var_decl
+            return Success(None)
+
+        return maybe_to_result(self._id2type, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: maybe_to_result(self._str2var, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2var: _find(id2type, str2var)
             )
-        id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
-        str2var[var_decl.id] = var_decl
-        return Success(None)
+        )
 
     def _build_id_2_type_array(self, array_decl: ArrayDecl) -> Result[None, Error]:
         """
