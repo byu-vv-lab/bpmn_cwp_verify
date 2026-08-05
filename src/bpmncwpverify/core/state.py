@@ -809,12 +809,10 @@ class State:
         return tuple(self._enums)
 
     def is_variable(self, variable: str) -> bool:
-        assert self._str2var != Nothing
-        return variable in self._str2var.unwrap()
+        return self._str2var.map(lambda d: variable in d).value_or(False)
 
     def is_enum(self, variable: str) -> bool:
-        assert self._str2enum != Nothing
-        return variable in self._str2enum.unwrap()
+        return self._str2enum.map(lambda d: variable in d).value_or(False)
 
     def is_defined(self, id: str) -> bool:
         """
@@ -836,14 +834,13 @@ class State:
         Args:
             id (str): Name of the variable
         """
-        # requires
-        assert self._id2type != Nothing
 
-        id2type = self._id2type.unwrap()
-        if id in id2type:
-            return Success(id2type[id].type_)
-        result: Result[str, Error] = typechecking.get_type_literal(id)
-        return result
+        def _lookup(id2type: dict[str, TypeWithDeclLoc]) -> Result[str, Error]:
+            if id in id2type:
+                return Success(id2type[id].type_)
+            return typechecking.get_type_literal(id)
+
+        return maybe_to_result(self._id2type, Error()).bind(_lookup)  # pyright: ignore[reportUnknownMemberType]
 
     def type_check(self) -> Result["State", Error]:
         """
