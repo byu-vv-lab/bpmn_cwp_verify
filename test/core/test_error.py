@@ -34,6 +34,7 @@ from bpmncwpverify.core.error import (
     CbmcReachabilityError,
     CbmcSubProcessError,
     CounterExampleError,
+    CwpEdgeInvalidStateError,
     CwpEdgeNoParentExprError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
@@ -179,6 +180,10 @@ test_inputs: list[tuple[Error, str]] = [
     (
         BpmnUnrecognizedElement("element_name"),
         "BPMN ERROR: Unrecognized bpmn element type in workflow: element_name",
+    ),
+    (
+        CwpEdgeInvalidStateError("edge_id"),
+        "CWP ERROR: Edge has an invalid source or target. Edge name: edge_id.",
     ),
     (
         CwpEdgeNoParentExprError(mock.Mock(attrib="edge_attrib")),
@@ -422,6 +427,7 @@ test_ids: list[str] = [
     "BpmnStructureError",
     "BpmnTaskFlowError",
     "BpmnUnrecognizedElement",
+    "CwpEdgeInvalidStateError",
     "CwpEdgeNoParentExprError",
     "CwpEdgeNoStateError",
     "CwpFileStructureError",

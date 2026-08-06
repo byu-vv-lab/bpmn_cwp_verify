@@ -239,6 +239,14 @@ class CwpEdgeNoStateError(Error):
         self.edge = edge
 
 
+class CwpEdgeInvalidStateError(Error):
+    __slots__ = ["edge_id"]
+
+    def __init__(self, edge_id: str) -> None:
+        super().__init__()
+        self.edge_id = edge_id
+
+
 class CwpUnsupportedElementError(Error):
     __slots__ = ["number_of_elements", "element"]
 
@@ -838,6 +846,8 @@ def get_error_message(error: Error) -> str:
             return f"CWP ERROR: Expression or parent node not found in edge. Edge details: {edge.attrib}."
         case CwpEdgeNoStateError(edge=edge):
             return f"CWP ERROR: Edge does not have a source or a target. Edge details: {edge.attrib}."
+        case CwpEdgeInvalidStateError(edge_id=edge_id):
+            return f"CWP ERROR: Edge has an invalid source or target. Edge name: {edge_id}."
         case CwpUnsupportedElementError(
             number_of_elements=number_of_elements, element=element
         ):
