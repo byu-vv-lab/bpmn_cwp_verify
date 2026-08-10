@@ -169,14 +169,19 @@ class FeelToPromelaVisitor(FeelVisitor):
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
+        choose_array: StringManager = StringManager()
+
         choose_visitor = FeelToPromelaChooseVisitor(
-            self.choose, self.choose_id, self.index
+            self.choose, choose_array, self.choose_id, self.index
         )
         node.accept(choose_visitor)
 
         self.promela.write_str(
             f"choose_{self.choose_id}_{self.index}[choose_{self.choose_id}_{self.index}_i]"
         )
+
+        self.selects.write_str(choose_array)
+
         self.selects.write_str("atomic{")
         self.selects.write_str(
             f"select(choose_{self.choose_id}_{self.index}_i : 0..{len(node.choices.values) - 1})"
@@ -209,20 +214,23 @@ class FeelToPromelaVisitor(FeelVisitor):
 class FeelToPromelaChooseVisitor(FeelVisitor):
     slots = ["promela", "found_choose", "choose_id", "index"]
 
-    def __init__(self, promela: StringManager, choose_id: str, index: int) -> None:
+    def __init__(
+        self, promela: StringManager, array: StringManager, choose_id: str, index: int
+    ) -> None:
         self.promela = promela
+        self.array = array
         self.found_choose: bool = False
         self.choose_id = choose_id
         self.index = index
 
     def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
         if self.found_choose:
-            self.promela.write_str(node.value)
+            self.array.write_str(node.value)
         return True
 
     def visit_qualified_name(self, node: QualifiedNameNode) -> bool:
         if self.found_choose:
-            self.promela.write_str(node.name)
+            self.array.write_str(node.name)
         return True
 
     def visit_list(self, node: ListNode) -> bool:
@@ -230,12 +238,12 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
             counter: int = 0
 
             for item in node.values:
-                self.promela.write_str(
+                self.array.write_str(
                     f"choose_{self.choose_id}_{self.index}[{counter}] = "
                 )
                 item.accept(self)
 
-                self.promela.write_str("", NL_SINGLE)
+                self.array.write_str("", NL_SINGLE)
 
                 counter += 1
 
