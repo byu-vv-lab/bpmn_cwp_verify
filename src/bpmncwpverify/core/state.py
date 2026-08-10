@@ -817,8 +817,7 @@ class State:
         return self._str2enum.map(lambda d: variable in d).value_or(False)
 
     def is_constant(self, variable: str) -> bool:
-        assert self._str2const != Nothing
-        return variable in self._str2const.unwrap()
+        return self._str2const.map(lambda d: variable in d).value_or(False)
 
     def is_defined(self, id: str) -> bool:
         """
@@ -880,12 +879,11 @@ class State:
         """
         Adds const variables into id2type dictionary
         Verifies there are no two variables with the same name being declared twice
-
-        Args:
-            state (State): State object to modify
         """
 
-        def _find(id2type: dict[str, TypeWithDeclLoc]) -> Result[None, Error]:
+        def _find(
+            id2type: dict[str, TypeWithDeclLoc], str2const: dict[str, ConstDecl]
+        ) -> Result[None, Error]:
             for const_decl in self._consts:
                 if const_decl.id in id2type:
                     first = (id2type[const_decl.id]).decl_loc
@@ -899,9 +897,14 @@ class State:
                         )
                     )
                 id2type[const_decl.id] = TypeWithDeclLoc(const_decl.type_, const_decl)
+                str2const[const_decl.id] = const_decl
             return Success(None)
 
-        return maybe_to_result(self._id2type, Error()).bind(_find)  # pyright: ignore[reportUnknownMemberType]
+        return maybe_to_result(self._id2type, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: maybe_to_result(self._str2const, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2const: _find(id2type, str2const)
+            )
+        )
 
     def _build_id_2_type_enums(self) -> Result[None, Error]:
         """
