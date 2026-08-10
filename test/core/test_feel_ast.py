@@ -1,3 +1,5 @@
+import pytest
+
 from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
@@ -371,3 +373,25 @@ def test_list_of_triples() -> None:
 
     assert feel.ast.triples[0].target.name == "x"
     assert feel.ast.triples[1].target.name == "z"
+
+
+def test_choose_with_expr() -> None:
+    feel = Feel.parse("choose [1, if (true) then 2 else 3]")
+
+    assert isinstance(feel.ast, ChooseNode)
+    assert isinstance(feel.ast.choices, ListNode)
+    assert isinstance(feel.ast.choices.values[1], IfNode)
+
+
+def test_parser_requires_parenthesis_around_condition() -> None:
+    pytest.skip("Temporarily diabled for issue 392")
+    feel_good = Feel.parse(
+        "(alert, [alert, trndSevNeed], if (trndSevNeed = homeCare) then no else if (trndSevNeed = outsideHomeCare) then choose [yes, no] else alert)"
+    )
+    feel_broken = Feel.parse(
+        "(alert, [alert, trndSevNeed], if trndSevNeed = homeCare then no else if (trndSevNeed = outsideHomeCare) then choose [yes, no] else alert)"
+    )
+
+    assert isinstance(feel_good.ast, TripleNode)
+    assert isinstance(feel_good.ast.value, IfNode)
+    assert isinstance(feel_broken.ast, TripleNode)

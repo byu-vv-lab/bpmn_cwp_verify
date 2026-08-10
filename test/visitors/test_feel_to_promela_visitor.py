@@ -109,7 +109,7 @@ def test_equal_comparision_with_chooose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:bool choose_0_0[2] = {true, false}\nbyte choose_0_0_i = 0\n"
+        == "byte choose_0_0_i = 0\nmtype:bool choose_0_0[2]\nchoose_0_0[0] = true\nchoose_0_0[1] = false\n\n"
     )
     assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..1)}\n"
     assert str(visitor.promela) == "(b == choose_0_0[choose_0_0_i])"
@@ -163,7 +163,7 @@ def test_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:commsState choose_0_0[3] = {standby, waiting, off}\nbyte choose_0_0_i = 0\n"
+        == "byte choose_0_0_i = 0\nmtype:commsState choose_0_0[3]\nchoose_0_0[0] = standby\nchoose_0_0[1] = waiting\nchoose_0_0[2] = off\n\n"
     )
     assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..2)}\n"
     assert str(visitor.promela) == "choose_0_0[choose_0_0_i]"
@@ -210,7 +210,7 @@ def test_triple_with_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:commsState choose_0_0[3] = {standby, waiting, off}\nbyte choose_0_0_i = 0\n"
+        == "byte choose_0_0_i = 0\nmtype:commsState choose_0_0[3]\nchoose_0_0[0] = standby\nchoose_0_0[1] = waiting\nchoose_0_0[2] = off\n\n"
     )
     assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..2)}\n"
     assert str(visitor.promela) == "comms = choose_0_0[choose_0_0_i]"
@@ -272,7 +272,7 @@ def test_input_if_choose() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:Cond choose_0_0[2] = {same, changed}\nbyte choose_0_0_i = 0\n"
+        == "byte choose_0_0_i = 0\nmtype:Cond choose_0_0[2]\nchoose_0_0[0] = same\nchoose_0_0[1] = changed\n\n"
     )
     assert str(visitor.selects) == "atomic{select(choose_0_0_i : 0..1)}\n"
     assert (
@@ -308,7 +308,7 @@ def test_input_if_then_choose_else() -> None:
 
     assert (
         str(visitor.choose)
-        == "mtype:Cond choose_activity_0[2] = {same, changed}\nbyte choose_activity_0_i = 0\nmtype:Cond choose_activity_1[2] = {same, notgood}\nbyte choose_activity_1_i = 0\n"
+        == "byte choose_activity_0_i = 0\nmtype:Cond choose_activity_0[2]\nchoose_activity_0[0] = same\nchoose_activity_0[1] = changed\n\nbyte choose_activity_1_i = 0\nmtype:Cond choose_activity_1[2]\nchoose_activity_1[0] = same\nchoose_activity_1[1] = notgood\n\n"
     )
     assert (
         str(visitor.selects)

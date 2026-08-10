@@ -227,15 +227,18 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
 
     def visit_list(self, node: ListNode) -> bool:
         if self.found_choose:
-            self.promela.write_str("{")
+            counter: int = 0
 
             for item in node.values:
+                self.promela.write_str(
+                    f"choose_{self.choose_id}_{self.index}[{counter}] = "
+                )
                 item.accept(self)
 
-                if node.values.index(item) != len(node.values) - 1:
-                    self.promela.write_str(", ")
+                self.promela.write_str("", NL_SINGLE)
 
-            self.promela.write_str("}")
+                counter += 1
+
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
@@ -248,21 +251,24 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
             )
         type = node.choices.type.unwrap()
 
+        self.promela.write_str(
+            f"byte choose_{self.choose_id}_{self.index}_i = 0", NL_SINGLE
+        )
+
         if type == "byte":
             self.promela.write_str(
-                f"{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}] = "
+                f"{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}]",
+                NL_SINGLE,
             )
         else:
             self.promela.write_str(
-                f"mtype:{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}] = "
+                f"mtype:{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}]",
+                NL_SINGLE,
             )
 
         node.choices.accept(self)
 
         self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str(
-            f"byte choose_{self.choose_id}_{self.index}_i = 0", NL_SINGLE
-        )
 
         self.found_choose = False
         return False
