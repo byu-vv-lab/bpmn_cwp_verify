@@ -32,7 +32,11 @@ The following assume the terminal is in the root directory of the package.
 
 ## Generating ANTLR Stuff
 
-`antlr4 -o src/bpmncwpverify/ -Dlanguage=Python3 antlr/State.g4 `
+To run ANTLR and generate files the following line needs to be run first in the terminal.
+`export ANTLR4_TOOLS_ANTLR_VERSION=4.13.2`
+After that files can be run and generated with
+`antlr4 -o src/bpmncwpverify/ -Dlanguage=Python3 antlr/State.g4`
+Once files are generated, `# type: ignore` needs to be put at the top of the parser file so that if clears pre-commits.
 
 ## AWS Account setup
 
