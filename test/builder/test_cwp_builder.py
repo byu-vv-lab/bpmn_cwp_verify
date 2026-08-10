@@ -5,7 +5,7 @@ from returns.pipeline import is_successful
 from returns.result import Success
 
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
-from bpmncwpverify.core.cwp import Cwp, CwpState
+from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpEdgeInvalidStateError,
     CwpMultStartStateError,
@@ -90,15 +90,23 @@ def test_check_expression_appends_pending(mocker, builder):
 
 
 def test_check_expression_resolve(mocker, builder):
-    mock_expr_checker = mocker.MagicMock()
-    mock_expr_checker.type_check.return_value = Success(None)
-    state = mocker.MagicMock()
+    mock_edge = mocker.MagicMock()
+    builder._cwp.edges = {"parent": mock_edge}
+    mock_feel = mocker.MagicMock()
+    mock_feel.type_check.return_value = Success(None)
 
-    builder._cwp.edges = {"parent": mocker.MagicMock()}
+    mocker.patch.object(
+        CwpEdge, "cleanup_expression", return_value="cleaned_expression"
+    )
+    mocker.patch.object(CwpEdge, "build_ast", return_value=mock_feel)
+
+    state = mocker.MagicMock()
+    mock_expr_checker = mocker.MagicMock()
 
     builder._check_expression(mock_expr_checker, "expression", "parent", state)
 
-    mock_expr_checker.type_check.assert_called_once()
+    mock_feel.type_check.assert_called_once_with(state)
+    assert mock_edge.expression == mock_feel
 
 
 def test_check_expression_resolve_no_parent(mocker, builder):
