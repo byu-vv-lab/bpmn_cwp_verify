@@ -25,6 +25,7 @@ from bpmncwpverify.core.feel_tree import (
     OrNode,
     QualifiedNameNode,
     SubtractNode,
+    TripleListNode,
     TripleNode,
     XOrNode,
 )
@@ -32,11 +33,13 @@ from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
 
 class FeelToPromelaVisitor(FeelVisitor):
-    __slots__ = ["promela", "choose", "index"]
+    __slots__ = ["promela", "choose", "selects", "choose_id", "index"]
 
-    def __init__(self) -> None:
+    def __init__(self, choose_id: str = "") -> None:
         self.promela = StringManager()
         self.choose = StringManager()
+        self.selects = StringManager()
+        self.choose_id = choose_id
         self.index: int = 0
 
     def visit_number_literal(self, node: NumberLiteralNode) -> bool:
@@ -166,10 +169,24 @@ class FeelToPromelaVisitor(FeelVisitor):
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
-        choose_visitor = FeelToPromelaChooseVisitor(self.choose, self.index)
+        choose_array: StringManager = StringManager()
+
+        choose_visitor = FeelToPromelaChooseVisitor(
+            self.choose, choose_array, self.choose_id, self.index
+        )
         node.accept(choose_visitor)
 
-        self.promela.write_str(f"choose_{self.index}[choose_{self.index}]")
+        self.promela.write_str(
+            f"choose_{self.choose_id}_{self.index}[choose_{self.choose_id}_{self.index}_i]"
+        )
+
+        self.selects.write_str(choose_array)
+
+        self.selects.write_str("atomic{")
+        self.selects.write_str(
+            f"select(choose_{self.choose_id}_{self.index}_i : 0..{len(node.choices.values) - 1})"
+        )
+        self.selects.write_str("}", NL_SINGLE)
         self.index += 1
         return False
 
@@ -183,36 +200,53 @@ class FeelToPromelaVisitor(FeelVisitor):
     def end_visit_triple(self, node: TripleNode) -> None:
         pass
 
+    def visit_triple_list(self, node: TripleListNode) -> bool:
+        for triple in node.triples:
+            triple.accept(self)
+            self.promela.write_str("", NL_SINGLE)
+
+        return False
+
+    def end_visit_triple_list(self, node: TripleListNode) -> None:
+        pass
+
 
 class FeelToPromelaChooseVisitor(FeelVisitor):
-    slots = ["promela", "found_choose", "index"]
+    slots = ["promela", "found_choose", "choose_id", "index"]
 
-    def __init__(self, promela: StringManager, index: int) -> None:
+    def __init__(
+        self, promela: StringManager, array: StringManager, choose_id: str, index: int
+    ) -> None:
         self.promela = promela
+        self.array = array
         self.found_choose: bool = False
+        self.choose_id = choose_id
         self.index = index
 
     def visit_bool_literal(self, node: BoolLiteralNode) -> bool:
         if self.found_choose:
-            self.promela.write_str(node.value)
+            self.array.write_str(node.value)
         return True
 
     def visit_qualified_name(self, node: QualifiedNameNode) -> bool:
         if self.found_choose:
-            self.promela.write_str(node.name)
+            self.array.write_str(node.name)
         return True
 
     def visit_list(self, node: ListNode) -> bool:
         if self.found_choose:
-            self.promela.write_str("{")
+            counter: int = 0
 
             for item in node.values:
+                self.array.write_str(
+                    f"choose_{self.choose_id}_{self.index}[{counter}] = "
+                )
                 item.accept(self)
 
-                if node.values.index(item) != len(node.values) - 1:
-                    self.promela.write_str(", ")
+                self.array.write_str("", NL_SINGLE)
 
-            self.promela.write_str("}")
+                counter += 1
+
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
@@ -226,18 +260,23 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
         type = node.choices.type.unwrap()
 
         self.promela.write_str(
-            f"mytype:{type} choose_{self.index}[{len(node.choices.values) - 1}] = "
+            f"byte choose_{self.choose_id}_{self.index}_i = 0", NL_SINGLE
         )
+
+        if type == "byte":
+            self.promela.write_str(
+                f"{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}]",
+                NL_SINGLE,
+            )
+        else:
+            self.promela.write_str(
+                f"mtype:{type} choose_{self.choose_id}_{self.index}[{len(node.choices.values)}]",
+                NL_SINGLE,
+            )
 
         node.choices.accept(self)
 
         self.promela.write_str("", NL_SINGLE)
-        self.promela.write_str(f"byte choose_{self.index} = 0", NL_SINGLE)
-        self.promela.write_str("atomic{")
-        self.promela.write_str(
-            f"select(choose_{self.index} : 0..{len(node.choices.values) - 1})"
-        )
-        self.promela.write_str("}", NL_SINGLE)
 
         self.found_choose = False
         return False

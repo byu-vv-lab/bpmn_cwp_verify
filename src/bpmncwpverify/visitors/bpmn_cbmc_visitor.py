@@ -33,6 +33,11 @@ from bpmncwpverify.core.bpmn import (
     Task,
 )
 from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.feel import Feel
+from bpmncwpverify.visitors.feel_to_cbmc_visitor import (
+    translate_feel_behavior,
+    translate_feel_expr,
+)
 
 
 class BpmnCbmcVisitor(BpmnVisitor):
@@ -100,7 +105,8 @@ class BpmnCbmcVisitor(BpmnVisitor):
             assert flow is not None
             gw_in = self._or_of_in_places(node)
             if flow.expression:
-                return f"({gw_in}) && ({flow.expression})"
+                expr_text = translate_feel_expr(flow.expression, flow.id)
+                return f"({gw_in}) && ({expr_text})"
             return f"({gw_in})"
         if isinstance(node, ParallelGatewayNode):
             # Fork: OR (usually one in_place). Join: AND (all branches must complete).
@@ -498,7 +504,14 @@ class BpmnCbmcVisitor(BpmnVisitor):
         elif isinstance(node, Task):
             for f in node.in_flows:
                 lines.append(f"            {self._flow_place_name(f)} = false;")
-            translated, always_assigns = self._translate_behavior_impl(node.behavior)
+            if isinstance(node.behavior, Feel):
+                translated, always_assigns = translate_feel_behavior(
+                    node.behavior, node.id
+                )
+            else:
+                translated, always_assigns = self._translate_behavior_impl(
+                    node.behavior
+                )
             for stmt in translated:
                 lines.append(f"            {stmt}")
             for f in node.out_flows:

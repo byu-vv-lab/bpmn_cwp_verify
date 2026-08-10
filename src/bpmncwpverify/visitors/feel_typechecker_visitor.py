@@ -37,6 +37,7 @@ from bpmncwpverify.core.feel_tree import (
     PowerNode,
     QualifiedNameNode,
     SubtractNode,
+    TripleListNode,
     TripleNode,
 )
 from bpmncwpverify.core.state import State
@@ -85,6 +86,8 @@ class TypeCheckerVisitor(FeelVisitor):
         if self.state.is_variable(node.name):
             self.stack.append(self.state.get_type(node.name).unwrap())
         elif self.state.is_enum(node.name):
+            self.stack.append(self.state.get_type(node.name).unwrap())
+        elif self.state.is_constant(node.name):
             self.stack.append(self.state.get_type(node.name).unwrap())
         else:
             raise ErrorException(ExpressionUnrecognizedID(node.name))
@@ -227,6 +230,11 @@ class TypeCheckerVisitor(FeelVisitor):
                 TypingAssignCompatabilityError(target_type, value_type)
             )
 
+    def end_visit_triple_list(self, node: TripleListNode) -> None:
+        for _ in range(len(node.triples)):
+            self.stack.pop()
+        self.stack.append("triples")
+
 
 class TypeCheckerTripleInputTargetVisitor(TypeCheckerVisitor):
     __slots__ = ["stack", "state"]
@@ -269,6 +277,8 @@ class TypeCheckerTripleValueVisitor(TypeCheckerVisitor):
             else:
                 raise ErrorException(ExpressionOutOfScope(node.name))
         elif self.state.is_enum(node.name):
+            self.stack.append(self.state.get_type(node.name).unwrap())
+        elif self.state.is_constant(node.name):
             self.stack.append(self.state.get_type(node.name).unwrap())
         else:
             raise ErrorException(ExpressionUnrecognizedID(node.name))
