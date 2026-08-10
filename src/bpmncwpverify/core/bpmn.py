@@ -9,6 +9,7 @@ from bpmncwpverify.core.error import (
     BpmnUnsupportedStartEvent,
     Error,
 )
+from bpmncwpverify.core.feel import Feel
 
 BPMN_XML_NAMESPACE = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
@@ -278,7 +279,7 @@ class Task(Node):
             self.traverse_outflows_if_result(visitor, result)
             visitor.end_visit_boundary_event(self)
 
-    def __init__(self, id: str, name: str, behavior: str) -> None:
+    def __init__(self, id: str, name: str, behavior: str | Feel) -> None:
         super().__init__(id, name)
         self.behavior = behavior
         self.msg_boundary_events: list[Task.BoundaryEvent] = []
@@ -402,7 +403,7 @@ class SequenceFlow(Flow):
         Initialize SequenceFlow object
         """
         super().__init__(id, name)
-        self.expression: str = ""
+        self.expression: str | Feel = ""
 
     def accept(self, visitor: "BpmnVisitor") -> None:
         if visitor.visit_sequence_flow(self) and not self.is_leaf:

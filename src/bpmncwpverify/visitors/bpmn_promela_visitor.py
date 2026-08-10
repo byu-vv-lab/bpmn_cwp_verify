@@ -13,7 +13,9 @@ from bpmncwpverify.core.bpmn import (
     StartEvent,
     Task,
 )
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.util.stringmanager import IndentAction, StringManager
+from bpmncwpverify.visitors.feel_to_promela_visitor import FeelToPromelaVisitor
 
 ##############
 # Constants
@@ -38,7 +40,7 @@ class Context:
     def __init__(self, element: Node) -> None:
         self._element = element
         self._is_parallel = False
-        self._behavior = ""
+        self._behavior: str | Feel = ""
         self._boundary_events: list[Task.BoundaryEvent] = []
 
     @property
@@ -53,11 +55,11 @@ class Context:
         self._is_parallel = new_val
 
     @property
-    def behavior(self) -> str:
+    def behavior(self) -> str | Feel:
         return self._behavior
 
     @behavior.setter
-    def behavior(self, new_val: str) -> None:
+    def behavior(self, new_val: str | Feel) -> None:
         assert isinstance(self._element, Task), (
             "only tasks can have a behavior associated with them."
         )
@@ -175,6 +177,7 @@ class PromelaGenVisitor(BpmnVisitor):
         "defs",
         "process",
         "local_var_defs",
+        "local_chooseschooses",
         "global_var_defs",
         "behaviors",
         "init_proc_contents",
@@ -184,7 +187,9 @@ class PromelaGenVisitor(BpmnVisitor):
     def __init__(self) -> None:
         self.defs = StringManager()
         self.process = StringManager()
+        self.chooses = StringManager()
         self.local_var_defs = StringManager()
+        self.local_chooses = StringManager()
         self.global_var_defs = StringManager()
         self.behaviors = StringManager()
         self.init_proc_contents = StringManager()
@@ -212,8 +217,10 @@ class PromelaGenVisitor(BpmnVisitor):
         context = Context(event)
         builder = StartEventBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model())
+        behavior, choose = builder.gen_behavior_model()
+        self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
+        self.local_chooses.write_str(choose)
 
         flows = get_consume_locations(event)
         self.process.write_str(
@@ -232,8 +239,10 @@ class PromelaGenVisitor(BpmnVisitor):
         context = Context(event)
         builder = EndEventBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model())
+        behavior, choose = builder.gen_behavior_model()
+        self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
+        self.local_chooses.write_str(choose)
 
         self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
@@ -243,8 +252,10 @@ class PromelaGenVisitor(BpmnVisitor):
         context = Context(event)
         builder = IntermediateEventBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model())
+        behavior, choose = builder.gen_behavior_model()
+        self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
+        self.local_chooses.write_str(choose)
 
         self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
@@ -256,8 +267,10 @@ class PromelaGenVisitor(BpmnVisitor):
         context.boundary_events = task.msg_boundary_events
         builder = TaskBuilder(context)
 
-        self.behaviors.write_str(builder.gen_behavior_model())
+        behavior, choose = builder.gen_behavior_model()
+        self.behaviors.write_str(behavior)
         self.gen_var_defs(context)
+        self.local_chooses.write_str(choose)
 
         self.process.write_str(builder.build_atomic_block(), indent_offset=1)
 
@@ -302,6 +315,7 @@ class PromelaGenVisitor(BpmnVisitor):
     def visit_process(self, process: Process) -> bool:
         self.process = StringManager()
         self.local_var_defs = StringManager()
+        self.local_chooses = StringManager()
 
         self.init_proc_contents.write_str(
             f"run {process.id}()", NL_SINGLE, IndentAction.NIL
@@ -313,6 +327,9 @@ class PromelaGenVisitor(BpmnVisitor):
 
     def end_visit_process(self, process: Process) -> None:
         self.promela.write_str(self.local_var_defs, indent_offset=1)
+        self.promela.write_str("", NL_SINGLE)
+
+        self.promela.write_str(self.local_chooses, indent_offset=1)
         self.promela.write_str("", NL_SINGLE)
 
         self.promela.write_str("d_step {", NL_SINGLE, IndentAction.INC)
@@ -335,6 +352,7 @@ class PromelaGenVisitor(BpmnVisitor):
         return True
 
     def end_visit_bpmn(self, bpmn: Bpmn) -> None:
+        self.chooses.write_str("", NL_SINGLE)
         self.init_proc_contents.write_str("}", NL_SINGLE, IndentAction.DEC)
         self.init_proc_contents.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
@@ -452,13 +470,25 @@ class AtomicBuilder:
         structure.write_str("DBG(stateLogger())", NL_SINGLE)
         return structure
 
-    def gen_behavior_model(self) -> StringManager:
+    def gen_behavior_model(self) -> tuple[StringManager, StringManager]:
         """
         Writes to the behaviors field to make an inline behavior model for the
         passed element.
         """
         behavior = StringManager()
+        chooses = StringManager()
+        selects = StringManager()
+
         if self.context.behavior:
+            if isinstance(self.context.behavior, Feel):
+                source_changer = FeelToPromelaVisitor(self.context.element.id)
+                self.context.behavior.ast.accept(source_changer)
+                behavior_source = str(source_changer.promela)
+                chooses.write_str(source_changer.choose)
+                selects.write_str(source_changer.selects)
+            else:
+                behavior_source = str(self.context.behavior)
+
             start_block_key_words = {"if"}
             end_block_key_words = {"fi"}
             behavior.write_str(
@@ -466,10 +496,9 @@ class AtomicBuilder:
                 NL_SINGLE,
                 IndentAction.INC,
             )
+            behavior.write_str(selects, indent_offset=1)
             processed_str_list = [
-                line.strip()
-                for line in self.context.behavior.split("\n")
-                if line.strip()
+                line.strip() for line in behavior_source.split("\n") if line.strip()
             ]
 
             for line in processed_str_list:
@@ -484,7 +513,7 @@ class AtomicBuilder:
 
             behavior.write_str("}", NL_DOUBLE, IndentAction.DEC)
 
-        return behavior
+        return behavior, chooses
 
 
 class StartEventBuilder(AtomicBuilder):
@@ -639,8 +668,15 @@ class ExclusiveGatewayBuilder(AtomicBuilder):
         expr.write_str("if", NL_SINGLE)
 
         for flow in self.context.element.out_flows:
+            if isinstance(flow.expression, Feel):
+                source_changer = FeelToPromelaVisitor(flow.id)
+                flow.expression.ast.accept(source_changer)
+                flow_expression = str(source_changer.promela)
+            else:
+                flow_expression = str(flow.expression)
+
             expr.write_str(
-                f":: {flow.expression.replace('\n', '')} -> putToken({generate_location_label(flow.target_node, flow)})",
+                f":: {flow_expression} -> putToken({generate_location_label(flow.target_node, flow)})",
                 NL_SINGLE,
             )
 

@@ -392,12 +392,12 @@ def test_gen_behavior_model(mocker):
     ctx.behavior = ""
 
     builder1 = AtomicBuilder(ctx)
-    behavior_output1 = builder1.gen_behavior_model()
+    behavior_output1, _ = builder1.gen_behavior_model()
     assert str(behavior_output1) == ""
 
     ctx.behavior = "content"
     builder2 = AtomicBuilder(ctx)
-    behavior_output2 = builder2.gen_behavior_model()
+    behavior_output2, _ = builder2.gen_behavior_model()
     assert (
         str(behavior_output2)
         == "inline TEST_BehaviorModel() {\n\tcontent\n\tupdateState()\n}\n\n"
@@ -415,7 +415,7 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
     )
 
     builder = AtomicBuilder(ctx)
-    output = builder.gen_behavior_model()
+    output, _ = builder.gen_behavior_model()
     assert (
         str(output)
         == "inline TEST_BehaviorModel() {\n\tif\n\t\t:: true -> test\n\t\t:: true -> test2\n\tfi\n\tupdateState()\n}\n\n"
@@ -467,7 +467,7 @@ def test_build_expr_conditional(promela_visitor, mocker):
     flow1, flow2 = mocker.Mock(), mocker.Mock()
     flow1.source_node = node1
     flow1.target_node = node2
-    flow1.expression = "EXPR1\n==test_val"
+    flow1.expression = "EXPR1==test_val"
 
     flow2.source_node = node1
     flow2.target_node = node3
@@ -598,7 +598,7 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_gen_behavior_model = mocker.patch.object(
         StartEventBuilder,
         "gen_behavior_model",
-        return_value="behavior_model",
+        return_value=("behavior_model", ""),
     )
 
     mock_out_s_and_m_flows = mocker.patch.object(
@@ -644,6 +644,7 @@ def test_visit_start_state(promela_visitor, mocker):
     mock_write_str.assert_has_calls(
         [
             mocker.call("behavior_model"),
+            mocker.call(""),
             mocker.call(
                 "putToken(test_loc)",
                 indent_action=IndentAction.INC,
@@ -675,7 +676,9 @@ def test_visit_parallel_gateway(promela_visitor, mocker):
 def test_visit_intermediate_event(promela_visitor, mocker):
     mock_ctx = mocker.patch("bpmncwpverify.visitors.bpmn_promela_visitor.Context")
     mock_gen_behavior_model = mocker.patch.object(
-        IntermediateEventBuilder, "gen_behavior_model"
+        IntermediateEventBuilder,
+        "gen_behavior_model",
+        return_value=("", ""),
     )
     mock_gen_var_defs = mocker.patch.object(PromelaGenVisitor, "gen_var_defs")
     mock_build_atomic_block = mocker.patch.object(
@@ -693,7 +696,8 @@ def test_visit_intermediate_event(promela_visitor, mocker):
 
 def test_visit_task_with_behavior(promela_visitor, mocker):
     mock_gen_method = mocker.patch(
-        "bpmncwpverify.visitors.bpmn_promela_visitor.AtomicBuilder.gen_behavior_model"
+        "bpmncwpverify.visitors.bpmn_promela_visitor.AtomicBuilder.gen_behavior_model",
+        return_value=("behavior_model", ""),
     )
     mocker.patch(
         "bpmncwpverify.visitors.bpmn_promela_visitor.PromelaGenVisitor.gen_var_defs"

@@ -1,10 +1,12 @@
 from typing import Protocol, cast
 
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
+from returns.result import Failure, Result, Success
 
 from bpmncwpverify.antlr.FeelExprLexer import FeelExprLexer
 from bpmncwpverify.antlr.FeelExprListener import FeelExprListener
 from bpmncwpverify.antlr.FeelExprParser import FeelExprParser  # type: ignore
+from bpmncwpverify.core.error import Error, ErrorException
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
@@ -27,9 +29,12 @@ from bpmncwpverify.core.feel_tree import (
     PowerNode,
     QualifiedNameNode,
     SubtractNode,
+    TripleListNode,
     TripleNode,
     XOrNode,
 )
+from bpmncwpverify.core.state import State
+from bpmncwpverify.visitors.feel_typechecker_visitor import TypeCheckerVisitor
 
 
 class HasText(Protocol):
@@ -54,6 +59,16 @@ class Feel:
         ParseTreeWalker().walk(listener, tree)
 
         return cls(cast(ExpressionNode, listener.ast))
+
+    def type_check(self, state: State) -> Result[str, Error]:
+        typechecker = TypeCheckerVisitor(state)
+
+        try:
+            self.ast.accept(typechecker)
+        except ErrorException as e:
+            return Failure(e.error)
+
+        return Success(typechecker.stack.pop())
 
     class _Listener(FeelExprListener):
         def __init__(self) -> None:
@@ -148,12 +163,11 @@ class Feel:
             argument = self.stack.pop()
             function = self.stack.pop()
 
-            assert isinstance(function, QualifiedNameNode)
-
-            if function.name == "not":
+            if isinstance(function, QualifiedNameNode) and function.name == "not":
                 self.stack.append(NotNode(argument))
             else:
-                pass
+                self.stack.append(function)
+                self.stack.append(argument)
 
         def exitPrimaryList(self, ctx: FeelExprParser.PrimaryListContext) -> None:
             pass
@@ -187,3 +201,15 @@ class Feel:
             target = self.stack.pop()
 
             self.stack.append(TripleNode(target, inputs, value))
+
+        def exitTripleList(self, ctx: FeelExprParser.TripleListContext) -> None:
+            triples = ctx.getTypedRuleContexts(FeelExprParser.TripleExpressionContext)
+
+            values: list[TripleNode] = []
+
+            for _ in triples:
+                values.append(cast(TripleNode, self.stack.pop()))
+
+            values.reverse()
+
+            self.stack.append(TripleListNode(values))

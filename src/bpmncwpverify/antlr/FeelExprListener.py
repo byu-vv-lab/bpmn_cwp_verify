@@ -575,6 +575,15 @@ class FeelExprListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by FeelExprParser#tripleList.
+    def enterTripleList(self, ctx:FeelExprParser.TripleListContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#tripleList.
+    def exitTripleList(self, ctx:FeelExprParser.TripleListContext):
+        pass
+
+
     # Enter a parse tree produced by FeelExprParser#primaryLiteral.
     def enterPrimaryLiteral(self, ctx:FeelExprParser.PrimaryLiteralContext):
         pass
@@ -617,6 +626,15 @@ class FeelExprListener(ParseTreeListener):
 
     # Exit a parse tree produced by FeelExprParser#primaryTripleExpression.
     def exitPrimaryTripleExpression(self, ctx:FeelExprParser.PrimaryTripleExpressionContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#primaryTripleList.
+    def enterPrimaryTripleList(self, ctx:FeelExprParser.PrimaryTripleListContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#primaryTripleList.
+    def exitPrimaryTripleList(self, ctx:FeelExprParser.PrimaryTripleListContext):
         pass
 
 

@@ -226,6 +226,22 @@ class TripleNode(ExpressionNode):
         visitor.end_visit_triple(self)
 
 
+class TripleListNode(ExpressionNode):
+    __slots__ = ["triples"]
+
+    def __init__(self, triples: list[TripleNode]):
+        self.triples = triples
+
+    def accept(self, visitor: "FeelVisitor") -> None:
+        result = visitor.visit_triple_list(self)
+
+        if result:
+            for triple in self.triples:
+                triple.accept(visitor)
+
+        visitor.end_visit_triple_list(self)
+
+
 #################
 # Generic Visitor
 #################
@@ -326,4 +342,10 @@ class FeelVisitor:
         return True
 
     def end_visit_triple(self, node: TripleNode) -> None:
+        pass
+
+    def visit_triple_list(self, node: TripleListNode) -> bool:
+        return True
+
+    def end_visit_triple_list(self, node: TripleListNode) -> None:
         pass

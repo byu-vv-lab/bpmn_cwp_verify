@@ -18,6 +18,14 @@ from bpmncwpverify.core.bpmn import (
     StartEvent,
     Task,
 )
+from bpmncwpverify.core.error import CbmcUnsupportedElementError, ErrorException
+from bpmncwpverify.core.feel import Feel
+from bpmncwpverify.core.feel_tree import (
+    ChooseNode,
+    ListNode,
+    NumberLiteralNode,
+    QualifiedNameNode,
+)
 from bpmncwpverify.visitors.bpmn_cbmc_visitor import BpmnCbmcVisitor
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -144,6 +152,43 @@ def test_enable_expr_xor_gateway_with_expression(visitor, mocker):
     out_flow = mocker.Mock(spec=SequenceFlow)
     out_flow.expression = "x > 5"
     assert visitor._enable_expr(gw, out_flow) == "(p_gw_1_FROM_task_A) && (x > 5)"
+
+
+def test_enable_expr_xor_gateway_with_feel_expression(visitor, mocker):
+    gw = mocker.Mock(spec=ExclusiveGatewayNode)
+    gw.id = "gw_1"
+    src = mocker.Mock()
+    src.id = "task_A"
+    in_flow = mocker.Mock(spec=SequenceFlow)
+    in_flow.source_node = src
+    gw.in_flows = [in_flow]
+    out_flow = mocker.Mock(spec=SequenceFlow)
+    out_flow.expression = Feel.parse("x > 5")
+    out_flow.id = "flow_1"
+    # visit_comparision already parenthesizes its own output, so this is
+    # double-wrapped compared to the plain-str sibling test above — harmless,
+    # semantically identical C.
+    assert visitor._enable_expr(gw, out_flow) == "(p_gw_1_FROM_task_A) && ((x > 5))"
+
+
+def test_enable_expr_xor_gateway_with_feel_expression_choose_raises(visitor, mocker):
+    gw = mocker.Mock(spec=ExclusiveGatewayNode)
+    gw.id = "gw_1"
+    src = mocker.Mock()
+    src.id = "task_A"
+    in_flow = mocker.Mock(spec=SequenceFlow)
+    in_flow.source_node = src
+    gw.in_flows = [in_flow]
+    out_flow = mocker.Mock(spec=SequenceFlow)
+    out_flow.expression = Feel(
+        ChooseNode(ListNode([QualifiedNameNode("a"), QualifiedNameNode("b")]))
+    )
+    out_flow.id = "flow_1"
+
+    with pytest.raises(ErrorException) as excinfo:
+        visitor._enable_expr(gw, out_flow)
+
+    assert isinstance(excinfo.value.error, CbmcUnsupportedElementError)
 
 
 # ── visitor callbacks ─────────────────────────────────────────────────────────
@@ -316,6 +361,67 @@ def test_transition_body_task_with_promela_behavior(visitor, mocker):
     assert not any(":: true" in line for line in lines)
     assert not any(line.strip() == "if" for line in lines)
     assert not any(line.strip() == "fi" for line in lines)
+
+
+def test_transition_body_task_with_feel_behavior(visitor, mocker):
+    task = mocker.Mock(spec=Task)
+    task.id = "task_1"
+    task.behavior = Feel.parse("(x, [], 1)")
+    in_flow = make_flow(mocker, "ev_start", "task_1", "f_in")
+    out_flow = make_flow(mocker, "task_1", "gw_1", "f_out")
+    task.in_flows = [in_flow]
+    task.out_flows = [out_flow]
+    lines = visitor._transition_body(task, None, ["x"])
+    assert any("p_task_1_FROM_ev_start = false;" in line for line in lines)
+    assert any("x = 1;" in line for line in lines)
+    assert any("p_gw_1_FROM_task_1 = true;" in line for line in lines)
+    assert any(
+        "update_cwp_state(&cwp_state, cwp_reached, x);" in line for line in lines
+    )
+
+
+def test_transition_body_task_with_feel_behavior_choose(visitor, mocker):
+    task = mocker.Mock(spec=Task)
+    task.id = "task_1"
+    task.behavior = Feel.parse("(terms, [], choose [agreed, failed])")
+    in_flow = make_flow(mocker, "ev_start", "task_1", "f_in")
+    out_flow = make_flow(mocker, "task_1", "gw_1", "f_out")
+    task.in_flows = [in_flow]
+    task.out_flows = [out_flow]
+    lines = visitor._transition_body(task, None, ["terms"])
+
+    assert any("int t_choose_task_1_0 = nondet_int();" in line for line in lines)
+    assert any(
+        "__CPROVER_assume(t_choose_task_1_0 == agreed || t_choose_task_1_0 == failed);"
+        in line
+        for line in lines
+    )
+    assert any("terms = t_choose_task_1_0;" in line for line in lines)
+    assert any(
+        "update_cwp_state(&cwp_state, cwp_reached, terms);" in line for line in lines
+    )
+
+    # nondet_int/assume must appear before the assignment that uses them.
+    nondet_idx = next(i for i, line in enumerate(lines) if "nondet_int()" in line)
+    assign_idx = next(
+        i for i, line in enumerate(lines) if "terms = t_choose_task_1_0;" in line
+    )
+    assert nondet_idx < assign_idx
+
+
+def test_transition_body_task_with_feel_behavior_invalid_shape_raises(visitor, mocker):
+    task = mocker.Mock(spec=Task)
+    task.id = "task_1"
+    task.behavior = Feel(NumberLiteralNode("1"))
+    in_flow = make_flow(mocker, "ev_start", "task_1", "f_in")
+    out_flow = make_flow(mocker, "task_1", "gw_1", "f_out")
+    task.in_flows = [in_flow]
+    task.out_flows = [out_flow]
+
+    with pytest.raises(ErrorException) as excinfo:
+        visitor._transition_body(task, None, ["x"])
+
+    assert isinstance(excinfo.value.error, CbmcUnsupportedElementError)
 
 
 def test_transition_body_task_without_behavior_no_update_call(visitor, mocker):
