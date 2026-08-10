@@ -9,6 +9,7 @@ CwpState and CwpEdge objects are mocked rather than parsed from XML.
 import pytest
 
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.visitors.cwp_cbmc_visitor import CwpCbmcVisitor
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -23,7 +24,7 @@ def make_state(mocker, name: str, sid: str, in_edges=None, out_edges=None):
     return state
 
 
-def make_edge(mocker, eid: str, expression: str, source=None, dest=None):
+def make_edge(mocker, eid: str, expression: "str | Feel", source=None, dest=None):
     edge = mocker.Mock(spec=CwpEdge)
     edge.id = eid
     edge.expression = expression
@@ -248,3 +249,24 @@ def test_generate_update_cwp_state_contains_key_sections(visitor, mocker):
     assert "CWP P1: transition follows valid CWP edge" in output
     assert "*cwp_state             = new_state;" in output
     assert "cwp_reached[new_state] = true;" in output
+
+
+def test_generate_update_cwp_state_edge_condition_with_feel_expression(visitor, mocker):
+    src = make_state(mocker, "Start", "s0")
+    dst = make_state(mocker, "Increment_x", "s1")
+
+    edge = make_edge(mocker, "e1", Feel.parse("x <= 5"), source=src, dest=dst)
+    dst.in_edges = [edge]
+    dst.out_edges = []
+    src.in_edges = []
+    src.out_edges = [edge]
+
+    visitor._states = [dst]
+    visitor._edges = {"e1": edge}
+
+    output = visitor.generate_update_cwp_state(["int x"])
+
+    # visit_comparision already parenthesizes its own output, so this is
+    # double-wrapped compared to the plain-str sibling test above — harmless,
+    # semantically identical C.
+    assert "bool e_Start_to_Increment_x = ((x <= 5));" in output

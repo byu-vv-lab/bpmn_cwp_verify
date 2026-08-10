@@ -19,7 +19,9 @@ class CwpGraphVizVisitor(CwpVisitor):
 
     def visit_edge(self, edge: CwpEdge) -> bool:
         if edge.source:
-            dot_edge(self.dot, edge.source.name, edge.dest.name, label=edge.expression)
+            dot_edge(
+                self.dot, edge.source.name, edge.dest.name, label=str(edge.expression)
+            )
         else:
-            dot_edge(self.dot, "start", edge.dest.name, label=edge.expression)
+            dot_edge(self.dot, "start", edge.dest.name, label=str(edge.expression))
         return True

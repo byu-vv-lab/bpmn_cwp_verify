@@ -28,6 +28,7 @@ from bpmncwpverify.core.feel_tree import (
     NotNode,
     NumberLiteralNode,
     QualifiedNameNode,
+    TripleListNode,
     TripleNode,
 )
 from bpmncwpverify.core.state import (
@@ -148,7 +149,7 @@ def test_qualified_name_literal_not_recongnized_name() -> None:
     assert error.value.error.id == "blackbox"
 
 
-def test_qualified_name_literal_enum_type_not_variable() -> None:  # check on error
+def test_qualified_name_literal_enum_type_not_variable() -> None:
     builder = StateBuilder()
     builder.with_var_decl(
         VarDecl(
@@ -970,10 +971,44 @@ def test_triple_equal_to_self() -> None:
             QualifiedNameNode("conditions"),
         ),
     )
-
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
     assert len(visitor.stack) == 1
     type = visitor.stack.pop()
     assert type == "Cond"
+
+
+def test_triple_list() -> None:
+    builder = StateBuilder()
+    builder.with_var_decl(
+        VarDecl(
+            "comms",
+            "byte",
+            AllowedValueDecl("2"),
+            [AllowedValueDecl("2"), AllowedValueDecl("3")],
+        )
+    )
+    state = builder.build().unwrap()
+    node = TripleListNode(
+        [
+            TripleNode(
+                QualifiedNameNode("comms"),
+                ListNode([]),
+                IfNode(
+                    BoolLiteralNode("true"),
+                    NumberLiteralNode("2"),
+                    NumberLiteralNode("3"),
+                ),
+            ),
+            TripleNode(
+                QualifiedNameNode("comms"), ListNode([]), NumberLiteralNode("3")
+            ),
+        ]
+    )
+    visitor = TypeCheckerVisitor(state)
+
+    node.accept(visitor)
+    assert len(visitor.stack) == 1
+    type = visitor.stack.pop()
+    assert type == "triples"
