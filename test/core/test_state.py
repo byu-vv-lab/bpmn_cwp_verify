@@ -257,7 +257,31 @@ class Test_SymbolTable_build:
         # then
         assert not_(is_successful)(result)
         error: Error = result.failure()
-        assert expected == error
+
+        assert type(error) is type(expected)
+        match error:
+            case StateMultipleDefinitionError():
+                assert error.id == expected.id
+                assert error.column == expected.column
+                assert error.line == expected.line
+                assert error.prev_line == expected.prev_line
+                assert error.prev_column == expected.prev_column
+            case TypingNoTypeError():
+                assert error.id == expected.id
+            case TypingAssignCompatabilityError():
+                assert error.ltype == expected.ltype
+                assert error.rtype == expected.rtype
+            case StateInitNotInValues():
+                assert error.id == expected.id
+                assert error.line == expected.line
+                assert error.column == expected.column
+                assert error.values == expected.values
+            case StateArraySizeError():
+                assert error.id == expected.id
+                assert error.line == expected.line
+                assert error.column == expected.column
+                assert error.expected_size == expected.expected_size
+                assert error.actual_size == expected.actual_size
 
     # @staticmethod
     # def generate_promela(state: "State") -> Result[str, Error]:

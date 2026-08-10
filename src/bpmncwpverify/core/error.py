@@ -1,7 +1,6 @@
 # TODO: create a "match" function on Failure(Error) and create standard error messaging.
 import builtins
 import re
-import typing
 from xml.etree.ElementTree import Element
 
 import requests
@@ -295,11 +294,6 @@ class ExpressionComputationCompatabilityError(Error):
         self.ltype = ltype
         self.rtype = rtype
 
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionComputationCompatabilityError):
-            return self.ltype == other.ltype and self.rtype == other.rtype
-        return False
-
 
 class ExpressionNegatorError(Error):
     __slots__ = ["type"]
@@ -307,11 +301,6 @@ class ExpressionNegatorError(Error):
     def __init__(self, type: str) -> None:
         super().__init__()
         self.type = type
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionNegatorError):
-            return self.type == other.type
-        return False
 
 
 class ExpressionParseError(Error):
@@ -329,11 +318,6 @@ class ExpressionRelationCompatabilityError(Error):
         super().__init__()
         self.ltype = ltype
         self.rtype = rtype
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionComputationCompatabilityError):
-            return self.ltype == other.ltype and self.rtype == other.rtype
-        return False
 
 
 class ExpressionIfBranchCompatabilityError(Error):
@@ -361,11 +345,6 @@ class ExpressionLogicalCompatibilityError(Error):
         self.ltype = ltype
         self.rtype = rtype
 
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionComputationCompatabilityError):
-            return self.ltype == other.ltype and self.rtype == other.rtype
-        return False
-
 
 class ExpressionRelationalNotError(Error):
     __slots__ = ["type"]
@@ -374,11 +353,6 @@ class ExpressionRelationalNotError(Error):
         super().__init__()
         self.type = type
 
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionRelationalNotError):
-            return self.type == other.type
-        return False
-
 
 class ExpressionUnrecognizedID(Error):
     __slots__ = ["id"]
@@ -386,11 +360,6 @@ class ExpressionUnrecognizedID(Error):
     def __init__(self, id: str) -> None:
         super().__init__()
         self.id = id
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, ExpressionUnrecognizedID):
-            return self.id == other.id
-        return False
 
 
 class ExpressionOutOfScope(Error):
@@ -564,16 +533,6 @@ class StateInitNotInValues(Error):
         self.column = column
         self.values = values
 
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, StateInitNotInValues):
-            return (
-                self.id == other.id
-                and self.line == other.line
-                and self.column == other.column
-                and self.values == other.values
-            )
-        return False
-
 
 class StateMultipleDefinitionError(Error):
     __slots__ = ("id", "line", "column", "prev_line", "prev_column")
@@ -593,17 +552,6 @@ class StateMultipleDefinitionError(Error):
         self.prev_line = prev_line
         self.prev_column = prev_column
 
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, StateMultipleDefinitionError):
-            return (
-                self.id == other.id
-                and self.line == other.line
-                and self.column == other.column
-                and self.prev_line == other.prev_line
-                and self.prev_column == other.prev_column
-            )
-        return False
-
 
 class StateArraySizeError(Error):
     __slots__ = ["id", "line", "column", "expected_size", "actual_size"]
@@ -622,17 +570,6 @@ class StateArraySizeError(Error):
         self.column = column
         self.expected_size = expected_size
         self.actual_size = actual_size
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, StateArraySizeError):
-            return (
-                self.id == other.id
-                and self.line == other.line
-                and self.column == other.column
-                and self.expected_size == other.expected_size
-                and self.actual_size == other.actual_size
-            )
-        return False
 
     def __str__(self) -> str:
         return (
@@ -715,11 +652,6 @@ class TypingAssignCompatabilityError(Error):
         self.ltype = ltype
         self.rtype = rtype
 
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, TypingAssignCompatabilityError):
-            return self.ltype == other.ltype and self.rtype == other.rtype
-        return False
-
 
 class TypingTripleVariableError(Error):
     __slots__ = ["id"]
@@ -757,11 +689,6 @@ class TypingNoTypeError(Error):
     def __init__(self, id: str) -> None:
         super().__init__()
         self.id = id
-
-    def __eq__(self, other: typing.Any) -> bool:
-        if isinstance(other, TypingNoTypeError):
-            return self.id == other.id
-        return False
 
 
 class TypingNotNonBoolError(Error):
