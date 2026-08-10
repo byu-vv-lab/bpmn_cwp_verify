@@ -11,6 +11,7 @@ but is never assigned a state ID or included in P1 checks.
 """
 
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState, CwpVisitor
+from bpmncwpverify.visitors.feel_to_cbmc_visitor import translate_feel_expr
 
 
 class CwpCbmcVisitor(CwpVisitor):
@@ -166,7 +167,8 @@ class CwpCbmcVisitor(CwpVisitor):
             if edge.id not in emitted_edges and edge.expression:
                 emitted_edges.add(edge.id)
                 var = self._edge_cond_var(edge)
-                lines.append(f"    bool {var} = ({edge.expression});")
+                expr_text = translate_feel_expr(edge.expression, edge.id)
+                lines.append(f"    bool {var} = ({expr_text});")
         lines.append("")
 
         # ── next-state booleans (mapping function per tracked state) ──

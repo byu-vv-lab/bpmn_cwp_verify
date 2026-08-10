@@ -1,3 +1,5 @@
+import pytest
+
 from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
@@ -19,6 +21,7 @@ from bpmncwpverify.core.feel_tree import (
     PowerNode,
     QualifiedNameNode,
     SubtractNode,
+    TripleListNode,
     TripleNode,
     XOrNode,
 )
@@ -194,6 +197,26 @@ def test_parse_or() -> None:
 
     assert feel.ast.left.value == "1"
     assert feel.ast.right.value == "2"
+    # terms != pending or<br>paymentOffered != pendingPayment
+
+
+def test_parse_multiple() -> None:
+    feel = Feel.parse("terms != pending or paymentOffered != pendingPayment")
+
+    assert isinstance(feel.ast, OrNode)
+
+    assert isinstance(feel.ast.left, NotEqualNode)
+    assert isinstance(feel.ast.right, NotEqualNode)
+
+    assert isinstance(feel.ast.left.left, QualifiedNameNode)
+    assert isinstance(feel.ast.left.right, QualifiedNameNode)
+    assert isinstance(feel.ast.right.left, QualifiedNameNode)
+    assert isinstance(feel.ast.right.right, QualifiedNameNode)
+
+    assert feel.ast.left.left.name == "terms"
+    assert feel.ast.left.right.name == "pending"
+    assert feel.ast.right.left.name == "paymentOffered"
+    assert feel.ast.right.right.name == "pendingPayment"
 
 
 def test_parse_if() -> None:
@@ -262,6 +285,17 @@ def test_parse_xor() -> None:
     assert feel.ast.right.value == "2"
 
 
+def test_parse_or_names() -> None:
+    feel = Feel.parse("this or that")
+
+    assert isinstance(feel.ast, OrNode)
+    assert isinstance(feel.ast.left, QualifiedNameNode)
+    assert isinstance(feel.ast.right, QualifiedNameNode)
+
+    assert feel.ast.left.name == "this"
+    assert feel.ast.right.name == "that"
+
+
 def test_parse_qualified_name() -> None:
     feel = Feel.parse("x")
 
@@ -279,16 +313,16 @@ def test_parse_qualified_name_with_path() -> None:
 
 
 def test_parse_triple_no_inputs() -> None:
-    feel = Feel.parse("(x, [], 1)")
+    feel = Feel.parse("(backpackOwner, [], buyerName)")
 
     assert isinstance(feel.ast, TripleNode)
     assert isinstance(feel.ast.target, QualifiedNameNode)
     assert isinstance(feel.ast.inputs, ListNode)
-    assert isinstance(feel.ast.value, NumberLiteralNode)
+    assert isinstance(feel.ast.value, QualifiedNameNode)
 
-    assert feel.ast.target.name == "x"
+    assert feel.ast.target.name == "backpackOwner"
     assert feel.ast.inputs.values == []
-    assert feel.ast.value.value == "1"
+    assert feel.ast.value.name == "buyerName"
 
 
 def test_parse_triple_inputs() -> None:
@@ -326,3 +360,38 @@ def test_parse_triple_if() -> None:
     assert feel.ast.value.condition.name == "y"
     assert feel.ast.value.thendo.value == "1"
     assert feel.ast.value.elsedo.value == "2"
+
+
+def test_list_of_triples() -> None:
+    feel = Feel.parse("((x, [], y), (z, [], w))")
+
+    assert isinstance(feel.ast, TripleListNode)
+    assert isinstance(feel.ast.triples[0], TripleNode)
+    assert isinstance(feel.ast.triples[1], TripleNode)
+    assert isinstance(feel.ast.triples[0].target, QualifiedNameNode)
+    assert isinstance(feel.ast.triples[1].target, QualifiedNameNode)
+
+    assert feel.ast.triples[0].target.name == "x"
+    assert feel.ast.triples[1].target.name == "z"
+
+
+def test_choose_with_expr() -> None:
+    feel = Feel.parse("choose [1, if (true) then 2 else 3]")
+
+    assert isinstance(feel.ast, ChooseNode)
+    assert isinstance(feel.ast.choices, ListNode)
+    assert isinstance(feel.ast.choices.values[1], IfNode)
+
+
+def test_parser_requires_parenthesis_around_condition() -> None:
+    pytest.skip("Temporarily diabled for issue 392")
+    feel_good = Feel.parse(
+        "(alert, [alert, trndSevNeed], if (trndSevNeed = homeCare) then no else if (trndSevNeed = outsideHomeCare) then choose [yes, no] else alert)"
+    )
+    feel_broken = Feel.parse(
+        "(alert, [alert, trndSevNeed], if trndSevNeed = homeCare then no else if (trndSevNeed = outsideHomeCare) then choose [yes, no] else alert)"
+    )
+
+    assert isinstance(feel_good.ast, TripleNode)
+    assert isinstance(feel_good.ast.value, IfNode)
+    assert isinstance(feel_broken.ast, TripleNode)

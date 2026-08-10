@@ -491,6 +491,7 @@ class State:
         "_id2type",
         "_str2enum",
         "_str2var",
+        "_str2const",
         "_vars",
     ]
 
@@ -696,6 +697,7 @@ class State:
         self._id2type: Maybe[dict[str, TypeWithDeclLoc]] = Nothing
         self._str2var: Maybe[dict[str, VarDecl]] = Nothing
         self._str2enum: Maybe[dict[str, EnumDecl]] = Nothing
+        self._str2const: Maybe[dict[str, ConstDecl]] = Nothing
         self._vars = vars
         self._arrays = arrays
 
@@ -814,6 +816,10 @@ class State:
         assert self._str2enum != Nothing
         return variable in self._str2enum.unwrap()
 
+    def is_constant(self, variable: str) -> bool:
+        assert self._str2const != Nothing
+        return variable in self._str2const.unwrap()
+
     def is_defined(self, id: str) -> bool:
         """
         Determines if a variable is defined or not
@@ -850,6 +856,7 @@ class State:
         self._id2type = Some(dict())
         self._str2var = Some(dict())
         self._str2enum = Some(dict())
+        self._str2const = Some(dict())
         result: Result[State, Error] = (
             self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
             .bind(lambda _: self._build_id_2_type_consts())
@@ -880,8 +887,10 @@ class State:
         """
         # requires
         assert self._id2type != Nothing
+        assert self._str2const != Nothing
 
         id2type = self._id2type.unwrap()
+        str2const = self._str2const.unwrap()
         for const_decl in self._consts:
             if const_decl.id in id2type:
                 first = (id2type[const_decl.id]).decl_loc
@@ -895,6 +904,7 @@ class State:
                     )
                 )
             id2type[const_decl.id] = TypeWithDeclLoc(const_decl.type_, const_decl)
+            str2const[const_decl.id] = const_decl
 
         return Success(None)
 
