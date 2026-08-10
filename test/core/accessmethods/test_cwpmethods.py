@@ -5,7 +5,8 @@ from returns.pipeline import is_successful
 
 from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.error import (
-    CwpEdgeNoParentExprError,
+    CwpEdgeNoExpressionError,
+    CwpEdgeNoParentError,
     CwpEdgeNoStateError,
     CwpFileStructureError,
     CwpUnsupportedElementError,
@@ -209,7 +210,26 @@ class TestCwpXmlParser:
                 mocker.Mock(), mock_builder, mock_all_items, mock_expr_lstnr, mock_state
             )
 
-        assert isinstance(exc_info.value.args[0], CwpEdgeNoParentExprError)
+        assert isinstance(exc_info.value.args[0], CwpEdgeNoParentError)
+
+        assert exc_info.value.args[0].edge == element
+
+    def test_check_expressions_with_no_expression(self, mocker):
+        mock_builder = mocker.Mock()
+        mock_expr_lstnr = mocker.Mock()
+        mock_state = mocker.Mock()
+        element = mocker.Mock()
+        element.get.side_effect = lambda x: {"style": "edgeLabel", "parent": True}.get(
+            x
+        )
+
+        mock_all_items = [element]
+        with pytest.raises(Exception) as exc_info:
+            CwpXmlParser._check_expressions(
+                mocker.Mock(), mock_builder, mock_all_items, mock_expr_lstnr, mock_state
+            )
+
+        assert isinstance(exc_info.value.args[0], CwpEdgeNoExpressionError)
 
         assert exc_info.value.args[0].edge == element
 

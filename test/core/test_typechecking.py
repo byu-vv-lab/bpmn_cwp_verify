@@ -1,6 +1,8 @@
 # type: ignore
 import pytest
-from returns.result import Failure, Success
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Success
 
 from bpmncwpverify.core.error import TypingAssignCompatabilityError, TypingNoTypeError
 from bpmncwpverify.core.typechecking import (
@@ -58,8 +60,11 @@ class Test_get_type_assign:
         result = get_type_assign(ltype, rtype)
 
         # then
-        expected = Failure(TypingAssignCompatabilityError(ltype, rtype))
-        assert expected == result
+        assert not_(is_successful)(result)
+        error = result.failure()
+        assert isinstance(error, TypingAssignCompatabilityError)
+        assert error.ltype == ltype
+        assert error.rtype == rtype
 
 
 class Test_get_type_literal:
@@ -101,11 +106,12 @@ class Test_get_type_literal:
     )
     def test_given_bad_literal_then_failure(self, literal: str):
         # givin
-        literal = literal
+        # literal
 
         # when
         result = get_type_literal(literal)
 
-        # then
-        expected = Failure(TypingNoTypeError(literal))
-        assert expected == result
+        assert not_(is_successful)(result)
+        error = result.failure()
+        assert isinstance(error, TypingNoTypeError)
+        assert error.id == literal
