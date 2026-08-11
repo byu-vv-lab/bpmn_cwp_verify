@@ -41,18 +41,25 @@ class CwpState:
         visitor.end_visit_state(self)
 
     @staticmethod
-    def from_xml(element: Element) -> "CwpState":
-        id = element.get("id")
-        name = element.get("value")
-        if id is None:
-            raise Exception("id not in cwp state")
-        if name is None:
-            name = id
+    def _clean_name(name: str) -> str:
         name = re.sub("[?,+=/]", "", name)
         name = re.sub("-", " ", name)
         name = re.sub(r"\s+", "_", name)
         name = re.sub("</?div>", "", name).strip()
-        return CwpState(id, name)
+        return name
+
+    @staticmethod
+    def from_xml(element: Element) -> "CwpState":
+        id = element.get("id")
+        if id is None:
+            raise Exception("id not in cwp state")
+
+        name = element.get("value") or id
+        return CwpState(id, CwpState._clean_name(name))
+
+    @staticmethod
+    def from_mmd(state_id: str, display_name: str) -> "CwpState":
+        return CwpState(state_id, CwpState._clean_name(display_name))
 
 
 class CwpEdge:
@@ -154,6 +161,10 @@ class CwpEdge:
         if id is None:
             raise Exception("No ID for edge or no targetRef")
         return CwpEdge(id, name)
+
+    @staticmethod
+    def from_mmd(target_id: str, name: str) -> "CwpEdge":
+        return CwpEdge(target_id, name)
 
 
 class CwpVisitor:
