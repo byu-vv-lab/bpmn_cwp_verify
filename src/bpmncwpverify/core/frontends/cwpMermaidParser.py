@@ -79,8 +79,6 @@ class CwpMermaidParser:
             tree = CwpMermaidParser._parse_tree(mmd_str)
             ParseTreeWalker().walk(listener, tree)
 
-            listener.builder = listener.builder.find_start_state()
-
             clauses = [f"{v.id} == {v.init.value}" for v in state.vars]
             start_edge = CwpEdge("Init_Edge", listener.builder.gen_edge_name())
             start_edge.expression = " && ".join(clauses)
