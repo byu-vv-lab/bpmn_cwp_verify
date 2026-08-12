@@ -10,74 +10,42 @@ else:
 
 def serializedATN():
     return [
-<<<<<<< HEAD
-        4,1,20,107,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
-=======
-        4,1,19,110,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+        4,1,21,114,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,1,0,1,0,1,0,1,1,1,1,1,2,1,2,
         1,2,1,2,1,2,1,2,5,2,34,8,2,10,2,12,2,37,9,2,1,3,1,3,1,3,1,3,1,3,
         1,3,5,3,45,8,3,10,3,12,3,48,9,3,1,4,1,4,1,4,3,4,53,8,4,1,5,1,5,1,
         5,1,5,1,5,1,5,5,5,61,8,5,10,5,12,5,64,9,5,1,6,1,6,1,6,1,6,1,6,1,
         6,5,6,72,8,6,10,6,12,6,75,9,6,1,7,1,7,1,7,1,7,1,7,1,7,5,7,83,8,7,
-<<<<<<< HEAD
-        10,7,12,7,86,9,7,1,8,1,8,1,8,3,8,91,8,8,1,9,1,9,1,9,1,9,1,9,3,9,
-        98,8,9,1,10,1,10,1,10,1,10,1,10,3,10,105,8,10,1,10,0,5,4,6,10,12,
-        14,11,0,2,4,6,8,10,12,14,16,18,20,0,3,1,0,4,9,1,0,10,11,1,0,12,14,
-        104,0,22,1,0,0,0,2,25,1,0,0,0,4,27,1,0,0,0,6,38,1,0,0,0,8,52,1,0,
-        0,0,10,54,1,0,0,0,12,65,1,0,0,0,14,76,1,0,0,0,16,90,1,0,0,0,18,97,
-        1,0,0,0,20,104,1,0,0,0,22,23,3,2,1,0,23,24,5,0,0,1,24,1,1,0,0,0,
-        25,26,3,4,2,0,26,3,1,0,0,0,27,28,6,2,-1,0,28,29,3,6,3,0,29,35,1,
-        0,0,0,30,31,10,2,0,0,31,32,5,1,0,0,32,34,3,6,3,0,33,30,1,0,0,0,34,
-        37,1,0,0,0,35,33,1,0,0,0,35,36,1,0,0,0,36,5,1,0,0,0,37,35,1,0,0,
-        0,38,39,6,3,-1,0,39,40,3,8,4,0,40,46,1,0,0,0,41,42,10,2,0,0,42,43,
-        5,2,0,0,43,45,3,8,4,0,44,41,1,0,0,0,45,48,1,0,0,0,46,44,1,0,0,0,
-        46,47,1,0,0,0,47,7,1,0,0,0,48,46,1,0,0,0,49,50,5,3,0,0,50,53,3,8,
-        4,0,51,53,3,10,5,0,52,49,1,0,0,0,52,51,1,0,0,0,53,9,1,0,0,0,54,55,
-        6,5,-1,0,55,56,3,12,6,0,56,62,1,0,0,0,57,58,10,2,0,0,58,59,7,0,0,
-        0,59,61,3,12,6,0,60,57,1,0,0,0,61,64,1,0,0,0,62,60,1,0,0,0,62,63,
-        1,0,0,0,63,11,1,0,0,0,64,62,1,0,0,0,65,66,6,6,-1,0,66,67,3,14,7,
-        0,67,73,1,0,0,0,68,69,10,2,0,0,69,70,7,1,0,0,70,72,3,14,7,0,71,68,
-        1,0,0,0,72,75,1,0,0,0,73,71,1,0,0,0,73,74,1,0,0,0,74,13,1,0,0,0,
-        75,73,1,0,0,0,76,77,6,7,-1,0,77,78,3,16,8,0,78,84,1,0,0,0,79,80,
-        10,2,0,0,80,81,7,2,0,0,81,83,3,16,8,0,82,79,1,0,0,0,83,86,1,0,0,
-        0,84,82,1,0,0,0,84,85,1,0,0,0,85,15,1,0,0,0,86,84,1,0,0,0,87,88,
-        5,11,0,0,88,91,3,16,8,0,89,91,3,18,9,0,90,87,1,0,0,0,90,89,1,0,0,
-        0,91,17,1,0,0,0,92,93,5,19,0,0,93,94,5,15,0,0,94,95,5,19,0,0,95,
-        98,5,16,0,0,96,98,3,20,10,0,97,92,1,0,0,0,97,96,1,0,0,0,98,19,1,
-        0,0,0,99,105,5,19,0,0,100,101,5,17,0,0,101,102,3,2,1,0,102,103,5,
-        18,0,0,103,105,1,0,0,0,104,99,1,0,0,0,104,100,1,0,0,0,105,21,1,0,
-        0,0,9,35,46,52,62,73,84,90,97,104
-=======
-        10,7,12,7,86,9,7,1,8,1,8,1,8,3,8,91,8,8,1,9,1,9,1,9,4,9,96,8,9,11,
-        9,12,9,97,1,9,3,9,101,8,9,1,10,1,10,1,10,1,10,1,10,3,10,108,8,10,
-        1,10,0,5,4,6,10,12,14,11,0,2,4,6,8,10,12,14,16,18,20,0,3,1,0,4,9,
-        1,0,10,11,1,0,12,14,108,0,22,1,0,0,0,2,25,1,0,0,0,4,27,1,0,0,0,6,
-        38,1,0,0,0,8,52,1,0,0,0,10,54,1,0,0,0,12,65,1,0,0,0,14,76,1,0,0,
-        0,16,90,1,0,0,0,18,100,1,0,0,0,20,107,1,0,0,0,22,23,3,2,1,0,23,24,
-        5,0,0,1,24,1,1,0,0,0,25,26,3,4,2,0,26,3,1,0,0,0,27,28,6,2,-1,0,28,
-        29,3,6,3,0,29,35,1,0,0,0,30,31,10,2,0,0,31,32,5,1,0,0,32,34,3,6,
-        3,0,33,30,1,0,0,0,34,37,1,0,0,0,35,33,1,0,0,0,35,36,1,0,0,0,36,5,
-        1,0,0,0,37,35,1,0,0,0,38,39,6,3,-1,0,39,40,3,8,4,0,40,46,1,0,0,0,
-        41,42,10,2,0,0,42,43,5,2,0,0,43,45,3,8,4,0,44,41,1,0,0,0,45,48,1,
-        0,0,0,46,44,1,0,0,0,46,47,1,0,0,0,47,7,1,0,0,0,48,46,1,0,0,0,49,
-        50,5,3,0,0,50,53,3,8,4,0,51,53,3,10,5,0,52,49,1,0,0,0,52,51,1,0,
-        0,0,53,9,1,0,0,0,54,55,6,5,-1,0,55,56,3,12,6,0,56,62,1,0,0,0,57,
-        58,10,2,0,0,58,59,7,0,0,0,59,61,3,12,6,0,60,57,1,0,0,0,61,64,1,0,
-        0,0,62,60,1,0,0,0,62,63,1,0,0,0,63,11,1,0,0,0,64,62,1,0,0,0,65,66,
-        6,6,-1,0,66,67,3,14,7,0,67,73,1,0,0,0,68,69,10,2,0,0,69,70,7,1,0,
-        0,70,72,3,14,7,0,71,68,1,0,0,0,72,75,1,0,0,0,73,71,1,0,0,0,73,74,
-        1,0,0,0,74,13,1,0,0,0,75,73,1,0,0,0,76,77,6,7,-1,0,77,78,3,16,8,
-        0,78,84,1,0,0,0,79,80,10,2,0,0,80,81,7,2,0,0,81,83,3,16,8,0,82,79,
-        1,0,0,0,83,86,1,0,0,0,84,82,1,0,0,0,84,85,1,0,0,0,85,15,1,0,0,0,
-        86,84,1,0,0,0,87,88,5,11,0,0,88,91,3,16,8,0,89,91,3,18,9,0,90,87,
-        1,0,0,0,90,89,1,0,0,0,91,17,1,0,0,0,92,95,5,18,0,0,93,94,5,17,0,
-        0,94,96,5,18,0,0,95,93,1,0,0,0,96,97,1,0,0,0,97,95,1,0,0,0,97,98,
-        1,0,0,0,98,101,1,0,0,0,99,101,3,20,10,0,100,92,1,0,0,0,100,99,1,
-        0,0,0,101,19,1,0,0,0,102,108,5,18,0,0,103,104,5,15,0,0,104,105,3,
-        2,1,0,105,106,5,16,0,0,106,108,1,0,0,0,107,102,1,0,0,0,107,103,1,
-        0,0,0,108,21,1,0,0,0,10,35,46,52,62,73,84,90,97,100,107
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+        10,7,12,7,86,9,7,1,8,1,8,1,8,3,8,91,8,8,1,9,1,9,1,9,1,9,1,9,1,9,
+        1,9,4,9,100,8,9,11,9,12,9,101,1,9,3,9,105,8,9,1,10,1,10,1,10,1,10,
+        1,10,3,10,112,8,10,1,10,0,5,4,6,10,12,14,11,0,2,4,6,8,10,12,14,16,
+        18,20,0,3,1,0,4,9,1,0,10,11,1,0,12,14,113,0,22,1,0,0,0,2,25,1,0,
+        0,0,4,27,1,0,0,0,6,38,1,0,0,0,8,52,1,0,0,0,10,54,1,0,0,0,12,65,1,
+        0,0,0,14,76,1,0,0,0,16,90,1,0,0,0,18,104,1,0,0,0,20,111,1,0,0,0,
+        22,23,3,2,1,0,23,24,5,0,0,1,24,1,1,0,0,0,25,26,3,4,2,0,26,3,1,0,
+        0,0,27,28,6,2,-1,0,28,29,3,6,3,0,29,35,1,0,0,0,30,31,10,2,0,0,31,
+        32,5,1,0,0,32,34,3,6,3,0,33,30,1,0,0,0,34,37,1,0,0,0,35,33,1,0,0,
+        0,35,36,1,0,0,0,36,5,1,0,0,0,37,35,1,0,0,0,38,39,6,3,-1,0,39,40,
+        3,8,4,0,40,46,1,0,0,0,41,42,10,2,0,0,42,43,5,2,0,0,43,45,3,8,4,0,
+        44,41,1,0,0,0,45,48,1,0,0,0,46,44,1,0,0,0,46,47,1,0,0,0,47,7,1,0,
+        0,0,48,46,1,0,0,0,49,50,5,3,0,0,50,53,3,8,4,0,51,53,3,10,5,0,52,
+        49,1,0,0,0,52,51,1,0,0,0,53,9,1,0,0,0,54,55,6,5,-1,0,55,56,3,12,
+        6,0,56,62,1,0,0,0,57,58,10,2,0,0,58,59,7,0,0,0,59,61,3,12,6,0,60,
+        57,1,0,0,0,61,64,1,0,0,0,62,60,1,0,0,0,62,63,1,0,0,0,63,11,1,0,0,
+        0,64,62,1,0,0,0,65,66,6,6,-1,0,66,67,3,14,7,0,67,73,1,0,0,0,68,69,
+        10,2,0,0,69,70,7,1,0,0,70,72,3,14,7,0,71,68,1,0,0,0,72,75,1,0,0,
+        0,73,71,1,0,0,0,73,74,1,0,0,0,74,13,1,0,0,0,75,73,1,0,0,0,76,77,
+        6,7,-1,0,77,78,3,16,8,0,78,84,1,0,0,0,79,80,10,2,0,0,80,81,7,2,0,
+        0,81,83,3,16,8,0,82,79,1,0,0,0,83,86,1,0,0,0,84,82,1,0,0,0,84,85,
+        1,0,0,0,85,15,1,0,0,0,86,84,1,0,0,0,87,88,5,11,0,0,88,91,3,16,8,
+        0,89,91,3,18,9,0,90,87,1,0,0,0,90,89,1,0,0,0,91,17,1,0,0,0,92,93,
+        5,20,0,0,93,94,5,15,0,0,94,95,5,20,0,0,95,105,5,16,0,0,96,99,5,20,
+        0,0,97,98,5,19,0,0,98,100,5,20,0,0,99,97,1,0,0,0,100,101,1,0,0,0,
+        101,99,1,0,0,0,101,102,1,0,0,0,102,105,1,0,0,0,103,105,3,20,10,0,
+        104,92,1,0,0,0,104,96,1,0,0,0,104,103,1,0,0,0,105,19,1,0,0,0,106,
+        112,5,20,0,0,107,108,5,17,0,0,108,109,3,2,1,0,109,110,5,18,0,0,110,
+        112,1,0,0,0,111,106,1,0,0,0,111,107,1,0,0,0,112,21,1,0,0,0,10,35,
+        46,52,62,73,84,90,101,104,111
     ]
 
 class ExprParser ( Parser ):
@@ -92,21 +60,14 @@ class ExprParser ( Parser ):
 
     literalNames = [ "<INVALID>", "'||'", "'&&'", "'!'", "'<'", "'<='", 
                      "'=='", "'!='", "'>'", "'>='", "'+'", "'-'", "'*'", 
-<<<<<<< HEAD
-                     "'/'", "'%'", "'['", "']'", "'('", "')'" ]
-=======
-                     "'/'", "'%'", "'('", "')'", "'.'" ]
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                     "'/'", "'%'", "'['", "']'", "'('", "')'", "'.'" ]
 
     symbolicNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
                       "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-<<<<<<< HEAD
-                      "<INVALID>", "<INVALID>", "<INVALID>", "ID", "WS" ]
-=======
-                      "<INVALID>", "PERIOD", "ID", "WS" ]
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                      "<INVALID>", "<INVALID>", "<INVALID>", "PERIOD", "ID", 
+                      "WS" ]
 
     RULE_start = 0
     RULE_expr = 1
@@ -141,16 +102,11 @@ class ExprParser ( Parser ):
     T__13=14
     T__14=15
     T__15=16
-<<<<<<< HEAD
     T__16=17
     T__17=18
-    ID=19
-    WS=20
-=======
-    PERIOD=17
-    ID=18
-    WS=19
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+    PERIOD=19
+    ID=20
+    WS=21
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -532,11 +488,7 @@ class ExprParser ( Parser ):
                 self.state = 50
                 self.notExpr()
                 pass
-<<<<<<< HEAD
-            elif token in [11, 17, 19]:
-=======
-            elif token in [11, 15, 18]:
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            elif token in [11, 17, 20]:
                 localctx = ExprParser.ToRelContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
                 self.state = 51
@@ -910,11 +862,7 @@ class ExprParser ( Parser ):
 
 
 
-<<<<<<< HEAD
     class ToPostfixContext(UnaryExprContext):
-=======
-    class ToPostFixExprContext(UnaryExprContext):
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a ExprParser.UnaryExprContext
             super().__init__(parser)
@@ -925,21 +873,12 @@ class ExprParser ( Parser ):
 
 
         def enterRule(self, listener:ParseTreeListener):
-<<<<<<< HEAD
             if hasattr( listener, "enterToPostfix" ):
                 listener.enterToPostfix(self)
 
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitToPostfix" ):
                 listener.exitToPostfix(self)
-=======
-            if hasattr( listener, "enterToPostFixExpr" ):
-                listener.enterToPostFixExpr(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitToPostFixExpr" ):
-                listener.exitToPostFixExpr(self)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
 
     class NegateContext(UnaryExprContext):
@@ -978,13 +917,8 @@ class ExprParser ( Parser ):
                 self.state = 88
                 self.unaryExpr()
                 pass
-<<<<<<< HEAD
-            elif token in [17, 19]:
+            elif token in [17, 20]:
                 localctx = ExprParser.ToPostfixContext(self, localctx)
-=======
-            elif token in [15, 18]:
-                localctx = ExprParser.ToPostFixExprContext(self, localctx)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
                 self.enterOuterAlt(localctx, 2)
                 self.state = 89
                 self.postfixExpr()
@@ -1018,11 +952,7 @@ class ExprParser ( Parser ):
 
 
 
-<<<<<<< HEAD
     class ArrayAccessContext(PostfixExprContext):
-=======
-    class FieldAccessContext(PostfixExprContext):
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
         def __init__(self, parser, ctx:ParserRuleContext): # actually a ExprParser.PostfixExprContext
             super().__init__(parser)
@@ -1033,7 +963,6 @@ class ExprParser ( Parser ):
                 return self.getTokens(ExprParser.ID)
             else:
                 return self.getToken(ExprParser.ID, i)
-<<<<<<< HEAD
 
         def enterRule(self, listener:ParseTreeListener):
             if hasattr( listener, "enterArrayAccess" ):
@@ -1042,7 +971,19 @@ class ExprParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitArrayAccess" ):
                 listener.exitArrayAccess(self)
-=======
+
+
+    class FieldAccessContext(PostfixExprContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a ExprParser.PostfixExprContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def ID(self, i:int=None):
+            if i is None:
+                return self.getTokens(ExprParser.ID)
+            else:
+                return self.getToken(ExprParser.ID, i)
         def PERIOD(self, i:int=None):
             if i is None:
                 return self.getTokens(ExprParser.PERIOD)
@@ -1056,7 +997,6 @@ class ExprParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitFieldAccess" ):
                 listener.exitFieldAccess(self)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
 
     class ToAtomContext(PostfixExprContext):
@@ -1084,10 +1024,9 @@ class ExprParser ( Parser ):
         localctx = ExprParser.PostfixExprContext(self, self._ctx, self.state)
         self.enterRule(localctx, 18, self.RULE_postfixExpr)
         try:
-<<<<<<< HEAD
-            self.state = 97
+            self.state = 104
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,7,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,8,self._ctx)
             if la_ == 1:
                 localctx = ExprParser.ArrayAccessContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
@@ -1099,42 +1038,35 @@ class ExprParser ( Parser ):
                 self.match(ExprParser.ID)
                 self.state = 95
                 self.match(ExprParser.T__15)
-=======
-            self.state = 100
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,8,self._ctx)
-            if la_ == 1:
+                pass
+
+            elif la_ == 2:
                 localctx = ExprParser.FieldAccessContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
-                self.state = 92
+                self.enterOuterAlt(localctx, 2)
+                self.state = 96
                 self.match(ExprParser.ID)
-                self.state = 95 
+                self.state = 99 
                 self._errHandler.sync(self)
                 _alt = 1
                 while _alt!=2 and _alt!=ATN.INVALID_ALT_NUMBER:
                     if _alt == 1:
-                        self.state = 93
+                        self.state = 97
                         self.match(ExprParser.PERIOD)
-                        self.state = 94
+                        self.state = 98
                         self.match(ExprParser.ID)
 
                     else:
                         raise NoViableAltException(self)
-                    self.state = 97 
+                    self.state = 101 
                     self._errHandler.sync(self)
                     _alt = self._interp.adaptivePredict(self._input,7,self._ctx)
 
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
                 pass
 
-            elif la_ == 2:
+            elif la_ == 3:
                 localctx = ExprParser.ToAtomContext(self, localctx)
-                self.enterOuterAlt(localctx, 2)
-<<<<<<< HEAD
-                self.state = 96
-=======
-                self.state = 99
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                self.enterOuterAlt(localctx, 3)
+                self.state = 103
                 self.atom()
                 pass
 
@@ -1208,43 +1140,24 @@ class ExprParser ( Parser ):
         localctx = ExprParser.AtomContext(self, self._ctx, self.state)
         self.enterRule(localctx, 20, self.RULE_atom)
         try:
-<<<<<<< HEAD
-            self.state = 104
+            self.state = 111
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [19]:
+            if token in [20]:
                 localctx = ExprParser.IDContext(self, localctx)
                 self.enterOuterAlt(localctx, 1)
-                self.state = 99
-=======
-            self.state = 107
-            self._errHandler.sync(self)
-            token = self._input.LA(1)
-            if token in [18]:
-                localctx = ExprParser.IDContext(self, localctx)
-                self.enterOuterAlt(localctx, 1)
-                self.state = 102
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                self.state = 106
                 self.match(ExprParser.ID)
                 pass
             elif token in [17]:
                 localctx = ExprParser.ParensContext(self, localctx)
                 self.enterOuterAlt(localctx, 2)
-<<<<<<< HEAD
-                self.state = 100
+                self.state = 107
                 self.match(ExprParser.T__16)
-                self.state = 101
+                self.state = 108
                 self.expr()
-                self.state = 102
+                self.state = 109
                 self.match(ExprParser.T__17)
-=======
-                self.state = 103
-                self.match(ExprParser.T__14)
-                self.state = 104
-                self.expr()
-                self.state = 105
-                self.match(ExprParser.T__15)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
                 pass
             else:
                 raise NoViableAltException(self)

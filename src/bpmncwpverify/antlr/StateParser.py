@@ -10,67 +10,44 @@ else:
 
 def serializedATN():
     return [
-<<<<<<< HEAD
-        4,1,17,90,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
-        6,2,7,7,7,1,0,5,0,18,8,0,10,0,12,0,21,9,0,1,0,5,0,24,8,0,10,0,12,
-        0,27,9,0,1,0,5,0,30,8,0,10,0,12,0,33,9,0,1,0,4,0,36,8,0,11,0,12,
-        0,37,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,2,4,2,49,8,2,11,2,12,2,50,
-        1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,
-        1,4,3,4,70,8,4,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,
-        6,1,6,3,6,86,8,6,1,7,1,7,1,7,0,0,8,0,2,4,6,8,10,12,14,0,1,2,0,2,
-        4,7,8,88,0,19,1,0,0,0,2,41,1,0,0,0,4,48,1,0,0,0,6,52,1,0,0,0,8,59,
-        1,0,0,0,10,71,1,0,0,0,12,85,1,0,0,0,14,87,1,0,0,0,16,18,3,2,1,0,
-        17,16,1,0,0,0,18,21,1,0,0,0,19,17,1,0,0,0,19,20,1,0,0,0,20,25,1,
-        0,0,0,21,19,1,0,0,0,22,24,3,6,3,0,23,22,1,0,0,0,24,27,1,0,0,0,25,
-        23,1,0,0,0,25,26,1,0,0,0,26,31,1,0,0,0,27,25,1,0,0,0,28,30,3,10,
-        5,0,29,28,1,0,0,0,30,33,1,0,0,0,31,29,1,0,0,0,31,32,1,0,0,0,32,35,
-        1,0,0,0,33,31,1,0,0,0,34,36,3,8,4,0,35,34,1,0,0,0,36,37,1,0,0,0,
-        37,35,1,0,0,0,37,38,1,0,0,0,38,39,1,0,0,0,39,40,5,0,0,1,40,1,1,0,
-        0,0,41,42,5,6,0,0,42,43,5,16,0,0,43,44,5,10,0,0,44,45,3,4,2,0,45,
-        46,5,11,0,0,46,3,1,0,0,0,47,49,5,16,0,0,48,47,1,0,0,0,49,50,1,0,
-        0,0,50,48,1,0,0,0,50,51,1,0,0,0,51,5,1,0,0,0,52,53,5,5,0,0,53,54,
-        5,16,0,0,54,55,5,1,0,0,55,56,3,12,6,0,56,57,5,9,0,0,57,58,5,16,0,
-        0,58,7,1,0,0,0,59,60,5,14,0,0,60,61,5,16,0,0,61,62,5,1,0,0,62,63,
-        3,12,6,0,63,64,5,9,0,0,64,69,5,16,0,0,65,66,5,10,0,0,66,67,3,4,2,
-        0,67,68,5,11,0,0,68,70,1,0,0,0,69,65,1,0,0,0,69,70,1,0,0,0,70,9,
-        1,0,0,0,71,72,5,15,0,0,72,73,5,16,0,0,73,74,5,12,0,0,74,75,5,16,
-        0,0,75,76,5,13,0,0,76,77,5,1,0,0,77,78,3,14,7,0,78,79,5,9,0,0,79,
-        80,5,10,0,0,80,81,3,4,2,0,81,82,5,11,0,0,82,11,1,0,0,0,83,86,3,14,
-        7,0,84,86,5,16,0,0,85,83,1,0,0,0,85,84,1,0,0,0,86,13,1,0,0,0,87,
-        88,7,0,0,0,88,15,1,0,0,0,7,19,25,31,37,50,69,85
-=======
-        4,1,15,101,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
-        6,2,7,7,7,2,8,7,8,2,9,7,9,1,0,5,0,22,8,0,10,0,12,0,25,9,0,1,0,5,
-        0,28,8,0,10,0,12,0,31,9,0,1,0,5,0,34,8,0,10,0,12,0,37,9,0,1,0,4,
-        0,40,8,0,11,0,12,0,41,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,2,4,2,53,
-        8,2,11,2,12,2,54,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,4,1,4,1,4,1,4,1,4,
-        1,4,1,4,1,4,1,4,1,4,3,4,74,8,4,1,5,4,5,77,8,5,11,5,12,5,78,1,6,1,
-        6,1,6,1,6,1,6,1,6,1,6,1,7,5,7,89,8,7,10,7,12,7,92,9,7,1,8,1,8,1,
-        8,3,8,97,8,8,1,9,1,9,1,9,0,0,10,0,2,4,6,8,10,12,14,16,18,0,1,2,0,
-        2,4,7,8,100,0,23,1,0,0,0,2,45,1,0,0,0,4,52,1,0,0,0,6,56,1,0,0,0,
-        8,63,1,0,0,0,10,76,1,0,0,0,12,80,1,0,0,0,14,90,1,0,0,0,16,96,1,0,
-        0,0,18,98,1,0,0,0,20,22,3,2,1,0,21,20,1,0,0,0,22,25,1,0,0,0,23,21,
-        1,0,0,0,23,24,1,0,0,0,24,29,1,0,0,0,25,23,1,0,0,0,26,28,3,6,3,0,
-        27,26,1,0,0,0,28,31,1,0,0,0,29,27,1,0,0,0,29,30,1,0,0,0,30,35,1,
-        0,0,0,31,29,1,0,0,0,32,34,3,12,6,0,33,32,1,0,0,0,34,37,1,0,0,0,35,
-        33,1,0,0,0,35,36,1,0,0,0,36,39,1,0,0,0,37,35,1,0,0,0,38,40,3,8,4,
-        0,39,38,1,0,0,0,40,41,1,0,0,0,41,39,1,0,0,0,41,42,1,0,0,0,42,43,
-        1,0,0,0,43,44,5,0,0,1,44,1,1,0,0,0,45,46,5,6,0,0,46,47,5,14,0,0,
-        47,48,5,10,0,0,48,49,3,4,2,0,49,50,5,11,0,0,50,3,1,0,0,0,51,53,5,
-        14,0,0,52,51,1,0,0,0,53,54,1,0,0,0,54,52,1,0,0,0,54,55,1,0,0,0,55,
-        5,1,0,0,0,56,57,5,5,0,0,57,58,5,14,0,0,58,59,5,1,0,0,59,60,3,16,
-        8,0,60,61,5,9,0,0,61,62,5,14,0,0,62,7,1,0,0,0,63,64,5,12,0,0,64,
-        65,5,14,0,0,65,66,5,1,0,0,66,67,3,16,8,0,67,68,5,9,0,0,68,73,5,14,
-        0,0,69,70,5,10,0,0,70,71,3,4,2,0,71,72,5,11,0,0,72,74,1,0,0,0,73,
-        69,1,0,0,0,73,74,1,0,0,0,74,9,1,0,0,0,75,77,3,8,4,0,76,75,1,0,0,
-        0,77,78,1,0,0,0,78,76,1,0,0,0,78,79,1,0,0,0,79,11,1,0,0,0,80,81,
-        5,13,0,0,81,82,5,14,0,0,82,83,5,10,0,0,83,84,3,10,5,0,84,85,3,14,
-        7,0,85,86,5,11,0,0,86,13,1,0,0,0,87,89,3,12,6,0,88,87,1,0,0,0,89,
-        92,1,0,0,0,90,88,1,0,0,0,90,91,1,0,0,0,91,15,1,0,0,0,92,90,1,0,0,
-        0,93,97,3,18,9,0,94,97,5,13,0,0,95,97,5,14,0,0,96,93,1,0,0,0,96,
-        94,1,0,0,0,96,95,1,0,0,0,97,17,1,0,0,0,98,99,7,0,0,0,99,19,1,0,0,
-        0,9,23,29,35,41,54,73,78,90,96
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+        4,1,18,121,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,1,0,5,0,24,8,0,10,0,12,0,27,
+        9,0,1,0,5,0,30,8,0,10,0,12,0,33,9,0,1,0,5,0,36,8,0,10,0,12,0,39,
+        9,0,1,0,5,0,42,8,0,10,0,12,0,45,9,0,1,0,4,0,48,8,0,11,0,12,0,49,
+        1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,2,4,2,61,8,2,11,2,12,2,62,1,3,
+        1,3,1,3,1,3,1,3,1,3,1,3,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,
+        3,4,82,8,4,1,5,4,5,85,8,5,11,5,12,5,86,1,6,1,6,1,6,1,6,1,6,1,6,1,
+        6,1,6,1,6,1,6,1,6,1,6,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,8,5,8,109,8,
+        8,10,8,12,8,112,9,8,1,9,1,9,1,9,3,9,117,8,9,1,10,1,10,1,10,0,0,11,
+        0,2,4,6,8,10,12,14,16,18,20,0,1,2,0,2,4,7,8,120,0,25,1,0,0,0,2,53,
+        1,0,0,0,4,60,1,0,0,0,6,64,1,0,0,0,8,71,1,0,0,0,10,84,1,0,0,0,12,
+        88,1,0,0,0,14,100,1,0,0,0,16,110,1,0,0,0,18,116,1,0,0,0,20,118,1,
+        0,0,0,22,24,3,2,1,0,23,22,1,0,0,0,24,27,1,0,0,0,25,23,1,0,0,0,25,
+        26,1,0,0,0,26,31,1,0,0,0,27,25,1,0,0,0,28,30,3,6,3,0,29,28,1,0,0,
+        0,30,33,1,0,0,0,31,29,1,0,0,0,31,32,1,0,0,0,32,37,1,0,0,0,33,31,
+        1,0,0,0,34,36,3,12,6,0,35,34,1,0,0,0,36,39,1,0,0,0,37,35,1,0,0,0,
+        37,38,1,0,0,0,38,43,1,0,0,0,39,37,1,0,0,0,40,42,3,14,7,0,41,40,1,
+        0,0,0,42,45,1,0,0,0,43,41,1,0,0,0,43,44,1,0,0,0,44,47,1,0,0,0,45,
+        43,1,0,0,0,46,48,3,8,4,0,47,46,1,0,0,0,48,49,1,0,0,0,49,47,1,0,0,
+        0,49,50,1,0,0,0,50,51,1,0,0,0,51,52,5,0,0,1,52,1,1,0,0,0,53,54,5,
+        6,0,0,54,55,5,17,0,0,55,56,5,10,0,0,56,57,3,4,2,0,57,58,5,11,0,0,
+        58,3,1,0,0,0,59,61,5,17,0,0,60,59,1,0,0,0,61,62,1,0,0,0,62,60,1,
+        0,0,0,62,63,1,0,0,0,63,5,1,0,0,0,64,65,5,5,0,0,65,66,5,17,0,0,66,
+        67,5,1,0,0,67,68,3,18,9,0,68,69,5,9,0,0,69,70,5,17,0,0,70,7,1,0,
+        0,0,71,72,5,14,0,0,72,73,5,17,0,0,73,74,5,1,0,0,74,75,3,18,9,0,75,
+        76,5,9,0,0,76,81,5,17,0,0,77,78,5,10,0,0,78,79,3,4,2,0,79,80,5,11,
+        0,0,80,82,1,0,0,0,81,77,1,0,0,0,81,82,1,0,0,0,82,9,1,0,0,0,83,85,
+        3,8,4,0,84,83,1,0,0,0,85,86,1,0,0,0,86,84,1,0,0,0,86,87,1,0,0,0,
+        87,11,1,0,0,0,88,89,5,15,0,0,89,90,5,17,0,0,90,91,5,12,0,0,91,92,
+        5,17,0,0,92,93,5,13,0,0,93,94,5,1,0,0,94,95,3,20,10,0,95,96,5,9,
+        0,0,96,97,5,10,0,0,97,98,3,4,2,0,98,99,5,11,0,0,99,13,1,0,0,0,100,
+        101,5,16,0,0,101,102,5,17,0,0,102,103,5,10,0,0,103,104,3,10,5,0,
+        104,105,3,16,8,0,105,106,5,11,0,0,106,15,1,0,0,0,107,109,3,14,7,
+        0,108,107,1,0,0,0,109,112,1,0,0,0,110,108,1,0,0,0,110,111,1,0,0,
+        0,111,17,1,0,0,0,112,110,1,0,0,0,113,117,3,20,10,0,114,117,5,16,
+        0,0,115,117,5,17,0,0,116,113,1,0,0,0,116,114,1,0,0,0,116,115,1,0,
+        0,0,117,19,1,0,0,0,118,119,7,0,0,0,119,21,1,0,0,0,10,25,31,37,43,
+        49,62,81,86,110,116
     ]
 
 class StateParser ( Parser ):
@@ -85,43 +62,28 @@ class StateParser ( Parser ):
 
     literalNames = [ "<INVALID>", "':'", "'bit'", "'bool'", "'byte'", "'const'", 
                      "'enum'", "'int'", "'short'", "'='", "'{'", "'}'", 
-<<<<<<< HEAD
-                     "'['", "']'", "'var'", "'array'" ]
+                     "'['", "']'", "'var'", "'array'", "'typedef'" ]
 
     symbolicNames = [ "<INVALID>", "COLON", "BIT", "BOOL", "BYTE", "CONST", 
                       "ENUM", "INT", "SHORT", "EQUALS", "LCURLY", "RCURLY", 
-                      "LBRACKET", "RBRACKET", "VAR", "ARRAY", "ID", "WS" ]
-=======
-                     "'var'", "'typedef'" ]
-
-    symbolicNames = [ "<INVALID>", "COLON", "BIT", "BOOL", "BYTE", "CONST", 
-                      "ENUM", "INT", "SHORT", "EQUALS", "LCURLY", "RCURLY", 
-                      "VAR", "TYPEDEF", "ID", "WS" ]
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                      "LBRACKET", "RBRACKET", "VAR", "ARRAY", "TYPEDEF", 
+                      "ID", "WS" ]
 
     RULE_state = 0
     RULE_enum_type_decl = 1
     RULE_id_set = 2
     RULE_const_var_decl = 3
     RULE_var_decl = 4
-<<<<<<< HEAD
-    RULE_array_decl = 5
-    RULE_type = 6
-    RULE_primitive_type = 7
-
-    ruleNames =  [ "state", "enum_type_decl", "id_set", "const_var_decl", 
-                   "var_decl", "array_decl", "type", "primitive_type" ]
-=======
     RULE_var_set = 5
-    RULE_typedef_decl = 6
-    RULE_typedef_decl_set = 7
-    RULE_type = 8
-    RULE_primitive_type = 9
+    RULE_array_decl = 6
+    RULE_typedef_decl = 7
+    RULE_typedef_decl_set = 8
+    RULE_type = 9
+    RULE_primitive_type = 10
 
     ruleNames =  [ "state", "enum_type_decl", "id_set", "const_var_decl", 
-                   "var_decl", "var_set", "typedef_decl", "typedef_decl_set", 
-                   "type", "primitive_type" ]
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                   "var_decl", "var_set", "array_decl", "typedef_decl", 
+                   "typedef_decl_set", "type", "primitive_type" ]
 
     EOF = Token.EOF
     COLON=1
@@ -135,19 +97,13 @@ class StateParser ( Parser ):
     EQUALS=9
     LCURLY=10
     RCURLY=11
-<<<<<<< HEAD
     LBRACKET=12
     RBRACKET=13
     VAR=14
     ARRAY=15
-    ID=16
-    WS=17
-=======
-    VAR=12
-    TYPEDEF=13
-    ID=14
-    WS=15
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+    TYPEDEF=16
+    ID=17
+    WS=18
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -182,19 +138,18 @@ class StateParser ( Parser ):
                 return self.getTypedRuleContext(StateParser.Const_var_declContext,i)
 
 
-<<<<<<< HEAD
         def array_decl(self, i:int=None):
             if i is None:
                 return self.getTypedRuleContexts(StateParser.Array_declContext)
             else:
                 return self.getTypedRuleContext(StateParser.Array_declContext,i)
-=======
+
+
         def typedef_decl(self, i:int=None):
             if i is None:
                 return self.getTypedRuleContexts(StateParser.Typedef_declContext)
             else:
                 return self.getTypedRuleContext(StateParser.Typedef_declContext,i)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
 
         def var_decl(self, i:int=None):
@@ -225,23 +180,12 @@ class StateParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-<<<<<<< HEAD
-            self.state = 19
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==6:
-                self.state = 16
-                self.enum_type_decl()
-                self.state = 21
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-
             self.state = 25
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==5:
+            while _la==6:
                 self.state = 22
-                self.const_var_decl()
+                self.enum_type_decl()
                 self.state = 27
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
@@ -249,69 +193,46 @@ class StateParser ( Parser ):
             self.state = 31
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==15:
+            while _la==5:
                 self.state = 28
-                self.array_decl()
+                self.const_var_decl()
                 self.state = 33
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 35 
+            self.state = 37
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while True:
+            while _la==15:
                 self.state = 34
-                self.var_decl()
-                self.state = 37 
-=======
-            self.state = 23
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==6:
-                self.state = 20
-                self.enum_type_decl()
-                self.state = 25
+                self.array_decl()
+                self.state = 39
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 29
+            self.state = 43
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==5:
-                self.state = 26
-                self.const_var_decl()
-                self.state = 31
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-
-            self.state = 35
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la==13:
-                self.state = 32
+            while _la==16:
+                self.state = 40
                 self.typedef_decl()
-                self.state = 37
+                self.state = 45
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-            self.state = 39 
+            self.state = 47 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 38
+                self.state = 46
                 self.var_decl()
-                self.state = 41 
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                self.state = 49 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==14):
                     break
 
-<<<<<<< HEAD
-            self.state = 39
-=======
-            self.state = 43
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            self.state = 51
             self.match(StateParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -365,27 +286,15 @@ class StateParser ( Parser ):
         self.enterRule(localctx, 2, self.RULE_enum_type_decl)
         try:
             self.enterOuterAlt(localctx, 1)
-<<<<<<< HEAD
-            self.state = 41
+            self.state = 53
             self.match(StateParser.ENUM)
-            self.state = 42
+            self.state = 54
             self.match(StateParser.ID)
-            self.state = 43
+            self.state = 55
             self.match(StateParser.LCURLY)
-            self.state = 44
+            self.state = 56
             self.id_set()
-            self.state = 45
-=======
-            self.state = 45
-            self.match(StateParser.ENUM)
-            self.state = 46
-            self.match(StateParser.ID)
-            self.state = 47
-            self.match(StateParser.LCURLY)
-            self.state = 48
-            self.id_set()
-            self.state = 49
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            self.state = 57
             self.match(StateParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -430,29 +339,16 @@ class StateParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-<<<<<<< HEAD
-            self.state = 48 
+            self.state = 60 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 47
+                self.state = 59
                 self.match(StateParser.ID)
-                self.state = 50 
+                self.state = 62 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==16):
-=======
-            self.state = 52 
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while True:
-                self.state = 51
-                self.match(StateParser.ID)
-                self.state = 54 
-                self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if not (_la==14):
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                if not (_la==17):
                     break
 
         except RecognitionException as re:
@@ -510,31 +406,17 @@ class StateParser ( Parser ):
         self.enterRule(localctx, 6, self.RULE_const_var_decl)
         try:
             self.enterOuterAlt(localctx, 1)
-<<<<<<< HEAD
-            self.state = 52
+            self.state = 64
             self.match(StateParser.CONST)
-            self.state = 53
+            self.state = 65
             self.match(StateParser.ID)
-            self.state = 54
+            self.state = 66
             self.match(StateParser.COLON)
-            self.state = 55
+            self.state = 67
             self.type_()
-            self.state = 56
+            self.state = 68
             self.match(StateParser.EQUALS)
-            self.state = 57
-=======
-            self.state = 56
-            self.match(StateParser.CONST)
-            self.state = 57
-            self.match(StateParser.ID)
-            self.state = 58
-            self.match(StateParser.COLON)
-            self.state = 59
-            self.type_()
-            self.state = 60
-            self.match(StateParser.EQUALS)
-            self.state = 61
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            self.state = 69
             self.match(StateParser.ID)
         except RecognitionException as re:
             localctx.exception = re
@@ -602,51 +484,27 @@ class StateParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-<<<<<<< HEAD
-            self.state = 59
+            self.state = 71
             self.match(StateParser.VAR)
-            self.state = 60
-            self.match(StateParser.ID)
-            self.state = 61
-            self.match(StateParser.COLON)
-            self.state = 62
-            self.type_()
-            self.state = 63
-            self.match(StateParser.EQUALS)
-            self.state = 64
-            self.match(StateParser.ID)
-            self.state = 69
-            self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la==10:
-                self.state = 65
-                self.match(StateParser.LCURLY)
-                self.state = 66
-                self.id_set()
-                self.state = 67
-=======
-            self.state = 63
-            self.match(StateParser.VAR)
-            self.state = 64
-            self.match(StateParser.ID)
-            self.state = 65
-            self.match(StateParser.COLON)
-            self.state = 66
-            self.type_()
-            self.state = 67
-            self.match(StateParser.EQUALS)
-            self.state = 68
+            self.state = 72
             self.match(StateParser.ID)
             self.state = 73
+            self.match(StateParser.COLON)
+            self.state = 74
+            self.type_()
+            self.state = 75
+            self.match(StateParser.EQUALS)
+            self.state = 76
+            self.match(StateParser.ID)
+            self.state = 81
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==10:
-                self.state = 69
+                self.state = 77
                 self.match(StateParser.LCURLY)
-                self.state = 70
+                self.state = 78
                 self.id_set()
-                self.state = 71
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                self.state = 79
                 self.match(StateParser.RCURLY)
 
 
@@ -659,43 +517,13 @@ class StateParser ( Parser ):
         return localctx
 
 
-<<<<<<< HEAD
-    class Array_declContext(ParserRuleContext):
-=======
     class Var_setContext(ParserRuleContext):
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-<<<<<<< HEAD
-        def ARRAY(self):
-            return self.getToken(StateParser.ARRAY, 0)
-
-        def ID(self, i:int=None):
-            if i is None:
-                return self.getTokens(StateParser.ID)
-            else:
-                return self.getToken(StateParser.ID, i)
-
-        def LBRACKET(self):
-            return self.getToken(StateParser.LBRACKET, 0)
-
-        def RBRACKET(self):
-            return self.getToken(StateParser.RBRACKET, 0)
-
-        def COLON(self):
-            return self.getToken(StateParser.COLON, 0)
-
-        def primitive_type(self):
-            return self.getTypedRuleContext(StateParser.Primitive_typeContext,0)
-
-
-        def EQUALS(self):
-            return self.getToken(StateParser.EQUALS, 0)
-=======
         def var_decl(self, i:int=None):
             if i is None:
                 return self.getTypedRuleContexts(StateParser.Var_declContext)
@@ -724,18 +552,111 @@ class StateParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 76 
+            self.state = 84 
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 75
+                self.state = 83
                 self.var_decl()
-                self.state = 78 
+                self.state = 86 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==12):
+                if not (_la==14):
                     break
 
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class Array_declContext(ParserRuleContext):
+        __slots__ = 'parser'
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def ARRAY(self):
+            return self.getToken(StateParser.ARRAY, 0)
+
+        def ID(self, i:int=None):
+            if i is None:
+                return self.getTokens(StateParser.ID)
+            else:
+                return self.getToken(StateParser.ID, i)
+
+        def LBRACKET(self):
+            return self.getToken(StateParser.LBRACKET, 0)
+
+        def RBRACKET(self):
+            return self.getToken(StateParser.RBRACKET, 0)
+
+        def COLON(self):
+            return self.getToken(StateParser.COLON, 0)
+
+        def primitive_type(self):
+            return self.getTypedRuleContext(StateParser.Primitive_typeContext,0)
+
+
+        def EQUALS(self):
+            return self.getToken(StateParser.EQUALS, 0)
+
+        def LCURLY(self):
+            return self.getToken(StateParser.LCURLY, 0)
+
+        def id_set(self):
+            return self.getTypedRuleContext(StateParser.Id_setContext,0)
+
+
+        def RCURLY(self):
+            return self.getToken(StateParser.RCURLY, 0)
+
+        def getRuleIndex(self):
+            return StateParser.RULE_array_decl
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterArray_decl" ):
+                listener.enterArray_decl(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitArray_decl" ):
+                listener.exitArray_decl(self)
+
+
+
+
+    def array_decl(self):
+
+        localctx = StateParser.Array_declContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 12, self.RULE_array_decl)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 88
+            self.match(StateParser.ARRAY)
+            self.state = 89
+            self.match(StateParser.ID)
+            self.state = 90
+            self.match(StateParser.LBRACKET)
+            self.state = 91
+            self.match(StateParser.ID)
+            self.state = 92
+            self.match(StateParser.RBRACKET)
+            self.state = 93
+            self.match(StateParser.COLON)
+            self.state = 94
+            self.primitive_type()
+            self.state = 95
+            self.match(StateParser.EQUALS)
+            self.state = 96
+            self.match(StateParser.LCURLY)
+            self.state = 97
+            self.id_set()
+            self.state = 98
+            self.match(StateParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -757,39 +678,22 @@ class StateParser ( Parser ):
 
         def ID(self):
             return self.getToken(StateParser.ID, 0)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
         def LCURLY(self):
             return self.getToken(StateParser.LCURLY, 0)
 
-<<<<<<< HEAD
-        def id_set(self):
-            return self.getTypedRuleContext(StateParser.Id_setContext,0)
-=======
         def var_set(self):
             return self.getTypedRuleContext(StateParser.Var_setContext,0)
 
 
         def typedef_decl_set(self):
             return self.getTypedRuleContext(StateParser.Typedef_decl_setContext,0)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
 
         def RCURLY(self):
             return self.getToken(StateParser.RCURLY, 0)
 
         def getRuleIndex(self):
-<<<<<<< HEAD
-            return StateParser.RULE_array_decl
-
-        def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterArray_decl" ):
-                listener.enterArray_decl(self)
-
-        def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitArray_decl" ):
-                listener.exitArray_decl(self)
-=======
             return StateParser.RULE_typedef_decl
 
         def enterRule(self, listener:ParseTreeListener):
@@ -799,58 +703,27 @@ class StateParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitTypedef_decl" ):
                 listener.exitTypedef_decl(self)
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
 
 
 
 
-<<<<<<< HEAD
-    def array_decl(self):
-
-        localctx = StateParser.Array_declContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_array_decl)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 71
-            self.match(StateParser.ARRAY)
-            self.state = 72
-            self.match(StateParser.ID)
-            self.state = 73
-            self.match(StateParser.LBRACKET)
-            self.state = 74
-            self.match(StateParser.ID)
-            self.state = 75
-            self.match(StateParser.RBRACKET)
-            self.state = 76
-            self.match(StateParser.COLON)
-            self.state = 77
-            self.primitive_type()
-            self.state = 78
-            self.match(StateParser.EQUALS)
-            self.state = 79
-            self.match(StateParser.LCURLY)
-            self.state = 80
-            self.id_set()
-            self.state = 81
-=======
     def typedef_decl(self):
 
         localctx = StateParser.Typedef_declContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 12, self.RULE_typedef_decl)
+        self.enterRule(localctx, 14, self.RULE_typedef_decl)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 80
+            self.state = 100
             self.match(StateParser.TYPEDEF)
-            self.state = 81
+            self.state = 101
             self.match(StateParser.ID)
-            self.state = 82
+            self.state = 102
             self.match(StateParser.LCURLY)
-            self.state = 83
+            self.state = 103
             self.var_set()
-            self.state = 84
+            self.state = 104
             self.typedef_decl_set()
-            self.state = 85
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            self.state = 105
             self.match(StateParser.RCURLY)
         except RecognitionException as re:
             localctx.exception = re
@@ -861,8 +734,6 @@ class StateParser ( Parser ):
         return localctx
 
 
-<<<<<<< HEAD
-=======
     class Typedef_decl_setContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -894,17 +765,17 @@ class StateParser ( Parser ):
     def typedef_decl_set(self):
 
         localctx = StateParser.Typedef_decl_setContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 14, self.RULE_typedef_decl_set)
+        self.enterRule(localctx, 16, self.RULE_typedef_decl_set)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 90
+            self.state = 110
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==13:
-                self.state = 87
+            while _la==16:
+                self.state = 107
                 self.typedef_decl()
-                self.state = 92
+                self.state = 112
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -917,7 +788,6 @@ class StateParser ( Parser ):
         return localctx
 
 
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
     class TypeContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -952,38 +822,24 @@ class StateParser ( Parser ):
     def type_(self):
 
         localctx = StateParser.TypeContext(self, self._ctx, self.state)
-<<<<<<< HEAD
-        self.enterRule(localctx, 12, self.RULE_type)
+        self.enterRule(localctx, 18, self.RULE_type)
         try:
-            self.state = 85
-=======
-        self.enterRule(localctx, 16, self.RULE_type)
-        try:
-            self.state = 96
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            self.state = 116
             self._errHandler.sync(self)
             token = self._input.LA(1)
             if token in [2, 3, 4, 7, 8]:
                 self.enterOuterAlt(localctx, 1)
-<<<<<<< HEAD
-                self.state = 83
-=======
-                self.state = 93
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                self.state = 113
                 self.primitive_type()
                 pass
             elif token in [16]:
                 self.enterOuterAlt(localctx, 2)
-<<<<<<< HEAD
-                self.state = 84
-=======
-                self.state = 94
+                self.state = 114
                 self.match(StateParser.TYPEDEF)
                 pass
-            elif token in [14]:
+            elif token in [17]:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 95
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+                self.state = 115
                 self.match(StateParser.ID)
                 pass
             else:
@@ -1037,19 +893,11 @@ class StateParser ( Parser ):
     def primitive_type(self):
 
         localctx = StateParser.Primitive_typeContext(self, self._ctx, self.state)
-<<<<<<< HEAD
-        self.enterRule(localctx, 14, self.RULE_primitive_type)
+        self.enterRule(localctx, 20, self.RULE_primitive_type)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 87
-=======
-        self.enterRule(localctx, 18, self.RULE_primitive_type)
-        self._la = 0 # Token type
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 98
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+            self.state = 118
             _la = self._input.LA(1)
             if not((((_la) & ~0x3f) == 0 and ((1 << _la) & 412) != 0)):
                 self._errHandler.recoverInline(self)
