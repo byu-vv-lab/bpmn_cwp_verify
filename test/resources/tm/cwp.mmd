@@ -1,0 +1,40 @@
+stateDiagram-v2
+    state "Start" as Start
+    state "TM_Order received by TM" as TMOrderReceivedByTM
+    state "TM_boxID waiting to install" as TMBoxIDWaitingToInstall
+    state "TM_Order Waiting" as TMOrderWaiting
+    state "Patient cardio monitored in ptRm" as PatientCardioMonitoredInPtRm
+    state "Patient gets immediate assessment and/or addSvcs" as PatientGetsImmediateAssessmentAndOrAddSvcs
+    state "End Care, Patient Deceased" as EndCarePatientDeceased
+    state "Patient Moved" as PatientMoved
+    state "Patient cardio monitored with addSvcs" as PatientCardioMonitoredWithAddSvcs
+    state "End Care, New Room" as EndCareNewRoom
+    state "End Care, Patient Recovered" as EndCarePatientRecovered
+    state "Patient Recovered" as PatientRecovered
+    state "Patient Deceased" as PatientDeceased
+
+    Start --> TMOrderReceivedByTM: orderNum = 20001 and ptID = KAB and ptRm = B201 and boxStatus = boxInit
+
+    TMOrderReceivedByTM --> TMBoxIDWaitingToInstall: boxNum = 21 and boxStatus = ready
+    TMOrderReceivedByTM --> TMOrderWaiting: boxStatus = notReady or boxStatus = boxRecovered and ptStatus = PatientStatusInit
+
+    TMOrderWaiting --> TMBoxIDWaitingToInstall: boxNum = 21 and boxStatus = ready
+
+    TMBoxIDWaitingToInstall --> PatientCardioMonitoredInPtRm: boxStatus = installed and boxLoc = ptRoom and ptID = KAB and ptStatus = stable and hasCare = H_monitoring and orderStatus = confirmed
+
+    PatientCardioMonitoredInPtRm --> PatientGetsImmediateAssessmentAndOrAddSvcs: alertStatus = confirmed and needsCare = N_immedAssmt
+    PatientCardioMonitoredInPtRm --> PatientRecovered: ptStatus = recovered
+    PatientCardioMonitoredInPtRm --> PatientDeceased: ptStatus = deceased
+
+    PatientGetsImmediateAssessmentAndOrAddSvcs --> PatientMoved: ptID = KAB and ptStatus = notStable and needsCare = N_moreAddSvcs and hasCare = H_transport and ptRm = new and alertStatus = cancelled
+    PatientGetsImmediateAssessmentAndOrAddSvcs --> PatientCardioMonitoredWithAddSvcs: ptID = KAB and hasCare = H_addSvcs and ptStatus = stable_C_addSvcs and alertStatus = cancelled
+
+    PatientMoved --> EndCareNewRoom: orderNum = 20001 and orderStatus = cancelled and boxNum = 21 and boxStatus = boxRecovered
+
+    PatientCardioMonitoredWithAddSvcs --> PatientGetsImmediateAssessmentAndOrAddSvcs: alertStatus = confirmed and needsCare = N_immedAssmt
+    PatientCardioMonitoredWithAddSvcs --> PatientDeceased: ptStatus = deceased
+    PatientCardioMonitoredWithAddSvcs --> PatientRecovered: ptStatus = recovered
+
+    PatientRecovered --> EndCarePatientRecovered: ptStatus = discharge and orderStatus = cancelled and boxNum = 21 and boxStatus = boxRecovered
+
+    PatientDeceased --> EndCarePatientDeceased: ptStatus = deceased and orderStatus = cancelled and boxNum = 21 and boxStatus = boxRecovered

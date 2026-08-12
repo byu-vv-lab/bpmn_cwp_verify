@@ -1,0 +1,22 @@
+stateDiagram-v2
+    state "Init State" as InitState
+    state "Plan Search" as PlanSearch
+    state "Deploy Troops" as DeployTroops
+    state "Active Search" as ActiveSearch
+    state "Return" as Return
+    state "Missing Person Located" as MissingPersonLocated
+    state "Search Off" as SearchOff
+
+    InitState --> PlanSearch: search == on and missingPerson == missing and risk == acceptable and conditions == changed and comms == standby
+
+    PlanSearch --> DeployTroops: search == on and missingPerson == missing and risk == acceptable and conditions == same and comms == sent
+    PlanSearch --> Return: search == on and missingPerson == missing and risk == notAcceptable and (conditions == changed or conditions == same) and (comms == standby or comms == listening or comms == sent)
+
+    DeployTroops --> ActiveSearch: search == on and missingPerson == missing and risk == acceptable and conditions == same and comms == listening
+
+    ActiveSearch --> PlanSearch: search == on and missingPerson == missing and risk == acceptable and conditions == changed and (comms == standby or comms == listening)
+    ActiveSearch --> MissingPersonLocated: search == on and missingPerson == found and risk == acceptable and conditions == same and comms == listening
+
+    Return --> SearchOff: search == off and conditions == same and comms == listening and (missingPerson == missing or missingPerson == found) and (risk == notAcceptable or risk == acceptable)
+
+    MissingPersonLocated --> SearchOff: search == off and conditions == same and comms == listening and (missingPerson == missing or missingPerson == found) and (risk == notAcceptable or risk == acceptable)

@@ -1,0 +1,20 @@
+stateDiagram-v2
+    state "Init State" as InitState
+    state "Pt In Appropriate Home Care State" as PtInAppropriateHomeCareState
+    state "Pt In Elevated Risk State" as PtInElevatedRiskState
+    state "Hospital State" as HospitalState
+    state "Pt Expired State" as PtExpiredState
+    state "Pt Discharged State" as PtDischargedState
+
+    InitState --> PtInAppropriateHomeCareState: sevNeed = homeCare and trndSevNeed = homeCare
+    InitState --> HospitalState: sevNeed = outsideHomeCare
+
+    PtInAppropriateHomeCareState --> PtInElevatedRiskState: sevNeed = homeCare and trndSevNeed = outsideHomeCare
+    PtInAppropriateHomeCareState --> PtDischargedState: sevNeed = discharge
+
+    HospitalState --> PtExpiredState: sevNeed = expired
+    HospitalState --> PtDischargedState: sevNeed = discharge
+
+    PtInElevatedRiskState --> HospitalState: sevNeed = outsideHomeCare
+    PtInElevatedRiskState --> PtInAppropriateHomeCareState: sevNeed = homeCare and trndSevNeed = homeCare
+    PtInElevatedRiskState --> PtExpiredState: sevNeed = expired
