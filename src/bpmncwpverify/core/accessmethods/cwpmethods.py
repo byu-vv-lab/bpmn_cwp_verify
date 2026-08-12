@@ -79,7 +79,6 @@ class CwpXmlParser:
         edge = CwpEdge("Init_Edge", builder.gen_edge_name())
         edge.expression = edge_expr
 
-        builder.find_start_state()
         builder = builder.with_start_edge(edge)
 
     def _check_expressions(
