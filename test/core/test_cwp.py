@@ -12,7 +12,7 @@ from bpmncwpverify.core.error import (
     CwpNoStartStateError,
     Error,
 )
-from bpmncwpverify.core.frontends.cwpmethods import CwpXmlParser
+from bpmncwpverify.core.frontends.cwpXmlParser import CwpXmlParser
 from bpmncwpverify.core.state import State
 
 

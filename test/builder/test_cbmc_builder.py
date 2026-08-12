@@ -21,7 +21,7 @@ from returns.unsafe import unsafe_perform_io
 from bpmncwpverify.builder.cbmc_builder import CbmcBuilder
 from bpmncwpverify.core.error import get_error_message
 from bpmncwpverify.core.frontends import bpmnmethods
-from bpmncwpverify.core.frontends.cwpmethods import CwpXmlParser
+from bpmncwpverify.core.frontends.cwpXmlParser import CwpXmlParser
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import element_tree_from_string, read_file_as_string
 
