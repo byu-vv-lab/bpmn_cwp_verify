@@ -192,7 +192,6 @@ class TestCwpMermaidParserBuilderListenerEdges:
 class TestCwpMermaidParserFromMmd:
     def test_from_mmd_no_error(self, mocker):
         mock_builder_object = mocker.Mock()
-        mock_builder_object.find_start_state.return_value = mock_builder_object
         mock_builder_object.with_start_edge.return_value = mock_builder_object
         mock_builder_object.gen_edge_name.return_value = "Init_Edge_Name"
         mock_builder_object.build.return_value = "built_cwp"
@@ -217,7 +216,6 @@ class TestCwpMermaidParserFromMmd:
         result = CwpMermaidParser.from_mmd("mmd_string", mock_state)
 
         mock_walker.walk.assert_called_once()
-        mock_builder_object.find_start_state.assert_called_once()
         mock_builder_object.with_start_edge.assert_called_once()
         mock_builder_object.build.assert_called_once()
         assert result == "built_cwp"
