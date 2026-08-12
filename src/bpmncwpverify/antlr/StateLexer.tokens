@@ -9,19 +9,13 @@ SHORT=8
 EQUALS=9
 LCURLY=10
 RCURLY=11
-<<<<<<< HEAD
 LBRACKET=12
 RBRACKET=13
 VAR=14
 ARRAY=15
-ID=16
-WS=17
-=======
-VAR=12
-TYPEDEF=13
-ID=14
-WS=15
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+TYPEDEF=16
+ID=17
+WS=18
 ':'=1
 'bit'=2
 'bool'=3
@@ -33,12 +27,8 @@ WS=15
 '='=9
 '{'=10
 '}'=11
-<<<<<<< HEAD
 '['=12
 ']'=13
 'var'=14
 'array'=15
-=======
-'var'=12
-'typedef'=13
->>>>>>> 28ed538 (Added typedefs to the state.g4 and rebuilt antlr files)
+'typedef'=16
