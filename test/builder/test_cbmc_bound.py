@@ -19,7 +19,6 @@ from bpmncwpverify.builder.cbmc_bound import (
     _find_matching_join,
     compute_bound,
 )
-from bpmncwpverify.core.accessmethods import bpmnmethods
 from bpmncwpverify.core.bpmn import (
     EndEvent,
     ExclusiveGatewayNode,
@@ -29,6 +28,7 @@ from bpmncwpverify.core.bpmn import (
     Task,
 )
 from bpmncwpverify.core.error import get_error_message
+from bpmncwpverify.core.frontends import bpmnmethods
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import element_tree_from_string, read_file_as_string
 

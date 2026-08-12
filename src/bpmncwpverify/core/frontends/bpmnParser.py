@@ -6,13 +6,13 @@ from returns.pipeline import is_successful
 from returns.result import Result
 
 from bpmncwpverify.builder.bpmn_builder import BpmnBuilder
-from bpmncwpverify.core.accessmethods.processmethods import from_xml as process_from_xml
 from bpmncwpverify.core.bpmn import (
     BPMN_XML_NAMESPACE,
     Bpmn,
     MessageFlow,
 )
 from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.frontends.processmethods import from_xml as process_from_xml
 from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.bpmn_graph_visitor import GraphVizVisitor
 
