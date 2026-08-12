@@ -6,7 +6,7 @@ from returns.result import Failure, Success
 
 from bpmncwpverify.core.bpmn import BPMN_XML_NAMESPACE, StartEvent
 from bpmncwpverify.core.error import BpmnMissingEventsError
-from bpmncwpverify.core.frontends.bpmnmethods import from_xml
+from bpmncwpverify.core.frontends.bpmnParser import from_xml
 from bpmncwpverify.core.state import StateBuilder
 
 

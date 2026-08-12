@@ -28,7 +28,7 @@ from bpmncwpverify.core.bpmn import (
     Task,
 )
 from bpmncwpverify.core.error import get_error_message
-from bpmncwpverify.core.frontends import bpmnmethods
+from bpmncwpverify.core.frontends import bpmnParser
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import element_tree_from_string, read_file_as_string
 
@@ -74,7 +74,7 @@ def _load_bpmn(state_path: Path, bpmn_path: Path):
     state_result = State.from_str(state_str)
     assert is_successful(state_result), get_error_message(state_result.failure())
     bpmn_xml = unsafe_perform_io(element_tree_from_string(bpmn_str).unwrap())
-    bpmn_result = bpmnmethods.from_xml(bpmn_xml, state_result.unwrap())
+    bpmn_result = bpmnParser.from_xml(bpmn_xml, state_result.unwrap())
     assert is_successful(bpmn_result), get_error_message(bpmn_result.failure())
     return bpmn_result.unwrap()
 
