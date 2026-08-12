@@ -8,11 +8,20 @@
       <bpmn:outgoing>Flow_13lou38</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:task id="Activity_1nr3291" name="Box">
-      <bpmn:documentation>civic.frontTire.pressure = civic.frontTire.pressure - 5
-if
-:: civic.frontTire.pressure &lt; 25 -&gt; civic.passenger.isOpen = truthy
-:: else -&gt; skip
-fi</bpmn:documentation>
+      <bpmn:documentation>(
+    civic.frontTire.pressure,
+    [civic.frontTire.pressure],
+    if civic.frontTire.pressure &gt; 20
+    then civic.frontTire.pressure - 5
+    else civic.frontTire.pressure
+),
+(
+    civic.passenger.isOpen,
+    [civic.frontTire.pressure],
+    if civic.frontTire.pressure &lt; 25
+    then truthy
+    else falsey
+)</bpmn:documentation>
       <bpmn:incoming>Flow_13lou38</bpmn:incoming>
       <bpmn:incoming>Flow_0uqd0m9</bpmn:incoming>
       <bpmn:outgoing>Flow_0erbwhn</bpmn:outgoing>
