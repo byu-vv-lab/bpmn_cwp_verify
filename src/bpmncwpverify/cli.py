@@ -11,9 +11,6 @@ from returns.pipeline import is_successful
 from returns.result import Result
 from returns.unsafe import unsafe_perform_io
 
-from bpmncwpverify.core.accessmethods import bpmnmethods
-from bpmncwpverify.core.accessmethods.cwpmermaidmethods import CwpMermaidParser
-from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.cbmc import (
     CbmcVerificationReport,
@@ -28,6 +25,9 @@ from bpmncwpverify.core.error import (
     RequestError,
     get_error_message,
 )
+from bpmncwpverify.core.frontends import bpmnParser
+from bpmncwpverify.core.frontends.cwpMermaidParser import CwpMermaidParser
+from bpmncwpverify.core.frontends.cwpXmlParser import CwpXmlParser
 from bpmncwpverify.core.spin import (
     SpinVerificationReport,
     verify_with_spin,
@@ -104,7 +104,7 @@ def _verify_cwp_with_state(cwp_str: str, state: State) -> IOResult[Cwp, Error]:
 
 def _verify_bpmn_with_state(bpmn_xml: Element, state: State) -> IOResult[Bpmn, Error]:
     logging.info("    Verifying BPMN against state")
-    return IOResult.from_result(bpmnmethods.from_xml(bpmn_xml, state))
+    return IOResult.from_result(bpmnParser.from_xml(bpmn_xml, state))
 
 
 def _verify_inputs(
