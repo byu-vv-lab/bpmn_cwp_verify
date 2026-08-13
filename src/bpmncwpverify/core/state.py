@@ -568,7 +568,9 @@ class StateBuilder:
         """
         Create a State object with the given lists of variables stored within itself
         """
-        state = State(self._consts, self._enums, self._vars, self._arrays, self._typedefs)
+        state = State(
+            self._consts, self._enums, self._vars, self._arrays, self._typedefs
+        )
         return state.type_check()
 
 
@@ -1001,9 +1003,7 @@ class State:
 
     @property
     def str2var(self) -> dict[str, VarDecl]:
-        if self._str2var == Nothing:
-            return dict()
-        return self._str2var.unwrap()
+        return self._str2var.value_or({})
 
     def is_variable(self, variable: str) -> bool:
         return self._str2var.map(lambda d: variable in d).value_or(False)
@@ -1306,31 +1306,32 @@ class State:
         )
 
     def _build_typedef_paths(self) -> Result[None, Error]:
-        assert self._id2type != Nothing
-        assert self._str2typedef != Nothing
-
-        str2typedef = self._str2typedef.unwrap()
-
-        for var_decl in self._vars:
-            if var_decl.type_ != typechecking.TYPEDEF:
-                continue
-            if var_decl.init.value not in str2typedef:
-                return Failure(
-                    StateInheritanceError(
-                        var_decl.id,
-                        var_decl.init.value,
-                        var_decl.line,
-                        var_decl.col,
+        def _build_paths(str2typedef: dict[str, TypeDefDecl]) -> Result[None, Error]:
+            for var_decl in self._vars:
+                if var_decl.type_ != typechecking.TYPEDEF:
+                    continue
+                if var_decl.init.value not in str2typedef:
+                    return Failure(
+                        StateInheritanceError(
+                            var_decl.id,
+                            var_decl.init.value,
+                            var_decl.line,
+                            var_decl.col,
+                        )
                     )
+
+                result = self._build_typedef_path(
+                    var_decl.id, str2typedef[var_decl.init.value]
                 )
+                if not_(is_successful)(result):
+                    return result
+            return Success(None)
 
-            result = self._build_typedef_path(
-                var_decl.id, str2typedef[var_decl.init.value]
-            )
-            if not_(is_successful)(result):
-                return result
-
-        return Success(None)
+        return maybe_to_result(
+            self._str2typedef, NotInitializedError("_str2typedef")
+        ).bind(  # pyright: ignore[reportUnknownMemberType]
+            _build_paths  # type: ignore[arg-type] # pyright: ignore[reportUnknownMemberType]
+        )
 
     def _build_typedef_path(
         self, id: str, typedef_decl: TypeDefDecl
@@ -1342,42 +1343,46 @@ class State:
             id (str): The ID of the var
             typedef_decl (TypeDefDecl): Typedef variable declaration to build paths for
         """
-        # requires
-        assert self._id2type != Nothing
-        assert self._str2var != Nothing
 
-        id2type = self._id2type.unwrap()
-        str2var = self._str2var.unwrap()
-
-        for var_decl in typedef_decl.fields:
-            if var_decl.type_ == typechecking.TYPEDEF:
-                nested_path = f"{id}.{var_decl.id}"
-                nested_typedef_decl = next(
-                    (
-                        td
-                        for td in typedef_decl.nested_typedefs
-                        if td.id == var_decl.init.value
-                    ),
-                    None,
-                )
-                if nested_typedef_decl is None:
-                    return Failure(
-                        StateInheritanceError(
-                            nested_path,
-                            var_decl.init.value,
-                            var_decl.line,
-                            var_decl.col,
-                        )
+        def _check_vars(
+            id2type: dict[str, TypeWithDeclLoc], str2var: dict[str, VarDecl]
+        ) -> Result[None, Error]:
+            for var_decl in typedef_decl.fields:
+                if var_decl.type_ == typechecking.TYPEDEF:
+                    nested_path = f"{id}.{var_decl.id}"
+                    nested_typedef_decl = next(
+                        (
+                            td
+                            for td in typedef_decl.nested_typedefs
+                            if td.id == var_decl.init.value
+                        ),
+                        None,
                     )
-                result = self._build_typedef_path(nested_path, nested_typedef_decl)
-                if not_(is_successful)(result):
-                    return result
-            else:
-                full_path = f"{id}.{var_decl.id}"
-                id2type[full_path] = TypeWithDeclLoc(var_decl.type_, var_decl)
-                str2var[full_path] = var_decl
+                    if nested_typedef_decl is None:
+                        return Failure(
+                            StateInheritanceError(
+                                nested_path,
+                                var_decl.init.value,
+                                var_decl.line,
+                                var_decl.col,
+                            )
+                        )
+                    result = self._build_typedef_path(nested_path, nested_typedef_decl)
+                    if not_(is_successful)(result):
+                        return result
+                else:
+                    full_path = f"{id}.{var_decl.id}"
+                    id2type[full_path] = TypeWithDeclLoc(var_decl.type_, var_decl)
+                    str2var[full_path] = var_decl
+            return Success(None)
 
-        return Success(None)
+        return maybe_to_result(self._id2type, NotInitializedError("_id2type")).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: maybe_to_result(
+                self._str2var, NotInitializedError("_str2var")
+            ).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2var: _check_vars(id2type, str2var)  # type: ignore[return-value, arg-type] # pyright: ignore[reportArgumentType]
+            )
+        )
 
     def _build_id_2_type_var(self, var_decl: VarDecl) -> Result[None, Error]:
         """
@@ -1399,8 +1404,13 @@ class State:
                 )
             id2type[var_decl.id] = TypeWithDeclLoc(var_decl.type_, var_decl)
             str2var[var_decl.id] = var_decl
-    
-        return Success(None)
+            return Success(None)
+
+        return maybe_to_result(self._id2type, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: maybe_to_result(self._str2var, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2var: _find(id2type, str2var)
+            )
+        )
 
     def _build_id_2_type_typedef(
         self, typedef_decl: TypeDefDecl
@@ -1411,53 +1421,55 @@ class State:
         Args:
             typedef_decl (TypeDefDecl): Typedef variable declaration to check
         """
-        # requires
-        assert self._id2type != Nothing
-        assert self._str2typedef != Nothing
 
-        # unwrap the Maybe objects to get the underlying dictionaries
-        id2type = self._id2type.unwrap()
-        str2typedef = self._str2typedef.unwrap()
-
-        # check for duplicate typedef name in global declarations
-        if typedef_decl.id in id2type:
-            first = (id2type[typedef_decl.id]).decl_loc
-            return Failure(
-                StateMultipleDefinitionError(
-                    typedef_decl.id,
-                    typedef_decl.line,
-                    typedef_decl.col,
-                    first.line,
-                    first.col,
-                )
-            )
-
-        # add the typedef to the id2type and str2typedef dictionaries
-        id2type[typedef_decl.id] = TypeWithDeclLoc(typechecking.TYPEDEF, typedef_decl)
-        str2typedef[typedef_decl.id] = typedef_decl
-
-        # check inside the typedef for duplicate field names
-        field_names = [var_decl.id for var_decl in typedef_decl.fields]
-        for var_decl in typedef_decl.fields:
-            field_names.remove(var_decl.id)
-            if var_decl.id in field_names:
-                first = DeclLoc(var_decl.line, var_decl.col)
+        def _check_duplicate_typedef(
+            id2type: dict[str, TypeWithDeclLoc], str2typedef: dict[str, TypeDefDecl]
+        ) -> Result[None, Error]:
+            # check for duplicate typedef name in global declarations
+            if typedef_decl.id in id2type:
+                first = (id2type[typedef_decl.id]).decl_loc
                 return Failure(
                     StateMultipleDefinitionError(
-                        var_decl.id,
+                        typedef_decl.id,
                         typedef_decl.line,
                         typedef_decl.col,
                         first.line,
                         first.col,
                     )
                 )
-            field_names.append(var_decl.id)
+            # add the typedef to the id2type and str2typedef dictionaries
+            id2type[typedef_decl.id] = TypeWithDeclLoc(
+                typechecking.TYPEDEF, typedef_decl
+            )
+            str2typedef[typedef_decl.id] = typedef_decl
+            return Success(None)
 
-        return Success(None)
+        def _check_duplicate_fields() -> Result[None, Error]:
+            # check inside the typedef for duplicate field names
+            field_names = [var_decl.id for var_decl in typedef_decl.fields]
+            for var_decl in typedef_decl.fields:
+                field_names.remove(var_decl.id)
+                if var_decl.id in field_names:
+                    first = DeclLoc(var_decl.line, var_decl.col)
+                    return Failure(
+                        StateMultipleDefinitionError(
+                            var_decl.id,
+                            typedef_decl.line,
+                            typedef_decl.col,
+                            first.line,
+                            first.col,
+                        )
+                    )
+                field_names.append(var_decl.id)
+            return Success(None)
 
-        return maybe_to_result(self._id2type, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda id2type: maybe_to_result(self._str2var, Error()).bind(  # pyright: ignore[reportUnknownMemberType]
-                lambda str2var: _find(id2type, str2var)
+        return maybe_to_result(self._id2type, NotInitializedError("_id2type")).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: maybe_to_result(
+                self._str2typedef, NotInitializedError("_str2typedef")
+            ).bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2typedef: _check_duplicate_typedef(id2type, str2typedef).bind(  # type: ignore[return-value, arg-type] # pyright: ignore[reportArgumentType, reportUnknownMemberType]
+                    lambda _: _check_duplicate_fields()  # pyright: ignore[reportArgumentType, reportUnknownMemberType]
+                )
             )
         )
 
