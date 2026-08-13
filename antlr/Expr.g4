@@ -43,12 +43,17 @@ unaryExpr
 
 postfixExpr
     :   ID '[' ID ']'                       # ArrayAccess
+    |   ID (PERIOD ID)+                     # FieldAccess
     |   atom                                # ToAtom
     ;
 
 atom
     :   ID                                  # ID
     |   '(' expr ')'                        # Parens
+    ;
+
+PERIOD
+    :   '.'
     ;
 
 // Lexer rules

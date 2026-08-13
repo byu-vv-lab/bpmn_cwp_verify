@@ -53,12 +53,39 @@ class StateListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by StateParser#var_set.
+    def enterVar_set(self, ctx:StateParser.Var_setContext):
+        pass
+
+    # Exit a parse tree produced by StateParser#var_set.
+    def exitVar_set(self, ctx:StateParser.Var_setContext):
+        pass
+
+
     # Enter a parse tree produced by StateParser#array_decl.
     def enterArray_decl(self, ctx:StateParser.Array_declContext):
         pass
 
     # Exit a parse tree produced by StateParser#array_decl.
     def exitArray_decl(self, ctx:StateParser.Array_declContext):
+        pass
+
+
+    # Enter a parse tree produced by StateParser#typedef_decl.
+    def enterTypedef_decl(self, ctx:StateParser.Typedef_declContext):
+        pass
+
+    # Exit a parse tree produced by StateParser#typedef_decl.
+    def exitTypedef_decl(self, ctx:StateParser.Typedef_declContext):
+        pass
+
+
+    # Enter a parse tree produced by StateParser#typedef_decl_set.
+    def enterTypedef_decl_set(self, ctx:StateParser.Typedef_decl_setContext):
+        pass
+
+    # Exit a parse tree produced by StateParser#typedef_decl_set.
+    def exitTypedef_decl_set(self, ctx:StateParser.Typedef_decl_setContext):
         pass
 
 
