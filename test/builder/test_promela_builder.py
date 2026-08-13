@@ -128,6 +128,7 @@ def test_state_dump_typedef(mocker):
 
     state = mocker.Mock()
     state.vars = vars
+    state.arrays = []
     state.typedefs = [
         mocker.Mock(
             id="OuterTypedef",
@@ -469,7 +470,7 @@ def test_generate_promela_with_only_arrays(mocker, mock_state):
     expected_output = (
         "//**********VARIABLE DECLARATION************//\n"
         "int array_id[5] = {1, 2, 3, 4, 5}\n"
-        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n\n"
+        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n"
         "inline typedefInit() {\n    skip\n}\n\n"
     )
 
