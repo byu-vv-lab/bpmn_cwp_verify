@@ -213,11 +213,10 @@ def _generate_state_promela(state: State) -> str:
     else:
         str2var = state.str2var
         for path, var in str2var.items():
-            if var.type_ == TYPEDEF:
-                continue
-            var = str2var[path]
-            str_builder.append(f"    {path} = {var.init.value}")
-            str_builder.append(f"    old_{path} = {var.init.value}")
+            if "." in path:
+                var = str2var[path]
+                str_builder.append(f"    {path} = {var.init.value}")
+                str_builder.append(f"    old_{path} = {var.init.value}")
     str_builder.append("}")
 
     return "\n".join(str_builder) + "\n\n"
