@@ -1,0 +1,23 @@
+stateDiagram-v2
+    state "Init State" as InitState
+    state "Plan Search" as PlanSearch
+    state "Deploy" as Deploy
+    state "Active Search" as ActiveSearch
+    state "Return" as Return
+    state "Retrieve Black Box" as RetrieveBlackBox
+    state "Search Off" as SearchOff
+
+    InitState --> PlanSearch: search = on and blackBox = missing and risk = assessing and conditions = changed and (comms = wait or comms = waiting)
+
+    PlanSearch --> Deploy: risk = acceptable and comms = sent and search = on and conditions = same and blackBox = missing
+    PlanSearch --> Return: risk = notAcceptable and search = on and blackBox = missing and conditions != conditionsInit and (comms = sent or comms = waiting)
+
+    Deploy --> ActiveSearch: (comms = waiting or comms = updates) and risk = acceptable and search = on and conditions = same and blackBox = missing
+
+    ActiveSearch --> PlanSearch: search = on and blackBox = missing and risk = assessing and conditions = changed and (comms = wait or comms = waiting)
+    ActiveSearch --> RetrieveBlackBox: blackBox = found and comms = waiting and risk = acceptable and search = on and conditions = same
+
+    Return --> SearchOff: search = off and comms = sent and conditions = same and (blackBox = missing or blackBox = found) and (risk = acceptable or risk = notAcceptable)
+    Return --> PlanSearch: search = on and blackBox = missing and risk = assessing and conditions = changed and (comms = wait or comms = waiting)
+
+    RetrieveBlackBox --> SearchOff: search = off and comms = sent and conditions = same and (blackBox = missing or blackBox = found) and (risk = acceptable or risk = notAcceptable)

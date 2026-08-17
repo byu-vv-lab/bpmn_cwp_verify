@@ -19,9 +19,9 @@ from returns.pipeline import is_successful
 from returns.unsafe import unsafe_perform_io
 
 from bpmncwpverify.builder.cbmc_builder import CbmcBuilder
-from bpmncwpverify.core.accessmethods import bpmnmethods
-from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.error import get_error_message
+from bpmncwpverify.core.frontends import bpmnParser
+from bpmncwpverify.core.frontends.cwpXmlParser import CwpXmlParser
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.file import element_tree_from_string, read_file_as_string
 
@@ -70,7 +70,7 @@ def _build_c(
     assert is_successful(cwp_result), get_error_message(cwp_result.failure())
     cwp = cwp_result.unwrap()
 
-    bpmn_result = bpmnmethods.from_xml(bpmn_xml, state)
+    bpmn_result = bpmnParser.from_xml(bpmn_xml, state)
     assert is_successful(bpmn_result), get_error_message(bpmn_result.failure())
     bpmn = bpmn_result.unwrap()
 

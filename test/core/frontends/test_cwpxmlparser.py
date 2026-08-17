@@ -3,7 +3,6 @@ import pytest
 from returns.functions import not_
 from returns.pipeline import is_successful
 
-from bpmncwpverify.core.accessmethods.cwpmethods import CwpXmlParser
 from bpmncwpverify.core.error import (
     CwpEdgeNoExpressionError,
     CwpEdgeNoParentError,
@@ -11,6 +10,7 @@ from bpmncwpverify.core.error import (
     CwpFileStructureError,
     CwpUnsupportedElementError,
 )
+from bpmncwpverify.core.frontends.cwpXmlParser import CwpXmlParser
 
 
 class TestCwpXmlParser:
@@ -108,7 +108,7 @@ class TestCwpXmlParser:
         mock_builder = mocker.Mock()
         mock_builder.with_state.return_value = mock_builder
         mock_from_xml = mocker.patch(
-            "bpmncwpverify.core.accessmethods.cwpmethods.CwpState.from_xml",
+            "bpmncwpverify.core.cwp.CwpState.from_xml",
             return_value="test_state",
         )
 
@@ -170,7 +170,7 @@ class TestCwpXmlParser:
         mock_builder.gen_edge_name.return_value = "A"
         mock_builder.with_state.return_value = mock_builder
         mock_from_xml = mocker.patch(
-            "bpmncwpverify.core.accessmethods.cwpmethods.CwpEdge.from_xml",
+            "bpmncwpverify.core.cwp.CwpEdge.from_xml",
             return_value="test_edge",
         )
         CwpXmlParser._add_edges(mocker.Mock(), mock_builder, edges)
@@ -237,15 +237,15 @@ class TestCwpXmlParser:
         mock_parser_object = mocker.Mock()
         mock_builder_object = mocker.Mock()
         mock_builder_class = mocker.patch(
-            "bpmncwpverify.core.accessmethods.cwpmethods.CwpBuilder",
+            "bpmncwpverify.core.frontends.cwpXmlParser.CwpBuilder",
             return_value=mock_builder_object,
         )
         mock_parser_class = mocker.patch(
-            "bpmncwpverify.core.accessmethods.cwpmethods.CwpXmlParser",
+            "bpmncwpverify.core.frontends.cwpXmlParser.CwpXmlParser",
             return_value=mock_parser_object,
         )
         mock_expr_lstnr_class = mocker.patch(
-            "bpmncwpverify.core.accessmethods.cwpmethods.ExpressionListener",
+            "bpmncwpverify.core.frontends.cwpXmlParser.ExpressionListener",
             return_value="expr_listener",
         )
 
@@ -282,7 +282,7 @@ class TestCwpXmlParser:
     def test_from_xml_with_error(self, mocker):
         mock_parser_object = mocker.Mock()
         mocker.patch(
-            "bpmncwpverify.core.accessmethods.cwpmethods.CwpXmlParser",
+            "bpmncwpverify.core.frontends.cwpXmlParser.CwpXmlParser",
             return_value=mock_parser_object,
         )
 

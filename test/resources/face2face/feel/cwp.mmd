@@ -1,0 +1,16 @@
+stateDiagram-v2
+    state "Start State" as StartState
+    state "Init Purchase Pending" as InitPurchasePending
+    state "Negotiations" as Negotiations
+    state "Purchase Agreed" as PurchaseAgreed
+    state "Purchase Failed" as PurchaseFailed
+    state "Ownerships Switched" as OwnershipsSwitched
+
+    StartState --> InitPurchasePending: paymentOwner = buyerName and backpackOwner = sellerName
+
+    InitPurchasePending --> Negotiations: terms != pending or paymentOffered != pendingPayment
+
+    Negotiations --> PurchaseAgreed: terms = agreed and paymentOffered = paymentAmount
+    Negotiations --> PurchaseFailed: terms = noRetry or paymentOffered = noRetryPayment
+
+    PurchaseAgreed --> OwnershipsSwitched: paymentOwner = sellerName and backpackOwner = buyerName

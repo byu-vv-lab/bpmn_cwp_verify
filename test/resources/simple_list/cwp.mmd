@@ -1,0 +1,7 @@
+stateDiagram-v2
+    state "Start" as Start
+    state "Transition" as Transition
+    state "End" as End
+
+    Start --> Transition: myList[0] == 1
+    Transition --> End: myList[0] == 2
