@@ -6,12 +6,15 @@
     "build": {
         "dockerfile": "../Dockerfile",
         "context": "..",
-        "target": "dev"
+        "target": "chromium"
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
     "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}; sh .devcontainer/post-create.sh",
+    // Use 'postStartCommand' to run commands after the container is started
+    "postStartCommand": "npm run watch > /tmp/mermaid-watch.log 2>&1 &",
+
     // Configure tool-specific properties.
     // "customizations": {},
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
@@ -36,7 +39,8 @@
                 "mike-lischke.vscode-antlr4",
                 "ms-python.mypy-type-checker",
                 "charliermarsh.ruff",
-                "peacekeeper228.spin-promela"
+                "peacekeeper228.spin-promela",
+                "mermaidchart.vscode-mermaid-chart"
             ]
         }
     }
