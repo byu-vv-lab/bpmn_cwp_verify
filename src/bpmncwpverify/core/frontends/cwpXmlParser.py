@@ -72,12 +72,13 @@ class CwpXmlParser:
     ) -> None:
         expr: list[str] = []
         for v in state.vars:
-            expr.append(f"{v.id} == {v.init.value}")
+            expr.append(f"{v.id} = {v.init.value}")
 
-        edge_expr = " && ".join(expr)
+        edge_expr = " and ".join(expr)
 
         edge = CwpEdge("Init_Edge", builder.gen_edge_name())
-        edge.expression = edge_expr
+        edge.expression = CwpEdge.build_ast(edge_expr)
+        # edge.expression = edge_expr
 
         builder = builder.with_start_edge(edge)
 

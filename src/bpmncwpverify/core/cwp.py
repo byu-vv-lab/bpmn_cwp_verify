@@ -68,9 +68,7 @@ class CwpEdge:
     def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name
-        self.expression: Feel | str = (
-            ""  # TODO: expression needs to always be on an edge and cannot be empty
-        )
+        self.expression: Feel
         self.parent_id: str
 
         self.source: CwpState | None = None

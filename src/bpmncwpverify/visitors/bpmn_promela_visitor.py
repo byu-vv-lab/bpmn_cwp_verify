@@ -40,7 +40,7 @@ class Context:
     def __init__(self, element: Node) -> None:
         self._element = element
         self._is_parallel = False
-        self._behavior: str | Feel = ""
+        self._behavior: Feel | None = None
         self._boundary_events: list[Task.BoundaryEvent] = []
 
     @property
@@ -55,11 +55,11 @@ class Context:
         self._is_parallel = new_val
 
     @property
-    def behavior(self) -> str | Feel:
+    def behavior(self) -> Feel | None:
         return self._behavior
 
     @behavior.setter
-    def behavior(self, new_val: str | Feel) -> None:
+    def behavior(self, new_val: Feel) -> None:
         assert isinstance(self._element, Task), (
             "only tasks can have a behavior associated with them."
         )
@@ -480,14 +480,11 @@ class AtomicBuilder:
         selects = StringManager()
 
         if self.context.behavior:
-            if isinstance(self.context.behavior, Feel):
-                source_changer = FeelToPromelaVisitor(self.context.element.id)
-                self.context.behavior.ast.accept(source_changer)
-                behavior_source = str(source_changer.promela)
-                chooses.write_str(source_changer.choose)
-                selects.write_str(source_changer.selects)
-            else:
-                behavior_source = str(self.context.behavior)
+            source_changer = FeelToPromelaVisitor(self.context.element.id)
+            self.context.behavior.ast.accept(source_changer)
+            behavior_source = str(source_changer.promela)
+            chooses.write_str(source_changer.choose)
+            selects.write_str(source_changer.selects)
 
             start_block_key_words = {"if"}
             end_block_key_words = {"fi"}
@@ -668,12 +665,9 @@ class ExclusiveGatewayBuilder(AtomicBuilder):
         expr.write_str("if", NL_SINGLE)
 
         for flow in self.context.element.out_flows:
-            if isinstance(flow.expression, Feel):
-                source_changer = FeelToPromelaVisitor(flow.id)
-                flow.expression.ast.accept(source_changer)
-                flow_expression = str(source_changer.promela)
-            else:
-                flow_expression = str(flow.expression)
+            source_changer = FeelToPromelaVisitor(flow.id)
+            flow.expression.ast.accept(source_changer)
+            flow_expression = str(source_changer.promela)
 
             expr.write_str(
                 f":: {flow_expression} -> putToken({generate_location_label(flow.target_node, flow)})",

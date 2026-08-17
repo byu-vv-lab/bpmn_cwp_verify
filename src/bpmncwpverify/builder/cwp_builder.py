@@ -119,8 +119,8 @@ class CwpBuilder:
         edge = self._cwp.edges.get(parent)
         if not edge:
             raise Exception(CwpNoParentEdgeError(parent))
-        edge.expression = CwpEdge.cleanup_expression(expression)
-        edge.expression = CwpEdge.build_ast(edge.expression)
+        expr: str = CwpEdge.cleanup_expression(expression)
+        edge.expression = CwpEdge.build_ast(expr)
         result = edge.expression.type_check(state)
         if not_(is_successful)(result):
             raise Exception(result.failure())
