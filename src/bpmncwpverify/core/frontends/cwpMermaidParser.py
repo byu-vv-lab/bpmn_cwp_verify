@@ -47,12 +47,11 @@ class CwpMermaidParser:
                 self.builder.gen_edge_name(),
             )
 
-            expr_clause_node = cast(Any, ctx).EXPR_CLAUSE()
-            if expr_clause_node is not None:
-                raw_expr: str = expr_clause_node.getText()
-                raw_expr_text: str = self._extract_expr_text(raw_expr)
-                edge.expression = CwpEdge.cleanup_expression(raw_expr_text)
-                edge.expression = CwpEdge.build_ast(edge.expression)
+            expr_ctx = cast(Any, ctx).expr()
+            if expr_ctx is not None:
+                raw_expr: str = expr_ctx.getText().strip()
+                expression = CwpEdge.cleanup_expression(raw_expr)
+                edge.expression = CwpEdge.build_ast(expression)
 
                 result = edge.expression.type_check(self.state)
                 if not_(is_successful)(result):
@@ -85,7 +84,7 @@ class CwpMermaidParser:
 
             clauses = [f"{v.id} == {v.init.value}" for v in state.vars]
             start_edge = CwpEdge("Init_Edge", listener.builder.gen_edge_name())
-            start_edge.expression = " && ".join(clauses)
+            start_edge.expression = CwpEdge.build_ast(" && ".join(clauses))
             listener.builder = listener.builder.with_start_edge(start_edge)
         except Exception as e:
             assert e.args, "Error does not have enough arguments"
