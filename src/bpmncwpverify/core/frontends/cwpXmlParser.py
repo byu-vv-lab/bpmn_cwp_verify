@@ -1,5 +1,7 @@
 from xml.etree.ElementTree import Element
 
+from returns.functions import not_
+from returns.pipeline import is_successful
 from returns.result import Failure, Result
 
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
@@ -78,7 +80,10 @@ class CwpXmlParser:
 
         edge = CwpEdge("Init_Edge", builder.gen_edge_name())
         edge.expression = CwpEdge.build_ast(edge_expr)
-        # edge.expression = edge_expr
+        result = edge.expression.type_check(state)
+
+        if not_(is_successful)(result):
+            raise Exception(result.failure())
 
         builder = builder.with_start_edge(edge)
 
