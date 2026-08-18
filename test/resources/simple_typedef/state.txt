@@ -8,8 +8,8 @@ typedef car {
 
     var frontTire: typedef = wheel
     var backTire: typedef = wheel
-    var passenger: typedef = door
-    var driver: typedef = door
+    var passengerSide: typedef = door
+    var driverSide: typedef = door
 
     typedef wheel {
         var pressure: int = 40
