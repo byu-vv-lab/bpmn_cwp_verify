@@ -417,11 +417,12 @@ class TypeDefDecl(DeclLoc):
     Represents typedef variable declaration using keyword typedef
     """
 
-    __slots__ = ["id", "fields", "nested_typedefs", "typedef_inits", "type_"]
+    __slots__ = ["id", "arrays", "fields", "nested_typedefs", "typedef_inits", "type_"]
 
     def __init__(
         self,
         id: str,
+        arrays: list[ArrayDecl],
         fields: list[VarDecl],
         nested_typedefs: list["TypeDefDecl"],
         line: Maybe[int] = Nothing,
@@ -432,6 +433,7 @@ class TypeDefDecl(DeclLoc):
 
         Args:
             id (str): Variable name
+            arrays (list[ArrayDecl]): List of array declarations
             fields (list[VarDecl]): List of field declarations
             nested_typedefs (list[TypeDefDecl]): List of nested typedef declarations
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
@@ -439,12 +441,14 @@ class TypeDefDecl(DeclLoc):
         """
         super().__init__(line, col)
         self.id = id
+        self.arrays = arrays
         self.fields = fields
         self.nested_typedefs = nested_typedefs
 
     @staticmethod
     def typedef_decl(
         id: str,
+        arrays: list[ArrayDecl],
         fields: list[VarDecl],
         nested_typedefs: list["TypeDefDecl"],
         line: Maybe[int] = Nothing,
@@ -455,21 +459,25 @@ class TypeDefDecl(DeclLoc):
 
         Args:
             id (str): Variable name
+            arrays (list[ArrayDecl]): List of array declarations
             fields (list[VarDecl]): List of field declarations
             nested_typedefs (list[TypeDefDecl]): List of nested typedef declarations
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
-        return Success(TypeDefDecl(id, fields, nested_typedefs, line, col))
+        return Success(TypeDefDecl(id, arrays, fields, nested_typedefs, line, col))
 
     def set_id(self, id: str) -> None:
         self.id = id
 
-    def set_fields(self, fields: list[VarDecl]) -> None:
-        self.fields = fields
+    def add_array(self, array: ArrayDecl) -> None:
+        self.arrays.append(array)
 
-    def set_nested_typedefs(self, nested_typedefs: list["TypeDefDecl"]) -> None:
-        self.nested_typedefs = nested_typedefs
+    def add_field(self, field: VarDecl) -> None:
+        self.fields.append(field)
+
+    def add_nested_typedef(self, nested_typedef: "TypeDefDecl") -> None:
+        self.nested_typedefs.append(nested_typedef)
 
     def set_line(self, line: Maybe[int]) -> None:
         self.line = line
@@ -582,6 +590,7 @@ class State:
 
     __slots__ = [
         "_arrays",
+        "_str2array",
         "_consts",
         "_enums",
         "_id2type",
@@ -723,7 +732,7 @@ class State:
             def attach_var_decl_to_typedef(var_decl: VarDecl) -> Result[VarDecl, Error]:
                 if not self.typedefStack:
                     return Failure(TypedefPathError(var_decl.id))
-                self.typedefStack[-1].fields.append(var_decl)
+                self.typedefStack[-1].add_field(var_decl)
                 return Success(var_decl)
 
             def get_var_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
@@ -771,6 +780,14 @@ class State:
                 ctx (StateParser.Array_declContext): Array variable to add
             """
 
+            def attach_array_decl_to_typedef(
+                array_decl: ArrayDecl,
+            ) -> Result[ArrayDecl, Error]:
+                if not self.typedefStack:
+                    return Failure(TypedefPathError(array_decl.id))
+                self.typedefStack[-1].add_array(array_decl)
+                return Success(array_decl)
+
             def get_array_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
                 node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
@@ -788,7 +805,17 @@ class State:
                 )
 
                 result = ArrayDecl.array_decl(id, type_, size, values, id_line, id_col)
-                return result.map(builder.with_array_decl).alt(lambda error: error)
+                if (
+                    ctx.parentCtx is not None
+                    and ctx.parentCtx.parentCtx is not None
+                    and isinstance(
+                        ctx.parentCtx.parentCtx, StateParser.Typedef_declContext
+                    )
+                ):
+                    result.bind_result(attach_array_decl_to_typedef)
+                    return result.map(lambda _: builder).alt(lambda error: error)
+                else:
+                    return result.map(builder.with_array_decl).alt(lambda error: error)
 
             self.state_builder = self.state_builder.bind(get_array_decl)  # pyright: ignore[reportUnknownMemberType]
 
@@ -799,7 +826,7 @@ class State:
             Args:
                 ctx (StateParser.Typedef_declContext): Typedef variable to add
             """
-            self.typedefStack.append(TypeDefDecl("", [], []))
+            self.typedefStack.append(TypeDefDecl("", [], [], []))
 
         def exitTypedef_decl(self, ctx: StateParser.Typedef_declContext) -> None:
             """
@@ -829,7 +856,7 @@ class State:
                 if ctx.parentCtx is not None and isinstance(
                     ctx.parentCtx, StateParser.Typedef_decl_setContext
                 ):
-                    self.typedefStack[-2].nested_typedefs.append(self.typedefStack[-1])
+                    self.typedefStack[-2].add_nested_typedef(self.typedefStack[-1])
 
                 result = result_or_error(self.typedefStack[-1])
                 return result.map(builder.with_typedef_decl).alt(lambda error: error)
@@ -856,13 +883,14 @@ class State:
         """
         self._consts = consts
         self._enums = enums
+        self._vars = vars
+        self._arrays = arrays
+        self._typedefs = typedefs
         self._id2type: Maybe[dict[str, TypeWithDeclLoc]] = Nothing
         self._str2var: Maybe[dict[str, VarDecl]] = Nothing
         self._str2enum: Maybe[dict[str, EnumDecl]] = Nothing
         self._str2const: Maybe[dict[str, ConstDecl]] = Nothing
-        self._vars = vars
-        self._arrays = arrays
-        self._typedefs = typedefs
+        self._str2array: Maybe[dict[str, ArrayDecl]] = Nothing
         self._str2typedef: Maybe[dict[str, TypeDefDecl]] = Nothing
 
     @staticmethod
@@ -1005,6 +1033,10 @@ class State:
     def str2var(self) -> dict[str, VarDecl]:
         return self._str2var.value_or({})
 
+    @property
+    def str2array(self) -> dict[str, ArrayDecl]:
+        return self._str2array.value_or({})
+
     def is_variable(self, variable: str) -> bool:
         return self._str2var.map(lambda d: variable in d).value_or(False)
 
@@ -1013,6 +1045,9 @@ class State:
 
     def is_constant(self, variable: str) -> bool:
         return self._str2const.map(lambda d: variable in d).value_or(False)
+
+    def is_array(self, variable: str) -> bool:
+        return self._str2array.map(lambda d: variable in d).value_or(False)
 
     def is_typedef(self, variable: str) -> bool:
         return self._str2typedef.map(lambda d: variable in d).value_or(False)
@@ -1056,6 +1091,7 @@ class State:
         self._str2var = Some(dict())
         self._str2enum = Some(dict())
         self._str2const = Some(dict())
+        self._str2array = Some(dict())
         self._str2typedef = Some(dict())
         result: Result[State, Error] = (
             self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
@@ -1250,6 +1286,11 @@ class State:
                 result = self._type_check_assigns(var_decl.type_, values)
                 if not_(is_successful)(result):
                     return result
+            for array_decl in typedef_decl.arrays:
+                values = array_decl.values
+                result = self._type_check_assigns(array_decl.type_, values)
+                if not_(is_successful)(result):
+                    return result
             for nested_typedef in typedef_decl.nested_typedefs:
                 result = _type_check_typedef(nested_typedef)
                 if not_(is_successful)(result):
@@ -1344,8 +1385,10 @@ class State:
             typedef_decl (TypeDefDecl): Typedef variable declaration to build paths for
         """
 
-        def _check_vars(
-            id2type: dict[str, TypeWithDeclLoc], str2var: dict[str, VarDecl]
+        def _check_vars_and_arrays(
+            id2type: dict[str, TypeWithDeclLoc],
+            str2var: dict[str, VarDecl],
+            str2array: dict[str, ArrayDecl],
         ) -> Result[None, Error]:
             for var_decl in typedef_decl.fields:
                 if var_decl.type_ == typechecking.TYPEDEF:
@@ -1374,13 +1417,23 @@ class State:
                     full_path = f"{id}.{var_decl.id}"
                     id2type[full_path] = TypeWithDeclLoc(var_decl.type_, var_decl)
                     str2var[full_path] = var_decl
+            for array_decl in typedef_decl.arrays:
+                full_path = f"{id}.{array_decl.id}"
+                id2type[full_path] = TypeWithDeclLoc(array_decl.type_, array_decl)
+                str2array[full_path] = array_decl
             return Success(None)
 
         return maybe_to_result(self._id2type, NotInitializedError("_id2type")).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda id2type: maybe_to_result(
                 self._str2var, NotInitializedError("_str2var")
             ).bind(  # pyright: ignore[reportUnknownMemberType]
-                lambda str2var: _check_vars(id2type, str2var)  # type: ignore[return-value, arg-type] # pyright: ignore[reportArgumentType]
+                lambda str2var: maybe_to_result(
+                    self._str2array, NotInitializedError("_str2array")
+                ).bind(  # pyright: ignore[reportUnknownMemberType]
+                    lambda str2array: _check_vars_and_arrays(  # type: ignore[return-value, arg-type] # pyright: ignore[reportArgumentType]
+                        id2type, str2var, str2array
+                    )
+                )
             )
         )
 
@@ -1444,23 +1497,36 @@ class State:
             str2typedef[typedef_decl.id] = typedef_decl
             return Success(None)
 
+        def _check_duplicate_arrays() -> Result[None, Error]:
+            # check inside the typedef for duplicate array names
+            array_names = [array_decl.id for array_decl in typedef_decl.arrays]
+            for array_decl in typedef_decl.arrays:
+                if array_names.count(array_decl.id) != 1:
+                    return Failure(
+                        StateMultipleDefinitionError(
+                            array_decl.id,
+                            typedef_decl.line,
+                            typedef_decl.col,
+                            array_decl.line,
+                            array_decl.col,
+                        )
+                    )
+            return Success(None)
+
         def _check_duplicate_fields() -> Result[None, Error]:
             # check inside the typedef for duplicate field names
             field_names = [var_decl.id for var_decl in typedef_decl.fields]
             for var_decl in typedef_decl.fields:
-                field_names.remove(var_decl.id)
-                if var_decl.id in field_names:
-                    first = DeclLoc(var_decl.line, var_decl.col)
+                if field_names.count(var_decl.id) != 1:
                     return Failure(
                         StateMultipleDefinitionError(
                             var_decl.id,
                             typedef_decl.line,
                             typedef_decl.col,
-                            first.line,
-                            first.col,
+                            var_decl.line,
+                            var_decl.col,
                         )
                     )
-                field_names.append(var_decl.id)
             return Success(None)
 
         return maybe_to_result(self._id2type, NotInitializedError("_id2type")).bind(  # pyright: ignore[reportUnknownMemberType]
@@ -1468,7 +1534,9 @@ class State:
                 self._str2typedef, NotInitializedError("_str2typedef")
             ).bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda str2typedef: _check_duplicate_typedef(id2type, str2typedef).bind(  # type: ignore[return-value, arg-type] # pyright: ignore[reportArgumentType, reportUnknownMemberType]
-                    lambda _: _check_duplicate_fields()  # pyright: ignore[reportArgumentType, reportUnknownMemberType]
+                    lambda _: _check_duplicate_fields().bind(  # pyright: ignore[reportArgumentType, reportUnknownMemberType]
+                        lambda _: _check_duplicate_arrays()
+                    )
                 )
             )
         )
@@ -1480,12 +1548,19 @@ class State:
         Args:
             array_decl (ArrayDecl): Array variable declaration to check
         """
-        result = cast(
+        result_id_2_type = cast(
             "Result[dict[str, TypeWithDeclLoc], Error]",
             maybe_to_result(self._id2type, NotInitializedError("_id2type")),
         )
 
-        def insert(id2type: dict[str, TypeWithDeclLoc]) -> Result[None, Error]:
+        result_str_2_array = cast(
+            "Result[dict[str, ArrayDecl], Error]",
+            maybe_to_result(self._str2array, NotInitializedError("_str2array")),
+        )
+
+        def insert(
+            id2type: dict[str, TypeWithDeclLoc], str2array: dict[str, ArrayDecl]
+        ) -> Result[None, Error]:
             if array_decl.id in id2type:
                 first = id2type[array_decl.id].decl_loc
                 return Failure(
@@ -1498,9 +1573,15 @@ class State:
                     )
                 )
             id2type[array_decl.id] = TypeWithDeclLoc(array_decl.type_, array_decl)
+            str2array[array_decl.id] = array_decl
+
             return Success(None)
 
-        return result.bind(insert)  # pyright: ignore[reportUnknownMemberType]
+        return result_id_2_type.bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda id2type: result_str_2_array.bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda str2array: insert(id2type, str2array)
+            )
+        )
 
     @staticmethod
     def from_str(state_def: str) -> Result["State", Error]:

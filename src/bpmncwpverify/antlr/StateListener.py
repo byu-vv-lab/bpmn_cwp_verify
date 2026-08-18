@@ -71,6 +71,15 @@ class StateListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by StateParser#array_decl_set.
+    def enterArray_decl_set(self, ctx:StateParser.Array_decl_setContext):
+        pass
+
+    # Exit a parse tree produced by StateParser#array_decl_set.
+    def exitArray_decl_set(self, ctx:StateParser.Array_decl_setContext):
+        pass
+
+
     # Enter a parse tree produced by StateParser#typedef_decl.
     def enterTypedef_decl(self, ctx:StateParser.Typedef_declContext):
         pass
