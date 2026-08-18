@@ -137,5 +137,5 @@ RUN dnf install -y \
     && dnf clean all
 
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json watcher.js puppeteer-config.json ./
 RUN npm ci

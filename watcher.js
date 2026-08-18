@@ -1,7 +1,9 @@
 import chokidar from "chokidar";
 import { execFile } from "child_process";
 
-const watcher = chokidar.watch("./test/resources", {
+const WORKSPACE = "/workspaces/bpmn_cwp_verify";
+
+const watcher = chokidar.watch(`${WORKSPACE}/test/resources`, {
     persistent: true,
     usePolling: true,
     interval: 100,
@@ -29,7 +31,7 @@ function render(file) {
 
     execFile("npx", [
         "mmdc",
-        "-p", "puppeteer-config.json",
+        "-p", `${WORKSPACE}/puppeteer-config.json`,
         "-i", file,
         "-o", output
     ], (error) => {

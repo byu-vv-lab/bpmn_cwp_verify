@@ -12,8 +12,6 @@
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
     "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}; sh .devcontainer/post-create.sh",
-    // Use 'postStartCommand' to run commands after the container is started
-    "postStartCommand": "npm run watch > /tmp/mermaid-watch.log 2>&1 &",
 
     // Configure tool-specific properties.
     // "customizations": {},

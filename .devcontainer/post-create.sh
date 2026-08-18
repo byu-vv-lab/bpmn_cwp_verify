@@ -28,6 +28,9 @@ npm ci
 # Install pre-commit
 pre-commit install
 
+# Run the file watcher
+nohup npm run watch --prefix /app > /tmp/mermaid-watch.log 2>&1 &
+
 # --- devcontainer niceties (dircolors, aliases) ---
 # Append color support to ~/.bashrc so it persists in interactive shells.
 # post-create.sh runs in its own subshell, so aliases and exports set here
