@@ -308,13 +308,21 @@ class ExpressionListener(ExprListener):
         assert nodes is not None
         nodes = [antlr_get_terminal_node_impl(node) for node in nodes]  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
         path = ""
+        index = ""
         for node in nodes:
             path += antlr_get_text(node) + "."
         path = path[:-1]  # Remove the trailing "."
+        if ctx.LBRACKET() is not None and ctx.RBRACKET() is not None:  # type: ignore[no-untyped-call]
+            # if the field access has an array index, separate the index from the path
+            index = path[-1]
+            path = path[:-2]
 
         type = self.state.get_type(path)  # Variable type retrieval method
         if not_(is_successful)(type):
             raise Exception(ExpressionUnrecognizedID(path))
+        index_check = self.state.get_type(index)
+        if not_(is_successful)(index_check):
+            raise Exception(ExpressionUnrecognizedID(index))
         self.type_stack.append(type.unwrap())
 
     @staticmethod

@@ -16,11 +16,18 @@
     else civic.frontTire.pressure
 ),
 (
-    civic.passenger.isOpen,
+    civic.passengerSide.isOpen,
     [civic.frontTire.pressure],
     if civic.frontTire.pressure &lt; 25
     then truthy
     else falsey
+)
+(
+    civic.passengers[0],
+    [civic.frontTire.pressure],
+    if civic.frontTire.pressure &lt; 25
+    then 0
+    else 1
 )</bpmn:documentation>
       <bpmn:incoming>Flow_13lou38</bpmn:incoming>
       <bpmn:incoming>Flow_0uqd0m9</bpmn:incoming>
