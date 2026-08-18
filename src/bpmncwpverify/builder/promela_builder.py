@@ -49,39 +49,19 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
         loggerFunction.write_str(":: else", NL_SINGLE, IndentAction.DEC)
         loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
 
-    for array in state.arrays:
+    for path, array in state.str2array.items():
         for i in range(len(array.values)):
             loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
             loggerFunction.write_str(
-                f":: {array.id}[{i}] != old_{array.id}[{i}] ->",
+                f":: {path}[{i}] != old_{path}[{i}] ->",
                 NL_SINGLE,
                 IndentAction.INC,
             )
             loggerFunction.write_str(
-                f'printf("{array.id}[{i}] = {_get_print_type(array.type_)}\\n", {array.id}[{i}])',
+                f'printf("{path}[{i}] = {_get_print_type(array.type_)}\\n", {path}[{i}])',
                 NL_SINGLE,
             )
-            loggerFunction.write_str(
-                f"old_{array.id}[{i}] = {array.id}[{i}]", NL_SINGLE
-            )
-            loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
-            loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
-
-    for array in state.arrays:
-        for i in range(len(array.values)):
-            loggerFunction.write_str("if", NL_SINGLE, IndentAction.INC)
-            loggerFunction.write_str(
-                f":: {array.id}[{i}] != old_{array.id}[{i}] ->",
-                NL_SINGLE,
-                IndentAction.INC,
-            )
-            loggerFunction.write_str(
-                f'printf("{array.id}[{i}] = {_get_print_type(array.type_)}\\n", {array.id}[{i}])',
-                NL_SINGLE,
-            )
-            loggerFunction.write_str(
-                f"old_{array.id}[{i}] = {array.id}[{i}]", NL_SINGLE
-            )
+            loggerFunction.write_str(f"old_{path}[{i}] = {path}[{i}]", NL_SINGLE)
             loggerFunction.write_str(":: else -> skip", NL_SINGLE, IndentAction.DEC)
             loggerFunction.write_str("fi;", NL_SINGLE, IndentAction.DEC)
 
@@ -109,7 +89,7 @@ def _generate_state_dump(state: State) -> str:
                 f'printf("{path} = {_get_print_type(var.type_)}\\n", {path})', NL_SINGLE
             )
 
-    for array in state.arrays:
+    for path, array in state.str2array.items():
         valTypeList: str = ""
         valDeclList: str = ""
         comma: str = ", "
@@ -117,9 +97,9 @@ def _generate_state_dump(state: State) -> str:
             if i == len(array.values) - 1:
                 comma = ""
             valTypeList += f"{_get_print_type(array.type_)}" + comma
-            valDeclList += f"{array.id}[{i}]" + comma
+            valDeclList += f"{path}[{i}]" + comma
         state_dump.write_str(
-            f'printf("{array.id} = {{{valTypeList}}}", {valDeclList})', NL_SINGLE
+            f'printf("{path} = {{{valTypeList}}}\\n", {valDeclList})', NL_SINGLE
         )
 
     state_dump.write_str("}", NL_DOUBLE, IndentAction.DEC)
@@ -172,6 +152,10 @@ def _generate_state_promela(state: State) -> str:
     for typedef_decl in state.typedefs:
         # Declare the typedef structure
         str_builder.append(f"typedef {typedef_decl.id} {{")
+        for array_decl in typedef_decl.arrays:
+            str_builder.append(
+                f"    {array_decl.type_} {array_decl.id}[{array_decl.size}]"
+            )
         for var_decl in typedef_decl.fields:
             if var_decl.type_ in {enum.id for enum in state.enums}:
                 str_builder.append(f"    mtype:{var_decl.type_} {var_decl.id}")
@@ -208,7 +192,7 @@ def _generate_state_promela(state: State) -> str:
                 )
     # Initialize each field in typedefs, if empty skip
     str_builder.append("inline typedefInit() {")
-    if len(state.str2var) == 0 or len(state.typedefs) == 0:
+    if len(state.typedefs) == 0:
         str_builder.append("    skip")
     else:
         str2var = state.str2var
@@ -217,6 +201,13 @@ def _generate_state_promela(state: State) -> str:
                 var = str2var[path]
                 str_builder.append(f"    {path} = {var.init.value}")
                 str_builder.append(f"    old_{path} = {var.init.value}")
+
+        str2array = state.str2array
+        for path, array in str2array.items():
+            if "." in path:
+                for i in range(len(array.values)):
+                    str_builder.append(f"    {path}[{i}] = {array.values[i].value}")
+                    str_builder.append(f"    old_{path}[{i}] = {array.values[i].value}")
     str_builder.append("}")
 
     return "\n".join(str_builder) + "\n\n"
