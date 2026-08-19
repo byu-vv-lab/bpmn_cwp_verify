@@ -302,6 +302,25 @@ class CwpNoStartStateError(Error):
         super().__init__()
 
 
+class CwpMermaidSyntaxError(Error):
+    __slots__ = ["line", "column", "msg"]
+
+    def __init__(self, line: int, column: int, msg: str) -> None:
+        super().__init__()
+        self.line = line
+        self.column = column
+        self.msg = msg
+
+
+class CwpStartEdgeExpressionMismatchError(Error):
+    __slots__ = ["written", "synthesized"]
+
+    def __init__(self, written: str, synthesized: str) -> None:
+        super().__init__()
+        self.written = written
+        self.synthesized = synthesized
+
+
 class ExpressionComputationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -803,6 +822,15 @@ def get_error_message(error: Error) -> str:
             return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
         case CwpNoStartStateError():
             return "CWP ERROR: No start states found."
+        case CwpMermaidSyntaxError(line=line, column=column, msg=msg):
+            return f"CWP MERMAID ERROR: syntax error at line {line}:{column}: {msg}"
+        case CwpStartEdgeExpressionMismatchError(
+            written=written, synthesized=synthesized
+        ):
+            return (
+                f"CWP MERMAID ERROR: start transition expression '{written}' does not "
+                f"match the expression derived from state init values '{synthesized}'"
+            )
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be computed with something of type '{ltype}'"
         case ExpressionNegatorError(type=type):
