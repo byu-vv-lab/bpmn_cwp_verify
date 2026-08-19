@@ -1,4 +1,4 @@
-# Generated from antlr/CwpParser.g4 by ANTLR 4.13.2
+# Generated from antlr/Cwp.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .CwpParser import CwpParser
@@ -6,7 +6,7 @@ else:
     from CwpParser import CwpParser
 
 # This class defines a complete listener for a parse tree produced by CwpParser.
-class CwpParserListener(ParseTreeListener):
+class CwpListener(ParseTreeListener):
 
     # Enter a parse tree produced by CwpParser#diagram.
     def enterDiagram(self, ctx:CwpParser.DiagramContext):
@@ -41,15 +41,6 @@ class CwpParserListener(ParseTreeListener):
 
     # Exit a parse tree produced by CwpParser#edgeTransition.
     def exitEdgeTransition(self, ctx:CwpParser.EdgeTransitionContext):
-        pass
-
-
-    # Enter a parse tree produced by CwpParser#expr.
-    def enterExpr(self, ctx:CwpParser.ExprContext):
-        pass
-
-    # Exit a parse tree produced by CwpParser#expr.
-    def exitExpr(self, ctx:CwpParser.ExprContext):
         pass
 
 

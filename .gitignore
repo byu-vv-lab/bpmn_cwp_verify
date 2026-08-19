@@ -174,3 +174,5 @@ pan
 work.code-workspace
 
 tmp/
+
+node_modules/

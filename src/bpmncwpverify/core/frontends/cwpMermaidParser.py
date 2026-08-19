@@ -6,8 +6,8 @@ from returns.pipeline import is_successful
 from returns.result import Failure, Result
 
 from bpmncwpverify.antlr.CwpLexer import CwpLexer
+from bpmncwpverify.antlr.CwpListener import CwpListener
 from bpmncwpverify.antlr.CwpParser import CwpParser
-from bpmncwpverify.antlr.CwpParserListener import CwpParserListener
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import Error
@@ -15,7 +15,7 @@ from bpmncwpverify.core.state import State
 
 
 class CwpMermaidParser:
-    class _BuilderListener(CwpParserListener):
+    class _BuilderListener(CwpListener):
         def __init__(self, builder: "CwpBuilder", state: State):
             self.builder = builder
             self.state = state
@@ -47,10 +47,11 @@ class CwpMermaidParser:
                 self.builder.gen_edge_name(),
             )
 
-            expr_ctx = cast(Any, ctx).expr()
-            if expr_ctx is not None:
-                raw_expr: str = expr_ctx.getText().strip()
-                edge.expression = CwpEdge.cleanup_expression(raw_expr)
+            expr_clause_node = cast(Any, ctx).EXPR_CLAUSE()
+            if expr_clause_node is not None:
+                raw_expr: str = expr_clause_node.getText()
+                raw_expr_text: str = self._extract_expr_text(raw_expr)
+                edge.expression = CwpEdge.cleanup_expression(raw_expr_text)
                 edge.expression = CwpEdge.build_ast(edge.expression)
 
                 result = edge.expression.type_check(self.state)
@@ -62,6 +63,9 @@ class CwpMermaidParser:
                 source_id,
                 target_id,
             )
+
+        def _extract_expr_text(self, raw: str) -> str:
+            return raw[1:].strip()
 
     @staticmethod
     def _parse_tree(mmd_str: str) -> CwpParser.DiagramContext:
