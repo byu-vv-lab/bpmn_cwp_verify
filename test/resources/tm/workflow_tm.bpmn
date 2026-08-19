@@ -314,12 +314,7 @@ EHR[has-- TM_Order[pt#; Rm#;status]
       <bpmn:messageEventDefinition id="MessageEventDefinition_1vr4mdi" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Activity_09jky14" name="FloorStaff does immediate eval &#38;&#38;/or AddSvcs">
-      <bpmn:documentation>((choice, [], choose [one, two, pass]),
-  (ptStatus,[choice, ptStatus], if (choice = one) then notStable else (if (choice = two) then stable_C_addSvcs else ptStatus)),
-  (needsCare, [choice, needsCare], if (choice = one) then N_moreAddSvcs else needsCare),
-  (hasCare, [choice, hasCare], if (choice = one) then H_transport else (if (choice = two) then H_addSvcs else hasCare)),
-  (ptRm, [choice, ptRm], if (choice = one) then new else ptRm),
-  (alertStatus, [choice, alertStatus], if (choice = one or choice = two) then cancelled else alertStatus))</bpmn:documentation>
+      <bpmn:documentation>((ptStatus, [], choose [notStable, stable_C_addSvcs]), (needsCare, [ptStatus, needsCare], if (ptStatus = notStable) then N_moreAddSvcs else needsCare), (hasCare, [hasCare, ptStatus], if (ptStatus = notStable) then H_transport else H_addSvcs), (ptRm, [ptRm, ptStatus], if (ptStatus = notStable) then new else ptRm), (alertStatus, [ptStatus], if (ptStatus = notStable) then cancelled else cancelled))</bpmn:documentation>
       <bpmn:incoming>Flow_0j6nxsn</bpmn:incoming>
       <bpmn:outgoing>Flow_0fiousf</bpmn:outgoing>
     </bpmn:task>

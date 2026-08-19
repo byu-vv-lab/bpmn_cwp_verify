@@ -9,8 +9,6 @@ enum Status { statusInit issued confirmed cancelled none }
 enum Box { boxInit ready notReady installed boxRecovered }
 enum Location { locationInit ptRoom }
 
-enum Choice { choiceInit one two pass }
-
 
 var ptID: ID = idInit
 var ptRm: Room = roomInit
@@ -25,5 +23,3 @@ var alertStatus: Status = statusInit
 var boxNum: int = 21
 var boxStatus: Box = boxInit
 var boxLoc: Location = locationInit
-
-var choice: Choice = choiceInit

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0uq4ztg" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.43.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0uq4ztg" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="0a9b4c5" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
   <bpmn:collaboration id="Collaboration_09uj9w9">
     <bpmn:participant id="Participant_0lfpcet" name="Commander" processRef="Commander_Process" />
     <bpmn:participant id="Participant_026l33z" name="AUV" processRef="AUV_Process" />
@@ -32,18 +32,12 @@
       <bpmn:outgoing>Flow_0ugmrj0</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:task id="Commander_Plan_Search" name="Plan Search">
-      <bpmn:documentation>search = on
-conditions = changed
-blackBox = missing
-comms = wait
-risk = assessing</bpmn:documentation>
+      <bpmn:documentation>((search, [], on), (conditions, [], changed), (blackBox, [], missing), (comms, [], wait), (risk, [], assessing))</bpmn:documentation>
       <bpmn:incoming>Flow_0ugmrj0</bpmn:incoming>
       <bpmn:outgoing>Flow_05o3vkq</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Commander_Deploy_Searchers" name="Deploy Searchers">
-      <bpmn:documentation>risk = acceptable
-comms = sent
-conditions = same</bpmn:documentation>
+      <bpmn:documentation>((risk, [], acceptable), (comms, [], sent), (conditions, [], same))</bpmn:documentation>
       <bpmn:incoming>Flow_05o3vkq</bpmn:incoming>
       <bpmn:outgoing>Flow_1c014h9</bpmn:outgoing>
     </bpmn:task>
@@ -63,45 +57,28 @@ conditions = same</bpmn:documentation>
       <bpmn:outgoing>Flow_1pyj6c3</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:task id="Commander_Check_Risk" name="Check Risk">
-      <bpmn:documentation>if
-:: true -&gt;
-risk = acceptable;
-conditions = same;
-:: true -&gt; risk = notAcceptable
-fi
-comms = sent;</bpmn:documentation>
+      <bpmn:documentation>((risk, [], choose [acceptable, notAcceptable]), (conditions, [risk, conditions], if (risk = acceptable) then same else conditions), (comms, [], sent))</bpmn:documentation>
       <bpmn:incoming>Flow_11h72oi</bpmn:incoming>
       <bpmn:incoming>Flow_1lzno7z</bpmn:incoming>
       <bpmn:outgoing>Flow_15ohdb9</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Commander_Update_Searchers" name="Update Searchers">
-      <bpmn:documentation>if
-:: risk == acceptable -&gt; conditions = same
-:: else -&gt; skip
-fi</bpmn:documentation>
+      <bpmn:documentation>(conditions, [risk, conditions], if (risk = acceptable) then same else conditions)</bpmn:documentation>
       <bpmn:incoming>Flow_15ohdb9</bpmn:incoming>
       <bpmn:outgoing>Flow_10h30va</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Commander_Notify_Searchers_Conditions" name="Notify Searchers Conditions">
-      <bpmn:documentation>comms = sent</bpmn:documentation>
+      <bpmn:documentation>(comms, [], sent)</bpmn:documentation>
       <bpmn:incoming>Flow_1et7avh</bpmn:incoming>
       <bpmn:outgoing>Flow_1x890u1</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Commander_Check_Conditions_Lower" name="Check Conditions">
-      <bpmn:documentation>if
-:: blackBox == missing -&gt; conditions = same
-:: blackBox == missing -&gt;
-  conditions = changed;
-  risk = assessing;
-  comms = wait;
-:: else -&gt; skip
-fi</bpmn:documentation>
+      <bpmn:documentation>((conditions, [blackBox, conditions], if (blackBox = missing) then choose [same, changed] else conditions), (risk, [blackBox, conditions, risk], if (blackBox = missing) then (if (conditions = same) then risk else assessing) else risk), (comms, [blackBox, conditions, comms], if (blackBox = missing) then (if (conditions = same) then comms else wait) else comms))</bpmn:documentation>
       <bpmn:incoming>Flow_0nq8kre</bpmn:incoming>
       <bpmn:outgoing>Flow_1ybrkic</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Commander_Update_Info" name="Update Info">
-      <bpmn:documentation>risk = assessing
-comms = wait</bpmn:documentation>
+      <bpmn:documentation>((risk, [],  assessing), (comms, [], wait))</bpmn:documentation>
       <bpmn:incoming>Flow_1atvpb2</bpmn:incoming>
       <bpmn:outgoing>Flow_11h72oi</bpmn:outgoing>
     </bpmn:task>
@@ -111,10 +88,7 @@ comms = wait</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0696ss6" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="Commander_Check_Conditions" name="Check Conditions">
-      <bpmn:documentation>if
-:: true -&gt; conditions = same
-:: true -&gt; conditions = changed
-fi</bpmn:documentation>
+      <bpmn:documentation>(conditions, [], choose [same, changed])</bpmn:documentation>
       <bpmn:incoming>Flow_1rjccce</bpmn:incoming>
       <bpmn:outgoing>Flow_1et7avh</bpmn:outgoing>
     </bpmn:task>
@@ -133,10 +107,7 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_12106bx</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:task id="Commander_Await_Updates" name="Await Updates">
-      <bpmn:documentation>if
-:: blackBox == found -&gt; skip
-:: else -&gt; comms = updates
-fi</bpmn:documentation>
+      <bpmn:documentation>(comms, [blackBox, comms], if (blackBox = found) then comms else updates)</bpmn:documentation>
       <bpmn:incoming>Flow_1twjnj7</bpmn:incoming>
       <bpmn:incoming>Flow_1tznmwy</bpmn:incoming>
       <bpmn:incoming>Flow_0nr0iwo</bpmn:incoming>
@@ -155,24 +126,24 @@ fi</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_05o3vkq" sourceRef="Commander_Plan_Search" targetRef="Commander_Deploy_Searchers" />
     <bpmn:sequenceFlow id="Flow_1c014h9" sourceRef="Commander_Deploy_Searchers" targetRef="Commander_Receive_Deployed" />
     <bpmn:sequenceFlow id="Flow_0nr0iwo" sourceRef="Commander_Receive_Deployed" targetRef="Commander_Await_Updates" />
-    <bpmn:sequenceFlow id="Flow_1pyj6c3" name="risk == acceptable" sourceRef="Commander_Risk_Acceptable_Or_NA" targetRef="Commander_Received_Accepted" />
+    <bpmn:sequenceFlow id="Flow_1pyj6c3" name="risk = acceptable" sourceRef="Commander_Risk_Acceptable_Or_NA" targetRef="Commander_Received_Accepted" />
     <bpmn:sequenceFlow id="Flow_1tznmwy" sourceRef="Commander_Received_Accepted" targetRef="Commander_Await_Updates" />
     <bpmn:sequenceFlow id="Flow_10h30va" sourceRef="Commander_Update_Searchers" targetRef="Commander_Risk_Acceptable_Or_NA" />
-    <bpmn:sequenceFlow id="Flow_0yslpgn" name="risk == notAcceptable" sourceRef="Commander_Risk_Acceptable_Or_NA" targetRef="Commander_Received_NotAcceptable" />
+    <bpmn:sequenceFlow id="Flow_0yslpgn" name="risk = notAcceptable" sourceRef="Commander_Risk_Acceptable_Or_NA" targetRef="Commander_Received_NotAcceptable" />
     <bpmn:sequenceFlow id="Flow_11h72oi" sourceRef="Commander_Update_Info" targetRef="Commander_Check_Risk" />
     <bpmn:sequenceFlow id="Flow_1lzno7z" sourceRef="Commander_Receive_Response" targetRef="Commander_Check_Risk" />
     <bpmn:sequenceFlow id="Flow_15ohdb9" sourceRef="Commander_Check_Risk" targetRef="Commander_Update_Searchers" />
     <bpmn:sequenceFlow id="Flow_1et7avh" sourceRef="Commander_Check_Conditions" targetRef="Commander_Notify_Searchers_Conditions" />
     <bpmn:sequenceFlow id="Flow_1x890u1" sourceRef="Commander_Notify_Searchers_Conditions" targetRef="Commander_Conditions_Change_Or_Same" />
-    <bpmn:sequenceFlow id="Flow_1bt1a2g" name="blackBox == missing" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_Receive_Updates" />
+    <bpmn:sequenceFlow id="Flow_1bt1a2g" name="blackBox = missing" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_Receive_Updates" />
     <bpmn:sequenceFlow id="Flow_1ybrkic" sourceRef="Commander_Check_Conditions_Lower" targetRef="Commander_Conditions_And_blackBox" />
-    <bpmn:sequenceFlow id="Flow_1atvpb2" name="conditions == changed" sourceRef="Commander_Conditions_Change_Or_Same" targetRef="Commander_Update_Info" />
+    <bpmn:sequenceFlow id="Flow_1atvpb2" name="conditions = changed" sourceRef="Commander_Conditions_Change_Or_Same" targetRef="Commander_Update_Info" />
     <bpmn:sequenceFlow id="Flow_1rjccce" sourceRef="Commander_Received_NotAcceptable" targetRef="Commander_Check_Conditions" />
-    <bpmn:sequenceFlow id="Flow_03ypw3z" name="conditions == same" sourceRef="Commander_Conditions_Change_Or_Same" targetRef="Commander_Search_Off_Risk" />
-    <bpmn:sequenceFlow id="Flow_12106bx" name="conditions == changed &#38;&#38; blackBox == missing" sourceRef="Commander_Conditions_And_blackBox" targetRef="Commander_Notify_Searchers_To_Wait" />
-    <bpmn:sequenceFlow id="Flow_1twjnj7" name="conditions == same || blackBox == found" sourceRef="Commander_Conditions_And_blackBox" targetRef="Commander_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_03ypw3z" name="conditions = same" sourceRef="Commander_Conditions_Change_Or_Same" targetRef="Commander_Search_Off_Risk" />
+    <bpmn:sequenceFlow id="Flow_12106bx" name="conditions = changed and blackBox = missing" sourceRef="Commander_Conditions_And_blackBox" targetRef="Commander_Notify_Searchers_To_Wait" />
+    <bpmn:sequenceFlow id="Flow_1twjnj7" name="conditions = same or blackBox = found" sourceRef="Commander_Conditions_And_blackBox" targetRef="Commander_Await_Updates" />
     <bpmn:sequenceFlow id="Flow_0v7q20v" sourceRef="Commander_Await_Updates" targetRef="Commander_Blackbox_Missing_Or_Found" />
-    <bpmn:sequenceFlow id="Flow_1os4dn1" name="blackBox == found" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_BlackBox_Found_Msg" />
+    <bpmn:sequenceFlow id="Flow_1os4dn1" name="blackBox = found" sourceRef="Commander_Blackbox_Missing_Or_Found" targetRef="Commander_BlackBox_Found_Msg" />
     <bpmn:sequenceFlow id="Flow_1glliuj" sourceRef="Commander_Notify_Searchers_To_Wait" targetRef="Commander_Receive_Response" />
     <bpmn:exclusiveGateway id="Commander_Blackbox_Missing_Or_Found" name="Xor">
       <bpmn:incoming>Flow_0v7q20v</bpmn:incoming>
@@ -185,8 +156,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1fl52xy</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="Commander_Retrieve_Black_Box" name="Retrieve Black Box">
-      <bpmn:documentation>search = off
-comms = sent</bpmn:documentation>
+      <bpmn:documentation>((search, [], off), (comms, [], sent))</bpmn:documentation>
       <bpmn:incoming>Flow_0wtm01a</bpmn:incoming>
       <bpmn:outgoing>Flow_1fl52xy</bpmn:outgoing>
     </bpmn:task>
@@ -202,7 +172,7 @@ comms = sent</bpmn:documentation>
     </bpmn:intermediateCatchEvent>
     <bpmn:sequenceFlow id="Flow_05itcp1" sourceRef="Commander_Receive_Updates" targetRef="Commander_Confirm_Received_Updates" />
     <bpmn:task id="Commander_Confirm_Received_Updates" name="Confirm Received Updates">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_05itcp1</bpmn:incoming>
       <bpmn:outgoing>Flow_0nq8kre</bpmn:outgoing>
     </bpmn:task>
@@ -218,7 +188,7 @@ comms = sent</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1kimus2" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="AUV_Send_Deployed" name="Deployed">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_1n4b7r9</bpmn:incoming>
       <bpmn:outgoing>Flow_0s9sz8o</bpmn:outgoing>
     </bpmn:task>
@@ -227,18 +197,7 @@ comms = sent</bpmn:documentation>
       <bpmn:outgoing>Flow_0bxyuzw</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="AUV_Active_Search" name="Active Search">
-      <bpmn:documentation>if
-:: blackBox == found || comms == updates -&gt; skip
-:: else -&gt;
-  if
-  :: comms == wait -&gt; blackBox = missing
-  :: else -&gt;
-      if
-      :: true -&gt; blackBox = missing
-      :: true -&gt; blackBox = found
-      fi
-  fi
-fi</bpmn:documentation>
+      <bpmn:documentation>(blackBox, [blackBox, comms], if (blackBox = found or comms = updates) then blackBox else if (comms = wait) then missing else choose [missing, found])</bpmn:documentation>
       <bpmn:incoming>Flow_0s9sz8o</bpmn:incoming>
       <bpmn:incoming>Flow_00e2sn9</bpmn:incoming>
       <bpmn:incoming>Flow_11vwxyo</bpmn:incoming>
@@ -260,7 +219,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_0hl1n0e</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="AUV_Update_Info_Return_To_Surface" name="Update Info and Return to Surface">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [],  waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_1q6tdit</bpmn:incoming>
       <bpmn:outgoing>Flow_0hl1n0e</bpmn:outgoing>
     </bpmn:task>
@@ -275,7 +234,7 @@ fi</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0ibzqj0" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="AUV_Await_Updates" name="Await Updates">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_1kxj6za</bpmn:incoming>
       <bpmn:outgoing>Flow_0opunqa</bpmn:outgoing>
     </bpmn:task>
@@ -287,7 +246,7 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_00e2sn9</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="AUV_Update_Info" name="Update Info">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_11w7314</bpmn:incoming>
       <bpmn:outgoing>Flow_037qktc</bpmn:outgoing>
     </bpmn:task>
@@ -319,21 +278,21 @@ fi</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_1ax9s2y" sourceRef="AUV_Start" targetRef="AUV_Receive_Deploy" />
     <bpmn:sequenceFlow id="Flow_1n4b7r9" sourceRef="AUV_Receive_Deploy" targetRef="AUV_Send_Deployed" />
     <bpmn:sequenceFlow id="Flow_0s9sz8o" sourceRef="AUV_Send_Deployed" targetRef="AUV_Active_Search" />
-    <bpmn:sequenceFlow id="Flow_169v6ma" name="search == on &#38;&#38; risk == notAcceptable" sourceRef="AUV_Risk_Acceptable_Or_NA" targetRef="AUV_Return_To_Surface" />
+    <bpmn:sequenceFlow id="Flow_169v6ma" name="search = on and risk = notAcceptable" sourceRef="AUV_Risk_Acceptable_Or_NA" targetRef="AUV_Return_To_Surface" />
     <bpmn:sequenceFlow id="Flow_0bxyuzw" sourceRef="AUV_Return_To_Surface" targetRef="AUV_Receive_Conditions" />
     <bpmn:sequenceFlow id="Flow_00e2sn9" sourceRef="AUV_Received_Acceptable" targetRef="AUV_Active_Search" />
     <bpmn:sequenceFlow id="Flow_11vwxyo" sourceRef="AUV_Receive_Confirmation" targetRef="AUV_Active_Search" />
     <bpmn:sequenceFlow id="Flow_1t4wl0u" sourceRef="AUV_Active_Search" targetRef="AUV_Comms_And_blackBox" />
-    <bpmn:sequenceFlow id="Flow_1kzgclj" name="comms == updates &#38;&#38; blackBox == missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Report_To_Commander" />
-    <bpmn:sequenceFlow id="Flow_18avrt1" name="comms == wait &#38;&#38; blackBox == missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Received_Wait" />
-    <bpmn:sequenceFlow id="Flow_1rv897x" name="blackBox == found" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_blackBox_Located_Ping" />
+    <bpmn:sequenceFlow id="Flow_1kzgclj" name="comms = updates and blackBox = missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Report_To_Commander" />
+    <bpmn:sequenceFlow id="Flow_18avrt1" name="comms = wait and blackBox = missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Received_Wait" />
+    <bpmn:sequenceFlow id="Flow_1rv897x" name="blackBox = found" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_blackBox_Located_Ping" />
     <bpmn:sequenceFlow id="Flow_04wh7yo" sourceRef="AUV_blackBox_Located_Ping" targetRef="AUV_Search_Off_Found" />
     <bpmn:sequenceFlow id="Flow_0hl1n0e" sourceRef="AUV_Update_Info_Return_To_Surface" targetRef="AUV_Search_Off_Risk" />
-    <bpmn:sequenceFlow id="Flow_1q6tdit" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="AUV_Conditions_Changed_Or_Same" targetRef="AUV_Update_Info_Return_To_Surface" />
+    <bpmn:sequenceFlow id="Flow_1q6tdit" name="risk = notAcceptable and conditions = same" sourceRef="AUV_Conditions_Changed_Or_Same" targetRef="AUV_Update_Info_Return_To_Surface" />
     <bpmn:sequenceFlow id="Flow_12btwul" sourceRef="AUV_Receive_Conditions" targetRef="AUV_Conditions_Changed_Or_Same" />
-    <bpmn:sequenceFlow id="Flow_1kxj6za" name="risk == acceptable || conditions == changed" sourceRef="AUV_Conditions_Changed_Or_Same" targetRef="AUV_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_1kxj6za" name="risk = acceptable or conditions = changed" sourceRef="AUV_Conditions_Changed_Or_Same" targetRef="AUV_Await_Updates" />
     <bpmn:sequenceFlow id="Flow_0opunqa" sourceRef="AUV_Await_Updates" targetRef="AUV_Receive_Updates_AUV" />
-    <bpmn:sequenceFlow id="Flow_0vy3iib" name="search == on &#38;&#38; risk == acceptable" sourceRef="AUV_Risk_Acceptable_Or_NA" targetRef="AUV_Received_Acceptable" />
+    <bpmn:sequenceFlow id="Flow_0vy3iib" name="search = on and risk = acceptable" sourceRef="AUV_Risk_Acceptable_Or_NA" targetRef="AUV_Received_Acceptable" />
     <bpmn:sequenceFlow id="Flow_11w7314" sourceRef="AUV_Receive_Updates_AUV" targetRef="AUV_Update_Info" />
     <bpmn:sequenceFlow id="Flow_037qktc" sourceRef="AUV_Update_Info" targetRef="AUV_Risk_Acceptable_Or_NA" />
     <bpmn:sequenceFlow id="Flow_06tewjg" sourceRef="AUV_Ping_Updates" targetRef="AUV_Receive_Updates_AUV" />
@@ -343,7 +302,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1kzgclj</bpmn:incoming>
       <bpmn:outgoing>Flow_1kx964a</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_1oisetq" name="comms == waiting &#38;&#38; blackBox == missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_1oisetq" name="comms = waiting and blackBox = missing" sourceRef="AUV_Comms_And_blackBox" targetRef="AUV_Active_Search" />
   </bpmn:process>
   <bpmn:message id="Message_26q47k7" name="Move On" />
   <bpmn:process id="ROV_Process" isExecutable="false">
@@ -356,7 +315,7 @@ fi</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_0o5jwsi" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="ROV_Send_Deployed" name="Deployed">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_17sry0g</bpmn:incoming>
       <bpmn:outgoing>Flow_1drtlov</bpmn:outgoing>
     </bpmn:task>
@@ -365,18 +324,7 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_1h2ei0f</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="ROV_Active_Search" name="Active Search">
-      <bpmn:documentation>if
-:: blackBox == found || comms == updates -&gt; skip
-:: else -&gt;
-  if
-  :: comms == wait -&gt; blackBox = missing
-  :: else -&gt;
-      if
-      :: true -&gt; blackBox = missing
-      :: true -&gt; blackBox = found
-      fi
-  fi
-fi</bpmn:documentation>
+      <bpmn:documentation>(blackBox, [blackBox, comms], if (blackBox = found or comms = updates) then blackBox else if (comms = wait) then missing else choose [missing, found])</bpmn:documentation>
       <bpmn:incoming>Flow_1drtlov</bpmn:incoming>
       <bpmn:incoming>Flow_0a7wrzz</bpmn:incoming>
       <bpmn:incoming>Flow_00mw89e</bpmn:incoming>
@@ -398,7 +346,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_0xcofz8</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:task id="ROV_Update_Info_And_Return" name="Update Info and Return to Command Vessel">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_1llg1yu</bpmn:incoming>
       <bpmn:outgoing>Flow_0xcofz8</bpmn:outgoing>
     </bpmn:task>
@@ -413,7 +361,7 @@ fi</bpmn:documentation>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1v4hjkr" />
     </bpmn:intermediateCatchEvent>
     <bpmn:task id="ROV_Await_Updates" name="Await_Updates">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_15vyqp6</bpmn:incoming>
       <bpmn:outgoing>Flow_07ea5e7</bpmn:outgoing>
     </bpmn:task>
@@ -425,7 +373,7 @@ fi</bpmn:documentation>
       <bpmn:outgoing>Flow_0a7wrzz</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="ROV_Update_Info" name="Update Info">
-      <bpmn:documentation>comms = waiting</bpmn:documentation>
+      <bpmn:documentation>(comms, [], waiting)</bpmn:documentation>
       <bpmn:incoming>Flow_1ltwuf3</bpmn:incoming>
       <bpmn:outgoing>Flow_0cvwhuj</bpmn:outgoing>
     </bpmn:task>
@@ -452,20 +400,20 @@ fi</bpmn:documentation>
     <bpmn:sequenceFlow id="Flow_18qfxt8" sourceRef="ROV_Start" targetRef="ROV_Receive_Deploy" />
     <bpmn:sequenceFlow id="Flow_17sry0g" sourceRef="ROV_Receive_Deploy" targetRef="ROV_Send_Deployed" />
     <bpmn:sequenceFlow id="Flow_1drtlov" sourceRef="ROV_Send_Deployed" targetRef="ROV_Active_Search" />
-    <bpmn:sequenceFlow id="Flow_0i1i54e" name="search == on &#38;&#38; risk == notAcceptable" sourceRef="ROV_Risk_Acceptable_Or_NA" targetRef="ROV_Return_To_Command_Vessel" />
+    <bpmn:sequenceFlow id="Flow_0i1i54e" name="search = on and risk = notAcceptable" sourceRef="ROV_Risk_Acceptable_Or_NA" targetRef="ROV_Return_To_Command_Vessel" />
     <bpmn:sequenceFlow id="Flow_1h2ei0f" sourceRef="ROV_Return_To_Command_Vessel" targetRef="ROV_Receive_Conditions" />
-    <bpmn:sequenceFlow id="Flow_1yre9aq" name="comms == updates &#38;&#38; blackBox == missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Report_To_Commander" />
+    <bpmn:sequenceFlow id="Flow_1yre9aq" name="comms = updates and blackBox = missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Report_To_Commander" />
     <bpmn:sequenceFlow id="Flow_0a7wrzz" sourceRef="Activity_0c6b8n2" targetRef="ROV_Active_Search" />
     <bpmn:sequenceFlow id="Flow_04q0sr7" sourceRef="ROV_Active_Search" targetRef="ROV_Comms_And_blackBox" />
-    <bpmn:sequenceFlow id="Flow_1nf4yz0" name="comms == wait &#38;&#38; blackBox == missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Receive_Wait" />
-    <bpmn:sequenceFlow id="Flow_1dodm0m" name="blackBox == found" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_blackBox_Located" />
+    <bpmn:sequenceFlow id="Flow_1nf4yz0" name="comms = wait and blackBox = missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Receive_Wait" />
+    <bpmn:sequenceFlow id="Flow_1dodm0m" name="blackBox = found" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_blackBox_Located" />
     <bpmn:sequenceFlow id="Flow_1797uxk" sourceRef="ROV_blackBox_Located" targetRef="ROV_Search_Off_Found" />
     <bpmn:sequenceFlow id="Flow_0xcofz8" sourceRef="ROV_Update_Info_And_Return" targetRef="ROV_Search_Off_Risk" />
-    <bpmn:sequenceFlow id="Flow_1llg1yu" name="risk == notAcceptable &#38;&#38; conditions == same" sourceRef="ROV_Conditions_Changed_Or_Same" targetRef="ROV_Update_Info_And_Return" />
+    <bpmn:sequenceFlow id="Flow_1llg1yu" name="risk = notAcceptable and conditions = same" sourceRef="ROV_Conditions_Changed_Or_Same" targetRef="ROV_Update_Info_And_Return" />
     <bpmn:sequenceFlow id="Flow_1mi24jj" sourceRef="ROV_Receive_Conditions" targetRef="ROV_Conditions_Changed_Or_Same" />
-    <bpmn:sequenceFlow id="Flow_15vyqp6" name="risk == acceptable || conditions == changed" sourceRef="ROV_Conditions_Changed_Or_Same" targetRef="ROV_Await_Updates" />
+    <bpmn:sequenceFlow id="Flow_15vyqp6" name="risk = acceptable or conditions = changed" sourceRef="ROV_Conditions_Changed_Or_Same" targetRef="ROV_Await_Updates" />
     <bpmn:sequenceFlow id="Flow_07ea5e7" sourceRef="ROV_Await_Updates" targetRef="ROV_Receive_Updates" />
-    <bpmn:sequenceFlow id="Flow_05vuap3" name="search == on &#38;&#38; risk == acceptable" sourceRef="ROV_Risk_Acceptable_Or_NA" targetRef="Activity_0c6b8n2" />
+    <bpmn:sequenceFlow id="Flow_05vuap3" name="search = on and risk = acceptable" sourceRef="ROV_Risk_Acceptable_Or_NA" targetRef="Activity_0c6b8n2" />
     <bpmn:sequenceFlow id="Flow_1ltwuf3" sourceRef="ROV_Receive_Updates" targetRef="ROV_Update_Info" />
     <bpmn:sequenceFlow id="Flow_0cvwhuj" sourceRef="ROV_Update_Info" targetRef="ROV_Risk_Acceptable_Or_NA" />
     <bpmn:sequenceFlow id="Flow_1fvhber" sourceRef="ROV_Send_Updates_And_Info" targetRef="ROV_Receive_Updates" />
@@ -481,7 +429,7 @@ fi</bpmn:documentation>
       <bpmn:incoming>Flow_1yre9aq</bpmn:incoming>
       <bpmn:outgoing>Flow_1k21835</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:sequenceFlow id="Flow_1o2s7oe" name="comms == waiting &#38;&#38; blackBox == missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Active_Search" />
+    <bpmn:sequenceFlow id="Flow_1o2s7oe" name="comms = waiting and blackBox = missing" sourceRef="ROV_Comms_And_blackBox" targetRef="ROV_Active_Search" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_09uj9w9">
@@ -638,7 +586,7 @@ fi</bpmn:documentation>
         <di:waypoint x="830" y="455" />
         <di:waypoint x="830" y="522" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="835" y="483" width="90" height="14" />
+          <dc:Bounds x="839" y="483" width="83" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1tznmwy_di" bpmnElement="Flow_1tznmwy">
@@ -682,7 +630,7 @@ fi</bpmn:documentation>
         <di:waypoint x="1010" y="800" />
         <di:waypoint x="918" y="800" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="949" y="722" width="62" height="27" />
+          <dc:Bounds x="953" y="722" width="55" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1ybrkic_di" bpmnElement="Flow_1ybrkic">
@@ -694,7 +642,7 @@ fi</bpmn:documentation>
         <di:waypoint x="590" y="130" />
         <di:waypoint x="590" y="220" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="736" y="136" width="67" height="27" />
+          <dc:Bounds x="740" y="136" width="60" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1rjccce_di" bpmnElement="Flow_1rjccce">
@@ -705,21 +653,21 @@ fi</bpmn:documentation>
         <di:waypoint x="975" y="130" />
         <di:waypoint x="1072" y="130" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="990" y="136" width="67" height="27" />
+          <dc:Bounds x="980" y="136" width="89" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_12106bx_di" bpmnElement="Flow_12106bx">
         <di:waypoint x="650" y="645" />
         <di:waypoint x="650" y="580" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="576" y="593" width="67" height="53" />
+          <dc:Bounds x="580" y="593" width="64" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1twjnj7_di" bpmnElement="Flow_1twjnj7">
         <di:waypoint x="675" y="670" />
         <di:waypoint x="780" y="670" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="678" y="630" width="84" height="40" />
+          <dc:Bounds x="676" y="630" width="89" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0v7q20v_di" bpmnElement="Flow_0v7q20v">
@@ -730,7 +678,7 @@ fi</bpmn:documentation>
         <di:waypoint x="1035" y="670" />
         <di:waypoint x="1092" y="670" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1033" y="636" width="62" height="27" />
+          <dc:Bounds x="1022" y="636" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1glliuj_di" bpmnElement="Flow_1glliuj">
@@ -882,7 +830,7 @@ fi</bpmn:documentation>
         <di:waypoint x="510" y="1495" />
         <di:waypoint x="510" y="1550" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="408" y="1496" width="83" height="40" />
+          <dc:Bounds x="410" y="1496" width="80" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0bxyuzw_di" bpmnElement="Flow_0bxyuzw">
@@ -909,21 +857,21 @@ fi</bpmn:documentation>
         <di:waypoint x="660" y="1000" />
         <di:waypoint x="620" y="1000" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="669" y="987" width="62" height="53" />
+          <dc:Bounds x="657" y="987" width="88" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_18avrt1_di" bpmnElement="Flow_18avrt1">
         <di:waypoint x="660" y="1135" />
         <di:waypoint x="660" y="1182" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="570" y="1143" width="79" height="40" />
+          <dc:Bounds x="566" y="1143" width="89" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1rv897x_di" bpmnElement="Flow_1rv897x">
         <di:waypoint x="685" y="1110" />
         <di:waypoint x="800" y="1110" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="729" y="1076" width="62" height="27" />
+          <dc:Bounds x="718" y="1076" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_04wh7yo_di" bpmnElement="Flow_04wh7yo">
@@ -938,7 +886,7 @@ fi</bpmn:documentation>
         <di:waypoint x="885" y="1590" />
         <di:waypoint x="950" y="1590" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="865" y="1596" width="89" height="53" />
+          <dc:Bounds x="870" y="1596" width="81" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_12btwul_di" bpmnElement="Flow_12btwul">
@@ -949,7 +897,7 @@ fi</bpmn:documentation>
         <di:waypoint x="860" y="1565" />
         <di:waypoint x="860" y="1500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="765" y="1510" width="90" height="40" />
+          <dc:Bounds x="770" y="1510" width="83" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0opunqa_di" bpmnElement="Flow_0opunqa">
@@ -961,7 +909,7 @@ fi</bpmn:documentation>
         <di:waypoint x="510" y="1445" />
         <di:waypoint x="510" y="1310" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="415" y="1358" width="90" height="27" />
+          <dc:Bounds x="419" y="1358" width="83" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_11w7314_di" bpmnElement="Flow_11w7314">
@@ -990,7 +938,7 @@ fi</bpmn:documentation>
         <di:waypoint x="630" y="1090" />
         <di:waypoint x="560" y="1090" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="562" y="1062" width="89" height="40" />
+          <dc:Bounds x="565" y="1062" width="83" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="BPMNShape_07g9zlp" bpmnElement="Participant_1qbu7ex" isHorizontal="true">
@@ -1122,7 +1070,7 @@ fi</bpmn:documentation>
         <di:waypoint x="450" y="2315" />
         <di:waypoint x="450" y="2370" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="348" y="2316" width="83" height="40" />
+          <dc:Bounds x="350" y="2316" width="80" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_0wjh9k4" bpmnElement="Flow_1h2ei0f">
@@ -1134,7 +1082,7 @@ fi</bpmn:documentation>
         <di:waypoint x="600" y="1800" />
         <di:waypoint x="560" y="1800" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="609" y="1807" width="62" height="53" />
+          <dc:Bounds x="597" y="1807" width="88" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_1ygqd2q" bpmnElement="Flow_0a7wrzz">
@@ -1152,14 +1100,14 @@ fi</bpmn:documentation>
         <di:waypoint x="600" y="1955" />
         <di:waypoint x="600" y="2002" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="510" y="1963" width="79" height="40" />
+          <dc:Bounds x="506" y="1963" width="89" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_1le2lzc" bpmnElement="Flow_1dodm0m">
         <di:waypoint x="625" y="1930" />
         <di:waypoint x="740" y="1930" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="669" y="1896" width="62" height="27" />
+          <dc:Bounds x="658" y="1896" width="85" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_1ywfzqv" bpmnElement="Flow_1797uxk">
@@ -1174,7 +1122,7 @@ fi</bpmn:documentation>
         <di:waypoint x="825" y="2410" />
         <di:waypoint x="890" y="2410" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="805" y="2416" width="89" height="53" />
+          <dc:Bounds x="810" y="2416" width="81" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_09p73je" bpmnElement="Flow_1mi24jj">
@@ -1185,7 +1133,7 @@ fi</bpmn:documentation>
         <di:waypoint x="800" y="2385" />
         <di:waypoint x="800" y="2320" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="705" y="2330" width="90" height="40" />
+          <dc:Bounds x="709" y="2330" width="83" height="53" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_1hn24el" bpmnElement="Flow_07ea5e7">
@@ -1197,7 +1145,7 @@ fi</bpmn:documentation>
         <di:waypoint x="450" y="2265" />
         <di:waypoint x="450" y="2130" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="355" y="2178" width="90" height="27" />
+          <dc:Bounds x="359" y="2178" width="83" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_0bamcfc" bpmnElement="Flow_1ltwuf3">
@@ -1230,7 +1178,7 @@ fi</bpmn:documentation>
         <di:waypoint x="570" y="1910" />
         <di:waypoint x="500" y="1910" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="495" y="1870" width="89" height="40" />
+          <dc:Bounds x="498" y="1870" width="83" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1nnf1e9_di" bpmnElement="Flow_1nnf1e9">
