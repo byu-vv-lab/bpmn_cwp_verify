@@ -61,7 +61,7 @@ class TestCwpMermaidParserBuilderListenerEdges:
 
         mock_ctx = mocker.Mock()
         mock_ctx.ID.side_effect = lambda i: [mock_source_node, mock_target_node][i]
-        mock_ctx.expr.return_value = None
+        mock_ctx.EXPR_CLAUSE.return_value = None
 
         mock_builder = mocker.Mock()
         mock_builder.gen_edge_name.return_value = "A"
@@ -104,9 +104,9 @@ class TestCwpMermaidParserBuilderListenerEdges:
         mock_ctx = mocker.Mock()
         mock_ctx.ID.side_effect = lambda i: [mock_source_node, mock_target_node][i]
 
-        mock_expr_ctx = mocker.Mock()
-        mock_expr_ctx.getText.return_value = "  x == 1  "
-        mock_ctx.expr.return_value = mock_expr_ctx
+        mock_expr_clause_node = mocker.Mock()
+        mock_expr_clause_node.getText.return_value = ":  x == 1  "
+        mock_ctx.EXPR_CLAUSE.return_value = mock_expr_clause_node
 
         mock_builder = mocker.Mock()
         mock_builder.gen_edge_name.return_value = "A"
@@ -152,9 +152,9 @@ class TestCwpMermaidParserBuilderListenerEdges:
         mock_ctx = mocker.Mock()
         mock_ctx.ID.side_effect = lambda i: [mock_source_node, mock_target_node][i]
 
-        mock_expr_ctx = mocker.Mock()
-        mock_expr_ctx.getText.return_value = "x == 1"
-        mock_ctx.expr.return_value = mock_expr_ctx
+        mock_expr_clause_node = mocker.Mock()
+        mock_expr_clause_node.getText.return_value = ": x == 1"
+        mock_ctx.EXPR_CLAUSE.return_value = mock_expr_clause_node
 
         mock_builder = mocker.Mock()
         mock_builder.gen_edge_name.return_value = "A"
