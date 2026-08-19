@@ -79,6 +79,30 @@ RUN pip install --no-cache-dir -e ".[dev]"
 # Default command (can be overridden)
 CMD ["/bin/bash"]
 
+# Install linux system dependencies for chromium to allow mermaid cli to turn mermaid files into svgs
+RUN dnf install -y \
+    alsa-lib \
+    atk \
+    at-spi2-atk \
+    cups-libs \
+    gtk3 \
+    libXcomposite \
+    libXdamage \
+    libXfixes \
+    libXrandr \
+    libgbm \
+    libdrm \
+    libxkbcommon \
+    pango \
+    cairo \
+    nss \
+    nspr \
+    && dnf clean all
+
+WORKDIR /app
+COPY package*.json watcher.js puppeteer-config.json ./
+RUN npm ci
+
 # ============================================================================
 # Lambda stage: For AWS Lambda deployment
 # ============================================================================
@@ -110,32 +134,3 @@ RUN mkdir -p /out && \
 # Minimal final stage just to hold the artifact
 FROM scratch AS artifact
 COPY --from=spin-layer /out/spin-layer.zip /spin-layer.zip
-
-
-# ============================================================================
-# Chromium stage: Installs chromium dependencies for mmd -> svg conversion
-# ============================================================================
-FROM dev AS chromium
-
-RUN dnf install -y \
-    alsa-lib \
-    atk \
-    at-spi2-atk \
-    cups-libs \
-    gtk3 \
-    libXcomposite \
-    libXdamage \
-    libXfixes \
-    libXrandr \
-    libgbm \
-    libdrm \
-    libxkbcommon \
-    pango \
-    cairo \
-    nss \
-    nspr \
-    && dnf clean all
-
-WORKDIR /app
-COPY package*.json watcher.js puppeteer-config.json ./
-RUN npm ci
