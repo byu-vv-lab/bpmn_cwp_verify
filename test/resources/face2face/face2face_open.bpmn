@@ -21,8 +21,8 @@
       <bpmn2:documentation id="documentation_lyxzCg"/>
       <nullsrc_provenance id="src_provenance_YDilqg"/>
       <nulldest_provenance id="dest_provenance_xraJyQ"/>
-      <nullpromela_code id="promela_code_dwow4w"><![CDATA[backpackOwner = sellerName
-paymentOwner = buyerName]]></nullpromela_code>
+      <nullpromela_code id="promela_code_dwow4w"><![CDATA[((backpackOwner, [], sellerName),
+(paymentOwner, [], buyerName))]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_Wu6RJA</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_7CyvhA</bpmn2:outgoing>
     </bpmn2:task>
@@ -43,10 +43,7 @@ paymentOwner = buyerName]]></nullpromela_code>
       <bpmn2:documentation id="documentation_01V8uw"/>
       <nullsrc_provenance id="src_provenance_T8Cv4w"/>
       <nulldest_provenance id="dest_provenance_c3smxQ"/>
-      <nullpromela_code id="promela_code_mU61xg"><![CDATA[if
-:: true -> paymentOffered = paymentAmount
-:: true -> paymentOffered = belowPaymentAmount
-fi]]></nullpromela_code>
+      <nullpromela_code id="promela_code_mU61xg"><![CDATA[(paymentOffered, [], choose [paymentAmount, belowPaymentAmount])]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_OwSR9w</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_fx0bRQ</bpmn2:outgoing>
     </bpmn2:task>
@@ -66,10 +63,7 @@ fi]]></nullpromela_code>
       <bpmn2:documentation id="documentation_0BOjqw"/>
       <nullsrc_provenance id="src_provenance_fQZpSg"/>
       <nulldest_provenance id="dest_provenance_IlIUlw"/>
-      <nullpromela_code id="promela_code_zSNMpg"><![CDATA[if
-:: true -> terms = agreed
-:: true -> terms = failed
-fi]]></nullpromela_code>
+      <nullpromela_code id="promela_code_zSNMpg"><![CDATA[(terms, [], choose [agreed, failed])]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_95YZag</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_7bZn0A</bpmn2:outgoing>
     </bpmn2:task>
@@ -97,32 +91,24 @@ fi]]></nullpromela_code>
       <bpmn2:documentation id="documentation_ycZ0UQ"/>
       <nullsrc_provenance id="src_provenance_u3vuow"/>
       <nulldest_provenance id="dest_provenance_kE9XUQ"/>
-      <nullpromela_code id="promela_code_0Ic61Q"><![CDATA[if
-:: true -> terms = agreed
-:: true -> terms = failed
-:: true -> terms = noRetry
-fi]]></nullpromela_code>
+      <nullpromela_code id="promela_code_0Ic61Q"><![CDATA[(terms, [], choose [agreed, failed, noRetry])]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_nFmIJg</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_Zn6XFQ</bpmn2:outgoing>
     </bpmn2:task>
-    <bpmn2:sequenceFlow id="sequenceFlow_nFmIJg" name="terms == failed" sourceRef="gateway_0Z6ttA" targetRef="task_o0yUYw">
+    <bpmn2:sequenceFlow id="sequenceFlow_nFmIJg" name="terms = failed" sourceRef="gateway_0Z6ttA" targetRef="task_o0yUYw">
       <bpmn2:documentation id="documentation_30Vtgg"/>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="sequenceFlow_Zn6XFQ" sourceRef="task_o0yUYw" targetRef="gateway_0Z6ttA">
       <bpmn2:documentation id="documentation_ZjllEw"/>
     </bpmn2:sequenceFlow>
-    <bpmn2:sequenceFlow id="sequenceFlow_w38KHQ" name="paymentOffered &lt; paymentAmount &amp;&amp; terms == failed" sourceRef="gateway_0Z6ttA" targetRef="gateway_bfgTUA">
+    <bpmn2:sequenceFlow id="sequenceFlow_w38KHQ" name="paymentOffered &lt; paymentAmount and terms = failed" sourceRef="gateway_0Z6ttA" targetRef="gateway_bfgTUA">
       <bpmn2:documentation id="documentation_z7tcBg"/>
     </bpmn2:sequenceFlow>
     <bpmn2:task id="task_bSPHoQ" name="4-Buyer and Seller repeat price negotiation">
       <bpmn2:documentation id="documentation_01IokA"/>
       <nullsrc_provenance id="src_provenance_65Gm7w"/>
       <nulldest_provenance id="dest_provenance_G158HA"/>
-      <nullpromela_code id="promela_code_CSJyqQ"><![CDATA[if
-:: true -> paymentOffered = paymentAmount
-:: true -> paymentOffered = belowPaymentAmount
-:: true -> paymentOffered = noRetryPayment
-fi]]></nullpromela_code>
+      <nullpromela_code id="promela_code_CSJyqQ"><![CDATA[(paymentOffered, [], choose [paymentAmount, belowPaymentAmount, noRetryPayment])]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_feVS1g</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_qkZCjA</bpmn2:outgoing>
     </bpmn2:task>
@@ -136,7 +122,7 @@ fi]]></nullpromela_code>
       <bpmn2:documentation id="documentation_hjlAEg"/>
       <bpmn2:incoming>sequenceFlow_DExong</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:sequenceFlow id="sequenceFlow_DExong" name="paymentOffered == noRetryPayment || terms == noRetry" sourceRef="gateway_0Z6ttA" targetRef="event_80zfsg">
+    <bpmn2:sequenceFlow id="sequenceFlow_DExong" name="paymentOffered = noRetryPayment or terms = noRetry" sourceRef="gateway_0Z6ttA" targetRef="event_80zfsg">
       <bpmn2:documentation id="documentation_74giIA"/>
     </bpmn2:sequenceFlow>
     <bpmn2:task id="task_8aDqZA" name="6-Buyer and Seller shake hands">
@@ -147,7 +133,7 @@ fi]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_qCK95A</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_F6MR6w</bpmn2:outgoing>
     </bpmn2:task>
-    <bpmn2:sequenceFlow id="sequenceFlow_qCK95A" name="paymentOffered == paymentAmount &amp;&amp; terms == agreed" sourceRef="gateway_0Z6ttA" targetRef="task_8aDqZA">
+    <bpmn2:sequenceFlow id="sequenceFlow_qCK95A" name="paymentOffered = paymentAmount and terms = agreed" sourceRef="gateway_0Z6ttA" targetRef="task_8aDqZA">
       <bpmn2:documentation id="documentation_yUAWjw"/>
     </bpmn2:sequenceFlow>
     <bpmn2:parallelGateway gatewayDirection="Diverging" id="gateway_ynk0sA" name="both1">
@@ -163,7 +149,7 @@ fi]]></nullpromela_code>
       <bpmn2:documentation id="documentation_0EKifg"/>
       <nullsrc_provenance id="src_provenance_QLvUKg"/>
       <nulldest_provenance id="dest_provenance_0Q3hHw"/>
-      <nullpromela_code id="promela_code_0cmIiw"><![CDATA[paymentOwner = sellerName]]></nullpromela_code>
+      <nullpromela_code id="promela_code_0cmIiw"><![CDATA[(paymentOwner, [], sellerName)]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_L4twcQ</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_ykmRCQ</bpmn2:outgoing>
     </bpmn2:task>
@@ -174,7 +160,7 @@ fi]]></nullpromela_code>
       <bpmn2:documentation id="documentation_z91ReQ"/>
       <nullsrc_provenance id="src_provenance_4CUo4A"/>
       <nulldest_provenance id="dest_provenance_izjUbw"/>
-      <nullpromela_code id="promela_code_SnTpUQ"><![CDATA[backpackOwner = buyerName]]></nullpromela_code>
+      <nullpromela_code id="promela_code_SnTpUQ"><![CDATA[(backpackOwner, [], buyerName)]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_N2gTbw</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_ybe5fQ</bpmn2:outgoing>
     </bpmn2:task>

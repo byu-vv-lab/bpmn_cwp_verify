@@ -38,9 +38,9 @@ SIMPLE_STATE = SIMPLE / "feel" / "state.txt"
 SIMPLE_CWP = SIMPLE / "feel" / "test_cwp.xml"
 SIMPLE_BPMN = SIMPLE / "feel" / "simple_open.bpmn"
 
-FACE2FACE_FEEL_STATE = FACE2FACE / "feel" / "state.txt"
-FACE2FACE_FEEL_CWP = FACE2FACE / "feel" / "cwp.xml"
-FACE2FACE_FEEL_BPMN = FACE2FACE / "feel" / "workflow.bpmn"
+FACE2FACE_FEEL_STATE = FACE2FACE / "state.txt"
+FACE2FACE_FEEL_CWP = FACE2FACE / "cwp.xml"
+FACE2FACE_FEEL_BPMN = FACE2FACE / "workflow_face2face.bpmn"
 
 
 def _build_c(
