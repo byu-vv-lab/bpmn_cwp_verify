@@ -6,7 +6,7 @@ const WORKSPACE = "/workspaces/bpmn_cwp_verify";
 const watcher = chokidar.watch(`${WORKSPACE}/test/resources`, {
     persistent: true,
     usePolling: true,
-    interval: 100,
+    interval: 1000,
 });
 
 watcher.on("ready", () => {
@@ -17,8 +17,23 @@ watcher.on("all", (event, file) => {
     console.log(event, file);
 });
 
-watcher.on("change", render);
-watcher.on("add", render);
+watcher.on("change", debouncedRender);
+watcher.on("add", debouncedRender);
+
+const debounceTimers = new Map();
+
+function debouncedRender(file) {
+    if (debounceTimers.has(file)) {
+        clearTimeout(debounceTimers.get(file));
+    }
+
+    const timer = setTimeout(() => {
+        debounceTimers.delete(file);
+        render(file);
+    }, 1000);
+
+    debounceTimers.set(file, timer);
+}
 
 function render(file) {
     if (!file.endsWith(".mmd")) {
