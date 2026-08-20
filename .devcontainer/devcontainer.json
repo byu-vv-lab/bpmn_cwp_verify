@@ -36,7 +36,8 @@
                 "mike-lischke.vscode-antlr4",
                 "ms-python.mypy-type-checker",
                 "charliermarsh.ruff",
-                "peacekeeper228.spin-promela"
+                "peacekeeper228.spin-promela",
+                "mermaidchart.vscode-mermaid-chart"
             ]
         }
     }
