@@ -23,6 +23,10 @@ watcher.on("add", debouncedRender);
 const debounceTimers = new Map();
 
 function debouncedRender(file) {
+    if (!file.endsWith(".mmd")) {
+        return;
+    }
+
     if (debounceTimers.has(file)) {
         clearTimeout(debounceTimers.get(file));
     }
@@ -36,10 +40,6 @@ function debouncedRender(file) {
 }
 
 function render(file) {
-    if (!file.endsWith(".mmd")) {
-        return;
-    }
-
     const output = file.replace(/\.mmd$/, ".svg");
 
     console.log(`Rendering ${file} → ${output}`);
