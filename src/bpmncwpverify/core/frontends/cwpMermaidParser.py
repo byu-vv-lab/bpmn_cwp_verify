@@ -20,6 +20,33 @@ class CwpMermaidParser:
             self.builder = builder
             self.state = state
 
+        def exitStartTransition(self, ctx: CwpParser.StartTransitionContext) -> None:
+            target_node = cast(Any, ctx).ID()
+
+            assert target_node is not None
+
+            target_id: str = target_node.getText()
+
+            edge = CwpEdge.from_mmd(
+                target_id,
+                self.builder.gen_edge_name(),
+            )
+
+            expr_clause_node = cast(Any, ctx).EXPR_CLAUSE()
+            if expr_clause_node is not None:
+                raw_expr: str = expr_clause_node.getText()
+                raw_expr_text: str = self._extract_expr_text(raw_expr)
+                edge.expression = CwpEdge.cleanup_expression(raw_expr_text)
+                edge.expression = CwpEdge.build_ast(edge.expression)
+
+                result = edge.expression.type_check(self.state)
+                if not_(is_successful)(result):
+                    raise Exception(result.failure())
+
+            self.builder = self.builder.with_start_edge(
+                edge,
+            )
+
         def exitStateDecl(self, ctx: CwpParser.StateDeclContext) -> None:
             string_node = cast(Any, ctx).STRING()
             id_node = cast(Any, ctx).ID()

@@ -26,6 +26,15 @@ class CwpListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by CwpParser#statesAndEdges.
+    def enterStatesAndEdges(self, ctx:CwpParser.StatesAndEdgesContext):
+        pass
+
+    # Exit a parse tree produced by CwpParser#statesAndEdges.
+    def exitStatesAndEdges(self, ctx:CwpParser.StatesAndEdgesContext):
+        pass
+
+
     # Enter a parse tree produced by CwpParser#stateDecl.
     def enterStateDecl(self, ctx:CwpParser.StateDeclContext):
         pass
@@ -41,6 +50,15 @@ class CwpListener(ParseTreeListener):
 
     # Exit a parse tree produced by CwpParser#edgeTransition.
     def exitEdgeTransition(self, ctx:CwpParser.EdgeTransitionContext):
+        pass
+
+
+    # Enter a parse tree produced by CwpParser#startTransition.
+    def enterStartTransition(self, ctx:CwpParser.StartTransitionContext):
+        pass
+
+    # Exit a parse tree produced by CwpParser#startTransition.
+    def exitStartTransition(self, ctx:CwpParser.StartTransitionContext):
         pass
 
 

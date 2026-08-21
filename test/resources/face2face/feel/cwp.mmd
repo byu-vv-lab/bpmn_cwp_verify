@@ -6,6 +6,8 @@ stateDiagram-v2
     state "Purchase Failed" as PurchaseFailed
     state "Ownerships Switched" as OwnershipsSwitched
 
+    [*] --> StartState: paymentOwner = buyerName
+
     StartState --> InitPurchasePending: paymentOwner = buyerName and backpackOwner = sellerName
 
     InitPurchasePending --> Negotiations: terms != pending or paymentOffered != pendingPayment
