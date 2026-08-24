@@ -106,7 +106,7 @@ def test_givin_bad_files_when_verify_then_faliure(capsys):
         "verify",
         "./test/resources/simple_example/state.txt",
         "./test/resources/simple_example/test_cwp.xml",
-        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/bad_test_bpmn.bpmn",
     ]
     sys.argv = test_args
 
@@ -124,9 +124,9 @@ def test_givin_good_files_when_verify_then_success(capsys):
     # given
     test_args = [
         "verify",
-        "./test/resources/face2face/feel/state.txt",
-        "./test/resources/face2face/feel/cwp.xml",
-        "./test/resources/face2face/feel/workflow.bpmn",
+        "./test/resources/face2face/state.txt",
+        "./test/resources/face2face/cwp.xml",
+        "./test/resources/face2face/workflow_face2face.bpmn",
     ]
     sys.argv = test_args
 
@@ -144,7 +144,7 @@ def test_givin_good_files_when_verify_then_success(capsys):
 def test_given_bad_input_when_webverify_then_faliure():
     # given
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
+    with open("./test/resources/simple_example/bad_test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
@@ -171,17 +171,17 @@ def test_given_bad_input_when_webverify_then_faliure():
 def test_given_good_input_when_webverify_then_success():
     # given
     bpmn = ""
-    with open("./test/resources/face2face/feel/workflow.bpmn") as bpmn_file:
+    with open("./test/resources/face2face/workflow_face2face.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 
     cwp = ""
-    with open("./test/resources/face2face/feel/cwp.xml") as cwp_file:
+    with open("./test/resources/face2face/cwp.xml") as cwp_file:
         for line in cwp_file:
             cwp += line
 
     state = ""
-    with open("./test/resources/face2face/feel/state.txt") as state_file:
+    with open("./test/resources/face2face/state.txt") as state_file:
         for line in state_file:
             state += line
 

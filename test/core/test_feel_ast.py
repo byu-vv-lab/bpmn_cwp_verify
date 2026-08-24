@@ -375,6 +375,61 @@ def test_list_of_triples() -> None:
     assert feel.ast.triples[1].target.name == "z"
 
 
+def test_if_inside_if() -> None:
+    feel = Feel.parse(
+        "(ptStatus, [ptStatus, alertStatus], if (alertStatus != confirmed) then (if (ptStatus = stable or ptStatus = stable_C_addSvcs) then choose [recovered, deceased] else ptStatus) else ptStatus)"
+    )
+
+    assert isinstance(feel.ast, TripleNode)
+    assert isinstance(feel.ast.target, QualifiedNameNode)
+    assert feel.ast.target.name == "ptStatus"
+
+    assert isinstance(feel.ast.inputs, ListNode)
+
+    assert isinstance(feel.ast.value, IfNode)
+
+    outer_if = feel.ast.value
+    assert isinstance(outer_if.condition, NotEqualNode)
+    assert isinstance(outer_if.condition.left, QualifiedNameNode)
+    assert isinstance(outer_if.condition.right, QualifiedNameNode)
+    assert outer_if.condition.left.name == "alertStatus"
+    assert outer_if.condition.right.name == "confirmed"
+
+    assert isinstance(outer_if.thendo, IfNode)
+    inner_if = outer_if.thendo
+
+    assert isinstance(inner_if.condition, OrNode)
+
+    assert isinstance(inner_if.condition.left, EqualNode)
+    assert isinstance(inner_if.condition.left.left, QualifiedNameNode)
+    assert isinstance(inner_if.condition.left.right, QualifiedNameNode)
+    assert inner_if.condition.left.left.name == "ptStatus"
+    assert inner_if.condition.left.right.name == "stable"
+
+    assert isinstance(inner_if.condition.right, EqualNode)
+    assert isinstance(inner_if.condition.right.left, QualifiedNameNode)
+    assert isinstance(inner_if.condition.right.right, QualifiedNameNode)
+    assert inner_if.condition.right.left.name == "ptStatus"
+    assert inner_if.condition.right.right.name == "stable_C_addSvcs"
+
+    assert isinstance(inner_if.thendo, ChooseNode)
+    assert isinstance(inner_if.thendo.choices, ListNode)
+
+    assert isinstance(inner_if.elsedo, QualifiedNameNode)
+    assert inner_if.elsedo.name == "ptStatus"
+
+    assert isinstance(outer_if.elsedo, QualifiedNameNode)
+    assert outer_if.elsedo.name == "ptStatus"
+
+
+def test_triple_target_in_choose() -> None:
+    feel = Feel.parse("(x, [], choose [1, 2, x])")
+
+    assert isinstance(feel.ast, TripleNode)
+    assert isinstance(feel.ast.value, ChooseNode)
+    assert isinstance(feel.ast.value.choices.values[2], QualifiedNameNode)
+
+
 def test_choose_with_expr() -> None:
     feel = Feel.parse("choose [1, if (true) then 2 else 3]")
 

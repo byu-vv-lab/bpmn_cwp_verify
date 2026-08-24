@@ -4,7 +4,7 @@ enum PatientStatus { PatientStatusInit recovered stable discharge deceased notSt
 enum Care { careInit H_monitoring H_transport H_addSvcs }
 enum Need { needInit N_immedAssmt N_moreAddSvcs }
 
-enum Status { statusInit issued confirmed cancelled null }
+enum Status { statusInit issued confirmed cancelled none }
 
 enum Box { boxInit ready notReady installed boxRecovered }
 enum Location { locationInit ptRoom }

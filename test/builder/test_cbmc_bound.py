@@ -232,8 +232,8 @@ class TestComputeBoundSimpleExample:
     @pytest.fixture(scope="class")
     def bpmn(self):
         return _load_bpmn(
-            RESOURCES / "simple_example" / "feel" / "state.txt",
-            RESOURCES / "simple_example" / "feel" / "simple_open.bpmn",
+            RESOURCES / "simple_example" / "state.txt",
+            RESOURCES / "simple_example" / "simple_open.bpmn",
         )
 
     def test_bound_default_retries(self, bpmn):
@@ -253,8 +253,8 @@ class TestComputeBoundFace2Face:
     @pytest.fixture(scope="class")
     def bpmn(self):
         return _load_bpmn(
-            RESOURCES / "face2face" / "feel" / "state.txt",
-            RESOURCES / "face2face" / "feel" / "face2face_open.bpmn",
+            RESOURCES / "face2face" / "state.txt",
+            RESOURCES / "face2face" / "face2face_open.bpmn",
         )
 
     def test_bound_default_retries(self, bpmn):
