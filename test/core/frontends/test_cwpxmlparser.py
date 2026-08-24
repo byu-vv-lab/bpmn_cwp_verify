@@ -9,6 +9,7 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoStateError,
     CwpFileStructureError,
     CwpUnsupportedElementError,
+    ErrorException,
 )
 from bpmncwpverify.core.frontends.cwpXmlParser import CwpXmlParser
 
@@ -286,7 +287,7 @@ class TestCwpXmlParser:
             return_value=mock_parser_object,
         )
 
-        mock_parser_object._get_mx_cells.side_effect = AssertionError("TEST")
+        mock_parser_object._get_mx_cells.side_effect = ErrorException("TEST")
 
         mock_root = mocker.Mock()
         mock_state = mocker.Mock()

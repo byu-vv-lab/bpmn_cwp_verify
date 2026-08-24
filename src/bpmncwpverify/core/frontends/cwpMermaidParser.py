@@ -10,7 +10,7 @@ from bpmncwpverify.antlr.CwpListener import CwpListener
 from bpmncwpverify.antlr.CwpParser import CwpParser
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
-from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.error import Error, ErrorException
 from bpmncwpverify.core.state import State
 
 
@@ -47,15 +47,16 @@ class CwpMermaidParser:
                 self.builder.gen_edge_name(),
             )
 
-            expr_ctx = cast(Any, ctx).expr()
-            if expr_ctx is not None:
-                raw_expr: str = expr_ctx.getText().strip()
-                expression = CwpEdge.cleanup_expression(raw_expr)
-                edge.expression = CwpEdge.build_ast(expression)
+            expr_clause_node = cast(Any, ctx).EXPR_CLAUSE()
+            if expr_clause_node is not None:
+                raw_expr: str = expr_clause_node.getText()
+                raw_expr_text: str = self._extract_expr_text(raw_expr)
+                expr: str = CwpEdge.cleanup_expression(raw_expr_text)
+                edge.expression = CwpEdge.build_ast(expr)
 
                 result = edge.expression.type_check(self.state)
                 if not_(is_successful)(result):
-                    raise Exception(result.failure())
+                    raise ErrorException(result.failure())
 
             self.builder = self.builder.with_edge(
                 edge,
@@ -82,13 +83,12 @@ class CwpMermaidParser:
             tree = CwpMermaidParser._parse_tree(mmd_str)
             ParseTreeWalker().walk(listener, tree)
 
-            clauses = [f"{v.id} == {v.init.value}" for v in state.vars]
+            clauses = [f"{v.id} = {v.init.value}" for v in state.vars]
             start_edge = CwpEdge("Init_Edge", listener.builder.gen_edge_name())
-            start_edge.expression = CwpEdge.build_ast(" && ".join(clauses))
+            start_edge.expression = CwpEdge.build_ast(" and ".join(clauses))
             listener.builder = listener.builder.with_start_edge(start_edge)
-        except Exception as e:
-            assert e.args, "Error does not have enough arguments"
-            return Failure(e.args[0])
+        except ErrorException as e:
+            return Failure(e.error)
 
         result: Result[Cwp, Error] = listener.builder.build()
         return result

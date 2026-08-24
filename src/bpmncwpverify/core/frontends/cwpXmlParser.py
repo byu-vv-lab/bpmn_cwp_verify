@@ -13,6 +13,7 @@ from bpmncwpverify.core.error import (
     CwpFileStructureError,
     CwpUnsupportedElementError,
     Error,
+    ErrorException,
 )
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
@@ -22,15 +23,15 @@ from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 class CwpXmlParser:
     def _get_mx_cells(self, root: Element) -> list[Element]:
         if (diagram := root.find("diagram")) is None:
-            raise Exception(CwpFileStructureError("diagram"))
+            raise ErrorException(CwpFileStructureError("diagram"))
         if (mx_graph_model := diagram.find("mxGraphModel")) is None:
-            raise Exception(CwpFileStructureError("mxGraphModel"))
+            raise ErrorException(CwpFileStructureError("mxGraphModel"))
         if (mx_root := mx_graph_model.find("root")) is None:
-            raise Exception(CwpFileStructureError("root"))
+            raise ErrorException(CwpFileStructureError("root"))
         if not (mx_cells := mx_root.findall("mxCell")):
-            raise Exception(CwpFileStructureError("mxCell"))
+            raise ErrorException(CwpFileStructureError("mxCell"))
         if object := mx_root.findall("object"):
-            raise Exception(CwpUnsupportedElementError(len(object), "object"))
+            raise ErrorException(CwpUnsupportedElementError(len(object), "object"))
         return mx_cells
 
     def _get_all_items(self, mx_cells: list[Element]) -> list[Element]:
@@ -53,7 +54,7 @@ class CwpXmlParser:
                 builder = builder.with_state(state)
 
         if unsupported_shapes != 0:
-            raise Exception(
+            raise ErrorException(
                 CwpUnsupportedElementError(
                     unsupported_shapes, "different shapes other than rectangles"
                 )
@@ -64,7 +65,7 @@ class CwpXmlParser:
             source_ref = element.get("source")
             target_ref = element.get("target")
             if not target_ref or not source_ref:
-                raise Exception(CwpEdgeNoStateError(element))
+                raise ErrorException(CwpEdgeNoStateError(element))
             edge = CwpEdge.from_xml(element, builder.gen_edge_name())
 
             builder = builder.with_edge(edge, source_ref, target_ref)
@@ -83,7 +84,7 @@ class CwpXmlParser:
         result = edge.expression.type_check(state)
 
         if not_(is_successful)(result):
-            raise Exception(result.failure())
+            raise ErrorException(result.failure())
 
         builder = builder.with_start_edge(edge)
 
@@ -100,9 +101,9 @@ class CwpXmlParser:
                 parent = itm.get("parent")
                 expression = itm.get("value")
                 if not parent:
-                    raise Exception(CwpEdgeNoParentError(itm))
+                    raise ErrorException(CwpEdgeNoParentError(itm))
                 if not expression:
-                    raise Exception(CwpEdgeNoExpressionError(itm))
+                    raise ErrorException(CwpEdgeNoExpressionError(itm))
                 builder.check_expression(expr_lstnr, expression, parent, state)
 
     @staticmethod
@@ -120,9 +121,8 @@ class CwpXmlParser:
             parser._add_edges(builder, edges)
             parser._add_incoming_edge_to_start_state(builder, state)
             parser._check_expressions(builder, all_items, expr_lstnr, state)
-        except Exception as e:
-            assert e.args, "Error does not have enough arguments"
-            return Failure(e.args[0])
+        except ErrorException as e:
+            return Failure(e.error)
 
         result: Result[Cwp, Error] = builder.build()
         return result
