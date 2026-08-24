@@ -34,9 +34,9 @@ FACE2FACE = RESOURCES / "face2face"
 # Resource filenames (matches existing test conventions)
 # simple_open.bpmn's task behavior is FEEL syntax, so this points at the
 # feel/ sibling directory (task_MWMokA: `x = x + 1` -> `(x, [x], x + 1)`).
-SIMPLE_STATE = SIMPLE / "feel" / "state.txt"
-SIMPLE_CWP = SIMPLE / "feel" / "test_cwp.xml"
-SIMPLE_BPMN = SIMPLE / "feel" / "simple_open.bpmn"
+SIMPLE_STATE = SIMPLE / "state.txt"
+SIMPLE_CWP = SIMPLE / "test_cwp.xml"
+SIMPLE_BPMN = SIMPLE / "simple_open.bpmn"
 
 FACE2FACE_FEEL_STATE = FACE2FACE / "state.txt"
 FACE2FACE_FEEL_CWP = FACE2FACE / "cwp.xml"

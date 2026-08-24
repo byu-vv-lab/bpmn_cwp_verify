@@ -106,7 +106,7 @@ def test_givin_bad_files_when_verify_then_faliure(capsys):
         "verify",
         "./test/resources/simple_example/state.txt",
         "./test/resources/simple_example/test_cwp.xml",
-        "./test/resources/simple_example/test_bpmn.bpmn",
+        "./test/resources/simple_example/bad_test_bpmn.bpmn",
     ]
     sys.argv = test_args
 
@@ -144,7 +144,7 @@ def test_givin_good_files_when_verify_then_success(capsys):
 def test_given_bad_input_when_webverify_then_faliure():
     # given
     bpmn = ""
-    with open("./test/resources/simple_example/test_bpmn.bpmn") as bpmn_file:
+    with open("./test/resources/simple_example/bad_test_bpmn.bpmn") as bpmn_file:
         for line in bpmn_file:
             bpmn += line
 

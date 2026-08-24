@@ -11,6 +11,9 @@
   </bpmn2:extensionElements>
   <bpmn2:process definitionalCollaborationRef="collaboration_1" id="process_1" name="Default Process" processType="Public">
     <bpmn2:documentation id="documentation_s0L1jQ"/>
+    <bpmn2:extensionElements>
+      <open-bpmn:auto-align/>
+    </bpmn2:extensionElements>
   </bpmn2:process>
   <bpmn2:process definitionalCollaborationRef="collaboration_1" id="process_fSy9Qw" isExecutable="true" name="Pool-1" processType="Private">
     <bpmn2:startEvent id="event_GWx9CQ" name="Start">
@@ -18,15 +21,15 @@
       <bpmn2:outgoing>sequenceFlow_5oU7SQ</bpmn2:outgoing>
     </bpmn2:startEvent>
     <bpmn2:task id="task_MWMokA" name="Increment_x">
-      <bpmn2:documentation id="documentation_lyzI0Q"/>
+      <bpmn2:documentation id="documentation_lyzI0Q"><![CDATA[(x, [x], x + 1)]]></bpmn2:documentation>
       <nullsrc_provenance id="src_provenance_sJ9ohQ"/>
       <nulldest_provenance id="dest_provenance_vtLEPg"/>
-      <nullpromela_code id="promela_code_jGH8Bw"><![CDATA[x = x + 1]]></nullpromela_code>
+      <nullpromela_code id="promela_code_jGH8Bw"><![CDATA[(x, [x], x + 1)]]></nullpromela_code>
       <bpmn2:incoming>sequenceFlow_5oU7SQ</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_riNFgg</bpmn2:outgoing>
       <bpmn2:incoming>sequenceFlow_RqrzQg</bpmn2:incoming>
     </bpmn2:task>
-    <bpmn2:exclusiveGateway gatewayDirection="Diverging" id="gateway_K0OuHg" name="Gateway-1">
+    <bpmn2:exclusiveGateway gatewayDirection="Diverging" id="gateway_K0OuHg" name="Xor">
       <bpmn2:documentation id="documentation_9qKtMg"/>
       <bpmn2:incoming>sequenceFlow_riNFgg</bpmn2:incoming>
       <bpmn2:outgoing>sequenceFlow_RqrzQg</bpmn2:outgoing>
