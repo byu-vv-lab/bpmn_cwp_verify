@@ -109,11 +109,6 @@ class CwpMermaidParser:
         try:
             tree = CwpMermaidParser._parse_tree(mmd_str)
             ParseTreeWalker().walk(listener, tree)
-
-            clauses = [f"{v.id} == {v.init.value}" for v in state.vars]
-            start_edge = CwpEdge("Init_Edge", listener.builder.gen_edge_name())
-            start_edge.expression = " && ".join(clauses)
-            listener.builder = listener.builder.with_start_edge(start_edge)
         except Exception as e:
             assert e.args, "Error does not have enough arguments"
             return Failure(e.args[0])
