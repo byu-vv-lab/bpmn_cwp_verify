@@ -1,10 +1,31 @@
 import html
 import re
+from typing import cast
 from xml.etree.ElementTree import Element
 
 from bs4 import BeautifulSoup
+from returns.functions import not_
+from returns.pipeline import is_successful
+from returns.result import Failure, Result, Success
 
+from bpmncwpverify.core.error import (
+    CwpInvalidAssignmentError,
+    CwpInvalidAssignmentTargetError,
+    CwpInvalidLiteralError,
+    CwpInvalidStartEdgeError,
+    CwpInvalidStartExpressionError,
+    Error,
+)
 from bpmncwpverify.core.feel import Feel
+from bpmncwpverify.core.feel_tree import (
+    AndNode,
+    BoolLiteralNode,
+    EqualNode,
+    ExpressionNode,
+    ListNode,
+    NumberLiteralNode,
+    QualifiedNameNode,
+)
 
 
 class Cwp:
@@ -87,6 +108,66 @@ class CwpEdge:
         if visitor.visit_edge(self) and not self.is_leaf:
             self.dest.accept(visitor)
         visitor.end_visit_edge(self)
+
+    def _literal_text(self, node: ExpressionNode) -> Result[str, Error]:
+        if isinstance(node, NumberLiteralNode | BoolLiteralNode):
+            return Success(node.value)
+        if isinstance(node, QualifiedNameNode):
+            return Success(node.name)
+        return Failure(CwpInvalidLiteralError())
+
+    def _flatten_and_equals(
+        self, node: ExpressionNode
+    ) -> Result[list[EqualNode], Error]:
+        if isinstance(node, EqualNode):
+            return Success([node])
+        if isinstance(node, AndNode):
+            left_result = self._flatten_and_equals(node.left)
+            if not_(is_successful)(left_result):
+                return left_result
+            right_result = self._flatten_and_equals(node.right)
+            if not_(is_successful)(right_result):
+                return right_result
+            return Success(left_result.unwrap() + right_result.unwrap())
+        return Failure(CwpInvalidAssignmentError())
+
+    def parse_initial_values(self) -> Result[list[tuple[str, str]], Error]:
+        if self.source or not self.expression:
+            return Failure(CwpInvalidStartEdgeError())
+
+        if isinstance(self.expression, str):
+            return Failure(CwpInvalidStartExpressionError())
+
+        ast = self.expression.ast
+
+        if isinstance(ast, ListNode):
+            assignments_result: Result[list[EqualNode], Error] = Success([])
+            for item in ast.values:
+                item_result = self._flatten_and_equals(item)
+                if not_(is_successful)(item_result):
+                    return cast(Result[list[tuple[str, str]], Error], item_result)
+                assignments_result = Success(
+                    assignments_result.unwrap() + item_result.unwrap()
+                )
+        else:
+            assignments_result = self._flatten_and_equals(ast)
+            if not_(is_successful)(assignments_result):
+                return cast(Result[list[tuple[str, str]], Error], assignments_result)
+
+        initial_values: list[tuple[str, str]] = []
+
+        for assignment in assignments_result.unwrap():
+            if not isinstance(assignment.left, QualifiedNameNode):
+                return Failure(CwpInvalidAssignmentTargetError())
+
+            name = assignment.left.name
+            value_result = self._literal_text(assignment.right)
+            if not is_successful(value_result):
+                return cast(Result[list[tuple[str, str]], Error], value_result)
+
+            initial_values.append((name, value_result.unwrap()))
+
+        return Success(initial_values)
 
     @staticmethod
     def has_html(expr: str) -> bool:

@@ -7,7 +7,7 @@ const belowPaymentAmount: byte = 252
 const noRetryPayment: byte = 254
 const pendingPayment: byte = 255
 
-var terms:TermsType = pending
-var backpackOwner: OwnerType = sellerName
-var paymentOwner: OwnerType = buyerName
-var paymentOffered: byte = pendingPayment {paymentAmount belowPaymentAmount noRetryPayment pendingPayment}
+var terms:TermsType
+var backpackOwner: OwnerType
+var paymentOwner: OwnerType
+var paymentOffered: byte

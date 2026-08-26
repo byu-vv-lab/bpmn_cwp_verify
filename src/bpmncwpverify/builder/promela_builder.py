@@ -149,7 +149,7 @@ def _generate_state_promela(state: State) -> str:
     for var_decl in state.vars:
         if var_decl.type_ in {enum.id for enum in state.enums}:
             str_builder.append(
-                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.values[0].value}"
             )
             if "bit" not in var_decl.type_:
                 str_builder.append(
@@ -157,7 +157,7 @@ def _generate_state_promela(state: State) -> str:
                 )
         else:
             str_builder.append(
-                f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
+                f"{var_decl.type_} {var_decl.id} = {var_decl.values[0].value}"
             )
 
             if "bit" not in var_decl.type_ and "bool" not in var_decl.type_:

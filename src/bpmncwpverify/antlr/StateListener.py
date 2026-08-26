@@ -8,12 +8,12 @@ else:
 # This class defines a complete listener for a parse tree produced by StateParser.
 class StateListener(ParseTreeListener):
 
-    # Enter a parse tree produced by StateParser#state.
-    def enterState(self, ctx:StateParser.StateContext):
+    # Enter a parse tree produced by StateParser#stateFile.
+    def enterStateFile(self, ctx:StateParser.StateFileContext):
         pass
 
-    # Exit a parse tree produced by StateParser#state.
-    def exitState(self, ctx:StateParser.StateContext):
+    # Exit a parse tree produced by StateParser#stateFile.
+    def exitStateFile(self, ctx:StateParser.StateFileContext):
         pass
 
 

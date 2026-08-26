@@ -1,6 +1,6 @@
 grammar State;
 
-state
+stateFile
   : (enum_type_decl)* (const_var_decl)* (array_decl)* (var_decl)+ EOF
   ;
 
@@ -17,7 +17,7 @@ const_var_decl
   ;
 
 var_decl
-  : VAR ID COLON type EQUALS ID (LCURLY id_set RCURLY)?
+  : VAR ID COLON type (LCURLY id_set RCURLY)?
   ;
 
 array_decl

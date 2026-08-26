@@ -3,7 +3,7 @@ from typing import Any, cast
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from returns.functions import not_
 from returns.pipeline import is_successful
-from returns.result import Failure, Result
+from returns.result import Failure, Result, Success
 
 from bpmncwpverify.antlr.CwpLexer import CwpLexer
 from bpmncwpverify.antlr.CwpListener import CwpListener
@@ -39,7 +39,7 @@ class CwpMermaidParser:
                 edge.expression = CwpEdge.cleanup_expression(raw_expr_text)
                 edge.expression = CwpEdge.build_ast(edge.expression)
 
-                result = edge.expression.type_check(self.state)
+                result = edge.parse_initial_values().bind(self._apply_initial_values)  # pyright: ignore[reportUnknownMemberType]
                 if not_(is_successful)(result):
                     raise Exception(result.failure())
 
@@ -93,6 +93,15 @@ class CwpMermaidParser:
 
         def _extract_expr_text(self, raw: str) -> str:
             return raw[1:].strip()
+
+        def _apply_initial_values(
+            self, initial_values: list[tuple[str, str]]
+        ) -> Result[None, Error]:
+            for name, value in initial_values:
+                result = self.state.set_value(name, value)
+                if not is_successful(result):
+                    return Failure(result.failure())
+            return Success(None)
 
     @staticmethod
     def _parse_tree(mmd_str: str) -> CwpParser.DiagramContext:
