@@ -2,6 +2,7 @@
 import pytest
 
 from bpmncwpverify.core.bpmn import IntermediateEvent, ParallelGatewayNode, Task
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.util.stringmanager import IndentAction, StringManager
 from bpmncwpverify.visitors.bpmn_promela_visitor import (
     NL_NONE,
@@ -389,18 +390,18 @@ def test_gen_behavior_model(mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.behavior = ""
+    ctx.behavior = None
 
     builder1 = AtomicBuilder(ctx)
     behavior_output1, _ = builder1.gen_behavior_model()
     assert str(behavior_output1) == ""
 
-    ctx.behavior = "content"
+    ctx.behavior = Feel.parse("context")
     builder2 = AtomicBuilder(ctx)
     behavior_output2, _ = builder2.gen_behavior_model()
     assert (
         str(behavior_output2)
-        == "inline TEST_BehaviorModel() {\n\tcontent\n\tupdateState()\n}\n\n"
+        == "inline TEST_BehaviorModel() {\n\tcontext\n\tupdateState()\n}\n\n"
     )
 
 
@@ -410,15 +411,13 @@ def test_gen_behavior_model_with_behavior(promela_visitor, mocker):
 
     ctx = mocker.Mock(spec=Context)
     ctx.element = node1
-    ctx.behavior = (
-        "\n\n\n\nif\n\n\n\n\t\t   :: true -> test\n\n :: true -> test2\n\nfi\n\n\n"
-    )
+    ctx.behavior = Feel.parse("(var, [], boo)")
 
     builder = AtomicBuilder(ctx)
     output, _ = builder.gen_behavior_model()
     assert (
         str(output)
-        == "inline TEST_BehaviorModel() {\n\tif\n\t\t:: true -> test\n\t\t:: true -> test2\n\tfi\n\tupdateState()\n}\n\n"
+        == "inline TEST_BehaviorModel() {\n\tvar = boo\n\tupdateState()\n}\n\n"
     )
 
 
@@ -467,11 +466,11 @@ def test_build_expr_conditional(promela_visitor, mocker):
     flow1, flow2 = mocker.Mock(), mocker.Mock()
     flow1.source_node = node1
     flow1.target_node = node2
-    flow1.expression = "EXPR1==test_val"
+    flow1.expression = Feel.parse("EXPR1==test_val")
 
     flow2.source_node = node1
     flow2.target_node = node3
-    flow2.expression = "EXPR2"
+    flow2.expression = Feel.parse("EXPR2")
 
     node1.out_flows = [flow1, flow2]
     node1.out_msgs = []
@@ -491,7 +490,9 @@ def test_build_expr_conditional(promela_visitor, mocker):
     mock_write_str.assert_has_calls(
         [
             mocker.call("if", NL_SINGLE),
-            mocker.call(":: EXPR1==test_val -> putToken(TEST2_FROM_TEST1)", NL_SINGLE),
+            mocker.call(
+                ":: (EXPR1 == test_val) -> putToken(TEST2_FROM_TEST1)", NL_SINGLE
+            ),
             mocker.call(":: EXPR2 -> putToken(TEST3_FROM_TEST1)", NL_SINGLE),
             mocker.call(":: else ->", NL_SINGLE, IndentAction.INC),
             mocker.call('DBG(printf("Assert: No viable path to take"))', NL_SINGLE),

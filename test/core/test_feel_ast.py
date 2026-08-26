@@ -438,6 +438,40 @@ def test_choose_with_expr() -> None:
     assert isinstance(feel.ast.choices.values[1], IfNode)
 
 
+def test_and_equal_chain() -> None:
+    feel = Feel.parse(
+        "terms = pending and backpackOwner = sellerName and paymentOwner = buyerName and paymentOffered = pendingPayment"
+    )
+
+    assert isinstance(feel.ast, AndNode)
+    assert isinstance(feel.ast.left, AndNode)
+    assert isinstance(feel.ast.right, EqualNode)
+
+    assert isinstance(feel.ast.left.left, AndNode)
+    assert isinstance(feel.ast.left.right, EqualNode)
+
+    assert isinstance(feel.ast.left.left.left, EqualNode)
+    assert isinstance(feel.ast.left.left.right, EqualNode)
+
+    assert isinstance(feel.ast.left.left.left.left, QualifiedNameNode)
+    assert isinstance(feel.ast.left.left.left.right, QualifiedNameNode)
+    assert isinstance(feel.ast.left.left.right.left, QualifiedNameNode)
+    assert isinstance(feel.ast.left.left.right.right, QualifiedNameNode)
+    assert isinstance(feel.ast.left.right.left, QualifiedNameNode)
+    assert isinstance(feel.ast.left.right.right, QualifiedNameNode)
+    assert isinstance(feel.ast.right.left, QualifiedNameNode)
+    assert isinstance(feel.ast.right.right, QualifiedNameNode)
+
+    assert feel.ast.left.left.left.left.name == "terms"
+    assert feel.ast.left.left.left.right.name == "pending"
+    assert feel.ast.left.left.right.left.name == "backpackOwner"
+    assert feel.ast.left.left.right.right.name == "sellerName"
+    assert feel.ast.left.right.left.name == "paymentOwner"
+    assert feel.ast.left.right.right.name == "buyerName"
+    assert feel.ast.right.left.name == "paymentOffered"
+    assert feel.ast.right.right.name == "pendingPayment"
+
+
 def test_parser_requires_parenthesis_around_condition() -> None:
     pytest.skip("Temporarily diabled for issue 392")
     feel_good = Feel.parse(

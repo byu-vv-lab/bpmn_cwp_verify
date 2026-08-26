@@ -10,6 +10,7 @@ from bpmncwpverify.core.error import (
     CwpNoParentEdgeError,
     CwpNoStartStateError,
     Error,
+    ErrorException,
 )
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
@@ -65,8 +66,8 @@ class CwpBuilder:
             self._cwp.accept(visitor)
 
             return Success(self._cwp)
-        except Exception as e:
-            return Failure(e.args[0])
+        except ErrorException as e:
+            return Failure(e.error)
 
     def with_edge(
         self, edge: CwpEdge, source_ref: str, target_ref: str
@@ -99,7 +100,7 @@ class CwpBuilder:
 
     def _with_edge(self, edge: CwpEdge, source_ref: str, target_ref: str) -> None:
         if source_ref not in self._cwp.states or target_ref not in self._cwp.states:
-            raise Exception(CwpEdgeInvalidStateError(edge.id))
+            raise ErrorException(CwpEdgeInvalidStateError(edge.id))
         source = self._cwp.states[source_ref]
         source.out_edges.append(edge)
         edge.set_source(source)
@@ -118,12 +119,12 @@ class CwpBuilder:
     ) -> None:
         edge = self._cwp.edges.get(parent)
         if not edge:
-            raise Exception(CwpNoParentEdgeError(parent))
-        edge.expression = CwpEdge.cleanup_expression(expression)
-        edge.expression = CwpEdge.build_ast(edge.expression)
+            raise ErrorException(CwpNoParentEdgeError(parent))
+        expr: str = CwpEdge.cleanup_expression(expression)
+        edge.expression = CwpEdge.build_ast(expr)
         result = edge.expression.type_check(state)
         if not_(is_successful)(result):
-            raise Exception(result.failure())
+            raise ErrorException(result.failure())
 
     def _find_start_state(self) -> None:
         found: bool = False
@@ -138,8 +139,8 @@ class CwpBuilder:
                 found = True
 
         if not found:
-            raise Exception(CwpNoStartStateError())
+            raise ErrorException(CwpNoStartStateError())
         elif start_states:
-            raise Exception(
+            raise ErrorException(
                 CwpMultStartStateError([state.id for state in start_states])
             )

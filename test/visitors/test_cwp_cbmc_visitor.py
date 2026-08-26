@@ -24,7 +24,7 @@ def make_state(mocker, name: str, sid: str, in_edges=None, out_edges=None):
     return state
 
 
-def make_edge(mocker, eid: str, expression: "str | Feel", source=None, dest=None):
+def make_edge(mocker, eid: str, expression: Feel, source=None, dest=None):
     edge = mocker.Mock(spec=CwpEdge)
     edge.id = eid
     edge.expression = expression
@@ -49,13 +49,13 @@ def test_define_name(visitor, mocker):
 def test_edge_cond_var_with_source(visitor, mocker):
     src = make_state(mocker, "Start", "s0")
     dst = make_state(mocker, "Increment_x", "s1")
-    edge = make_edge(mocker, "e1", "x <= 5", source=src, dest=dst)
+    edge = make_edge(mocker, "e1", Feel.parse("x <= 5"), source=src, dest=dst)
     assert visitor._edge_cond_var(edge) == "e_Start_to_Increment_x"
 
 
 def test_edge_cond_var_no_source(visitor, mocker):
     dst = make_state(mocker, "Start", "s0")
-    edge = make_edge(mocker, "e0", "x == 0", source=None, dest=dst)
+    edge = make_edge(mocker, "e0", Feel.parse("x == 0"), source=None, dest=dst)
     assert visitor._edge_cond_var(edge) == "e_UNKNOWN_to_Start"
 
 
@@ -66,8 +66,8 @@ def test_mapping_function_with_in_and_out_edges(visitor, mocker):
     src = make_state(mocker, "Start", "s0")
     mid = make_state(mocker, "Mid", "s1")
     dst = make_state(mocker, "End", "s2")
-    e_in = make_edge(mocker, "e1", "x <= 5", source=src, dest=mid)
-    e_out = make_edge(mocker, "e2", "x > 5", source=mid, dest=dst)
+    e_in = make_edge(mocker, "e1", Feel.parse("x <= 5"), source=src, dest=mid)
+    e_out = make_edge(mocker, "e2", Feel.parse("x > 5"), source=mid, dest=dst)
     mid.in_edges = [e_in]
     mid.out_edges = [e_out]
     result = visitor._mapping_function(mid)
@@ -77,7 +77,7 @@ def test_mapping_function_with_in_and_out_edges(visitor, mocker):
 def test_mapping_function_terminal_state(visitor, mocker):
     src = make_state(mocker, "Mid", "s1")
     end = make_state(mocker, "End", "s2")
-    e_in = make_edge(mocker, "e2", "x > 5", source=src, dest=end)
+    e_in = make_edge(mocker, "e2", Feel.parse("x > 5"), source=src, dest=end)
     end.in_edges = [e_in]
     end.out_edges = []
     result = visitor._mapping_function(end)
@@ -99,7 +99,7 @@ def test_visit_cwp_sets_init_state(visitor, mocker):
     model = mocker.Mock(spec=Cwp)
     start = make_state(mocker, "Start", "s0")
     init = make_state(mocker, "Increment_x", "s1")
-    edge = make_edge(mocker, "e0", "x == 0", source=None, dest=init)
+    edge = make_edge(mocker, "e0", Feel.parse("x == 0"), source=None, dest=init)
     start.out_edges = [edge]
     model.start_state = start
     visitor.visit_cwp(model)
@@ -108,7 +108,7 @@ def test_visit_cwp_sets_init_state(visitor, mocker):
 
 
 def test_visit_state_with_in_edges_is_tracked(visitor, mocker):
-    e = make_edge(mocker, "e1", "x > 0")
+    e = make_edge(mocker, "e1", Feel.parse("x > 0"))
     state = make_state(mocker, "Mid", "s1", in_edges=[e], out_edges=[])
     e.source = mocker.Mock()
     e.dest = state
@@ -123,7 +123,7 @@ def test_visit_state_without_in_edges_not_tracked(visitor, mocker):
 
 
 def test_visit_state_deduplicates(visitor, mocker):
-    e = make_edge(mocker, "e1", "x > 0")
+    e = make_edge(mocker, "e1", Feel.parse("x > 0"))
     state = make_state(mocker, "Mid", "s1", in_edges=[e])
     e.dest = state
     visitor.visit_state(state)
@@ -132,8 +132,8 @@ def test_visit_state_deduplicates(visitor, mocker):
 
 
 def test_visit_state_collects_edges(visitor, mocker):
-    e_in = make_edge(mocker, "e1", "x <= 5")
-    e_out = make_edge(mocker, "e2", "x > 5")
+    e_in = make_edge(mocker, "e1", Feel.parse("x <= 5"))
+    e_out = make_edge(mocker, "e2", Feel.parse("x > 5"))
     e_in.dest = mocker.Mock()
     e_out.dest = mocker.Mock()
     state = make_state(mocker, "Mid", "s1", in_edges=[e_in], out_edges=[e_out])
@@ -146,7 +146,7 @@ def test_visit_state_collects_edges(visitor, mocker):
 
 
 def test_num_states(visitor, mocker):
-    e = make_edge(mocker, "e1", "x > 0")
+    e = make_edge(mocker, "e1", Feel.parse("x > 0"))
     s = make_state(mocker, "Mid", "s1", in_edges=[e])
     e.dest = s
     visitor.visit_state(s)
@@ -154,8 +154,8 @@ def test_num_states(visitor, mocker):
 
 
 def test_state_define_names(visitor, mocker):
-    e1 = make_edge(mocker, "e1", "x > 0")
-    e2 = make_edge(mocker, "e2", "x > 5")
+    e1 = make_edge(mocker, "e1", Feel.parse("x > 0"))
+    e2 = make_edge(mocker, "e2", Feel.parse("x > 5"))
     s1 = make_state(mocker, "Increment_x", "s1", in_edges=[e1])
     s2 = make_state(mocker, "End", "s2", in_edges=[e2])
     e1.dest = s1
@@ -165,9 +165,9 @@ def test_state_define_names(visitor, mocker):
 
 
 def test_reachable_state_define_names_excludes_start(visitor, mocker):
-    e1 = make_edge(mocker, "e0", "x == 0")
+    e1 = make_edge(mocker, "e0", Feel.parse("x == 0"))
     start = make_state(mocker, "Start", "s0", in_edges=[e1])
-    e2 = make_edge(mocker, "e1", "x <= 5")
+    e2 = make_edge(mocker, "e1", Feel.parse("x <= 5"))
     mid = make_state(mocker, "Increment_x", "s1", in_edges=[e2])
     e1.dest = start
     e2.dest = mid
@@ -179,7 +179,7 @@ def test_reachable_state_define_names_excludes_start(visitor, mocker):
 
 
 def test_initial_cwp_state_define(visitor, mocker):
-    e = make_edge(mocker, "e1", "x <= 5")
+    e = make_edge(mocker, "e1", Feel.parse("x <= 5"))
     init = make_state(mocker, "Increment_x", "s1", in_edges=[e])
     e.dest = init
     visitor._states = [init]
@@ -188,11 +188,11 @@ def test_initial_cwp_state_define(visitor, mocker):
 
 
 def test_cwp_reached_init_expr(visitor, mocker):
-    e1 = make_edge(mocker, "e0", "x == 0")
+    e1 = make_edge(mocker, "e0", Feel.parse("x == 0"))
     s0 = make_state(mocker, "Start", "s0", in_edges=[e1])
-    e2 = make_edge(mocker, "e1", "x <= 5")
+    e2 = make_edge(mocker, "e1", Feel.parse("x <= 5"))
     s1 = make_state(mocker, "Increment_x", "s1", in_edges=[e2])
-    e3 = make_edge(mocker, "e2", "x > 5")
+    e3 = make_edge(mocker, "e2", Feel.parse("x > 5"))
     s2 = make_state(mocker, "End", "s2", in_edges=[e3])
     visitor._states = [s0, s1, s2]
     visitor._init_state = s1
@@ -203,8 +203,8 @@ def test_cwp_reached_init_expr(visitor, mocker):
 
 
 def test_generate_state_defines(visitor, mocker):
-    e1 = make_edge(mocker, "e1", "x <= 5")
-    e2 = make_edge(mocker, "e2", "x > 5")
+    e1 = make_edge(mocker, "e1", Feel.parse("x <= 5"))
+    e2 = make_edge(mocker, "e2", Feel.parse("x > 5"))
     s1 = make_state(mocker, "Increment_x", "s1", in_edges=[e1])
     s2 = make_state(mocker, "End", "s2", in_edges=[e2])
     visitor._states = [s1, s2]
@@ -220,9 +220,9 @@ def test_generate_update_cwp_state_contains_key_sections(visitor, mocker):
     mid = make_state(mocker, "Increment_x", "s1")
     end = make_state(mocker, "End", "s2")
 
-    e_init = make_edge(mocker, "e0", "x == 0", source=None, dest=src)
-    e_mid = make_edge(mocker, "e1", "x <= 5", source=src, dest=mid)
-    e_end = make_edge(mocker, "e2", "x > 5", source=mid, dest=end)
+    e_init = make_edge(mocker, "e0", Feel.parse("x == 0"), source=None, dest=src)
+    e_mid = make_edge(mocker, "e1", Feel.parse("x <= 5"), source=src, dest=mid)
+    e_end = make_edge(mocker, "e2", Feel.parse("x > 5"), source=mid, dest=end)
 
     mid.in_edges = [e_mid]
     mid.out_edges = [e_end]
