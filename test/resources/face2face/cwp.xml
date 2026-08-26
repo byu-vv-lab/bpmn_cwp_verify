@@ -72,6 +72,16 @@
         <mxCell id="KCSDiFEF1kXdy24a8ZIy-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Start" vertex="1">
           <mxGeometry height="60" width="120" x="90" y="180" as="geometry" />
         </mxCell>
+        <mxCell id="init-pseudostate-edge-1" edge="1" parent="1" target="KCSDiFEF1kXdy24a8ZIy-1" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" y="290" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="init-pseudostate-label-1" connectable="0" parent="init-pseudostate-edge-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="terms = pending and backpackOwner = sellerName and paymentOwner = buyerName and paymentOffered = pendingPayment" vertex="1">
+          <mxGeometry relative="1" x="0" y="0" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
