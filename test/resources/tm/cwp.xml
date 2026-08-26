@@ -1,13 +1,13 @@
-<mxfile host="Electron">
+<mxfile host="app.diagrams.net">
   <diagram name="Page-1" id="ZF0FYxoDmuCHXhCGKFgo">
-    <mxGraphModel dx="1664" dy="989" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1482" dy="1133" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="Nog0-tSulBfJgW7ReGkv-5" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-3">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-6" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="orderNum == 20001&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; ptID == KAB&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; ptRm == B201&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxStatus == boxInit&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-6" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-5" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="orderNum = 20001&amp;nbsp;&lt;div&gt;and ptID = KAB&amp;nbsp;&lt;/div&gt;&lt;div&gt;and ptRm = B201&lt;/div&gt;&lt;div&gt;and boxStatus = boxInit&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.1778" y="-1" as="geometry">
             <mxPoint x="11" y="-31" as="offset" />
           </mxGeometry>
@@ -18,7 +18,7 @@
         <mxCell id="Nog0-tSulBfJgW7ReGkv-8" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-9" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-8" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxNum == 21&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; boxStatus == ready&amp;nbsp;&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-9" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-8" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxNum = 21&amp;nbsp;&lt;div&gt;and boxStatus = ready&amp;nbsp;&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.15" as="geometry">
             <mxPoint x="9" y="-30" as="offset" />
           </mxGeometry>
@@ -26,7 +26,7 @@
         <mxCell id="Nog0-tSulBfJgW7ReGkv-11" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-12" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxStatus == notReady&amp;nbsp;&lt;div&gt;|| boxStatus == boxRecovered&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; ptStatus == PatientStatusInit&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-12" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxStatus = notReady&amp;nbsp;&lt;div&gt;or boxStatus = boxRecovered&lt;/div&gt;&lt;div&gt;and ptStatus = PatientStatusInit&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.18" as="geometry">
             <mxPoint y="-11" as="offset" />
           </mxGeometry>
@@ -37,7 +37,7 @@
         <mxCell id="Nog0-tSulBfJgW7ReGkv-16" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-15">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-17" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-16" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxStatus == installed&lt;div&gt;&amp;amp;&amp;amp; boxLoc == ptRoom&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; ptID == KAB&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; ptStatus == stable&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; hasCare == H_monitoring&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; orderStatus == confirmed&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-17" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-16" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxStatus = installed&lt;div&gt;and boxLoc = ptRoom&lt;/div&gt;&lt;div&gt;and ptID = KAB&lt;/div&gt;&lt;div&gt;and ptStatus = stable&lt;/div&gt;&lt;div&gt;and hasCare = H_monitoring&lt;/div&gt;&lt;div&gt;and orderStatus = confirmed&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.1412" y="1" as="geometry">
             <mxPoint x="-1" y="-20" as="offset" />
           </mxGeometry>
@@ -48,7 +48,7 @@
         <mxCell id="Nog0-tSulBfJgW7ReGkv-13" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-7">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-14" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxNum == 21&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; boxStatus == ready&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-14" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-13" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="boxNum = 21&amp;nbsp;&lt;div&gt;and boxStatus = ready&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.0038" y="1" as="geometry">
             <mxPoint y="12" as="offset" />
           </mxGeometry>
@@ -63,7 +63,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-20" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-19" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="alertStatus == confirmed&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; needsCare == N_immedAssmt&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-20" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-19" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="alertStatus = confirmed&amp;nbsp;&lt;div&gt;and needsCare = N_immedAssmt&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="0.2" as="geometry">
             <mxPoint x="85" y="-6" as="offset" />
           </mxGeometry>
@@ -71,7 +71,7 @@
         <mxCell id="n7rN1dzmysY3F7zLQdUA-32" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="n7rN1dzmysY3F7zLQdUA-22">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="n7rN1dzmysY3F7zLQdUA-34" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-32" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus == recovered" vertex="1">
+        <mxCell id="n7rN1dzmysY3F7zLQdUA-34" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-32" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus = recovered" vertex="1">
           <mxGeometry relative="1" x="-0.3586" y="-1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -84,7 +84,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="n7rN1dzmysY3F7zLQdUA-35" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-33" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus == deceased" vertex="1">
+        <mxCell id="n7rN1dzmysY3F7zLQdUA-35" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-33" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus = deceased" vertex="1">
           <mxGeometry relative="1" x="-0.2034" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -95,7 +95,7 @@
         <mxCell id="Nog0-tSulBfJgW7ReGkv-24" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-26" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptID == KAB&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; ptStatus == notStable&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; needsCare == N_moreAddSvcs&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; hasCare == H_transport&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; ptRm == new&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; alertStatus == cancelled&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-26" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptID = KAB&amp;nbsp;&lt;div&gt;and ptStatus = notStable&amp;nbsp;&lt;/div&gt;&lt;div&gt;and needsCare = N_moreAddSvcs&amp;nbsp;&lt;/div&gt;&lt;div&gt;and hasCare = H_transport&amp;nbsp;&lt;/div&gt;&lt;div&gt;and ptRm = new&amp;nbsp;&lt;/div&gt;&lt;div&gt;and alertStatus = cancelled&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.1382" y="1" as="geometry">
             <mxPoint x="9" y="-49" as="offset" />
           </mxGeometry>
@@ -103,7 +103,7 @@
         <mxCell id="Nog0-tSulBfJgW7ReGkv-28" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-27">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-29" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-28" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptID == KAB&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; hasCare == H_addSvcs&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; ptStatus == stable_C_addSvcs&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; alertStatus == cancelled&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-29" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-28" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptID = KAB&amp;nbsp;&lt;div&gt;and hasCare = H_addSvcs&amp;nbsp;&lt;/div&gt;&lt;div&gt;and ptStatus = stable_C_addSvcs&amp;nbsp;&lt;/div&gt;&lt;div&gt;and alertStatus = cancelled&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.18" y="3" as="geometry">
             <mxPoint x="-3" y="9" as="offset" />
           </mxGeometry>
@@ -122,7 +122,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-37" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-36" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="orderNum == 20001&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; orderStatus == cancelled&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxNum == 21&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxStatus == boxRecovered&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-37" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-36" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="orderNum = 20001&amp;nbsp;&lt;div&gt;and orderStatus = cancelled&amp;nbsp;&lt;/div&gt;&lt;div&gt;and boxNum = 21&amp;nbsp;&lt;/div&gt;&lt;div&gt;and boxStatus = boxRecovered&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.3321" y="3" as="geometry">
             <mxPoint x="-3" y="7" as="offset" />
           </mxGeometry>
@@ -138,7 +138,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="Nog0-tSulBfJgW7ReGkv-31" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="alertStatus == confirmed&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; needsCare == N_immedAssmt&lt;/div&gt;" vertex="1">
+        <mxCell id="Nog0-tSulBfJgW7ReGkv-31" connectable="0" parent="Nog0-tSulBfJgW7ReGkv-30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="alertStatus = confirmed&amp;nbsp;&lt;div&gt;and needsCare = N_immedAssmt&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="0.1102" as="geometry">
             <mxPoint y="14" as="offset" />
           </mxGeometry>
@@ -146,7 +146,7 @@
         <mxCell id="n7rN1dzmysY3F7zLQdUA-30" edge="1" parent="1" source="Nog0-tSulBfJgW7ReGkv-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="n7rN1dzmysY3F7zLQdUA-23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="n7rN1dzmysY3F7zLQdUA-36" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus == deceased" vertex="1">
+        <mxCell id="n7rN1dzmysY3F7zLQdUA-36" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus = deceased" vertex="1">
           <mxGeometry relative="1" x="-0.2733" y="2" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -159,7 +159,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="n7rN1dzmysY3F7zLQdUA-37" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus == recovered" vertex="1">
+        <mxCell id="n7rN1dzmysY3F7zLQdUA-37" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus = recovered" vertex="1">
           <mxGeometry relative="1" x="-0.4236" y="2" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
@@ -176,7 +176,7 @@
         <mxCell id="n7rN1dzmysY3F7zLQdUA-26" edge="1" parent="1" source="n7rN1dzmysY3F7zLQdUA-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="n7rN1dzmysY3F7zLQdUA-18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="n7rN1dzmysY3F7zLQdUA-27" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-26" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus == discharge&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; orderStatus == cancelled&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxNum == 21&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxStatus == boxRecovered&lt;/div&gt;" vertex="1">
+        <mxCell id="n7rN1dzmysY3F7zLQdUA-27" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-26" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus = discharge&amp;nbsp;&lt;div&gt;and orderStatus = cancelled&amp;nbsp;&lt;/div&gt;&lt;div&gt;and boxNum = 21&amp;nbsp;&lt;/div&gt;&lt;div&gt;and boxStatus = boxRecovered&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="-0.2047" y="-6" as="geometry">
             <mxPoint x="10" y="-6" as="offset" />
           </mxGeometry>
@@ -187,7 +187,7 @@
         <mxCell id="n7rN1dzmysY3F7zLQdUA-24" edge="1" parent="1" source="n7rN1dzmysY3F7zLQdUA-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="Nog0-tSulBfJgW7ReGkv-21">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="n7rN1dzmysY3F7zLQdUA-25" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus == deceased&amp;nbsp;&lt;div&gt;&amp;amp;&amp;amp; orderStatus == cancelled&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxNum == 21&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;amp;&amp;amp; boxStatus == boxRecovered&lt;/div&gt;" vertex="1">
+        <mxCell id="n7rN1dzmysY3F7zLQdUA-25" connectable="0" parent="n7rN1dzmysY3F7zLQdUA-24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptStatus = deceased&amp;nbsp;&lt;div&gt;and orderStatus = cancelled&amp;nbsp;&lt;/div&gt;&lt;div&gt;and boxNum = 21&amp;nbsp;&lt;/div&gt;&lt;div&gt;and boxStatus = boxRecovered&lt;/div&gt;" vertex="1">
           <mxGeometry relative="1" x="0.0017" as="geometry">
             <mxPoint x="-1" y="10" as="offset" />
           </mxGeometry>

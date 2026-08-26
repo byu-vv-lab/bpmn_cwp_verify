@@ -46,6 +46,7 @@ from bpmncwpverify.core.typechecking import (
     get_and_or_type_result,
     get_computation_type_result,
     get_relational_type_result,
+    get_type_assign,
     get_type_literal,
     get_widened_type_result,
 )
@@ -223,8 +224,10 @@ class TypeCheckerVisitor(FeelVisitor):
         value_type = self.stack.pop()
         self.stack.pop()  # input types
 
-        if target_type == value_type:
-            self.stack.append(target_type)
+        result_type = get_type_assign(target_type, value_type)
+
+        if is_successful(result_type):
+            self.stack.append(result_type.unwrap())
         else:
             raise ErrorException(
                 TypingAssignCompatabilityError(target_type, value_type)
