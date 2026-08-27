@@ -827,7 +827,7 @@ def get_error_message(error: Error) -> str:
         case CwpNoParentEdgeError(parent_edge=parent_edge):
             return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
         case CwpNoStartStateError():
-            return "CWP ERROR: No start states found."
+            return "CWP ERROR: No start state found."
         case CwpInvalidLiteralError():
             return "CWP ERROR: Expression on start edge invalid type"
         case CwpInvalidStartEdgeError():
