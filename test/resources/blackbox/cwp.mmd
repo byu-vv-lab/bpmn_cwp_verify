@@ -7,6 +7,8 @@ stateDiagram-v2
     state "Retrieve Black Box" as RetrieveBlackBox
     state "Search Off" as SearchOff
 
+    [*] --> InitState: risk = riskInit and comms = communicationInit and conditions = conditionsInit and blackBox = blackBoxInit and search = searchInit
+
     InitState --> PlanSearch: search = on and blackBox = missing and risk = assessing and conditions = changed and (comms = wait or comms = waiting)
 
     PlanSearch --> Deploy: risk = acceptable and comms = sent and search = on and conditions = same and blackBox = missing

@@ -3,6 +3,8 @@ stateDiagram-v2
     state "Increment_x" as IncrementX
     state "End" as End
 
+    [*] --> Start: x = 0
+
     Start --> IncrementX: x <= 5
 
     IncrementX --> End: x > 5

@@ -13,6 +13,8 @@ stateDiagram-v2
     state "Patient Recovered" as PatientRecovered
     state "Patient Deceased" as PatientDeceased
 
+    [*] --> Start: ptID = idInit and ptRm = roomInit and ptStatus = PatientStatusInit and hasCare = careInit and needsCare = needInit and orderNum = 20001 and orderStatus = statusInit and alertStatus = statusInit and boxNum = 21 and boxStatus = boxInit and boxLoc = locationInit
+
     Start --> TMOrderReceivedByTM: orderNum = 20001 and ptID = KAB and ptRm = B201 and boxStatus = boxInit
 
     TMOrderReceivedByTM --> TMBoxIDWaitingToInstall: boxNum = 21 and boxStatus = ready
