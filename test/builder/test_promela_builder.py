@@ -124,12 +124,12 @@ def test_generate_promela(mocker):
         id="enum_id",
         values=[mocker.Mock(value="init_val"), mocker.Mock(value="other_val")],
     )
-    var1 = mocker.Mock(id="var1_id", type_="int", init=mocker.Mock(value="0"))
+    var1 = mocker.Mock(id="var1_id", type_="int", values=[mocker.Mock(value="0")])
     var2 = mocker.Mock(
-        id="var2_id", type_="enum_id", init=mocker.Mock(value="init_val")
+        id="var2_id", type_="enum_id", values=[mocker.Mock(value="init_val")]
     )
-    var3 = mocker.Mock(id="var3_id", type_="bool", init=mocker.Mock(value="0"))
-    var4 = mocker.Mock(id="var4_id", type_="bit", init=mocker.Mock(value="0"))
+    var3 = mocker.Mock(id="var3_id", type_="bool", values=[mocker.Mock(value="0")])
+    var4 = mocker.Mock(id="var4_id", type_="bit", values=[mocker.Mock(value="0")])
 
     array = mocker.Mock(
         id="array_id",
@@ -196,12 +196,12 @@ def test_generate_promela_with_full_state(mocker, mock_state):
     mock_var_enum = mocker.MagicMock()
     mock_var_enum.type_ = "int"
     mock_var_enum.id = "state_var"
-    mock_var_enum.init.value = "START"
+    mock_var_enum.values[0].value = "START"
 
     mock_var_int = mocker.MagicMock()
     mock_var_int.type_ = "int"
     mock_var_int.id = "counter"
-    mock_var_int.init.value = "0"
+    mock_var_int.values[0].value = "0"
 
     mock_array = mocker.MagicMock()
     mock_array.type_ = "int"
