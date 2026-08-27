@@ -54,7 +54,7 @@ def _var_decls(state: State) -> list[str]:
     for var in state.vars:
         # bare bones: always declare as int regardless of type_
         _ = enum_ids  # noted: ignored in this bare-bones version
-        decls.append(f"int {var.id} = {var.values[0].value};")
+        decls.append(f"int {var.id} = {var.allowed_values[0].value};")
     return decls
 
 

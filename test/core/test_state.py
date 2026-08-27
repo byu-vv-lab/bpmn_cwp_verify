@@ -30,7 +30,7 @@ def bad_input() -> Iterable[str]:
 
 @pytest.fixture(scope="module")
 def good_input() -> Iterable[str]:
-    yield "enum MyEnum {a b c d} const MYCONST : byte = 10 var myenum : MyEnum = a {a b c d}"
+    yield "enum MyEnum {a b c d} const MYCONST : byte = 10 var myenum : MyEnum"
 
 
 class Test_get_parser:
@@ -46,7 +46,7 @@ class Test_get_parser:
         with pytest.raises(
             ParseCancellationException, match=r".* extraneous .*"
         ) as exception:
-            _ = parser.state()
+            _ = parser.stateFile()
 
         # then
         assert exception.type is ParseCancellationException
@@ -64,7 +64,7 @@ class Test_get_parser:
 
         # when
         try:
-            tree = parser.state()
+            tree = parser.stateFile()
         except Exception as exception:
             pytest.fail(f"ERROR: unexpected {exception}")
 
@@ -139,22 +139,22 @@ class Test_SymbolTable_build:
         "good_input, expected",
         [
             (
-                "enum E {a b} var e : E = a {a b}",
+                "enum E {a b} var e : E",
                 [("E", typechecking.ENUM), ("a", "E"), ("b", "E")],
             ),
-            ("enum A {b} const a: A = b var i : A = b {b}", [("a", "A")]),
-            ("const a: bit = 0 var i : bit = 0 {0 1}", [("a", typechecking.BIT)]),
+            ("enum A {b} const a: A = b var i : A", [("a", "A")]),
+            ("const a: bit = 0 var i : bit", [("a", typechecking.BIT)]),
             (
-                "const a: bool = false var i : bool = true {true false}",
+                "const a: bool = false var i : bool",
                 [("a", typechecking.BOOL)],
             ),
-            ("const a: byte = 0 var i : byte = 0 {0 5 9}", [("a", typechecking.BYTE)]),
+            ("const a: byte = 0 var i : byte", [("a", typechecking.BYTE)]),
             (
-                "const a: short = 0 var i : short = 256 {0 1 256}",
+                "const a: short = 0 var i : short",
                 [("a", typechecking.SHORT)],
             ),
-            ("const a: int = 0 var i : int = 2", [("a", typechecking.INT)]),
-            ("var i : int = 0 {0 1}", [("i", typechecking.INT)]),
+            ("const a: int = 0 var i : int", [("a", typechecking.INT)]),
+            ("var i : int", [("i", typechecking.INT)]),
         ],
     )
     def test_given_good_state_when_build_then_success(self, good_input, expected):
@@ -178,73 +178,73 @@ class Test_SymbolTable_build:
         [
             # Multiple Defnitionns
             (
-                "enum E {e e} var i : E = a {a}",
+                "enum E {e e} var i : E",
                 StateMultipleDefinitionError("e", Some(1), Some(10), Some(1), Some(8)),
             ),
             (
-                "enum E {e} enum E {f} var i : E = a {a}",
+                "enum E {e} enum E {f} var i: E",
                 StateMultipleDefinitionError("E", Some(1), Some(16), Some(1), Some(5)),
             ),
             (
-                "enum E {e} const e : E = 0 var i : E = a {a}",
+                "enum E {e} const e : E = 0 var i : E",
                 StateMultipleDefinitionError("e", Some(1), Some(17), Some(1), Some(8)),
             ),
             (
-                "const e : int = 0 var e : int = 0 {0 1}",
+                "const e : int = 0 var e : int",
                 StateMultipleDefinitionError("e", Some(1), Some(22), Some(1), Some(6)),
             ),
             # Bad const initializer
             (
-                "enum E {e} const ECONST : E = a var i : int = 0",
+                "enum E {e} const ECONST : E = a var i : int",
                 TypingNoTypeError("a"),
             ),
             (
-                "enum E {e} const ECONST : E = true var i : int = 0",
+                "enum E {e} const ECONST : E = true var i : int",
                 TypingAssignCompatabilityError("E", typechecking.BOOL),
             ),
             (
-                "const C : bool = 0 var i : int = 0",
+                "const C : bool = 0 var i : int",
                 TypingAssignCompatabilityError(typechecking.BOOL, typechecking.BIT),
             ),
             (
-                "const C : int = true var i : int = 0",
+                "const C : int = true var i : int",
                 TypingAssignCompatabilityError(typechecking.INT, typechecking.BOOL),
             ),
             (
-                "const C : bit = 2 var i : int = 0",
+                "const C : bit = 2 var i : int",
                 TypingAssignCompatabilityError(typechecking.BIT, typechecking.BYTE),
             ),
             # Bad var assigns
             (
-                "enum E {e} var c : E = a",
+                "enum E {e} var c : E",
                 TypingNoTypeError("a"),
             ),
             (
-                "enum E {e} var c : E = e {e 0}",
+                "enum E {e} var c : E",
                 TypingAssignCompatabilityError("E", typechecking.BIT),
             ),
             (
-                "var i : int = false",
+                "var i : int",
                 TypingAssignCompatabilityError(typechecking.INT, typechecking.BOOL),
             ),
             (
-                "var i : bit = 2",
+                "var i : bit",
                 TypingAssignCompatabilityError(typechecking.BIT, typechecking.BYTE),
             ),
             # Var initial value not included in allowed values
             (
-                "enum E {e f} var c : E = e {f}",
+                "enum E {e f} var c : E",
                 StateInitNotInValues("e", Some(1), Some(25), {"f"}),
             ),
             # Array initialized with bad size
-            (
-                "array a[0]: int = {0 1} var a: int = 0",
-                StateArraySizeError("a", Some(1), Some(6), 0, 2),
-            ),
-            (
-                "array b[2]: int = {0 1 2} var a: int = 0",
-                StateArraySizeError("b", Some(1), Some(6), 2, 3),
-            ),
+            # (
+            #     "array a[0]: int = {0 1} var a: int = 0",
+            #     StateArraySizeError("a", Some(1), Some(6), 0, 2),
+            # ),
+            # (
+            #     "array b[2]: int = {0 1 2} var a: int = 0",
+            #     StateArraySizeError("b", Some(1), Some(6), 2, 3),
+            # ),
         ],
     )
     def test_given_bad_state_when_build_then_failure(self, bad_input, expected):

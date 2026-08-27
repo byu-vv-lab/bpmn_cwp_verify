@@ -185,7 +185,7 @@ class CwpXmlParser:
             parser._check_expressions(
                 builder, all_items, expr_lstnr, state, start_edge_id
             )
-        except ErrorException as e:
+        except Exception as e:
             assert e.args, "Error does not have enough arguments"
             return Failure(e.args[0])
 

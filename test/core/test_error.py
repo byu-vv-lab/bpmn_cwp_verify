@@ -40,6 +40,11 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoStateError,
     CwpFileStructureError,
     CwpGraphConnError,
+    CwpInvalidAssignmentError,
+    CwpInvalidAssignmentTargetError,
+    CwpInvalidLiteralError,
+    CwpInvalidStartEdgeError,
+    CwpInvalidStartExpressionError,
     CwpMultStartStateError,
     CwpNoEndStatesError,
     CwpNoParentEdgeError,
@@ -224,7 +229,27 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         CwpNoStartStateError(),
-        "CWP ERROR: No start states found.",
+        "CWP ERROR: No start state found.",
+    ),
+    (
+        CwpInvalidLiteralError(),
+        "CWP ERROR: Expression on start edge invalid type",
+    ),
+    (
+        CwpInvalidStartEdgeError(),
+        "CWP ERROR: Start edge invalid",
+    ),
+    (
+        CwpInvalidStartExpressionError(),
+        "CWP ERROR: Expression on start edge parsing incorrectly",
+    ),
+    (
+        CwpInvalidAssignmentError(),
+        "CWP ERROR: Start edge expression contains an invalid variable assignment",
+    ),
+    (
+        CwpInvalidAssignmentTargetError(),
+        "CWP ERROR: Start edge expression contains an invalid variable name",
     ),
     (
         ExpressionComputationCompatabilityError("ltype", "rtype"),
@@ -443,6 +468,11 @@ test_ids: list[str] = [
     "CwpUnsupportedElementError",
     "CwpNoParentEdgeError",
     "CwpNoStartStateError",
+    "CwpInvalidLiteralError",
+    "CwpInvalidStartEdgeError",
+    "CwpInvalidStartExpressionError",
+    "CwpInvalidAssignmentError",
+    "CwpInvalidAssignmentTargetError",
     "ExpressionComputationCompatabilityError",
     "ExpressionNegatorError",
     "ExpressionParseError",

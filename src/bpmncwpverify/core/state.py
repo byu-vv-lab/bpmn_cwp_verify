@@ -334,13 +334,13 @@ class VarDecl(DeclLoc):
     Represents variable declaration using keyword var
     """
 
-    __slots__ = ["col", "id", "line", "type_", "values"]
+    __slots__ = ["col", "id", "line", "type_", "allowed_values"]
 
     def __init__(
         self,
         id: str,
         type_: str,
-        values: list[AllowedValueDecl],
+        allowed_values: list[AllowedValueDecl],
         line: Maybe[int] = Nothing,
         col: Maybe[int] = Nothing,
     ) -> None:
@@ -358,14 +358,13 @@ class VarDecl(DeclLoc):
         super().__init__(line, col)
         self.id = id
         self.type_ = type_
-        self.values = values
+        self.allowed_values = allowed_values
 
     @staticmethod
     def var_decl(
         id: str,
         type_: str,
-        init: AllowedValueDecl,
-        values: list[AllowedValueDecl],
+        allowed_values: list[AllowedValueDecl],
         line: Maybe[int] = Nothing,
         col: Maybe[int] = Nothing,
     ) -> "VarDecl":
@@ -380,7 +379,7 @@ class VarDecl(DeclLoc):
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
-        return VarDecl(id, type_, values, line, col)
+        return VarDecl(id, type_, allowed_values, line, col)
 
 
 class TypeWithDeclLoc:
@@ -765,13 +764,13 @@ class State:
         state_str = ""
         for var in vars:
             state_str += "var " + var.id + " : " + var.type_
-            if len(var.values) != 0:
+            if len(var.allowed_values) != 0:
                 state_str += " {"
-                for vals in range(len(var.values)):
+                for vals in range(len(var.allowed_values)):
                     if vals == 0:
-                        state_str += var.values[vals].value
+                        state_str += var.allowed_values[vals].value
                         continue
-                    state_str += " " + var.values[vals].value
+                    state_str += " " + var.allowed_values[vals].value
                 state_str += "}\n"
             else:
                 state_str += "\n"
@@ -873,7 +872,7 @@ class State:
                 if not_(is_successful)(result):
                     return result
 
-                var.values = [AllowedValueDecl(value, line, col)]
+                var.allowed_values = [AllowedValueDecl(value, line, col)]
                 return Success(None)
 
         return Failure(ExpressionParseError(name))
@@ -1011,7 +1010,7 @@ class State:
             state (State): State object to retrieve initial type
         """
         for var_decl in self._vars:
-            values = var_decl.values
+            values = var_decl.allowed_values
             result = self._type_check_assigns(var_decl.type_, values)
             if not_(is_successful)(result):
                 return result

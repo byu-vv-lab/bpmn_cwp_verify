@@ -216,7 +216,6 @@ class TestCwpMermaidParserFromMmd:
         result = CwpMermaidParser.from_mmd("mmd_string", mock_state)
 
         mock_walker.walk.assert_called_once()
-        mock_builder_object.with_start_edge.assert_called_once()
         mock_builder_object.build.assert_called_once()
         assert result == "built_cwp"
 

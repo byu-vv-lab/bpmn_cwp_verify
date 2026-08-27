@@ -196,12 +196,12 @@ def test_generate_promela_with_full_state(mocker, mock_state):
     mock_var_enum = mocker.MagicMock()
     mock_var_enum.type_ = "int"
     mock_var_enum.id = "state_var"
-    mock_var_enum.values[0].value = "START"
+    mock_var_enum.allowed_values[0].value = "START"
 
     mock_var_int = mocker.MagicMock()
     mock_var_int.type_ = "int"
     mock_var_int.id = "counter"
-    mock_var_int.values[0].value = "0"
+    mock_var_int.allowed_values[0].value = "0"
 
     mock_array = mocker.MagicMock()
     mock_array.type_ = "int"

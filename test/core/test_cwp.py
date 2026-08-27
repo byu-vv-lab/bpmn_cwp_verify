@@ -7,7 +7,6 @@ from returns.pipeline import is_successful
 
 from bpmncwpverify.core.cwp import CwpEdge, CwpState
 from bpmncwpverify.core.error import (
-    CwpMultStartStateError,
     CwpNoEndStatesError,
     CwpNoStartStateError,
     Error,
@@ -50,20 +49,24 @@ def setup_cwp_and_assert(xml_root, state, success=True, failure_message=Error):
 
 
 def test_valid_cwp_end_start_events():
-    state = build_state("var x: int = 0")
+    state = build_state("var x: int")
     root, mx_root = get_root_mx_root()
 
     add_mx_cell(mx_root, id="s1", value="Start", style="rounded=1;state", vertex="1")
     add_mx_cell(mx_root, id="s2", value="End", style="rounded=1;state", vertex="1")
-    add_mx_cell(mx_root, id="e1", source="s1", target="s2", style="edge", edge="1")
+    add_mx_cell(mx_root, id="e1", target="s1", style="edge", edge="1")
+    add_mx_cell(mx_root, id="e2", source="s1", target="s2", style="edge", edge="2")
     add_mx_cell(
-        mx_root, id="expr1", value="x > 0", style="edgeLabel", parent="e1", vertex="1"
+        mx_root, id="expr1", value="x = 0", style="edgeLabel", parent="e1", vertex="1"
+    )
+    add_mx_cell(
+        mx_root, id="expr2", value="x > 0", style="edgeLabel", parent="e2", vertex="1"
     )
 
     cwp = setup_cwp_and_assert(root, state)
     assert len(cwp.edges) == 2
-    assert "Init_Edge" in cwp.edges
-    assert "e1" in cwp.edges
+    assert "s1" in cwp.edges
+    assert "e2" in cwp.edges
     assert cwp.start_state.id == "s1"
     assert len(cwp.states) == 2
     assert "s1" in cwp.states
@@ -71,7 +74,7 @@ def test_valid_cwp_end_start_events():
 
 
 def test_invalid_cwp_missing_start_event():
-    state = build_state("var x: int = 0")
+    state = build_state("var x: int")
     root, mx_root = get_root_mx_root()
 
     add_mx_cell(mx_root, id="s1", value="state", style="rounded=1;state", vertex="1")
@@ -82,7 +85,7 @@ def test_invalid_cwp_missing_start_event():
 
 
 def test_invalid_cwp_not_connected():
-    state = build_state("var x: int = 0")
+    state = build_state("var x: int")
     root, mx_root = get_root_mx_root()
 
     # First disconnected component
@@ -105,17 +108,22 @@ def test_invalid_cwp_not_connected():
         root,
         state,
         success=False,
-        failure_message=CwpMultStartStateError,
+        failure_message=CwpNoStartStateError,
     )
 
 
 def test_invalid_cwp_no_end_state():
-    state = build_state("var x: int = 0")
+    state = build_state("var x: int")
     root, mx_root = get_root_mx_root()
 
     add_mx_cell(mx_root, id="s1", value="Start", style="rounded=1;state", vertex="1")
     add_mx_cell(mx_root, id="s2", value="middle1", style="rounded=1;state", vertex="1")
     add_mx_cell(mx_root, id="s3", value="middle2", style="rounded=1;state", vertex="1")
+
+    add_mx_cell(mx_root, id="e0", target="s1", style="edge", edge="1")
+    add_mx_cell(
+        mx_root, id="expr1", value="x = 0", style="edgeLabel", parent="e0", vertex="1"
+    )
 
     add_mx_cell(mx_root, id="e1", source="s1", target="s2", style="edge", edge="1")
     add_mx_cell(

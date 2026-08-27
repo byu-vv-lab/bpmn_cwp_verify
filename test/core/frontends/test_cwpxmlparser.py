@@ -136,25 +136,39 @@ class TestCwpXmlParser:
         )
         assert exc_info.value.args[0].number_of_elements == 3
 
-    def test_add_edges_no_src_or_target(self, mocker):
+    def test_add_edges_no_target(self, mocker):
         mock_edge = mocker.Mock()
-        dyct = {"source": None, "target": "something"}
-        mock_edge.get.side_effect = lambda x: dyct.get(x)
+        mock_edge.get.side_effect = lambda x: {
+            "source": "something",
+            "target": None,
+        }.get(x)
         edges = [mock_edge]
+
         with pytest.raises(Exception) as exc_info:
-            CwpXmlParser._add_edges(mocker.Mock(), mocker.Mock(), edges)
+            CwpXmlParser._add_edges(
+                mocker.Mock(), mocker.Mock(), edges, mocker.Mock(), mocker.Mock()
+            )
 
         assert isinstance(exc_info.value.args[0], CwpEdgeNoStateError)
         assert exc_info.value.args[0].edge == mock_edge
 
-        dyct["source"] = "something"
-        dyct["target"] = None
+    def test_add_edges_start_edge_no_source(self, mocker):
+        mock_edge = mocker.Mock()
+        mock_edge.get.side_effect = lambda x: {
+            "source": None,
+            "target": "something",
+        }.get(x)
+        edges = [mock_edge]
 
-        with pytest.raises(Exception) as exc_info:
-            CwpXmlParser._add_edges(mocker.Mock(), mocker.Mock(), edges)
+        parser_self = mocker.Mock()
+        parser_self._build_start_edge.return_value = "start_id"
 
-        assert isinstance(exc_info.value.args[0], CwpEdgeNoStateError)
-        assert exc_info.value.args[0].edge == mock_edge
+        result = CwpXmlParser._add_edges(
+            parser_self, mocker.Mock(), edges, mocker.Mock(), mocker.Mock()
+        )
+
+        parser_self._build_start_edge.assert_called_once()
+        assert result == "start_id"
 
     def test_add_edges(self, mocker):
         mock_src = "src"
@@ -173,7 +187,12 @@ class TestCwpXmlParser:
             "bpmncwpverify.core.cwp.CwpEdge.from_xml",
             return_value="test_edge",
         )
-        CwpXmlParser._add_edges(mocker.Mock(), mock_builder, edges)
+        mock_edge_labels = mocker.Mock()
+        mock_state = mocker.Mock()
+
+        CwpXmlParser._add_edges(
+            mocker.Mock(), mock_builder, edges, mock_edge_labels, mock_state
+        )
 
         calls = [mocker.call("test_edge", "src", "target")]
         mock_builder.with_edge.assert_has_calls(calls)
@@ -183,6 +202,7 @@ class TestCwpXmlParser:
         mock_builder = mocker.Mock()
         mock_expr_lstnr = mocker.Mock()
         mock_state = mocker.Mock()
+        mock_start_edge_id = mocker.Mock()
         element = mocker.Mock()
         element.get.side_effect = lambda x: {
             "style": "edgeLabel",
@@ -192,7 +212,12 @@ class TestCwpXmlParser:
 
         mock_all_items = [element]
         CwpXmlParser._check_expressions(
-            mocker.Mock(), mock_builder, mock_all_items, mock_expr_lstnr, mock_state
+            mocker.Mock(),
+            mock_builder,
+            mock_all_items,
+            mock_expr_lstnr,
+            mock_state,
+            mock_start_edge_id,
         )
 
         mock_builder.check_expression.assert_called_once()
@@ -201,13 +226,19 @@ class TestCwpXmlParser:
         mock_builder = mocker.Mock()
         mock_expr_lstnr = mocker.Mock()
         mock_state = mocker.Mock()
+        mock_start_edge_id = mocker.Mock()
         element = mocker.Mock()
         element.get.side_effect = lambda x: {"style": "edgeLabel"}.get(x)
 
         mock_all_items = [element]
         with pytest.raises(Exception) as exc_info:
             CwpXmlParser._check_expressions(
-                mocker.Mock(), mock_builder, mock_all_items, mock_expr_lstnr, mock_state
+                mocker.Mock(),
+                mock_builder,
+                mock_all_items,
+                mock_expr_lstnr,
+                mock_state,
+                mock_start_edge_id,
             )
 
         assert isinstance(exc_info.value.args[0], CwpEdgeNoParentError)
@@ -218,6 +249,7 @@ class TestCwpXmlParser:
         mock_builder = mocker.Mock()
         mock_expr_lstnr = mocker.Mock()
         mock_state = mocker.Mock()
+        mock_start_edge_id = mocker.Mock()
         element = mocker.Mock()
         element.get.side_effect = lambda x: {"style": "edgeLabel", "parent": True}.get(
             x
@@ -226,7 +258,12 @@ class TestCwpXmlParser:
         mock_all_items = [element]
         with pytest.raises(Exception) as exc_info:
             CwpXmlParser._check_expressions(
-                mocker.Mock(), mock_builder, mock_all_items, mock_expr_lstnr, mock_state
+                mocker.Mock(),
+                mock_builder,
+                mock_all_items,
+                mock_expr_lstnr,
+                mock_state,
+                mock_start_edge_id,
             )
 
         assert isinstance(exc_info.value.args[0], CwpEdgeNoExpressionError)
@@ -253,6 +290,8 @@ class TestCwpXmlParser:
         mock_parser_object._get_all_items.return_value = "all_items"
         mock_parser_object._get_edges.return_value = "edges"
         mock_parser_object._get_states.return_value = "states"
+        mock_parser_object._get_edge_labels.return_value = "edge_labels"
+        mock_parser_object._add_edges.return_value = "start_edge_id"
 
         mock_root = mocker.Mock()
         mock_state = mocker.Mock()
@@ -270,11 +309,15 @@ class TestCwpXmlParser:
             mock_builder_object, "states"
         )
         mock_parser_object._add_edges.assert_called_once_with(
-            mock_builder_object, "edges"
+            mock_builder_object, "edges", "edge_labels", mock_state
         )
 
         mock_parser_object._check_expressions.assert_called_once_with(
-            mock_builder_object, "all_items", "expr_listener", mock_state
+            mock_builder_object,
+            "all_items",
+            "expr_listener",
+            mock_state,
+            "start_edge_id",
         )
 
         mock_builder_object.build.assert_called_once()
