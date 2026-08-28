@@ -21,6 +21,7 @@ from bpmncwpverify.core.error import (
     Error,
     ExpressionParseError,
     NotInitializedError,
+    StartExpressionDisallowedAssignemntError,
     StateAntlrWalkerError,
     StateArraySizeError,
     StateMultipleDefinitionError,
@@ -334,7 +335,7 @@ class VarDecl(DeclLoc):
     Represents variable declaration using keyword var
     """
 
-    __slots__ = ["col", "id", "line", "type_", "allowed_values"]
+    __slots__ = ["col", "id", "line", "type_", "init_value", "allowed_values"]
 
     def __init__(
         self,
@@ -350,8 +351,7 @@ class VarDecl(DeclLoc):
         Args:
             id (str): Variable name
             type_ (str): Variable type
-            init (AllowedValueDecl): Initial variable value
-            values (list[AllowedValueDecl]): Variable values
+            allowed_values (list[AllowedValueDecl]): Variable values that this value can take on
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
@@ -359,6 +359,7 @@ class VarDecl(DeclLoc):
         self.id = id
         self.type_ = type_
         self.allowed_values = allowed_values
+        self.init_value: Maybe[AllowedValueDecl] = Nothing
 
     @staticmethod
     def var_decl(
@@ -374,7 +375,6 @@ class VarDecl(DeclLoc):
         Args:
             id (str): Variable name
             type_ (str): Variable type
-            init (AllowedValueDecl): Initial variable value
             values (list[AllowedValueDecl]): Variable values
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
@@ -618,14 +618,14 @@ class State:
 
                 type_ = antlr_get_type_from_type_context(ctx)
 
-                values = State._Listener._get_values(
+                allowed_values = State._Listener._get_values(
                     antlr_get_id_set_context(ctx.id_set())  # type: ignore[no-untyped-call]
                 )
 
                 var_decl = VarDecl(
                     id,
                     type_,
-                    values,
+                    allowed_values,
                     id_line,
                     id_col,
                 )
@@ -872,7 +872,12 @@ class State:
                 if not_(is_successful)(result):
                     return result
 
-                var.allowed_values = [AllowedValueDecl(value, line, col)]
+                if var.allowed_values and not any(
+                    av.value == value for av in var.allowed_values
+                ):
+                    return Failure(StartExpressionDisallowedAssignemntError(name))
+
+                var.init_value = Some(AllowedValueDecl(value, line, col))
                 return Success(None)
 
         return Failure(ExpressionParseError(name))

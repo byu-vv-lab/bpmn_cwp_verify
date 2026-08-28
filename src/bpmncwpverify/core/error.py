@@ -352,6 +352,14 @@ class ExpressionParseError(Error):
         self.exception_str = exception_str
 
 
+class StartExpressionDisallowedAssignemntError(Error):
+    __slots__ = ["exception_str"]
+
+    def __init__(self, exception_str: str):
+        super().__init__()
+        self.exception_str = exception_str
+
+
 class ExpressionRelationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -844,6 +852,8 @@ def get_error_message(error: Error) -> str:
             return f"EXPR ERROR: sometiong of type '{type}' cannot be used with a mathmatical negator"
         case ExpressionParseError(exception_str=exception_str):
             return f"Error while parsing expression: {exception_str}"
+        case StartExpressionDisallowedAssignemntError(exception_str=exception_str):
+            return f"Error wile parsing start edge expression: variable {exception_str} assigned to invalid value"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be related with something of type '{ltype}'"
         case ExpressionIfBranchCompatabilityError(thentype=thentype, elsetype=elsetype):

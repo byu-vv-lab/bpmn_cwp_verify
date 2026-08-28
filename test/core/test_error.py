@@ -72,6 +72,7 @@ from bpmncwpverify.core.error import (
     SpinCoverageError,
     SpinInvalidEndStateError,
     SpinSyntaxError,
+    StartExpressionDisallowedAssignemntError,
     StateAntlrWalkerError,
     StateArraySizeError,
     StateInitNotInValues,
@@ -262,6 +263,10 @@ test_inputs: list[tuple[Error, str]] = [
     (
         ExpressionParseError("exception_str"),
         "Error while parsing expression: exception_str",
+    ),
+    (
+        StartExpressionDisallowedAssignemntError("exception_str"),
+        "Error wile parsing start edge expression: variable exception_str assigned to invalid value",
     ),
     (
         ExpressionRelationCompatabilityError("ltype", "rtype"),
@@ -476,6 +481,7 @@ test_ids: list[str] = [
     "ExpressionComputationCompatabilityError",
     "ExpressionNegatorError",
     "ExpressionParseError",
+    "StartExpressionDisallowedAssignemntError",
     "ExpressionRelationCompatabilityError",
     "ExpressionRelationalNotError",
     "ExpressionIfBranchCompatabilityError",

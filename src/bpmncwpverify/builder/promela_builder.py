@@ -1,3 +1,4 @@
+from returns.maybe import Some
 from returns.result import Failure, Result, Success
 
 from bpmncwpverify.core.bpmn import Bpmn
@@ -147,27 +148,31 @@ def _generate_state_promela(state: State) -> str:
         str_builder.append(arrayBuilder + "}")
         str_builder.append(hiddenBuilder + "}")
     for var_decl in state.vars:
-        if var_decl.type_ in {enum.id for enum in state.enums}:
-            str_builder.append(
-                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.allowed_values[0].value}"
-            )
-            if "bit" not in var_decl.type_:
-                str_builder.append(
-                    f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-        else:
-            str_builder.append(
-                f"{var_decl.type_} {var_decl.id} = {var_decl.allowed_values[0].value}"
-            )
+        match var_decl.init_value:
+            case Some(init_value):
+                if var_decl.type_ in {enum.id for enum in state.enums}:
+                    str_builder.append(
+                        f"mtype:{var_decl.type_} {var_decl.id} = {init_value.value}"
+                    )
+                    if "bit" not in var_decl.type_:
+                        str_builder.append(
+                            f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                        )
+                else:
+                    str_builder.append(
+                        f"{var_decl.type_} {var_decl.id} = {init_value.value}"
+                    )
 
-            if "bit" not in var_decl.type_ and "bool" not in var_decl.type_:
-                str_builder.append(
-                    f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-            else:
-                str_builder.append(
-                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
+                    if "bit" not in var_decl.type_ and "bool" not in var_decl.type_:
+                        str_builder.append(
+                            f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                        )
+                    else:
+                        str_builder.append(
+                            f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                        )
+            case _:
+                continue
 
     return "\n".join(str_builder) + "\n\n"
 
