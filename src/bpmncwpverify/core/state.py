@@ -26,6 +26,7 @@ from bpmncwpverify.core.error import (
     StateArraySizeError,
     StateMultipleDefinitionError,
     StateSyntaxError,
+    UnassignedVariableError,
 )
 
 
@@ -881,6 +882,12 @@ class State:
                 return Success(None)
 
         return Failure(ExpressionParseError(name))
+
+    def assert_all_values_set(self) -> Result[None, Error]:
+        for var in self._vars:
+            if not isinstance(var.init_value, Some):
+                return Failure(UnassignedVariableError(var.id))
+        return Success(None)
 
     @property
     def vars(self) -> tuple[VarDecl, ...]:

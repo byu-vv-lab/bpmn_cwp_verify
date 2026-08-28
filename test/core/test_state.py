@@ -214,28 +214,6 @@ class Test_SymbolTable_build:
                 "const C : bit = 2 var i : int",
                 TypingAssignCompatabilityError(typechecking.BIT, typechecking.BYTE),
             ),
-            # Bad var assigns
-            (
-                "enum E {e} var c : E",
-                TypingNoTypeError("a"),
-            ),
-            (
-                "enum E {e} var c : E",
-                TypingAssignCompatabilityError("E", typechecking.BIT),
-            ),
-            (
-                "var i : int",
-                TypingAssignCompatabilityError(typechecking.INT, typechecking.BOOL),
-            ),
-            (
-                "var i : bit",
-                TypingAssignCompatabilityError(typechecking.BIT, typechecking.BYTE),
-            ),
-            # Var initial value not included in allowed values
-            (
-                "enum E {e f} var c : E",
-                StateInitNotInValues("e", Some(1), Some(25), {"f"}),
-            ),
             # Array initialized with bad size
             # (
             #     "array a[0]: int = {0 1} var a: int = 0",

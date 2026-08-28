@@ -84,6 +84,7 @@ from bpmncwpverify.core.error import (
     TypingListOfExpressionsError,
     TypingNoTypeError,
     TypingTripleVariableError,
+    UnassignedVariableError,
     get_error_message,
 )
 
@@ -266,7 +267,11 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         StartExpressionDisallowedAssignemntError("exception_str"),
-        "Error wile parsing start edge expression: variable exception_str assigned to invalid value",
+        "Error while parsing start edge expression: variable exception_str assigned to invalid value",
+    ),
+    (
+        UnassignedVariableError("variable_name"),
+        "Error while parsing start edge expression: variable variable_name was never assigned",
     ),
     (
         ExpressionRelationCompatabilityError("ltype", "rtype"),
@@ -482,6 +487,7 @@ test_ids: list[str] = [
     "ExpressionNegatorError",
     "ExpressionParseError",
     "StartExpressionDisallowedAssignemntError",
+    "UnassignedVariableError",
     "ExpressionRelationCompatabilityError",
     "ExpressionRelationalNotError",
     "ExpressionIfBranchCompatabilityError",

@@ -10,7 +10,7 @@ from bpmncwpverify.antlr.CwpListener import CwpListener
 from bpmncwpverify.antlr.CwpParser import CwpParser
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
-from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.error import Error, ErrorException
 from bpmncwpverify.core.state import State
 
 
@@ -41,7 +41,11 @@ class CwpMermaidParser:
 
                 result = edge.parse_initial_values().bind(self._apply_initial_values)  # pyright: ignore[reportUnknownMemberType]
                 if not_(is_successful)(result):
-                    raise Exception(result.failure())
+                    raise ErrorException(result.failure())
+
+            all_variables_assigned = self.state.assert_all_values_set()
+            if not is_successful(all_variables_assigned):
+                raise ErrorException(all_variables_assigned.failure())
 
             self.builder = self.builder.with_start_edge(
                 edge,

@@ -1,5 +1,6 @@
 from xml.etree.ElementTree import Element
 
+from returns.pipeline import is_successful
 from returns.result import Failure, Result, Success
 
 from bpmncwpverify.builder.cwp_builder import CwpBuilder
@@ -110,6 +111,10 @@ class CwpXmlParser:
             )
             if not isinstance(result, Success):
                 raise ErrorException(result.failure())
+
+        all_variables_assigned = state.assert_all_values_set()
+        if not is_successful(all_variables_assigned):
+            raise ErrorException(all_variables_assigned.failure())
 
         builder.with_start_edge(edge)
         return edge_id

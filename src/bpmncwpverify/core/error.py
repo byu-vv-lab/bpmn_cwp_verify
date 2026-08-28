@@ -360,6 +360,14 @@ class StartExpressionDisallowedAssignemntError(Error):
         self.exception_str = exception_str
 
 
+class UnassignedVariableError(Error):
+    __slots__ = ["variable_name"]
+
+    def __init__(self, variable_name: str):
+        super().__init__()
+        self.variable_name = variable_name
+
+
 class ExpressionRelationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -853,7 +861,9 @@ def get_error_message(error: Error) -> str:
         case ExpressionParseError(exception_str=exception_str):
             return f"Error while parsing expression: {exception_str}"
         case StartExpressionDisallowedAssignemntError(exception_str=exception_str):
-            return f"Error wile parsing start edge expression: variable {exception_str} assigned to invalid value"
+            return f"Error while parsing start edge expression: variable {exception_str} assigned to invalid value"
+        case UnassignedVariableError(variable_name=variable_name):
+            return f"Error while parsing start edge expression: variable {variable_name} was never assigned"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be related with something of type '{ltype}'"
         case ExpressionIfBranchCompatabilityError(thentype=thentype, elsetype=elsetype):
