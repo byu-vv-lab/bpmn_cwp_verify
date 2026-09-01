@@ -302,6 +302,15 @@ class CwpNoStartStateError(Error):
         super().__init__()
 
 
+class ExpressionArrayAccessError(Error):
+    __slots__ = ["array_name", "array_type"]
+
+    def __init__(self, array_name: str, array_type: str) -> None:
+        super().__init__()
+        self.array_name = array_name
+        self.array_type = array_type
+
+
 class ExpressionComputationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -537,6 +546,17 @@ class SpinSyntaxError(Error):
         self.list_of_error_maps = list_of_error_maps
 
 
+class StateInheritanceError(Error):
+    __slots__ = ["id", "parent_id", "line", "column"]
+
+    def __init__(self, id: str, parent_id: str, line: Maybe[int], column: Maybe[int]):
+        super().__init__()
+        self.id = id
+        self.parent_id = parent_id
+        self.line = line
+        self.column = column
+
+
 class StateInitNotInValues(Error):
     __slots__ = ["id", "line", "column", "values"]
 
@@ -667,6 +687,14 @@ class TypingAssignCompatabilityError(Error):
         super().__init__()
         self.ltype = ltype
         self.rtype = rtype
+
+
+class TypedefPathError(Error):
+    __slots__ = ["full_path"]
+
+    def __init__(self, full_path: str):
+        super().__init__()
+        self.full_path = full_path
 
 
 class TypingTripleVariableError(Error):
@@ -803,6 +831,8 @@ def get_error_message(error: Error) -> str:
             return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
         case CwpNoStartStateError():
             return "CWP ERROR: No start states found."
+        case ExpressionArrayAccessError(array_name=array_name, array_type=array_type):
+            return f"EXPR ERROR: '{array_name}' is of type '{array_type}' and cannot be accessed with an index."
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be computed with something of type '{ltype}'"
         case ExpressionNegatorError(type=type):
@@ -893,6 +923,13 @@ def get_error_message(error: Error) -> str:
             return "\n".join(errors)
         case StateAntlrWalkerError(msg=msg):
             return f"STATE ERROR: {msg}"
+        case StateInheritanceError(
+            id=id, parent_id=parent_id, line=line, column=column
+        ):
+            loc: str = " "
+            if line != Nothing and column != Nothing:
+                loc = f"{line.unwrap()}:{column.unwrap()}"
+            return f"STATE ERROR: '{id}' at {loc} cannot inherit from '{parent_id}' because it is not defined"
         case StateInitNotInValues(id=id, line=line, column=column, values=values):
             location: str = " "
             if line != Nothing and column != Nothing:
@@ -961,6 +998,8 @@ def get_error_message(error: Error) -> str:
             return f"CBMC ERROR: failed to run '{command}'"
         case SubProcessRunError(process_name=process_name):
             return f"ERROR: failed to run '{process_name}'"
+        case TypedefPathError(full_path=full_path):
+            return f"ERROR: Typedef path '{full_path}' is not valid"
         case TypingAssignCompatabilityError(ltype=ltype, rtype=rtype):
             return f"TYPING ERROR: something of type '{rtype}' cannot by assigned to something of type '{ltype}'"
         case TypingTripleVariableError(id=id):

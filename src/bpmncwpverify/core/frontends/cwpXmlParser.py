@@ -17,6 +17,7 @@ from bpmncwpverify.core.error import (
 )
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
+from bpmncwpverify.core.typechecking import TYPEDEF
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 
 
@@ -75,7 +76,8 @@ class CwpXmlParser:
     ) -> None:
         expr: list[str] = []
         for v in state.vars:
-            expr.append(f"{v.id} = {v.init.value}")
+            if v.type_ != TYPEDEF:
+                expr.append(f"{v.id} = {v.init.value}")
 
         edge_expr = " and ".join(expr)
 

@@ -1,5 +1,6 @@
 # type: ignore
 import pytest
+from returns.maybe import Some
 
 from bpmncwpverify.builder.promela_builder import (
     _generate_logger,
@@ -27,6 +28,7 @@ def test_logger_generator(mocker):
     state = mocker.Mock()
     state.vars = [mock_val1, mock_val2]
     state.arrays = []
+    state.str2var = {var.id: var for var in state.vars}
 
     cwp = mocker.Mock(states={"_0": mock_val1, "_1": mock_val2})
     _generate_logger(state, cwp)
@@ -74,6 +76,7 @@ def test_state_dump_int(mocker):
     state = mocker.Mock()
     state.vars = vars
     state.arrays = []
+    state.str2var = {var.id: var for var in vars}
 
     result = _generate_state_dump(state)
 
@@ -92,6 +95,7 @@ def test_state_dump_bool(mocker):
     state = mocker.Mock()
     state.vars = vars
     state.arrays = []
+    state.str2var = {var.id: var for var in vars}
     result = _generate_state_dump(state)
 
     assert (
@@ -109,12 +113,45 @@ def test_state_dump_enum(mocker):
     state = mocker.Mock()
     state.vars = vars
     state.arrays = []
+    state.str2var = {var.id: var for var in vars}
 
     result = _generate_state_dump(state)
 
     assert (
         result
         == 'inline stateDump(){\n\tprintf("v1 = %e\\n", v1)\n\tprintf("v2 = %e\\n", v2)\n}\n\n'
+    )
+
+
+def test_state_dump_typedef(mocker):
+    vars = [mocker.Mock(id="v1", type_="int", init="1")]
+
+    state = mocker.Mock()
+    state.vars = vars
+    state.arrays = []
+    state.typedefs = [
+        mocker.Mock(
+            id="OuterTypedef",
+            fields=[mocker.Mock(id="field1", type_="int", init="0")],
+            nested_typedefs=[
+                mocker.Mock(
+                    id="NestedTypedef",
+                    fields=[mocker.Mock(id="nested_field", type_="int", init="1")],
+                )
+            ],
+        )
+    ]
+    state.str2var = {
+        "v1": vars[0],
+        "OuterTypedef.field1": state.typedefs[0].fields[0],
+        "NestedTypedef.nested_field": state.typedefs[0].nested_typedefs[0].fields[0],
+    }
+
+    result = _generate_state_dump(state)
+
+    assert (
+        result
+        == 'inline stateDump(){\n\tprintf("v1 = %d\\n", v1)\n\tprintf("OuterTypedef.field1 = %d\\n", OuterTypedef.field1)\n\tprintf("NestedTypedef.nested_field = %d\\n", NestedTypedef.nested_field)\n}\n\n'
     )
 
 
@@ -143,14 +180,48 @@ def test_generate_promela(mocker):
             mocker.Mock(value="5"),
         ],
     )
+    var5 = mocker.Mock(
+        id="outertypedef", type_="typedef", init=mocker.Mock(value="OuterTypedef")
+    )
+    typedef2 = mocker.Mock(
+        id="InnerTypedef",
+        fields=[
+            mocker.Mock(id="nested_field", type_="int", init=mocker.Mock(value="1"))
+        ],
+    )
+    typedef1 = mocker.Mock(
+        id="OuterTypedef",
+        fields=[
+            mocker.Mock(id="field1", type_="int", init=mocker.Mock(value="0")),
+            mocker.Mock(
+                id="innertypedef",
+                type_="typedef",
+                init=mocker.Mock(value="InnerTypedef"),
+            ),
+        ],
+        nested_typedefs=[typedef2],
+    )
 
     _consts = [const]
-    _vars = [var1, var2, var3, var4]
+    _vars = [var1, var2, var3, var4, var5]
     _enums = [enum]
     _arrays = [array]
+    _typedefs = [typedef2, typedef1]
 
-    state = State(_consts, _enums, _vars, _arrays)
-
+    state = State(_consts, _enums, _vars, _arrays, _typedefs)
+    state._str2var = Some(
+        {
+            "var1_id": var1,
+            "var2_id": var2,
+            "var3_id": var3,
+            "var4_id": var4,
+            "outertypedef": var5,
+            "outertypedef.field1": typedef1.fields[0],
+            "outertypedef.innertypedef.nested_field": typedef1.nested_typedefs[
+                0
+            ].fields[0],
+        }
+    )
     result = _generate_state_promela(state)
 
     expected = (
@@ -159,6 +230,8 @@ def test_generate_promela(mocker):
         "mtype:enum_id = {init_val other_val}\n"
         "int array_id[5] = {1, 2, 3, 4, 5}\n"
         "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n"
+        "typedef InnerTypedef {\n    int nested_field\n}\n"
+        "typedef OuterTypedef {\n    int field1\n    InnerTypedef innertypedef\n}\n"
         "int var1_id = 0\n"
         "hidden int old_var1_id = var1_id\n"
         "mtype:enum_id var2_id = init_val\n"
@@ -166,7 +239,10 @@ def test_generate_promela(mocker):
         "bool var3_id = 0\n"
         "bool old_var3_id = var3_id\n"
         "bit var4_id = 0\n"
-        "bit old_var4_id = var4_id\n\n"
+        "bit old_var4_id = var4_id\n"
+        "OuterTypedef outertypedef\n"
+        "OuterTypedef old_outertypedef\n"
+        "inline typedefInit() {\n    outertypedef.field1 = 0\n    old_outertypedef.field1 = 0\n    outertypedef.innertypedef.nested_field = 1\n    old_outertypedef.innertypedef.nested_field = 1\n}\n\n"
     )
     assert result == expected
 
@@ -179,6 +255,7 @@ def mock_state(mocker):
     state._enums = []
     state._vars = []
     state._arrays = []
+    state._typedefs = []
     return state
 
 
@@ -215,9 +292,45 @@ def test_generate_promela_with_full_state(mocker, mock_state):
         mocker.Mock(value="5"),
     ]
 
+    mock_var_typedef = mocker.MagicMock()
+    mock_var_typedef.type_ = "typedef"
+    mock_var_typedef.id = "outer_typedef"
+    mock_var_typedef.init.value = "OuterTypedef"
+
+    mock_typedef1 = mocker.MagicMock()
+    mock_typedef1.id = "InnerTypedef"
+    mock_typedef1.fields = [
+        mocker.MagicMock(
+            id="inner_field1", type_="int", init=mocker.MagicMock(value="1")
+        )
+    ]
+    mock_typedef1.nested_typedefs = []
+
+    mock_typedef2 = mocker.MagicMock()
+    mock_typedef2.id = "OuterTypedef"
+    mock_typedef2.fields = [
+        mocker.MagicMock(
+            id="outer_field1", type_="int", init=mocker.MagicMock(value="0")
+        ),
+        mocker.MagicMock(
+            id="inner_typedef",
+            type_="typedef",
+            init=mocker.MagicMock(value="InnerTypedef"),
+        ),
+    ]
+    mock_typedef2.nested_typedefs = [mock_typedef1]
+
     mock_state.consts = [mock_const]
     mock_state.enums = [mock_enum]
-    mock_state.vars = [mock_var_enum, mock_var_int]
+    mock_state.vars = [mock_var_enum, mock_var_int, mock_var_typedef]
+    mock_state.typedefs = [mock_typedef1, mock_typedef2]
+    mock_state.str2var = {
+        "state_var": mock_var_enum,
+        "counter": mock_var_int,
+        "outer_typedef": mock_var_typedef,
+        "outer_typedef.outer_field1": mock_typedef2.fields[0],
+        "outer_typedef.inner_typedef.inner_field1": mock_typedef1.fields[0],
+    }
     mock_state.arrays = [mock_array]
 
     result = _generate_state_promela(mock_state)
@@ -228,10 +341,15 @@ def test_generate_promela_with_full_state(mocker, mock_state):
         "mtype:TestEnum = {START STOP}\n"
         "int array_id[5] = {1, 2, 3, 4, 5}\n"
         "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n"
+        "typedef InnerTypedef {\n    int inner_field1\n}\n"
+        "typedef OuterTypedef {\n    int outer_field1\n    InnerTypedef inner_typedef\n}\n"
         "int state_var = START\n"
         "hidden int old_state_var = state_var\n"
         "int counter = 0\n"
-        "hidden int old_counter = counter\n\n"
+        "hidden int old_counter = counter\n"
+        "OuterTypedef outer_typedef\n"
+        "OuterTypedef old_outer_typedef\n"
+        "inline typedefInit() {\n    outer_typedef.outer_field1 = 0\n    old_outer_typedef.outer_field1 = 0\n    outer_typedef.inner_typedef.inner_field1 = 1\n    old_outer_typedef.inner_typedef.inner_field1 = 1\n}\n\n"
     )
 
     assert result == expected_output
@@ -249,7 +367,8 @@ def test_generate_promela_with_only_constants(mocker, mock_state):
     result = _generate_state_promela(mock_state)
 
     expected_output = (
-        "//**********VARIABLE DECLARATION************//\n#define BUFFER_SIZE 256\n\n"
+        "//**********VARIABLE DECLARATION************//\n#define BUFFER_SIZE 256\n"
+        "inline typedefInit() {\n    skip\n}\n\n"
     )
 
     assert result == expected_output
@@ -271,7 +390,59 @@ def test_generate_promela_with_only_enums(mocker, mock_state):
 
     expected_output = (
         "//**********VARIABLE DECLARATION************//\n"
-        "mtype:TestEnum = {IDLE RUNNING}\n\n"
+        "mtype:TestEnum = {IDLE RUNNING}\n"
+        "inline typedefInit() {\n    skip\n}\n\n"
+    )
+
+    assert result == expected_output
+
+
+def test_generate_promela_with_only_typedefs(mocker, mock_state):
+    """Test generate_promela with only typedefs."""
+
+    mock_typedef3 = mocker.MagicMock()
+    mock_typedef3.id = "InnerStruct"
+    mock_typedef3.fields = [
+        mocker.MagicMock(
+            id="inner_field1", type_="int", init=mocker.MagicMock(value="1")
+        )
+    ]
+    mock_typedef3.nested_typedefs = []
+
+    mock_typedef1 = mocker.MagicMock()
+    mock_typedef1.id = "MyStruct"
+    mock_typedef1.fields = [
+        mocker.MagicMock(id="field1", type_="bit", init=mocker.MagicMock(value="1")),
+        mocker.MagicMock(id="field2", type_="bit", init=mocker.MagicMock(value="0")),
+    ]
+    mock_typedef1.nested_typedefs = [mock_typedef3]
+
+    mock_typedef2 = mocker.MagicMock()
+    mock_typedef2.id = "MyOtherStruct"
+    mock_typedef2.fields = [
+        mocker.MagicMock(id="field3", type_="int", init=mocker.MagicMock(value="10")),
+        mocker.MagicMock(id="field4", type_="int", init=mocker.MagicMock(value="'11'")),
+    ]
+    mock_typedef2.nested_typedefs = []
+
+    mock_state.typedefs = [mock_typedef3, mock_typedef1, mock_typedef2]
+
+    result = _generate_state_promela(mock_state)
+
+    expected_output = (
+        "//**********VARIABLE DECLARATION************//\n"
+        "typedef InnerStruct {\n"
+        "    int inner_field1\n"
+        "}\n"
+        "typedef MyStruct {\n"
+        "    bit field1\n"
+        "    bit field2\n"
+        "}\n"
+        "typedef MyOtherStruct {\n"
+        "    int field3\n"
+        "    int field4\n"
+        "}\n"
+        "inline typedefInit() {\n    skip\n}\n\n"
     )
 
     assert result == expected_output
@@ -299,7 +470,8 @@ def test_generate_promela_with_only_arrays(mocker, mock_state):
     expected_output = (
         "//**********VARIABLE DECLARATION************//\n"
         "int array_id[5] = {1, 2, 3, 4, 5}\n"
-        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n\n"
+        "hidden int old_array_id[5] = {1, 2, 3, 4, 5}\n"
+        "inline typedefInit() {\n    skip\n}\n\n"
     )
 
     assert result == expected_output
@@ -310,6 +482,9 @@ def test_generate_promela_with_empty_state(mock_state):
 
     result = _generate_state_promela(mock_state)
 
-    expected_output = "//**********VARIABLE DECLARATION************//\n\n"
+    expected_output = (
+        "//**********VARIABLE DECLARATION************//\n"
+        "inline typedefInit() {\n    skip\n}\n\n"
+    )
 
     assert result == expected_output
