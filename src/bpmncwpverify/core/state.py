@@ -1572,7 +1572,7 @@ class State:
                         first.col,
                     )
                 )
-            id2type[array_decl.id] = TypeWithDeclLoc(array_decl.type_, array_decl)
+            id2type[array_decl.id] = TypeWithDeclLoc(typechecking.ARRAY, array_decl)
             str2array[array_decl.id] = array_decl
 
             return Success(None)

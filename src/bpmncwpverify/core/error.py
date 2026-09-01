@@ -302,6 +302,15 @@ class CwpNoStartStateError(Error):
         super().__init__()
 
 
+class ExpressionArrayAccessError(Error):
+    __slots__ = ["array_name", "array_type"]
+
+    def __init__(self, array_name: str, array_type: str) -> None:
+        super().__init__()
+        self.array_name = array_name
+        self.array_type = array_type
+
+
 class ExpressionComputationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -822,6 +831,8 @@ def get_error_message(error: Error) -> str:
             return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
         case CwpNoStartStateError():
             return "CWP ERROR: No start states found."
+        case ExpressionArrayAccessError(array_name=array_name, array_type=array_type):
+            return f"EXPR ERROR: '{array_name}' is of type '{array_type}' and cannot be accessed with an index."
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be computed with something of type '{ltype}'"
         case ExpressionNegatorError(type=type):
