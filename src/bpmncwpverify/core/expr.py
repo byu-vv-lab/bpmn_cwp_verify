@@ -273,13 +273,8 @@ class ExpressionListener(ExprListener):
         array_type.bind(validate_array_type)  # type: ignore[reportUnknownMemberType, unused-ignore]
 
         def validate_index_type(index_type: str) -> Result[None, Error]:
-            if index_type not in {
-                typechecking.BIT,
-                typechecking.BYTE,
-                typechecking.SHORT,
-                typechecking.INT,
-            }:
-                return Failure(ExpressionArrayAccessError(array_name, index_type))
+            if index_type != typechecking.INT:
+                return Failure(ExpressionArrayAccessError(array_name, index_text))
             return Success(None)
 
         index_type = self.state.get_type(index_text)
