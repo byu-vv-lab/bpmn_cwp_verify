@@ -58,7 +58,7 @@ def _generate_logger(state: State, cwp: Cwp) -> str:
                 IndentAction.INC,
             )
             loggerFunction.write_str(
-                f'printf("{path}[{i}] = {_get_print_type(array.type_)}\\n", {path}[{i}])',
+                f'printf("{path}[{i}] = {_get_print_type(array.sub_type)}\\n", {path}[{i}])',
                 NL_SINGLE,
             )
             loggerFunction.write_str(f"old_{path}[{i}] = {path}[{i}]", NL_SINGLE)
@@ -96,7 +96,7 @@ def _generate_state_dump(state: State) -> str:
         for i in range(len(array.values)):
             if i == len(array.values) - 1:
                 comma = ""
-            valTypeList += f"{_get_print_type(array.type_)}" + comma
+            valTypeList += f"{_get_print_type(array.sub_type)}" + comma
             valDeclList += f"{path}[{i}]" + comma
         state_dump.write_str(
             f'printf("{path} = {{{valTypeList}}}\\n", {valDeclList})', NL_SINGLE
@@ -127,15 +127,13 @@ def _generate_state_promela(state: State) -> str:
         )
     for array_decl in state.arrays:
         arrayBuilder: str = (
-            f"{array_decl.type_} {array_decl.id}[{array_decl.size}] = {{"
+            f"{array_decl.sub_type} {array_decl.id}[{array_decl.size}] = {{"
         )
-        if "bit" not in array_decl.type_ and "bool" not in array_decl.type_:
-            hiddenBuilder: str = (
-                f"hidden {array_decl.type_} old_{array_decl.id}[{array_decl.size}] = {{"
-            )
+        if "bit" not in array_decl.sub_type and "bool" not in array_decl.sub_type:
+            hiddenBuilder: str = f"hidden {array_decl.sub_type} old_{array_decl.id}[{array_decl.size}] = {{"
         else:
             hiddenBuilder = (
-                f"{array_decl.type_} old_{array_decl.id}[{array_decl.size}] = {{"
+                f"{array_decl.sub_type} old_{array_decl.id}[{array_decl.size}] = {{"
             )
 
         index: int = 0
@@ -154,7 +152,7 @@ def _generate_state_promela(state: State) -> str:
         str_builder.append(f"typedef {typedef_decl.id} {{")
         for array_decl in typedef_decl.arrays:
             str_builder.append(
-                f"    {array_decl.type_} {array_decl.id}[{array_decl.size}]"
+                f"    {array_decl.sub_type} {array_decl.id}[{array_decl.size}]"
             )
         for var_decl in typedef_decl.fields:
             if var_decl.type_ in {enum.id for enum in state.enums}:

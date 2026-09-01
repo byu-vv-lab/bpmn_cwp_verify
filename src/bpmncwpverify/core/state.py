@@ -296,12 +296,12 @@ class ArrayDecl(DeclLoc):
     Represents array variable declaration using keyword array
     """
 
-    __slots__ = ["col", "id", "line", "size", "type_", "values"]
+    __slots__ = ["col", "id", "line", "size", "sub_type", "values"]
 
     def __init__(
         self,
         id: str,
-        type_: str,
+        sub_type: str,
         size: int,
         values: list[AllowedValueDecl],
         line: Maybe[int] = Nothing,
@@ -312,7 +312,7 @@ class ArrayDecl(DeclLoc):
 
         Args:
             id (str): Variable name
-            type_ (str): Variable type
+            sub_type_ (str): Variable sub-type
             size (int): Array size
             values (list[AllowedValueDecl]): Initial variable values
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
@@ -320,14 +320,14 @@ class ArrayDecl(DeclLoc):
         """
         super().__init__(line, col)
         self.id = id
-        self.type_ = type_
+        self.sub_type = sub_type
         self.size = size
         self.values = values
 
     @staticmethod
     def array_decl(
         id: str,
-        type_: str,
+        sub_type: str,
         size: int,
         values: list[AllowedValueDecl],
         line: Maybe[int] = Nothing,
@@ -338,7 +338,7 @@ class ArrayDecl(DeclLoc):
 
         Args:
             id (str): Variable name
-            type_ (str): Variable type
+            sub_type (str): Variable sub-type
             size (int): Array size
             values (list[AllowedValueDecl]): Initial variable values
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
@@ -347,7 +347,7 @@ class ArrayDecl(DeclLoc):
 
         if len(values) != size or size < 1:
             return Failure(StateArraySizeError(id, line, col, size, len(values)))
-        return Success(ArrayDecl(id, type_, size, values, line, col))
+        return Success(ArrayDecl(id, sub_type, size, values, line, col))
 
 
 class VarDecl(DeclLoc):
@@ -926,7 +926,7 @@ class State:
                 "array "
                 + array.id
                 + " "
-                + array.type_
+                + array.sub_type
                 + "["
                 + str(array.size)
                 + "] = \n[\n"
@@ -1267,7 +1267,7 @@ class State:
         """
         for array_decl in self._arrays:
             values = array_decl.values
-            result = self._type_check_assigns(array_decl.type_, values)
+            result = self._type_check_assigns(array_decl.sub_type, values)
             if not_(is_successful)(result):
                 return result
         return Success(None)
@@ -1288,7 +1288,7 @@ class State:
                     return result
             for array_decl in typedef_decl.arrays:
                 values = array_decl.values
-                result = self._type_check_assigns(array_decl.type_, values)
+                result = self._type_check_assigns(array_decl.sub_type, values)
                 if not_(is_successful)(result):
                     return result
             for nested_typedef in typedef_decl.nested_typedefs:
@@ -1419,7 +1419,7 @@ class State:
                     str2var[full_path] = var_decl
             for array_decl in typedef_decl.arrays:
                 full_path = f"{id}.{array_decl.id}"
-                id2type[full_path] = TypeWithDeclLoc(array_decl.type_, array_decl)
+                id2type[full_path] = TypeWithDeclLoc(typechecking.ARRAY, array_decl)
                 str2array[full_path] = array_decl
             return Success(None)
 
