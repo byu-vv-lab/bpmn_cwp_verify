@@ -56,6 +56,23 @@ class ListNode(ExpressionNode):
         visitor.end_visit_list(self)
 
 
+class ArrayAccessNode(ExpressionNode):
+    __slots__ = ["array", "index"]
+
+    def __init__(self, array: ExpressionNode, index: ExpressionNode) -> None:
+        self.array = array
+        self.index = index
+
+    def accept(self, visitor: "FeelVisitor") -> None:
+        result = visitor.visit_array_access(self)
+
+        if result:
+            self.array.accept(visitor)
+            self.index.accept(visitor)
+
+        visitor.end_visit_array_access(self)
+
+
 class BinaryOperatorNode(ExpressionNode):
     __slots__ = ["left", "right"]
 
@@ -270,6 +287,12 @@ class FeelVisitor:
         return True
 
     def end_visit_list(self, node: ListNode) -> None:
+        pass
+
+    def visit_array_access(self, node: ArrayAccessNode) -> bool:
+        return True
+
+    def end_visit_array_access(self, node: ArrayAccessNode) -> None:
         pass
 
     def visit_binary_operator(self, node: BinaryOperatorNode) -> bool:
