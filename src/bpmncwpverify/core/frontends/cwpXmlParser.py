@@ -76,10 +76,13 @@ class CwpXmlParser:
             )
 
     def _apply_initial_values(
-        self, state: State, initial_values: list[tuple[str, str]]
+        self, state: State, initial_values: list[tuple[str, str | list[str]]]
     ) -> Result[None, Error]:
         for name, value in initial_values:
-            result = state.set_value(name, value)
+            if isinstance(value, list):
+                result = state.set_array_value(name, value)
+            else:
+                result = state.set_variable_value(name, value)
             if not isinstance(result, Success):
                 return Failure(result.failure())
         return Success(None)

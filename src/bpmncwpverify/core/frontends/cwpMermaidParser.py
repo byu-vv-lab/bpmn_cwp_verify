@@ -99,10 +99,13 @@ class CwpMermaidParser:
             return raw[1:].strip()
 
         def _apply_initial_values(
-            self, initial_values: list[tuple[str, str]]
+            self, initial_values: list[tuple[str, str | list[str]]]
         ) -> Result[None, Error]:
             for name, value in initial_values:
-                result = self.state.set_value(name, value)
+                if isinstance(value, list):
+                    result = self.state.set_array_value(name, value)
+                else:
+                    result = self.state.set_variable_value(name, value)
                 if not is_successful(result):
                     return Failure(result.failure())
             return Success(None)

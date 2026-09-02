@@ -643,7 +643,7 @@ class State:
                 ctx (StateParser.Array_declContext): Array variable to add
             """
 
-            def get_array_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
+            def get_array_decl(builder: StateBuilder) -> StateBuilder:
                 node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
                 id: str = State._Listener._get_id(node)
@@ -655,14 +655,10 @@ class State:
                 number_node: TerminalNode = antlr_get_terminal_node_impl(ctx.ID(1))
                 size: int = int(antlr_get_text(number_node))
 
-                values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_set_context(ctx.id_set()),  # type: ignore[no-untyped-call]
-                )
+                array_decl = ArrayDecl(id, type_, size, [], id_line, id_col)
+                return builder.with_array_decl(array_decl)
 
-                result = ArrayDecl.array_decl(id, type_, size, values, id_line, id_col)
-                return result.map(builder.with_array_decl).alt(lambda error: error)
-
-            self.state_builder = self.state_builder.bind(get_array_decl)  # pyright: ignore[reportUnknownMemberType]
+            self.state_builder = self.state_builder.map(get_array_decl)
 
     def __init__(
         self,
@@ -853,7 +849,7 @@ class State:
         )
         return result
 
-    def set_value(
+    def set_variable_value(
         self,
         name: str,
         value: str,
@@ -864,9 +860,7 @@ class State:
             if var.id == name:
                 result: Result[None, Error] = (
                     self.get_type(value)
-                    .bind(  # pyright: ignore[reportUnknownMemberType]
-                        lambda rtype: typechecking.get_type_assign(var.type_, rtype)
-                    )
+                    .bind(lambda rtype: typechecking.get_type_assign(var.type_, rtype))  # pyright: ignore[reportUnknownMemberType]
                     .map(lambda _: None)
                 )
 
@@ -883,10 +877,52 @@ class State:
 
         return Failure(ExpressionParseError(name))
 
+    def set_array_value(
+        self,
+        name: str,
+        values: list[str],
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> Result[None, Error]:
+        for array in self._arrays:
+            if array.id == name:
+                if len(values) != array.size:
+                    return Failure(
+                        StateArraySizeError(name, line, col, array.size, len(values))
+                    )
+
+                for value in values:
+                    result: Result[None, Error] = (
+                        self.get_type(value)
+                        .bind(  # pyright: ignore[reportUnknownMemberType]
+                            lambda rtype: typechecking.get_type_assign(
+                                array.type_, rtype
+                            )
+                        )
+                        .map(lambda _: None)
+                    )
+                    if not_(is_successful)(result):
+                        return result
+
+                array.values = [AllowedValueDecl(v, line, col) for v in values]
+                return Success(None)
+
+        return Failure(ExpressionParseError(name))
+
     def assert_all_values_set(self) -> Result[None, Error]:
         for var in self._vars:
             if not isinstance(var.init_value, Some):
                 return Failure(UnassignedVariableError(var.id))
+
+        for array in self._arrays:
+            if not array.values:
+                return Failure(UnassignedVariableError(array.id))
+            if len(array.values) != array.size:
+                return Failure(
+                    StateArraySizeError(
+                        array.id, array.line, array.col, array.size, len(array.values)
+                    )
+                )
         return Success(None)
 
     @property

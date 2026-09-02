@@ -131,7 +131,9 @@ class CwpEdge:
             return Success(left_result.unwrap() + right_result.unwrap())
         return Failure(CwpInvalidAssignmentError())
 
-    def parse_initial_values(self) -> Result[list[tuple[str, str]], Error]:
+    def parse_initial_values(
+        self,
+    ) -> Result[list[tuple[str, str | list[str]]], Error]:
         if self.source or not self.expression:
             return Failure(CwpInvalidStartEdgeError())
 
@@ -145,27 +147,44 @@ class CwpEdge:
             for item in ast.values:
                 item_result = self._flatten_and_equals(item)
                 if not_(is_successful)(item_result):
-                    return cast(Result[list[tuple[str, str]], Error], item_result)
+                    return cast(
+                        Result[list[tuple[str, str | list[str]]], Error], item_result
+                    )
                 assignments_result = Success(
                     assignments_result.unwrap() + item_result.unwrap()
                 )
         else:
             assignments_result = self._flatten_and_equals(ast)
             if not_(is_successful)(assignments_result):
-                return cast(Result[list[tuple[str, str]], Error], assignments_result)
+                return cast(
+                    Result[list[tuple[str, str | list[str]]], Error], assignments_result
+                )
 
-        initial_values: list[tuple[str, str]] = []
+        initial_values: list[tuple[str, str | list[str]]] = []
 
         for assignment in assignments_result.unwrap():
             if not isinstance(assignment.left, QualifiedNameNode):
                 return Failure(CwpInvalidAssignmentTargetError())
 
             name = assignment.left.name
-            value_result = self._literal_text(assignment.right)
-            if not is_successful(value_result):
-                return cast(Result[list[tuple[str, str]], Error], value_result)
 
-            initial_values.append((name, value_result.unwrap()))
+            if isinstance(assignment.right, ListNode):
+                element_values: list[str] = []
+                for element in assignment.right.values:
+                    el_result = self._literal_text(element)
+                    if not is_successful(el_result):
+                        return cast(
+                            Result[list[tuple[str, str | list[str]]], Error], el_result
+                        )
+                    element_values.append(el_result.unwrap())
+                initial_values.append((name, element_values))
+            else:
+                value_result = self._literal_text(assignment.right)
+                if not is_successful(value_result):
+                    return cast(
+                        Result[list[tuple[str, str | list[str]]], Error], value_result
+                    )
+                initial_values.append((name, value_result.unwrap()))
 
         return Success(initial_values)
 
