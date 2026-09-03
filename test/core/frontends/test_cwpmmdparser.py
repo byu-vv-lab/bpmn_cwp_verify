@@ -2,7 +2,9 @@
 import pytest
 from returns.functions import not_
 from returns.pipeline import is_successful
+from returns.result import Failure, Success
 
+from bpmncwpverify.core.error import ErrorException
 from bpmncwpverify.core.frontends.cwpMermaidParser import CwpMermaidParser
 
 
@@ -250,3 +252,108 @@ class TestCwpMermaidParserFromMmd:
 
         assert not_(is_successful)(result)
         assert result.failure() == "WALK_FAILED"
+
+
+class TestCwpMermaidParserVarAndArrayValues:
+    def test_exit_start_transition_with_array_initial_value(self, mocker):
+        mock_target_node = mocker.Mock()
+        mock_target_node.getText.return_value = "start"
+
+        mock_ctx = mocker.Mock()
+        mock_ctx.ID.return_value = mock_target_node
+
+        mock_expr_clause_node = mocker.Mock()
+        mock_expr_clause_node.getText.return_value = ": a = {0}"
+        mock_ctx.EXPR_CLAUSE.return_value = mock_expr_clause_node
+
+        mock_builder = mocker.Mock()
+        mock_builder.gen_edge_name.return_value = "A"
+        mock_builder.with_start_edge.return_value = mock_builder
+
+        mock_edge = mocker.Mock()
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.from_mmd",
+            return_value=mock_edge,
+        )
+
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.cleanup_expression",
+            return_value="a = {0}",
+        )
+
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.build_ast",
+            return_value=mock_edge,
+        )
+
+        mock_edge.parse_initial_values.return_value = Success([("a", ["0"])])
+
+        mock_state = mocker.Mock()
+        mock_state.set_array_value.return_value = Success(None)
+
+        object.__setattr__(
+            mock_state,
+            "assert_all_values_set",
+            mocker.Mock(return_value=Success(None)),
+        )
+
+        listener = CwpMermaidParser._BuilderListener(
+            mock_builder,
+            mock_state,
+        )
+
+        listener.exitStartTransition(mock_ctx)
+
+        mock_state.set_array_value.assert_called_once_with("a", ["0"])
+        mock_state.assert_all_values_set.assert_called_once()
+        mock_builder.with_start_edge.assert_called_once_with(mock_edge)
+
+    def test_exit_start_transition_set_array_value_error(self, mocker):
+        mock_target_node = mocker.Mock()
+        mock_target_node.getText.return_value = "start"
+
+        mock_ctx = mocker.Mock()
+        mock_ctx.ID.return_value = mock_target_node
+
+        mock_expr_clause_node = mocker.Mock()
+        mock_expr_clause_node.getText.return_value = ": a = {bad}"
+        mock_ctx.EXPR_CLAUSE.return_value = mock_expr_clause_node
+
+        mock_builder = mocker.Mock()
+        mock_builder.gen_edge_name.return_value = "A"
+
+        mock_edge = mocker.Mock()
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.from_mmd",
+            return_value=mock_edge,
+        )
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.cleanup_expression",
+            return_value="a = {bad}",
+        )
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.build_ast",
+            return_value=mock_edge,
+        )
+
+        mock_edge.parse_initial_values.return_value = Success([("a", ["bad"])])
+
+        mock_error = mocker.Mock()
+
+        mock_state = mocker.Mock()
+        mock_state.set_array_value.return_value = Failure(mock_error)
+
+        listener = CwpMermaidParser._BuilderListener(
+            mock_builder,
+            mock_state,
+        )
+
+        with pytest.raises(ErrorException) as exc_info:
+            listener.exitStartTransition(mock_ctx)
+
+        assert exc_info.value.args[0] == mock_error
+
+        mock_state.set_array_value.assert_called_once_with(
+            "a",
+            ["bad"],
+        )

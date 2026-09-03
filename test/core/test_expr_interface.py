@@ -41,16 +41,16 @@ from bpmncwpverify.core.state import State
         ("const a: bit = 0 var b: short", "b + a", "short"),
         ("const x: int = 0 var y: short var z: bit", "x + y - z", "int"),
         ("const a: bit = 0 var b: short var c: int", "a + (b * c)", "int"),
-        # (
-        #     "array a[2]: int = {1 2} array b[2]: int = {3 4} var x: int = 0",
-        #     "a[0] + b[1]",
-        #     "int",
-        # ),
-        # (
-        #     "array a[2]: int = {1 2} array b[2]: int = {3 4} var x: int = 0",
-        #     "a[0] != b[1]",
-        #     "bool",
-        # ),
+        (
+            "array a[2]: int array b[2]: int var x: int",
+            "a[0] + b[1]",
+            "int",
+        ),
+        (
+            "array a[2]: int array b[2]: int var x: int",
+            "a[0] != b[1]",
+            "bool",
+        ),
     ],
 )
 def test_given_good_state_when_build_then_success(state, expression, expression_type):
