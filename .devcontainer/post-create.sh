@@ -22,9 +22,6 @@ pip install --user --editable ".[dev]"
 # Install pyright
 npm install -g pyright
 
-# Install node modules into the live-mounted workspace
-npm ci
-
 # Install pre-commit
 pre-commit install
 
