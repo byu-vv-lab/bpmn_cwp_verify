@@ -195,6 +195,14 @@
         <mxCell id="n7rN1dzmysY3F7zLQdUA-23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Patient Deceased" vertex="1">
           <mxGeometry height="60" width="120" x="800" y="580" as="geometry" />
         </mxCell>
+        <mxCell id="InitEdge-Start-01" edge="1" parent="1" target="Nog0-tSulBfJgW7ReGkv-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="-40" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="InitEdge-Start-01-label" connectable="0" parent="InitEdge-Start-01" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="ptID = idInit and ptRm = roomInit and ptStatus = PatientStatusInit and hasCare = careInit and needsCare = needInit and orderNum = 20001 and orderStatus = statusInit and alertStatus = statusInit and boxNum = 21 and boxStatus = boxInit and boxLoc = locationInit" vertex="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

@@ -3,7 +3,7 @@ from typing import Any, cast
 from antlr4 import CommonTokenStream, InputStream, ParseTreeWalker
 from returns.functions import not_
 from returns.pipeline import is_successful
-from returns.result import Failure, Result
+from returns.result import Failure, Result, Success
 
 from bpmncwpverify.antlr.CwpLexer import CwpLexer
 from bpmncwpverify.antlr.CwpListener import CwpListener
@@ -19,6 +19,37 @@ class CwpMermaidParser:
         def __init__(self, builder: "CwpBuilder", state: State):
             self.builder = builder
             self.state = state
+
+        def exitStartTransition(self, ctx: CwpParser.StartTransitionContext) -> None:
+            target_node = cast(Any, ctx).ID()
+
+            assert target_node is not None
+
+            target_id: str = target_node.getText()
+
+            edge = CwpEdge.from_mmd(
+                target_id,
+                self.builder.gen_edge_name(),
+            )
+
+            expr_clause_node = cast(Any, ctx).EXPR_CLAUSE()
+            if expr_clause_node is not None:
+                raw_expr: str = expr_clause_node.getText()
+                raw_expr_text: str = self._extract_expr_text(raw_expr)
+                expr: str = CwpEdge.cleanup_expression(raw_expr_text)
+                edge.expression = CwpEdge.build_ast(expr)
+
+                result = edge.parse_initial_values().bind(self._apply_initial_values)  # pyright: ignore[reportUnknownMemberType]
+                if not_(is_successful)(result):
+                    raise ErrorException(result.failure())
+
+            all_variables_assigned = self.state.assert_all_values_set()
+            if not is_successful(all_variables_assigned):
+                raise ErrorException(all_variables_assigned.failure())
+
+            self.builder = self.builder.with_start_edge(
+                edge,
+            )
 
         def exitStateDecl(self, ctx: CwpParser.StateDeclContext) -> None:
             string_node = cast(Any, ctx).STRING()
@@ -67,6 +98,18 @@ class CwpMermaidParser:
         def _extract_expr_text(self, raw: str) -> str:
             return raw[1:].strip()
 
+        def _apply_initial_values(
+            self, initial_values: list[tuple[str, str | list[str]]]
+        ) -> Result[None, Error]:
+            for name, value in initial_values:
+                if isinstance(value, list):
+                    result = self.state.set_array_value(name, value)
+                else:
+                    result = self.state.set_variable_value(name, value)
+                if not is_successful(result):
+                    return Failure(result.failure())
+            return Success(None)
+
     @staticmethod
     def _parse_tree(mmd_str: str) -> CwpParser.DiagramContext:
         lexer = CwpLexer(InputStream(mmd_str))
@@ -82,12 +125,8 @@ class CwpMermaidParser:
         try:
             tree = CwpMermaidParser._parse_tree(mmd_str)
             ParseTreeWalker().walk(listener, tree)
-
-            clauses = [f"{v.id} = {v.init.value}" for v in state.vars]
-            start_edge = CwpEdge("Init_Edge", listener.builder.gen_edge_name())
-            start_edge.expression = CwpEdge.build_ast(" and ".join(clauses))
-            listener.builder = listener.builder.with_start_edge(start_edge)
         except ErrorException as e:
+            assert e.args, "Error does not have enough arguments"
             return Failure(e.error)
 
         result: Result[Cwp, Error] = listener.builder.build()

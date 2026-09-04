@@ -113,7 +113,6 @@ def test_qualified_name_literal_good() -> None:
         VarDecl(
             "blackbox",
             "bit",
-            AllowedValueDecl("0"),
             [AllowedValueDecl("1"), AllowedValueDecl("0")],
         )
     )
@@ -134,7 +133,6 @@ def test_qualified_name_literal_not_recongnized_name() -> None:
         VarDecl(
             "foo",
             "bit",
-            AllowedValueDecl("0"),
             [AllowedValueDecl("1"), AllowedValueDecl("0")],
         )
     )
@@ -155,7 +153,6 @@ def test_qualified_name_literal_enum_type_not_variable() -> None:
         VarDecl(
             "x",
             "bit",
-            AllowedValueDecl("0"),
             [AllowedValueDecl("1"), AllowedValueDecl("0")],
         )
     )
@@ -284,7 +281,7 @@ def test_binary_add_bit_byte() -> None:
 
 def test_binary_add_qualified_name_byte_with_byte() -> None:
     builder = StateBuilder()
-    builder.with_var_decl(VarDecl("x", "byte", AllowedValueDecl("2"), []))
+    builder.with_var_decl(VarDecl("x", "byte", []))
     state = builder.build().unwrap()
     node = AddNode(QualifiedNameNode("x"), NumberLiteralNode("2"))
     visitor = TypeCheckerVisitor(state)
@@ -348,7 +345,6 @@ def test_conditional_bool_and_bool() -> None:
         VarDecl(
             "y",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -488,7 +484,6 @@ def test_if_x_x_and_bit() -> None:
         VarDecl(
             "x",
             "bit",
-            AllowedValueDecl("1"),
             [AllowedValueDecl("1"), AllowedValueDecl("0")],
         )
     )
@@ -496,7 +491,6 @@ def test_if_x_x_and_bit() -> None:
         VarDecl(
             "y",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -533,7 +527,6 @@ def test_choose_enums() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [AllowedValueDecl("waiting"), AllowedValueDecl("off")],
         )
     )
@@ -565,7 +558,6 @@ def test_triple() -> None:
         VarDecl(
             "comms",
             "byte",
-            AllowedValueDecl("2"),
             [AllowedValueDecl("2"), AllowedValueDecl("3")],
         )
     )
@@ -589,7 +581,6 @@ def test_triple_bool_input() -> None:
         VarDecl(
             "comms",
             "byte",
-            AllowedValueDecl("2"),
             [AllowedValueDecl("2"), AllowedValueDecl("3")],
         )
     )
@@ -613,7 +604,6 @@ def test_triple_with_one_input() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [
                 AllowedValueDecl("waiting"),
                 AllowedValueDecl("off"),
@@ -635,7 +625,6 @@ def test_triple_with_one_input() -> None:
         VarDecl(
             "deployed",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -665,7 +654,6 @@ def test_triple_with_multiple_inputs() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [
                 AllowedValueDecl("waiting"),
                 AllowedValueDecl("off"),
@@ -687,7 +675,6 @@ def test_triple_with_multiple_inputs() -> None:
         VarDecl(
             "deployed",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -717,7 +704,6 @@ def test_triple_with_enum_input() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [
                 AllowedValueDecl("waiting"),
                 AllowedValueDecl("off"),
@@ -739,7 +725,6 @@ def test_triple_with_enum_input() -> None:
         VarDecl(
             "deployed",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -770,7 +755,6 @@ def test_triple_with_bad_target() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [
                 AllowedValueDecl("waiting"),
                 AllowedValueDecl("off"),
@@ -792,7 +776,6 @@ def test_triple_with_bad_target() -> None:
         VarDecl(
             "deployed",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -823,7 +806,6 @@ def test_triple_with_diff_target_and_value_types() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [
                 AllowedValueDecl("waiting"),
                 AllowedValueDecl("off"),
@@ -845,7 +827,6 @@ def test_triple_with_diff_target_and_value_types() -> None:
         VarDecl(
             "deployed",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -875,7 +856,6 @@ def test_triple_out_of_scope() -> None:
         VarDecl(
             "comms",
             "commsState",
-            AllowedValueDecl("off"),
             [
                 AllowedValueDecl("waiting"),
                 AllowedValueDecl("off"),
@@ -897,7 +877,6 @@ def test_triple_out_of_scope() -> None:
         VarDecl(
             "deployed",
             "bool",
-            AllowedValueDecl("true"),
             [AllowedValueDecl("true"), AllowedValueDecl("false")],
         )
     )
@@ -928,7 +907,6 @@ def test_triple_equal_to_self() -> None:
         VarDecl(
             "conditions",
             "Cond",
-            AllowedValueDecl("same"),
             [
                 AllowedValueDecl("same"),
                 AllowedValueDecl("off"),
@@ -948,7 +926,6 @@ def test_triple_equal_to_self() -> None:
         VarDecl(
             "risk",
             "riskState",
-            AllowedValueDecl("acceptable"),
             [AllowedValueDecl("acceptable"), AllowedValueDecl("unacceptable")],
         )
     )
@@ -985,7 +962,6 @@ def test_triple_list() -> None:
         VarDecl(
             "comms",
             "byte",
-            AllowedValueDecl("2"),
             [AllowedValueDecl("2"), AllowedValueDecl("3")],
         )
     )

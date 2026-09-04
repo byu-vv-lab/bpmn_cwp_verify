@@ -3,5 +3,6 @@ stateDiagram-v2
     state "Transition" as Transition
     state "End" as End
 
-    Start --> Transition: myList[0] == 1
-    Transition --> End: myList[0] == 2
+    [*] --> Start: myList = [1,2,3] and x = 5 and test = [0,1]
+    Start --> Transition: x = 1
+    Transition --> End: x = 2

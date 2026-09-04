@@ -14,6 +14,7 @@ The generated C file has this structure:
   8. int main()          (from BpmnCbmcVisitor)
 """
 
+from returns.maybe import Some
 from returns.pipeline import is_successful
 from returns.result import Failure, Result, Success
 
@@ -54,7 +55,11 @@ def _var_decls(state: State) -> list[str]:
     for var in state.vars:
         # bare bones: always declare as int regardless of type_
         _ = enum_ids  # noted: ignored in this bare-bones version
-        decls.append(f"int {var.id} = {var.init.value};")
+        match var.init_value:
+            case Some(init_value):
+                decls.append(f"int {var.id} = {init_value.value};")
+            case _:
+                continue
     return decls
 
 

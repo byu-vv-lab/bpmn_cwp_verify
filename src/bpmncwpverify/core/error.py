@@ -302,6 +302,31 @@ class CwpNoStartStateError(Error):
         super().__init__()
 
 
+class CwpInvalidLiteralError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class CwpInvalidStartEdgeError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class CwpInvalidStartExpressionError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class CwpInvalidAssignmentError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class CwpInvalidAssignmentTargetError(Error):
+    def __init__(self) -> None:
+        super().__init__()
+
+
 class ExpressionComputationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -325,6 +350,22 @@ class ExpressionParseError(Error):
     def __init__(self, exception_str: str):
         super().__init__()
         self.exception_str = exception_str
+
+
+class StartExpressionDisallowedAssignemntError(Error):
+    __slots__ = ["exception_str"]
+
+    def __init__(self, exception_str: str):
+        super().__init__()
+        self.exception_str = exception_str
+
+
+class UnassignedVariableError(Error):
+    __slots__ = ["variable_name"]
+
+    def __init__(self, variable_name: str):
+        super().__init__()
+        self.variable_name = variable_name
 
 
 class ExpressionRelationCompatabilityError(Error):
@@ -802,13 +843,27 @@ def get_error_message(error: Error) -> str:
         case CwpNoParentEdgeError(parent_edge=parent_edge):
             return f"CWP ERROR: Parent edge not found or no parent ID reference. Edge details: {parent_edge}."
         case CwpNoStartStateError():
-            return "CWP ERROR: No start states found."
+            return "CWP ERROR: No start state found."
+        case CwpInvalidLiteralError():
+            return "CWP ERROR: Expression on start edge invalid type"
+        case CwpInvalidStartEdgeError():
+            return "CWP ERROR: Start edge invalid"  # TODO: Verify that it can only be thrown when the expression is missing, update message accordingly
+        case CwpInvalidStartExpressionError():
+            return "CWP ERROR: Expression on start edge parsing incorrectly"
+        case CwpInvalidAssignmentError():
+            return "CWP ERROR: Start edge expression contains an invalid variable assignment"
+        case CwpInvalidAssignmentTargetError():
+            return "CWP ERROR: Start edge expression contains an invalid variable name"
         case ExpressionComputationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be computed with something of type '{ltype}'"
         case ExpressionNegatorError(type=type):
             return f"EXPR ERROR: sometiong of type '{type}' cannot be used with a mathmatical negator"
         case ExpressionParseError(exception_str=exception_str):
             return f"Error while parsing expression: {exception_str}"
+        case StartExpressionDisallowedAssignemntError(exception_str=exception_str):
+            return f"Error while parsing start edge expression: variable {exception_str} assigned to invalid value"
+        case UnassignedVariableError(variable_name=variable_name):
+            return f"Error while parsing start edge expression: variable {variable_name} was never assigned"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be related with something of type '{ltype}'"
         case ExpressionIfBranchCompatabilityError(thentype=thentype, elsetype=elsetype):

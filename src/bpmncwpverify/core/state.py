@@ -19,12 +19,14 @@ from bpmncwpverify.antlr.StateParser import StateParser
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
+    ExpressionParseError,
     NotInitializedError,
+    StartExpressionDisallowedAssignemntError,
     StateAntlrWalkerError,
     StateArraySizeError,
-    StateInitNotInValues,
     StateMultipleDefinitionError,
     StateSyntaxError,
+    UnassignedVariableError,
 )
 
 
@@ -163,17 +165,11 @@ def _get_parser(file_contents: str) -> Result[StateParser, Error]:
     return Success(parser)
 
 
-def _parse_state(parser: StateParser) -> Result[StateParser.StateContext, Error]:
-    """
-    Returns a traversable tree object if successful, error otherwise
-
-    Args:
-        parser (StateParser): Parser that will make sure tree is valid
-    """
-    result: Result[StateParser.StateContext, Error] = safe(parser.state)().alt(
-        lambda exc: StateSyntaxError(str(exc))  # pyright: ignore[reportUnknownLambdaType]
+def _parse_state(parser: StateParser) -> Result[StateParser.StateFileContext, Error]:
+    result: Result[StateParser.StateFileContext, Error] = safe(parser.stateFile)().alt(
+        lambda exc: StateSyntaxError(str(exc))
     )
-    return result  # pyright: ignore[reportUnknownVariableType]
+    return result
 
 
 class DeclLoc:
@@ -340,14 +336,13 @@ class VarDecl(DeclLoc):
     Represents variable declaration using keyword var
     """
 
-    __slots__ = ["col", "id", "init", "line", "type_", "values"]
+    __slots__ = ["col", "id", "line", "type_", "init_value", "allowed_values"]
 
     def __init__(
         self,
         id: str,
         type_: str,
-        init: AllowedValueDecl,
-        values: list[AllowedValueDecl],
+        allowed_values: list[AllowedValueDecl],
         line: Maybe[int] = Nothing,
         col: Maybe[int] = Nothing,
     ) -> None:
@@ -357,44 +352,35 @@ class VarDecl(DeclLoc):
         Args:
             id (str): Variable name
             type_ (str): Variable type
-            init (AllowedValueDecl): Initial variable value
-            values (list[AllowedValueDecl]): Variable values
+            allowed_values (list[AllowedValueDecl]): Variable values that this value can take on
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
         super().__init__(line, col)
         self.id = id
         self.type_ = type_
-        self.init = init
-        self.values = values
+        self.allowed_values = allowed_values
+        self.init_value: Maybe[AllowedValueDecl] = Nothing
 
     @staticmethod
     def var_decl(
         id: str,
         type_: str,
-        init: AllowedValueDecl,
-        values: list[AllowedValueDecl],
+        allowed_values: list[AllowedValueDecl],
         line: Maybe[int] = Nothing,
         col: Maybe[int] = Nothing,
-    ) -> Result["VarDecl", Error]:
+    ) -> "VarDecl":
         """
         Returns a VarDecl object if the length of list of values is 0 or if init is contained in the list of values, error otherwise
 
         Args:
             id (str): Variable name
             type_ (str): Variable type
-            init (AllowedValueDecl): Initial variable value
             values (list[AllowedValueDecl]): Variable values
             line (Maybe[int], optional): Possible line number of variable declaration. Defaults to Nothing
             col (Maybe[int], optional): Possible character position in the line of variable declaration. Defaults to Nothing
         """
-        value_ids = {i.value for i in values}
-        if len(values) == 0 or init.value in value_ids:
-            return Success(VarDecl(id, type_, init, values, line, col))
-        else:
-            return Failure(
-                StateInitNotInValues(init.value, init.line, init.col, value_ids)
-            )
+        return VarDecl(id, type_, allowed_values, line, col)
 
 
 class TypeWithDeclLoc:
@@ -623,31 +609,31 @@ class State:
                 ctx (StateParser.Var_declContext): Var variable to add
             """
 
-            def get_var_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
-                node = antlr_get_terminal_node_impl(ctx.ID(0))
-                symbol: Token = node.getSymbol()
-                id: str = State._Listener._get_id(node)
+            def get_var_decl(builder: StateBuilder) -> StateBuilder:
+                node = antlr_get_terminal_node_impl(ctx.ID())  # type: ignore[no-untyped-call]
+                symbol = node.getSymbol()
+
+                id = State._Listener._get_id(node)
                 id_line = Some(symbol.line)
                 id_col = Some(symbol.column)
 
-                type_: str = antlr_get_type_from_type_context(ctx)
+                type_ = antlr_get_type_from_type_context(ctx)
 
-                node = antlr_get_terminal_node_impl(ctx.ID(1))
-                symbol = node.getSymbol()
-                init: AllowedValueDecl = AllowedValueDecl(
-                    antlr_get_text(node),
-                    Some(symbol.line),
-                    Some(symbol.column),
+                allowed_values = State._Listener._get_values(
+                    antlr_get_id_set_context(ctx.id_set())  # type: ignore[no-untyped-call]
                 )
 
-                values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_set_context(ctx.id_set()),  # type: ignore[no-untyped-call]
+                var_decl = VarDecl(
+                    id,
+                    type_,
+                    allowed_values,
+                    id_line,
+                    id_col,
                 )
 
-                result = VarDecl.var_decl(id, type_, init, values, id_line, id_col)
-                return result.map(builder.with_var_decl).alt(lambda error: error)
+                return builder.with_var_decl(var_decl)
 
-            self.state_builder = self.state_builder.bind(get_var_decl)  # pyright: ignore[reportUnknownMemberType]
+            self.state_builder = self.state_builder.map(get_var_decl)
 
         def exitArray_decl(self, ctx: StateParser.Array_declContext) -> None:
             """
@@ -657,7 +643,7 @@ class State:
                 ctx (StateParser.Array_declContext): Array variable to add
             """
 
-            def get_array_decl(builder: StateBuilder) -> Result[StateBuilder, Error]:
+            def get_array_decl(builder: StateBuilder) -> StateBuilder:
                 node = antlr_get_terminal_node_impl(ctx.ID(0))
                 symbol: Token = node.getSymbol()
                 id: str = State._Listener._get_id(node)
@@ -669,14 +655,10 @@ class State:
                 number_node: TerminalNode = antlr_get_terminal_node_impl(ctx.ID(1))
                 size: int = int(antlr_get_text(number_node))
 
-                values: list[AllowedValueDecl] = State._Listener._get_values(
-                    antlr_get_id_set_context(ctx.id_set()),  # type: ignore[no-untyped-call]
-                )
+                array_decl = ArrayDecl(id, type_, size, [], id_line, id_col)
+                return builder.with_array_decl(array_decl)
 
-                result = ArrayDecl.array_decl(id, type_, size, values, id_line, id_col)
-                return result.map(builder.with_array_decl).alt(lambda error: error)
-
-            self.state_builder = self.state_builder.bind(get_array_decl)  # pyright: ignore[reportUnknownMemberType]
+            self.state_builder = self.state_builder.map(get_array_decl)
 
     def __init__(
         self,
@@ -778,14 +760,14 @@ class State:
         """
         state_str = ""
         for var in vars:
-            state_str += "var " + var.id + " : " + var.type_ + " = " + var.init.value
-            if len(var.values) != 0:
+            state_str += "var " + var.id + " : " + var.type_
+            if len(var.allowed_values) != 0:
                 state_str += " {"
-                for vals in range(len(var.values)):
+                for vals in range(len(var.allowed_values)):
                     if vals == 0:
-                        state_str += var.values[vals].value
+                        state_str += var.allowed_values[vals].value
                         continue
-                    state_str += " " + var.values[vals].value
+                    state_str += " " + var.allowed_values[vals].value
                 state_str += "}\n"
             else:
                 state_str += "\n"
@@ -866,6 +848,82 @@ class State:
             .map(lambda _: self)
         )
         return result
+
+    def set_variable_value(
+        self,
+        name: str,
+        value: str,
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> Result[None, Error]:
+        for var in self._vars:
+            if var.id == name:
+                result: Result[None, Error] = (
+                    self.get_type(value)
+                    .bind(lambda rtype: typechecking.get_type_assign(var.type_, rtype))  # pyright: ignore[reportUnknownMemberType]
+                    .map(lambda _: None)
+                )
+
+                if not_(is_successful)(result):
+                    return result
+
+                if var.allowed_values and not any(
+                    av.value == value for av in var.allowed_values
+                ):
+                    return Failure(StartExpressionDisallowedAssignemntError(name))
+
+                var.init_value = Some(AllowedValueDecl(value, line, col))
+                return Success(None)
+
+        return Failure(ExpressionParseError(name))
+
+    def set_array_value(
+        self,
+        name: str,
+        values: list[str],
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> Result[None, Error]:
+        for array in self._arrays:
+            if array.id == name:
+                if len(values) != array.size:
+                    return Failure(
+                        StateArraySizeError(name, line, col, array.size, len(values))
+                    )
+
+                for value in values:
+                    result: Result[None, Error] = (
+                        self.get_type(value)
+                        .bind(  # pyright: ignore[reportUnknownMemberType]
+                            lambda rtype: typechecking.get_type_assign(
+                                array.type_, rtype
+                            )
+                        )
+                        .map(lambda _: None)
+                    )
+                    if not_(is_successful)(result):
+                        return result
+
+                array.values = [AllowedValueDecl(v, line, col) for v in values]
+                return Success(None)
+
+        return Failure(ExpressionParseError(name))
+
+    def assert_all_values_set(self) -> Result[None, Error]:
+        for var in self._vars:
+            if not isinstance(var.init_value, Some):
+                return Failure(UnassignedVariableError(var.id))
+
+        for array in self._arrays:
+            if not array.values:
+                return Failure(UnassignedVariableError(array.id))
+            if len(array.values) != array.size:
+                return Failure(
+                    StateArraySizeError(
+                        array.id, array.line, array.col, array.size, len(array.values)
+                    )
+                )
+        return Success(None)
 
     @property
     def vars(self) -> tuple[VarDecl, ...]:
@@ -1000,7 +1058,7 @@ class State:
             state (State): State object to retrieve initial type
         """
         for var_decl in self._vars:
-            values = var_decl.values + [var_decl.init]
+            values = var_decl.allowed_values
             result = self._type_check_assigns(var_decl.type_, values)
             if not_(is_successful)(result):
                 return result
@@ -1136,12 +1194,12 @@ class State:
         return result
 
     @staticmethod
-    def _from_str(context: StateParser.StateContext) -> Result["State", Error]:
+    def _from_str(context: StateParser.StateFileContext) -> Result["State", Error]:
         """
         Return a State object from a valid tree, error otherwise
 
         Args:
-            context (StateParser.StateContext): Tree to walk through
+            context (StateParser.StateFileContext): Tree to walk through
         """
 
         @safe

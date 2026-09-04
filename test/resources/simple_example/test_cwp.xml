@@ -33,6 +33,16 @@
         <mxCell id="-AYt-wPokLTaNUis7IPH-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="End" vertex="1">
           <mxGeometry height="60" width="120" x="620" y="160" as="geometry" />
         </mxCell>
+        <mxCell id="init-edge-1" edge="1" parent="1" target="-AYt-wPokLTaNUis7IPH-7" style="endArrow=classic;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="190" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="init-edge-1-label" connectable="0" parent="init-edge-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="x = 0" vertex="1">
+          <mxGeometry relative="1" x="0" y="0" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

@@ -6,10 +6,10 @@ enum ConditionsState { conditionsInit changed same}
 enum MissingPersonState { missingPersonInit found missing }
 enum SearchState {searchInit on off }
 
-var risk: RiskState = riskInit
+var risk: RiskState
 
-var comms: CommunicationState = communicationInit
-var conditions: ConditionsState = conditionsInit
+var comms: CommunicationState
+var conditions: ConditionsState
 
-var missingPerson: MissingPersonState = missingPersonInit
-var search: SearchState = searchInit
+var missingPerson: MissingPersonState
+var search: SearchState

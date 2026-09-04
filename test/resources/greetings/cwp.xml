@@ -21,6 +21,16 @@
         <mxCell id="wMyzcqAesjO8TzFHF-gd-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="End" vertex="1">
           <mxGeometry height="60" width="120" x="280" y="370" as="geometry" />
         </mxCell>
+        <mxCell id="init-start-edge-1" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" target="9i2YKtEFCY5KEEU9Eqry-1" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="340" y="140" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="init-start-edge-1-label" connectable="0" parent="init-start-edge-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="f = true" vertex="1">
+          <mxGeometry relative="1" x="0.04" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

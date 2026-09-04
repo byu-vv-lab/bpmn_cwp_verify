@@ -40,6 +40,11 @@ from bpmncwpverify.core.error import (
     CwpEdgeNoStateError,
     CwpFileStructureError,
     CwpGraphConnError,
+    CwpInvalidAssignmentError,
+    CwpInvalidAssignmentTargetError,
+    CwpInvalidLiteralError,
+    CwpInvalidStartEdgeError,
+    CwpInvalidStartExpressionError,
     CwpMultStartStateError,
     CwpNoEndStatesError,
     CwpNoParentEdgeError,
@@ -67,6 +72,7 @@ from bpmncwpverify.core.error import (
     SpinCoverageError,
     SpinInvalidEndStateError,
     SpinSyntaxError,
+    StartExpressionDisallowedAssignemntError,
     StateAntlrWalkerError,
     StateArraySizeError,
     StateInitNotInValues,
@@ -78,6 +84,7 @@ from bpmncwpverify.core.error import (
     TypingListOfExpressionsError,
     TypingNoTypeError,
     TypingTripleVariableError,
+    UnassignedVariableError,
     get_error_message,
 )
 
@@ -224,7 +231,27 @@ test_inputs: list[tuple[Error, str]] = [
     ),
     (
         CwpNoStartStateError(),
-        "CWP ERROR: No start states found.",
+        "CWP ERROR: No start state found.",
+    ),
+    (
+        CwpInvalidLiteralError(),
+        "CWP ERROR: Expression on start edge invalid type",
+    ),
+    (
+        CwpInvalidStartEdgeError(),
+        "CWP ERROR: Start edge invalid",
+    ),
+    (
+        CwpInvalidStartExpressionError(),
+        "CWP ERROR: Expression on start edge parsing incorrectly",
+    ),
+    (
+        CwpInvalidAssignmentError(),
+        "CWP ERROR: Start edge expression contains an invalid variable assignment",
+    ),
+    (
+        CwpInvalidAssignmentTargetError(),
+        "CWP ERROR: Start edge expression contains an invalid variable name",
     ),
     (
         ExpressionComputationCompatabilityError("ltype", "rtype"),
@@ -237,6 +264,14 @@ test_inputs: list[tuple[Error, str]] = [
     (
         ExpressionParseError("exception_str"),
         "Error while parsing expression: exception_str",
+    ),
+    (
+        StartExpressionDisallowedAssignemntError("exception_str"),
+        "Error while parsing start edge expression: variable exception_str assigned to invalid value",
+    ),
+    (
+        UnassignedVariableError("variable_name"),
+        "Error while parsing start edge expression: variable variable_name was never assigned",
     ),
     (
         ExpressionRelationCompatabilityError("ltype", "rtype"),
@@ -443,9 +478,16 @@ test_ids: list[str] = [
     "CwpUnsupportedElementError",
     "CwpNoParentEdgeError",
     "CwpNoStartStateError",
+    "CwpInvalidLiteralError",
+    "CwpInvalidStartEdgeError",
+    "CwpInvalidStartExpressionError",
+    "CwpInvalidAssignmentError",
+    "CwpInvalidAssignmentTargetError",
     "ExpressionComputationCompatabilityError",
     "ExpressionNegatorError",
     "ExpressionParseError",
+    "StartExpressionDisallowedAssignemntError",
+    "UnassignedVariableError",
     "ExpressionRelationCompatabilityError",
     "ExpressionRelationalNotError",
     "ExpressionIfBranchCompatabilityError",
