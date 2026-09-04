@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Call Lambda Service</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.13/dist/mermaid.min.js"></script>
 </head>
 
 <body>
@@ -62,7 +62,11 @@
       }
     });
 
-    document.getElementById('mmdText').addEventListener('input', renderMermaid);
+    let renderMermaidTimeout;
+    document.getElementById('mmdText').addEventListener('input', function () {
+      clearTimeout(renderMermaidTimeout);
+      renderMermaidTimeout = setTimeout(renderMermaid, 500);
+    });
 
     function populateSpinReport(report) {
       const container = document.getElementById('spinReport');
