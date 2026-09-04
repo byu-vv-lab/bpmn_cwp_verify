@@ -215,6 +215,11 @@ class TestCwpMermaidParserFromMmd:
         mock_state = mocker.Mock()
         mock_state.vars = []
 
+        mocker.patch(
+            "bpmncwpverify.core.frontends.cwpMermaidParser.CwpEdge.build_ast",
+            return_value=mocker.Mock(),
+        )
+
         result = CwpMermaidParser.from_mmd("mmd_string", mock_state)
 
         mock_walker.walk.assert_called_once()
@@ -222,8 +227,11 @@ class TestCwpMermaidParserFromMmd:
         assert result == "built_cwp"
 
     def test_from_mmd_with_error(self, mocker):
+        inner_error = mocker.Mock()
+        error = ErrorException(inner_error)
+
         mocker.patch.object(
-            CwpMermaidParser, "_parse_tree", side_effect=AssertionError("TEST")
+            CwpMermaidParser, "_parse_tree", side_effect=ErrorException(error)
         )
 
         mock_state = mocker.Mock()
@@ -232,7 +240,7 @@ class TestCwpMermaidParserFromMmd:
         result = CwpMermaidParser.from_mmd("mmd_string", mock_state)
 
         assert not_(is_successful)(result)
-        assert result.failure() == "TEST"
+        assert result.failure() is error
 
     def test_from_mmd_error_during_walk(self, mocker):
         mocker.patch(
@@ -242,7 +250,7 @@ class TestCwpMermaidParserFromMmd:
         mocker.patch.object(CwpMermaidParser, "_parse_tree", return_value=mocker.Mock())
         mocker.patch(
             "bpmncwpverify.core.frontends.cwpMermaidParser.ParseTreeWalker",
-            side_effect=AssertionError("WALK_FAILED"),
+            side_effect=ErrorException("WALK_FAILED"),
         )
 
         mock_state = mocker.Mock()

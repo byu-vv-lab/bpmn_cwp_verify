@@ -1,5 +1,4 @@
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState, CwpVisitor
-from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.util.stringmanager import (
     NL_DOUBLE,
     NL_SINGLE,
@@ -45,12 +44,10 @@ class CwpPromelaVisitor(CwpVisitor):
         edges: list[str] = []
         for edge in state.in_edges:
             source_changer = FeelToPromelaVisitor(edge.id)
-            if isinstance(edge.expression, Feel):
-                edge.expression.ast.accept(source_changer)
-                edges.append(str(source_changer.promela))
-                self.chooses.write_str(source_changer.choose)
-            else:
-                edges.append(str(edge.expression))
+            edge.expression.ast.accept(source_changer)
+            edges.append(str(source_changer.promela))
+            self.chooses.write_str(source_changer.choose)
+
         guard.write_str(
             " && ".join(edges if state.in_edges else ["true"])
         )  # ["true"] in case no in edges
@@ -60,12 +57,10 @@ class CwpPromelaVisitor(CwpVisitor):
         edges = []
         for edge in state.out_edges:
             source_changer = FeelToPromelaVisitor(edge.id)
-            if isinstance(edge.expression, Feel):
-                edge.expression.ast.accept(source_changer)
-                edges.append(str(source_changer.promela))
-                self.chooses.write_str(source_changer.choose)
-            else:
-                edges.append(str(edge.expression))
+            edge.expression.ast.accept(source_changer)
+            edges.append(str(source_changer.promela))
+            self.chooses.write_str(source_changer.choose)
+
         guard.write_str(
             " || ".join(edges if state.out_edges else ["false"])
         )  # ["false"] in case no out edges

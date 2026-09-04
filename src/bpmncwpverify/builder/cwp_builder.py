@@ -66,7 +66,7 @@ class CwpBuilder:
 
             return Success(self._cwp)
         except ErrorException as e:
-            return Failure(e.args[0])
+            return Failure(e.error)
 
     def with_edge(
         self, edge: CwpEdge, source_ref: str, target_ref: str
@@ -119,8 +119,8 @@ class CwpBuilder:
         edge = self._cwp.edges.get(parent)
         if not edge:
             raise ErrorException(CwpNoParentEdgeError(parent))
-        edge.expression = CwpEdge.cleanup_expression(expression)
-        edge.expression = CwpEdge.build_ast(edge.expression)
+        expr: str = CwpEdge.cleanup_expression(expression)
+        edge.expression = CwpEdge.build_ast(expr)
         result = edge.expression.type_check(state)
         if not_(is_successful)(result):
             raise ErrorException(result.failure())

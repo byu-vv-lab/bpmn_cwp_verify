@@ -28,9 +28,9 @@ def get_process_name(id: str, parts: list[Element]) -> str:
 
 def parse_and_typecheck_optional_feel(
     text: str | None, state: State
-) -> Result[str | Feel, Error]:
+) -> Result[Feel | None, Error]:
     if not text:
-        return Success("")  # nothing to do
+        return Success(None)  # nothing to do
 
     feel = Feel.parse(text)
     type_result = feel.type_check(state)
@@ -69,11 +69,7 @@ def from_xml(
             return Failure(feel_result.failure())
 
         parsed = feel_result.unwrap()
-        if (
-            parsed
-            and isinstance(parsed, Feel)
-            and isinstance(class_object, SequenceFlow)
-        ):
+        if parsed and isinstance(class_object, SequenceFlow):
             class_object.expression = parsed
 
         # behavior
@@ -84,7 +80,7 @@ def from_xml(
             return Failure(feel_result.failure())
 
         parsed = feel_result.unwrap()
-        if parsed and isinstance(parsed, Feel) and isinstance(class_object, Task):
+        if parsed and isinstance(class_object, Task):
             class_object.behavior = parsed
 
         # mainly to check if the Start Event is supported

@@ -141,19 +141,6 @@ def test_enable_expr_xor_gateway_no_expression(visitor, mocker):
     assert visitor._enable_expr(gw, out_flow) == "(p_gw_1_FROM_task_A)"
 
 
-def test_enable_expr_xor_gateway_with_expression(visitor, mocker):
-    gw = mocker.Mock(spec=ExclusiveGatewayNode)
-    gw.id = "gw_1"
-    src = mocker.Mock()
-    src.id = "task_A"
-    in_flow = mocker.Mock(spec=SequenceFlow)
-    in_flow.source_node = src
-    gw.in_flows = [in_flow]
-    out_flow = mocker.Mock(spec=SequenceFlow)
-    out_flow.expression = "x > 5"
-    assert visitor._enable_expr(gw, out_flow) == "(p_gw_1_FROM_task_A) && (x > 5)"
-
-
 def test_enable_expr_xor_gateway_with_feel_expression(visitor, mocker):
     gw = mocker.Mock(spec=ExclusiveGatewayNode)
     gw.id = "gw_1"
@@ -321,46 +308,6 @@ def test_transition_body_start_event(visitor, mocker):
     lines = visitor._transition_body(event, None, [])
     assert "p_ev_start = false;" in lines[0]
     assert "p_task_1_FROM_ev_start = true;" in lines[1]
-
-
-def test_transition_body_task_with_behavior(visitor, mocker):
-    task = mocker.Mock(spec=Task)
-    task.id = "task_1"
-    task.behavior = "x = x + 1"
-    in_flow = make_flow(mocker, "ev_start", "task_1", "f_in")
-    out_flow = make_flow(mocker, "task_1", "gw_1", "f_out")
-    task.in_flows = [in_flow]
-    task.out_flows = [out_flow]
-    lines = visitor._transition_body(task, None, ["x"])
-    assert any("p_task_1_FROM_ev_start = false;" in line for line in lines)
-    assert any("x = x + 1;" in line for line in lines)
-    assert any("p_gw_1_FROM_task_1 = true;" in line for line in lines)
-    assert any(
-        "update_cwp_state(&cwp_state, cwp_reached, x);" in line for line in lines
-    )
-
-
-def test_transition_body_task_with_promela_behavior(visitor, mocker):
-    task = mocker.Mock(spec=Task)
-    task.id = "task_1"
-    task.behavior = "if\n:: true -> terms = agreed\n:: true -> terms = failed\nfi"
-    in_flow = make_flow(mocker, "ev_start", "task_1", "f_in")
-    out_flow = make_flow(mocker, "task_1", "gw_1", "f_out")
-    task.in_flows = [in_flow]
-    task.out_flows = [out_flow]
-    lines = visitor._transition_body(task, None, ["terms"])
-    assert any("int t = nondet_int();" in line for line in lines)
-    assert any(
-        "__CPROVER_assume(t == agreed || t == failed);" in line for line in lines
-    )
-    assert any("terms = t;" in line for line in lines)
-    assert any(
-        "update_cwp_state(&cwp_state, cwp_reached, terms);" in line for line in lines
-    )
-    # Raw Promela syntax must NOT appear verbatim in the output.
-    assert not any(":: true" in line for line in lines)
-    assert not any(line.strip() == "if" for line in lines)
-    assert not any(line.strip() == "fi" for line in lines)
 
 
 def test_transition_body_task_with_feel_behavior(visitor, mocker):

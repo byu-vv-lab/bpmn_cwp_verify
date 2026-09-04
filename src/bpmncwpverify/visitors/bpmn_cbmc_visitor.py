@@ -33,7 +33,6 @@ from bpmncwpverify.core.bpmn import (
     Task,
 )
 from bpmncwpverify.core.error import Error
-from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.visitors.feel_to_cbmc_visitor import (
     translate_feel_behavior,
     translate_feel_expr,
@@ -504,13 +503,11 @@ class BpmnCbmcVisitor(BpmnVisitor):
         elif isinstance(node, Task):
             for f in node.in_flows:
                 lines.append(f"            {self._flow_place_name(f)} = false;")
-            if isinstance(node.behavior, Feel):
+            translated: list[str] = []
+            always_assigns = False
+            if node.behavior:
                 translated, always_assigns = translate_feel_behavior(
                     node.behavior, node.id
-                )
-            else:
-                translated, always_assigns = self._translate_behavior_impl(
-                    node.behavior
                 )
             for stmt in translated:
                 lines.append(f"            {stmt}")

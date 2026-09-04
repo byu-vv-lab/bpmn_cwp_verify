@@ -210,11 +210,8 @@ class FeelToCbmcVisitor(FeelVisitor):
         return False
 
 
-def translate_feel_expr(expression: "str | Feel", owner_id: str) -> str:
-    """Render a guard/edge-condition value (Feel AST or legacy plain string) as C."""
-    if not isinstance(expression, Feel):
-        return str(expression)
-
+def translate_feel_expr(expression: Feel, owner_id: str) -> str:
+    """Render a guard/edge-condition Feel AST as C."""
     visitor = FeelToCbmcVisitor(owner_id)
     expression.ast.accept(visitor)
 

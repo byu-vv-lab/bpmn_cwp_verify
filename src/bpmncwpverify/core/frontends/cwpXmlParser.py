@@ -23,13 +23,18 @@ class CwpXmlParser:
     def _get_mx_cells(self, root: Element) -> list[Element]:
         if (diagram := root.find("diagram")) is None:
             raise ErrorException(CwpFileStructureError("diagram"))
+            raise ErrorException(CwpFileStructureError("diagram"))
         if (mx_graph_model := diagram.find("mxGraphModel")) is None:
+            raise ErrorException(CwpFileStructureError("mxGraphModel"))
             raise ErrorException(CwpFileStructureError("mxGraphModel"))
         if (mx_root := mx_graph_model.find("root")) is None:
             raise ErrorException(CwpFileStructureError("root"))
+            raise ErrorException(CwpFileStructureError("root"))
         if not (mx_cells := mx_root.findall("mxCell")):
             raise ErrorException(CwpFileStructureError("mxCell"))
+            raise ErrorException(CwpFileStructureError("mxCell"))
         if object := mx_root.findall("object"):
+            raise ErrorException(CwpUnsupportedElementError(len(object), "object"))
             raise ErrorException(CwpUnsupportedElementError(len(object), "object"))
         return mx_cells
 
@@ -107,8 +112,8 @@ class CwpXmlParser:
 
         raw_expr = edge_labels.get(edge_id)
         if raw_expr is not None:
-            edge.expression = CwpEdge.cleanup_expression(raw_expr)
-            edge.expression = CwpEdge.build_ast(edge.expression)
+            expr: str = CwpEdge.cleanup_expression(raw_expr)
+            edge.expression = CwpEdge.build_ast(expr)
             result = edge.parse_initial_values().bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda values: self._apply_initial_values(state, values)
             )
@@ -193,7 +198,7 @@ class CwpXmlParser:
             parser._check_expressions(
                 builder, all_items, expr_lstnr, state, start_edge_id
             )
-        except Exception as e:
+        except ErrorException as e:
             assert e.args, "Error does not have enough arguments"
             return Failure(e.args[0])
 

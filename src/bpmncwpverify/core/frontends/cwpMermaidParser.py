@@ -36,8 +36,8 @@ class CwpMermaidParser:
             if expr_clause_node is not None:
                 raw_expr: str = expr_clause_node.getText()
                 raw_expr_text: str = self._extract_expr_text(raw_expr)
-                edge.expression = CwpEdge.cleanup_expression(raw_expr_text)
-                edge.expression = CwpEdge.build_ast(edge.expression)
+                expr: str = CwpEdge.cleanup_expression(raw_expr_text)
+                edge.expression = CwpEdge.build_ast(expr)
 
                 result = edge.parse_initial_values().bind(self._apply_initial_values)  # pyright: ignore[reportUnknownMemberType]
                 if not_(is_successful)(result):
@@ -82,12 +82,12 @@ class CwpMermaidParser:
             if expr_clause_node is not None:
                 raw_expr: str = expr_clause_node.getText()
                 raw_expr_text: str = self._extract_expr_text(raw_expr)
-                edge.expression = CwpEdge.cleanup_expression(raw_expr_text)
-                edge.expression = CwpEdge.build_ast(edge.expression)
+                expr: str = CwpEdge.cleanup_expression(raw_expr_text)
+                edge.expression = CwpEdge.build_ast(expr)
 
                 result = edge.expression.type_check(self.state)
                 if not_(is_successful)(result):
-                    raise Exception(result.failure())
+                    raise ErrorException(result.failure())
 
             self.builder = self.builder.with_edge(
                 edge,
@@ -125,9 +125,9 @@ class CwpMermaidParser:
         try:
             tree = CwpMermaidParser._parse_tree(mmd_str)
             ParseTreeWalker().walk(listener, tree)
-        except Exception as e:
+        except ErrorException as e:
             assert e.args, "Error does not have enough arguments"
-            return Failure(e.args[0])
+            return Failure(e.error)
 
         result: Result[Cwp, Error] = listener.builder.build()
         return result

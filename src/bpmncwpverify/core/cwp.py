@@ -13,7 +13,6 @@ from bpmncwpverify.core.error import (
     CwpInvalidAssignmentTargetError,
     CwpInvalidLiteralError,
     CwpInvalidStartEdgeError,
-    CwpInvalidStartExpressionError,
     Error,
 )
 from bpmncwpverify.core.feel import Feel
@@ -89,9 +88,7 @@ class CwpEdge:
     def __init__(self, id: str, name: str) -> None:
         self.id = id
         self.name = name
-        self.expression: Feel | str = (
-            ""  # TODO: expression needs to always be on an edge and cannot be empty
-        )
+        self.expression: Feel
         self.parent_id: str
 
         self.source: CwpState | None = None
@@ -136,9 +133,6 @@ class CwpEdge:
     ) -> Result[list[tuple[str, str | list[str]]], Error]:
         if self.source or not self.expression:
             return Failure(CwpInvalidStartEdgeError())
-
-        if isinstance(self.expression, str):
-            return Failure(CwpInvalidStartExpressionError())
 
         ast = self.expression.ast
 
