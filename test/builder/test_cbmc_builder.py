@@ -110,12 +110,15 @@ class TestSimpleExampleGeneration:
     def test_bound_defined(self, c_code):
         assert "#define BOUND" in c_code
 
-    def test_bound_is_8(self, c_code):
-        # acyclic depth 4 + cycle(len=2) × max_retries(2) = 4 + 4 = 8
+    def test_bound_is_14(self, c_code):
+        # acyclic depth 4 + cycle(len=2) × 5 derived trips = 4 + 10 = 14.
+        # The trip count comes from the loop's data — `x` starts at 0, the task
+        # adds 1, and the back-edge guard `x <= 5` stops holding once x is 6 —
+        # not from the default max_retries of 2, which would give 8.
         import re
 
-        assert re.search(r"#define BOUND\s+8\b", c_code), (
-            "Expected BOUND == 8 (acyclic=4, cycle=2×2=4)"
+        assert re.search(r"#define BOUND\s+14\b", c_code), (
+            "Expected BOUND == 14 (acyclic=4, cycle=2×5 derived trips)"
         )
 
     # ── CWP state defines ──
@@ -332,18 +335,13 @@ class TestFace2FaceFeelCbmc:
 class TestSimpleExampleCbmc:
     """Runs the actual CBMC tool. Skipped automatically when cbmc is not installed."""
 
+    # One file at the derived bound serves both checks. Before the trip count was
+    # derived, reachability needed a hand-fed max_retries=8 (BOUND=20) that the CLI
+    # could not produce, so this suite passed while `verify --cbmc` failed.
     @pytest.fixture(scope="class")
     def c_file(self):
-        # Verification: max_retries=2 (BOUND=8) is sufficient for bug-finding.
-        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN, max_retries=2)
-        with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
-            f.write(c_code)
-            return Path(f.name)
-
-    @pytest.fixture(scope="class")
-    def c_file_reachability(self):
-        # Reachability: max_retries=8 (BOUND=20) needed to reach x>5 (end event).
-        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN, max_retries=8)
+        c_code = _build_c(SIMPLE_STATE, SIMPLE_CWP, SIMPLE_BPMN)
+        assert "#define BOUND                        14" in c_code
         with tempfile.NamedTemporaryFile(suffix=".c", mode="w", delete=False) as f:
             f.write(c_code)
             return Path(f.name)
@@ -354,9 +352,9 @@ class TestSimpleExampleCbmc:
         )
 
     def test_cbmc_verification_successful(self, c_file):
-        """BOUND=8 (max_retries=2), --unwind 9."""
+        """BOUND=14, --unwind 15."""
         result = subprocess.run(
-            ["cbmc", str(c_file), "--unwind", "9"],
+            ["cbmc", str(c_file), "--unwind", "15"],
             capture_output=True,
             text=True,
         )
@@ -364,13 +362,12 @@ class TestSimpleExampleCbmc:
             f"CBMC failed.\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
         )
 
-    def test_cbmc_reachability(self, c_file_reachability):
-        """All CWP states and the end event must be reachable.
-        Uses max_retries=8 (BOUND=20) so x can exceed 5 and reach the end event."""
+    def test_cbmc_reachability(self, c_file):
+        """All CWP states and the end event must be reachable at the derived bound."""
         result = subprocess.run(
             [
                 "cbmc",
-                str(c_file_reachability),
+                str(c_file),
                 "--unwind",
                 "15",
                 "--cover",
