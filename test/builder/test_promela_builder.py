@@ -120,7 +120,8 @@ def test_state_dump_enum(mocker):
 
 
 def test_generate_promela(mocker):
-    const = mocker.Mock(id="const_id", init=mocker.Mock(value="const_init_val"))
+    const = mocker.Mock(id="const_id")
+    const.init = Some(mocker.Mock(value="const_init_val"))
     enum = mocker.Mock(
         id="enum_id",
         values=[mocker.Mock(value="init_val"), mocker.Mock(value="other_val")],
@@ -206,7 +207,7 @@ def test_generate_promela_with_full_state(mocker, mock_state):
 
     mock_const = mocker.MagicMock()
     mock_const.id = "MAX_COUNT"
-    mock_const.init.value = "10"
+    mock_const.init = Some(mocker.Mock(value="10"))
 
     mock_enum = mocker.MagicMock()
     mock_enum.id = "TestEnum"
@@ -263,7 +264,7 @@ def test_generate_promela_with_only_constants(mocker, mock_state):
 
     mock_const = mocker.MagicMock()
     mock_const.id = "BUFFER_SIZE"
-    mock_const.init.value = "256"
+    mock_const.init = Some(mocker.Mock(value="256"))
 
     mock_state.consts = [mock_const]
 

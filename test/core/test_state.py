@@ -52,9 +52,9 @@ class Test_get_parser:
         assert exception.type is ParseCancellationException
         assert parser.getNumberOfSyntaxErrors() == 1
         assert (
-            "line 1:58 extraneous input 'my' expecting ':'" == exception.value.args[0]
+            "line 1:53 extraneous input 'my' expecting ':'" == exception.value.args[0]
         )
-        assert "line 1:58 extraneous input 'my' expecting ':'" in str(exception.value)
+        assert "line 1:53 extraneous input 'my' expecting ':'" in str(exception.value)
 
     def test_given_good_input_when_parse_state_then_tree_not_none(self, good_input):
         # given
@@ -97,7 +97,7 @@ class Test_parse_state:
         assert not is_successful(result)
         error = result.failure()
         assert isinstance(error, StateSyntaxError)
-        assert "line 1:58 extraneous input 'my' expecting ':'" == error.msg
+        assert "line 1:53 extraneous input 'my' expecting ':'" == error.msg
 
     def test_given_good_parser_when_parse_state_then_success(
         self, good_parser: Result[StateParser, Error]
@@ -142,18 +142,18 @@ class Test_SymbolTable_build:
                 "enum E {a b} var e : E",
                 [("E", typechecking.ENUM), ("a", "E"), ("b", "E")],
             ),
-            ("enum A {b} const a: A = b var i : A", [("a", "A")]),
-            ("const a: bit = 0 var i : bit", [("a", typechecking.BIT)]),
+            ("enum A {b} const a: A var i : A", [("a", "A")]),
+            ("const a: bit var i : bit", [("a", typechecking.BIT)]),
             (
-                "const a: bool = false var i : bool",
+                "const a: bool var i : bool",
                 [("a", typechecking.BOOL)],
             ),
-            ("const a: byte = 0 var i : byte", [("a", typechecking.BYTE)]),
+            ("const a: byte var i : byte", [("a", typechecking.BYTE)]),
             (
-                "const a: short = 0 var i : short",
+                "const a: short var i : short",
                 [("a", typechecking.SHORT)],
             ),
-            ("const a: int = 0 var i : int", [("a", typechecking.INT)]),
+            ("const a: int var i : int", [("a", typechecking.INT)]),
             ("var i : int", [("i", typechecking.INT)]),
         ],
     )
@@ -186,33 +186,12 @@ class Test_SymbolTable_build:
                 StateMultipleDefinitionError("E", Some(1), Some(16), Some(1), Some(5)),
             ),
             (
-                "enum E {e} const e : E = 0 var i : E",
+                "enum E {e} const e : E var i : E",
                 StateMultipleDefinitionError("e", Some(1), Some(17), Some(1), Some(8)),
             ),
             (
-                "const e : int = 0 var e : int",
-                StateMultipleDefinitionError("e", Some(1), Some(22), Some(1), Some(6)),
-            ),
-            # Bad const initializer
-            (
-                "enum E {e} const ECONST : E = a var i : int",
-                TypingNoTypeError("a"),
-            ),
-            (
-                "enum E {e} const ECONST : E = true var i : int",
-                TypingAssignCompatabilityError("E", typechecking.BOOL),
-            ),
-            (
-                "const C : bool = 0 var i : int",
-                TypingAssignCompatabilityError(typechecking.BOOL, typechecking.BIT),
-            ),
-            (
-                "const C : int = true var i : int",
-                TypingAssignCompatabilityError(typechecking.INT, typechecking.BOOL),
-            ),
-            (
-                "const C : bit = 2 var i : int",
-                TypingAssignCompatabilityError(typechecking.BIT, typechecking.BYTE),
+                "const e : int var e : int",
+                StateMultipleDefinitionError("e", Some(1), Some(18), Some(1), Some(6)),
             ),
             # Array initialized with bad size
             # (

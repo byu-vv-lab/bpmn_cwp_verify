@@ -77,7 +77,7 @@
             <mxPoint x="20" y="290" as="sourcePoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="init-pseudostate-label-1" connectable="0" parent="init-pseudostate-edge-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="terms = pending and backpackOwner = sellerName and paymentOwner = buyerName and paymentOffered = pendingPayment" vertex="1">
+        <mxCell id="init-pseudostate-label-1" connectable="0" parent="init-pseudostate-edge-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="terms = pending and backpackOwner = sellerName and paymentOwner = buyerName and paymentOffered = pendingPayment and paymentAmount = 253 and belowPaymentAmount = 252 and noRetryPayment = 254 and pendingPayment = 255" vertex="1">
           <mxGeometry relative="1" x="0" y="0" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
