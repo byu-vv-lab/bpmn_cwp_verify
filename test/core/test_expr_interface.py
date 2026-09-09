@@ -17,9 +17,9 @@ from bpmncwpverify.core.state import State
     "state, expression, expression_type",
     [
         ("var a: bit var b: bit ", "a != b", "bool"),
-        ("const x: int = 0 var y: short var z: short", "x + y - z", "int"),
+        ("const x: int var y: short var z: short", "x + y - z", "int"),
         ("var a: int var b: byte", "a > b", "bool"),
-        ("const x: bool = true var y: bool", "!x || y", "bool"),
+        ("const x: bool var y: bool", "!x || y", "bool"),
         (
             "var m: int var n: short var o: bool",
             "(m >= n) && !o",
@@ -32,15 +32,15 @@ from bpmncwpverify.core.state import State
         ),
         ("var a: byte var b: bit", "(a != b) || (a > b)", "bool"),
         (
-            "const x: int = 4 var y: short var z: byte",
+            "const x: int var y: short var z: byte",
             "x * (y + z) < x",
             "bool",
         ),
         ("var i: int var j: short var k: bit", "(i + j) > k", "bool"),
         ("var a: int var b: short var c: bool", "(a > b) && !c", "bool"),
-        ("const a: bit = 0 var b: short", "b + a", "short"),
-        ("const x: int = 0 var y: short var z: bit", "x + y - z", "int"),
-        ("const a: bit = 0 var b: short var c: int", "a + (b * c)", "int"),
+        ("const a: bit var b: short", "b + a", "short"),
+        ("const x: int var y: short var z: bit", "x + y - z", "int"),
+        ("const a: bit var b: short var c: int", "a + (b * c)", "int"),
         (
             "array a[2]: int array b[2]: int var x: int",
             "a[0] + b[1]",
@@ -69,9 +69,9 @@ def test_given_good_state_when_build_then_success(state, expression, expression_
 @pytest.mark.parametrize(
     "state, expression, error",
     [
-        ("const a: bit = 0 var b: short", "b + c", ExpressionUnrecognizedID),
+        ("const a: bit var b: short", "b + c", ExpressionUnrecognizedID),
         (
-            "const a: short = 0 var b: short var c: short",
+            "const a: short var b: short var c: short",
             "a + (b > c)",
             ExpressionComputationCompatabilityError,
         ),

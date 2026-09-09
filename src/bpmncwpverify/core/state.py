@@ -26,6 +26,8 @@ from bpmncwpverify.core.error import (
     StateArraySizeError,
     StateMultipleDefinitionError,
     StateSyntaxError,
+    UnassignedArrayError,
+    UnassignedConstError,
     UnassignedVariableError,
 )
 
@@ -224,7 +226,6 @@ class ConstDecl(DeclLoc):
         self,
         id: str,
         type_: str,
-        init: AllowedValueDecl,
         line: Maybe[int] = Nothing,
         col: Maybe[int] = Nothing,
     ) -> None:
@@ -241,7 +242,7 @@ class ConstDecl(DeclLoc):
         super().__init__(line, col)
         self.id = id
         self.type_ = type_
-        self.init = init
+        self.init: Maybe[AllowedValueDecl] = Nothing
 
 
 class EnumDecl(DeclLoc):
@@ -579,7 +580,7 @@ class State:
             """
 
             def get_const_var_decl() -> ConstDecl:
-                node = antlr_get_terminal_node_impl(ctx.ID(0))
+                node = antlr_get_terminal_node_impl(ctx.ID())  # type: ignore[no-untyped-call]
                 symbol: Token = node.getSymbol()
                 id = State._Listener._get_id(node)
                 id_line = Some(symbol.line)
@@ -587,15 +588,7 @@ class State:
 
                 type_: str = antlr_get_type_from_type_context(ctx)
 
-                node = antlr_get_terminal_node_impl(ctx.ID(1))
-                symbol = node.getSymbol()
-                init = AllowedValueDecl(
-                    antlr_get_text(node),
-                    Some(symbol.line),
-                    Some(symbol.column),
-                )
-
-                return ConstDecl(id, type_, init, id_line, id_col)
+                return ConstDecl(id, type_, id_line, id_col)
 
             self.state_builder = self.state_builder.map(
                 lambda builder: builder.with_const_decl(get_const_var_decl())
@@ -739,15 +732,7 @@ class State:
         """
         state_str = ""
         for const in consts:
-            state_str += (
-                "const "
-                + const.id
-                + ": "
-                + const.type_
-                + " = "
-                + const.init.value
-                + "\n"
-            )
+            state_str += "const " + const.id + ": " + const.type_ + "\n"
         return state_str
 
     @staticmethod
@@ -849,6 +834,15 @@ class State:
         )
         return result
 
+    def name_is_var(self, name: str) -> bool:
+        """
+        Returns True if the name passed in is the name of a variable in the state, false otherwise
+        """
+        for var in self._vars:
+            if var.id == name:
+                return True
+        return False
+
     def set_variable_value(
         self,
         name: str,
@@ -873,6 +867,31 @@ class State:
                     return Failure(StartExpressionDisallowedAssignemntError(name))
 
                 var.init_value = Some(AllowedValueDecl(value, line, col))
+                return Success(None)
+
+        return Failure(ExpressionParseError(name))
+
+    def set_const_value(
+        self,
+        name: str,
+        value: str,
+        line: Maybe[int] = Nothing,
+        col: Maybe[int] = Nothing,
+    ) -> Result[None, Error]:
+        for const in self.consts:
+            if const.id == name:
+                result: Result[None, Error] = (
+                    self.get_type(value)
+                    .bind(  # pyright: ignore[reportUnknownMemberType]
+                        lambda rtype: typechecking.get_type_assign(const.type_, rtype)
+                    )
+                    .map(lambda _: None)
+                )
+
+                if not_(is_successful)(result):
+                    return result
+
+                const.init = Some(AllowedValueDecl(value, line, col))
                 return Success(None)
 
         return Failure(ExpressionParseError(name))
@@ -914,9 +933,13 @@ class State:
             if not isinstance(var.init_value, Some):
                 return Failure(UnassignedVariableError(var.id))
 
+        for const in self._consts:
+            if not isinstance(const.init, Some):
+                return Failure(UnassignedConstError(const.id))
+
         for array in self._arrays:
             if not array.values:
-                return Failure(UnassignedVariableError(array.id))
+                return Failure(UnassignedArrayError(array.id))
             if len(array.values) != array.size:
                 return Failure(
                     StateArraySizeError(
@@ -1045,7 +1068,8 @@ class State:
             state (State): State object to retrieve initial type
         """
         for const_decl in self._consts:
-            result = self._type_check_assigns(const_decl.type_, [const_decl.init])
+            values = const_decl.init.map(lambda v: [v]).value_or([])
+            result = self._type_check_assigns(const_decl.type_, values)
             if not_(is_successful)(result):
                 return result
         return Success(None)

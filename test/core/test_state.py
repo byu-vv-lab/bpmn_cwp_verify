@@ -25,12 +25,12 @@ from bpmncwpverify.core.state import State, _get_parser, _parse_state
 
 @pytest.fixture(scope="module")
 def bad_input() -> Iterable[str]:
-    yield "enum MyEnum {a b c d} const MYCONST : foo = 10 var myenum my : MyEnum = a {b c d}"
+    yield "enum MyEnum {a b c d} const MYCONST : foo var myenum my : MyEnum = a {b c d}"
 
 
 @pytest.fixture(scope="module")
 def good_input() -> Iterable[str]:
-    yield "enum MyEnum {a b c d} const MYCONST : byte = 10 var myenum : MyEnum"
+    yield "enum MyEnum {a b c d} const MYCONST : byte var myenum : MyEnum"
 
 
 class Test_get_parser:

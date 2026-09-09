@@ -368,6 +368,22 @@ class UnassignedVariableError(Error):
         self.variable_name = variable_name
 
 
+class UnassignedConstError(Error):
+    __slots__ = ["const_name"]
+
+    def __init__(self, const_name: str):
+        super().__init__()
+        self.const_name = const_name
+
+
+class UnassignedArrayError(Error):
+    __slots__ = ["array_name"]
+
+    def __init__(self, array_name: str):
+        super().__init__()
+        self.array_name = array_name
+
+
 class ExpressionRelationCompatabilityError(Error):
     __slots__ = ["ltype", "rtype"]
 
@@ -864,6 +880,10 @@ def get_error_message(error: Error) -> str:
             return f"Error while parsing start edge expression: variable {exception_str} assigned to invalid value"
         case UnassignedVariableError(variable_name=variable_name):
             return f"Error while parsing start edge expression: variable {variable_name} was never assigned"
+        case UnassignedConstError(const_name=const_name):
+            return f"Error while parsing start edge expression: constant {const_name} was never assigned"
+        case UnassignedArrayError(array_name=array_name):
+            return f"Error while parsing start edge expression: variable {array_name} was never assigned"
         case ExpressionRelationCompatabilityError(ltype=ltype, rtype=rtype):
             return f"EXPR ERROR: something of type '{rtype}' cannot be related with something of type '{ltype}'"
         case ExpressionIfBranchCompatabilityError(thentype=thentype, elsetype=elsetype):

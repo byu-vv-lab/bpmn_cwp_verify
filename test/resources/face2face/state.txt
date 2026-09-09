@@ -2,10 +2,10 @@ enum all { INIT other}
 enum TermsType {agreed failed pending noRetry}
 enum OwnerType {buyerName sellerName}
 
-const paymentAmount: byte = 253
-const belowPaymentAmount: byte = 252
-const noRetryPayment: byte = 254
-const pendingPayment: byte = 255
+const paymentAmount: byte
+const belowPaymentAmount: byte
+const noRetryPayment: byte
+const pendingPayment: byte
 
 var terms:TermsType
 var backpackOwner: OwnerType

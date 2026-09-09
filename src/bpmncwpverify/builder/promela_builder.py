@@ -119,7 +119,12 @@ def _generate_state_promela(state: State) -> str:
     str_builder: list[str] = []
     str_builder.append("//**********VARIABLE DECLARATION************//")
     for const_decl in state.consts:
-        str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
+        match const_decl.init:
+            case Some(init):
+                str_builder.append(f"#define {const_decl.id} {init.value}")
+            case _:
+                continue
+
     for enum_decl in state.enums:
         str_builder.append(
             f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"

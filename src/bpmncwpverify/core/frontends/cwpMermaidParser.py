@@ -105,7 +105,10 @@ class CwpMermaidParser:
                 if isinstance(value, list):
                     result = self.state.set_array_value(name, value)
                 else:
-                    result = self.state.set_variable_value(name, value)
+                    if self.state.name_is_var(name):
+                        result = self.state.set_variable_value(name, value)
+                    else:
+                        result = self.state.set_const_value(name, value)
                 if not is_successful(result):
                     return Failure(result.failure())
             return Success(None)

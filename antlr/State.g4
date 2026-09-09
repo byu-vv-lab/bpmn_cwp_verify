@@ -13,7 +13,7 @@ id_set
   ;
 
 const_var_decl
-  : CONST ID COLON type EQUALS ID
+  : CONST ID COLON type
   ;
 
 var_decl

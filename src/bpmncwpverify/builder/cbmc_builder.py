@@ -38,7 +38,11 @@ def _state_defines(state: State) -> str:
     """
     lines: list[str] = []
     for const in state.consts:
-        lines.append(f"#define {const.id:<28} {const.init.value}")
+        match const.init:
+            case Some(init):
+                lines.append(f"#define {const.id:<28} {init.value}")
+            case _:
+                continue
     for enum in state.enums:
         for i, val in enumerate(enum.values):
             lines.append(f"#define {val.value:<28} {i}")
