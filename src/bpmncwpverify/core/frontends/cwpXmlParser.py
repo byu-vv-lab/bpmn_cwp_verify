@@ -23,18 +23,13 @@ class CwpXmlParser:
     def _get_mx_cells(self, root: Element) -> list[Element]:
         if (diagram := root.find("diagram")) is None:
             raise ErrorException(CwpFileStructureError("diagram"))
-            raise ErrorException(CwpFileStructureError("diagram"))
         if (mx_graph_model := diagram.find("mxGraphModel")) is None:
-            raise ErrorException(CwpFileStructureError("mxGraphModel"))
             raise ErrorException(CwpFileStructureError("mxGraphModel"))
         if (mx_root := mx_graph_model.find("root")) is None:
             raise ErrorException(CwpFileStructureError("root"))
-            raise ErrorException(CwpFileStructureError("root"))
         if not (mx_cells := mx_root.findall("mxCell")):
             raise ErrorException(CwpFileStructureError("mxCell"))
-            raise ErrorException(CwpFileStructureError("mxCell"))
         if object := mx_root.findall("object"):
-            raise ErrorException(CwpUnsupportedElementError(len(object), "object"))
             raise ErrorException(CwpUnsupportedElementError(len(object), "object"))
         return mx_cells
 
