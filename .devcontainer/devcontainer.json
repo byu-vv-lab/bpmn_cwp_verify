@@ -37,7 +37,8 @@
                 "ms-python.mypy-type-checker",
                 "charliermarsh.ruff",
                 "peacekeeper228.spin-promela",
-                "mermaidchart.vscode-mermaid-chart"
+                "mermaidchart.vscode-mermaid-chart",
+                "ritwickdey.LiveServer"
             ]
         }
     }
