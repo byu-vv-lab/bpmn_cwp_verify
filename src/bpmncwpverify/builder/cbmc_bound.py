@@ -4,14 +4,20 @@ cbmc_bound.py — CBMC loop-bound computation from a BPMN graph.
 Computes the minimum unwind depth needed for CBMC to cover all execution paths:
 
     BOUND = SUM over pools of
-              acyclic_path_length + sum(loop_length × max_retries  for each loop)
+              acyclic_path_length + sum(loop_length × trips  for each loop)
+
+where `trips` is the loop's derived trip count when it is a recognisable counter
+(see cbmc_trip_count.py) and `max_retries` otherwise.
 
 Entry point: _compute_bound(bpmn, max_retries)
 """
 
 from collections import deque
 
+from bpmncwpverify.builder.cbmc_trip_count import loop_trip_count
 from bpmncwpverify.core.bpmn import Bpmn, EndEvent, Node, ParallelGatewayNode
+from bpmncwpverify.core.feel import Feel
+from bpmncwpverify.core.state import State
 
 
 def _find_matching_join(fork: ParallelGatewayNode, path: frozenset[str]) -> Node | None:
@@ -130,32 +136,75 @@ def _cycle_length_bfs(target: Node, source_id: str) -> int:
     return 2  # fallback: minimum cycle
 
 
-def _flow_bound(start: Node, node_map: dict[str, Node], max_retries: int) -> int:
-    """
-    Steps one token needs: acyclic longest path + max_retries extra trips per loop.
+def _back_edge_guard(
+    node_map: dict[str, Node], source_id: str, target_id: str
+) -> Feel | None:
+    """Condition expression on the sequence flow that closes the loop, if any."""
+    source = node_map.get(source_id)
+    if source is None:
+        return None
+    for flow in source.out_flows:
+        if flow.target_node.id == target_id:
+            return getattr(flow, "expression", None)
+    return None
 
-    Detect back-edges from this start event, group them by loop-entry node, take the
-    longest cycle per entry, and charge each one max_retries additional traversals.
+
+def _loop_body(node_map: dict[str, Node], source_id: str, target_id: str) -> list[Node]:
+    """Nodes on some path from the loop entry back round to the back-edge source."""
+
+    def _walk(seed: str, forwards: bool) -> set[str]:
+        seen: set[str] = set()
+        stack = [seed]
+        while stack:
+            node_id = stack.pop()
+            if node_id in seen or node_id not in node_map:
+                continue
+            seen.add(node_id)
+            node = node_map[node_id]
+            if forwards:
+                stack.extend(f.target_node.id for f in node.out_flows)
+            else:
+                stack.extend(f.source_node.id for f in node.in_flows)
+        return seen
+
+    reachable_from_entry = _walk(target_id, forwards=True)
+    reaches_back_edge = _walk(source_id, forwards=False)
+    return [node_map[i] for i in reachable_from_entry & reaches_back_edge]
+
+
+def _flow_bound(
+    start: Node, node_map: dict[str, Node], max_retries: int, state: State | None
+) -> int:
+    """
+    Steps one token needs: acyclic longest path + extra trips per loop.
+
+    Detect back-edges from this start event and group them by loop-entry node. A
+    counter loop (`x <= 5` guarding a body that does `x + 1`) gets the trip count
+    its data actually implies; every other loop falls back to max_retries.
     """
     acyclic = max(_acyclic_depth(start, frozenset()), 0)
 
     back_edges: list[tuple[str, str]] = []
     _find_back_edges(start, set(), set(), back_edges)
 
-    # Per loop-entry (back-edge target): keep the longest cycle length.
-    target_max_cycle: dict[str, int] = {}
+    # Per loop-entry (back-edge target): keep the largest contribution.
+    per_entry: dict[str, int] = {}
     for source_id, target_id in back_edges:
         if target_id not in node_map:
             continue
         cycle_len = _cycle_length_bfs(node_map[target_id], source_id)
-        prev = target_max_cycle.get(target_id, 0)
-        target_max_cycle[target_id] = max(prev, cycle_len)
+        derived = loop_trip_count(
+            _back_edge_guard(node_map, source_id, target_id),
+            _loop_body(node_map, source_id, target_id),
+            state,
+        )
+        retries = max_retries if derived is None else derived
+        per_entry[target_id] = max(per_entry.get(target_id, 0), cycle_len * retries)
 
-    loop_total = sum(c * max_retries for c in target_max_cycle.values())
-    return acyclic + loop_total
+    return acyclic + sum(per_entry.values())
 
 
-def compute_bound(bpmn: Bpmn, max_retries: int) -> int:
+def compute_bound(bpmn: Bpmn, max_retries: int, state: State | None = None) -> int:
     """
     Acyclic-skeleton longest path + loop contributions, summed across all pools.
 
@@ -164,10 +213,13 @@ def compute_bound(bpmn: Bpmn, max_retries: int) -> int:
     pool is a step unavailable to another. The budget that lets every pool finish is
     therefore the sum of their costs, not the largest of them. Same for a pool with
     several start events: each seeds its own token, and all of them have to run.
+
+    `state` supplies initial variable values so counter loops can have their real
+    trip count derived; without it every loop falls back to max_retries.
     """
     return max(
         sum(
-            _flow_bound(start, dict(process.all_items()), max_retries)
+            _flow_bound(start, dict(process.all_items()), max_retries, state)
             for process in bpmn.processes.values()
             for start in process.get_start_states().values()
         ),

@@ -70,6 +70,13 @@ def _connect(source, target, flow_id: str | None = None) -> SequenceFlow:
     return flow
 
 
+def _load_bpmn_and_state(state_path: Path, bpmn_path: Path):
+    """Same as _load_bpmn, but also hands back the State for trip-count derivation."""
+    state_str = unsafe_perform_io(read_file_as_string(str(state_path)).unwrap())
+    state = State.from_str(state_str).unwrap()
+    return _load_bpmn(state_path, bpmn_path), state
+
+
 def _load_bpmn(state_path: Path, bpmn_path: Path):
     state_str = unsafe_perform_io(read_file_as_string(str(state_path)).unwrap())
     bpmn_str = unsafe_perform_io(read_file_as_string(str(bpmn_path)).unwrap())
@@ -323,6 +330,43 @@ class TestComputeBoundSimpleExample:
     def test_bound_minimum_is_acyclic_depth(self, bpmn):
         # With max_retries=0, only the acyclic skeleton contributes.
         assert compute_bound(bpmn, max_retries=0) == 4
+
+
+class TestComputeBoundDerivesTripCount:
+    """With a State, a counter loop gets its real trip count instead of max_retries."""
+
+    @pytest.fixture(scope="class")
+    def simple(self):
+        return _load_bpmn_and_state(
+            RESOURCES / "simple_example" / "state.txt",
+            RESOURCES / "simple_example" / "simple_open.bpmn",
+        )
+
+    @pytest.fixture(scope="class")
+    def face2face(self):
+        return _load_bpmn_and_state(
+            RESOURCES / "face2face" / "state.txt",
+            RESOURCES / "face2face" / "face2face_open.bpmn",
+        )
+
+    def test_simple_example_is_14(self, simple):
+        # `x <= 5` from x=0 stepping by 1 needs 5 extra trips: 4 + 2×5 = 14.
+        bpmn, state = simple
+        assert compute_bound(bpmn, max_retries=2, state=state) == 14
+
+    def test_simple_example_ignores_max_retries_once_derived(self, simple):
+        # The derived count replaces max_retries rather than scaling with it.
+        bpmn, state = simple
+        assert compute_bound(bpmn, max_retries=8, state=state) == 14
+
+    def test_face2face_unchanged_at_25(self, face2face):
+        # Its back-edge guards are not integer counters, so it falls back.
+        bpmn, state = face2face
+        assert compute_bound(bpmn, max_retries=2, state=state) == 25
+
+    def test_without_state_falls_back_everywhere(self, simple):
+        bpmn, _ = simple
+        assert compute_bound(bpmn, max_retries=2) == 8
 
 
 class TestComputeBoundFace2Face:

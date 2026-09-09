@@ -95,7 +95,7 @@ def _generate_c(
         return Failure(CbmcGeneratorError("BPMN produced no transitions"))
 
     # ── Derived values ──
-    bound = compute_bound(bpmn, max_retries)
+    bound = compute_bound(bpmn, max_retries, state)
     st_defines = _state_defines(state)
     v_decls = _var_decls(state)
     v_params = _var_params(state)
