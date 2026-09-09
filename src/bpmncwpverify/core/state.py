@@ -745,17 +745,7 @@ class State:
         """
         state_str = ""
         for var in vars:
-            state_str += "var " + var.id + " : " + var.type_
-            if len(var.allowed_values) != 0:
-                state_str += " {"
-                for vals in range(len(var.allowed_values)):
-                    if vals == 0:
-                        state_str += var.allowed_values[vals].value
-                        continue
-                    state_str += " " + var.allowed_values[vals].value
-                state_str += "}\n"
-            else:
-                state_str += "\n"
+            state_str += "var " + var.id + " : " + var.type_ + "\n"
         return state_str
 
     def __str__(self) -> str:
