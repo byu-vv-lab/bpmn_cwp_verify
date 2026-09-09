@@ -197,7 +197,7 @@ def serializedATN():
         3,110,55,0,490,492,3,6,3,0,491,490,1,0,0,0,491,492,1,0,0,0,492,494,
         1,0,0,0,493,488,1,0,0,0,493,494,1,0,0,0,494,77,1,0,0,0,495,496,5,
         10,0,0,496,497,3,26,13,0,497,79,1,0,0,0,498,499,5,28,0,0,499,500,
-        3,110,55,0,500,501,5,34,0,0,501,502,3,26,13,0,502,503,5,34,0,0,503,
+        3,2,1,0,500,501,5,34,0,0,501,502,3,26,13,0,502,503,5,34,0,0,503,
         504,3,2,1,0,504,505,5,29,0,0,505,81,1,0,0,0,506,511,3,80,40,0,507,
         508,5,34,0,0,508,510,3,80,40,0,509,507,1,0,0,0,510,513,1,0,0,0,511,
         509,1,0,0,0,511,512,1,0,0,0,512,83,1,0,0,0,513,511,1,0,0,0,514,531,
@@ -3662,44 +3662,106 @@ class FeelExprParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def unaryExpression(self):
-            return self.getTypedRuleContext(FeelExprParser.UnaryExpressionContext,0)
-
-
-        def pathDescendantFilterExpression(self):
-            return self.getTypedRuleContext(FeelExprParser.PathDescendantFilterExpressionContext,0)
-
-
-        def LBRACK(self):
-            return self.getToken(FeelExprParser.LBRACK, 0)
-
-        def expression(self):
-            return self.getTypedRuleContext(FeelExprParser.ExpressionContext,0)
-
-
-        def RBRACK(self):
-            return self.getToken(FeelExprParser.RBRACK, 0)
-
-        def DOT(self):
-            return self.getToken(FeelExprParser.DOT, 0)
-
-        def qualifiedName(self):
-            return self.getTypedRuleContext(FeelExprParser.QualifiedNameContext,0)
-
-
-        def SPREAD(self):
-            return self.getToken(FeelExprParser.SPREAD, 0)
 
         def getRuleIndex(self):
             return FeelExprParser.RULE_pathDescendantFilterExpression
 
+     
+        def copyFrom(self, ctx:ParserRuleContext):
+            super().copyFrom(ctx)
+
+
+    class FilterPathContext(PathDescendantFilterExpressionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a FeelExprParser.PathDescendantFilterExpressionContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def pathDescendantFilterExpression(self):
+            return self.getTypedRuleContext(FeelExprParser.PathDescendantFilterExpressionContext,0)
+
+        def DOT(self):
+            return self.getToken(FeelExprParser.DOT, 0)
+        def qualifiedName(self):
+            return self.getTypedRuleContext(FeelExprParser.QualifiedNameContext,0)
+
+
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterPathDescendantFilterExpression" ):
-                listener.enterPathDescendantFilterExpression(self)
+            if hasattr( listener, "enterFilterPath" ):
+                listener.enterFilterPath(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitPathDescendantFilterExpression" ):
-                listener.exitPathDescendantFilterExpression(self)
+            if hasattr( listener, "exitFilterPath" ):
+                listener.exitFilterPath(self)
+
+
+    class FilteraccessContext(PathDescendantFilterExpressionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a FeelExprParser.PathDescendantFilterExpressionContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def pathDescendantFilterExpression(self):
+            return self.getTypedRuleContext(FeelExprParser.PathDescendantFilterExpressionContext,0)
+
+        def LBRACK(self):
+            return self.getToken(FeelExprParser.LBRACK, 0)
+        def expression(self):
+            return self.getTypedRuleContext(FeelExprParser.ExpressionContext,0)
+
+        def RBRACK(self):
+            return self.getToken(FeelExprParser.RBRACK, 0)
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFilteraccess" ):
+                listener.enterFilteraccess(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFilteraccess" ):
+                listener.exitFilteraccess(self)
+
+
+    class FilterPrimaryContext(PathDescendantFilterExpressionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a FeelExprParser.PathDescendantFilterExpressionContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def unaryExpression(self):
+            return self.getTypedRuleContext(FeelExprParser.UnaryExpressionContext,0)
+
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFilterPrimary" ):
+                listener.enterFilterPrimary(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFilterPrimary" ):
+                listener.exitFilterPrimary(self)
+
+
+    class FilterSpreadContext(PathDescendantFilterExpressionContext):
+
+        def __init__(self, parser, ctx:ParserRuleContext): # actually a FeelExprParser.PathDescendantFilterExpressionContext
+            super().__init__(parser)
+            self.copyFrom(ctx)
+
+        def pathDescendantFilterExpression(self):
+            return self.getTypedRuleContext(FeelExprParser.PathDescendantFilterExpressionContext,0)
+
+        def SPREAD(self):
+            return self.getToken(FeelExprParser.SPREAD, 0)
+        def qualifiedName(self):
+            return self.getTypedRuleContext(FeelExprParser.QualifiedNameContext,0)
+
+
+        def enterRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "enterFilterSpread" ):
+                listener.enterFilterSpread(self)
+
+        def exitRule(self, listener:ParseTreeListener):
+            if hasattr( listener, "exitFilterSpread" ):
+                listener.exitFilterSpread(self)
 
 
 
@@ -3712,6 +3774,10 @@ class FeelExprParser ( Parser ):
         self.enterRecursionRule(localctx, 72, self.RULE_pathDescendantFilterExpression, _p)
         try:
             self.enterOuterAlt(localctx, 1)
+            localctx = FeelExprParser.FilterPrimaryContext(self, localctx)
+            self._ctx = localctx
+            _prevctx = localctx
+
             self.state = 454
             self.unaryExpression(0)
             self._ctx.stop = self._input.LT(-1)
@@ -3727,7 +3793,7 @@ class FeelExprParser ( Parser ):
                     self._errHandler.sync(self)
                     la_ = self._interp.adaptivePredict(self._input,34,self._ctx)
                     if la_ == 1:
-                        localctx = FeelExprParser.PathDescendantFilterExpressionContext(self, _parentctx, _parentState)
+                        localctx = FeelExprParser.FilteraccessContext(self, FeelExprParser.PathDescendantFilterExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_pathDescendantFilterExpression)
                         self.state = 456
                         if not self.precpred(self._ctx, 3):
@@ -3742,7 +3808,7 @@ class FeelExprParser ( Parser ):
                         pass
 
                     elif la_ == 2:
-                        localctx = FeelExprParser.PathDescendantFilterExpressionContext(self, _parentctx, _parentState)
+                        localctx = FeelExprParser.FilterPathContext(self, FeelExprParser.PathDescendantFilterExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_pathDescendantFilterExpression)
                         self.state = 461
                         if not self.precpred(self._ctx, 2):
@@ -3755,7 +3821,7 @@ class FeelExprParser ( Parser ):
                         pass
 
                     elif la_ == 3:
-                        localctx = FeelExprParser.PathDescendantFilterExpressionContext(self, _parentctx, _parentState)
+                        localctx = FeelExprParser.FilterSpreadContext(self, FeelExprParser.PathDescendantFilterExpressionContext(self, _parentctx, _parentState))
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_pathDescendantFilterExpression)
                         self.state = 464
                         if not self.precpred(self._ctx, 1):
@@ -4105,8 +4171,11 @@ class FeelExprParser ( Parser ):
 
         def LPAREN(self):
             return self.getToken(FeelExprParser.LPAREN, 0)
-        def qualifiedName(self):
-            return self.getTypedRuleContext(FeelExprParser.QualifiedNameContext,0)
+        def expression(self, i:int=None):
+            if i is None:
+                return self.getTypedRuleContexts(FeelExprParser.ExpressionContext)
+            else:
+                return self.getTypedRuleContext(FeelExprParser.ExpressionContext,i)
 
         def COMMA(self, i:int=None):
             if i is None:
@@ -4115,9 +4184,6 @@ class FeelExprParser ( Parser ):
                 return self.getToken(FeelExprParser.COMMA, i)
         def list_(self):
             return self.getTypedRuleContext(FeelExprParser.ListContext,0)
-
-        def expression(self):
-            return self.getTypedRuleContext(FeelExprParser.ExpressionContext,0)
 
         def RPAREN(self):
             return self.getToken(FeelExprParser.RPAREN, 0)
@@ -4142,7 +4208,7 @@ class FeelExprParser ( Parser ):
             self.state = 498
             self.match(FeelExprParser.LPAREN)
             self.state = 499
-            self.qualifiedName()
+            self.expression()
             self.state = 500
             self.match(FeelExprParser.COMMA)
             self.state = 501
