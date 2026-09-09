@@ -3,7 +3,8 @@ cbmc_bound.py — CBMC loop-bound computation from a BPMN graph.
 
 Computes the minimum unwind depth needed for CBMC to cover all execution paths:
 
-    BOUND = acyclic_path_length + sum(loop_length × max_retries  for each loop)
+    BOUND = SUM over pools of
+              acyclic_path_length + sum(loop_length × max_retries  for each loop)
 
 Entry point: _compute_bound(bpmn, max_retries)
 """
@@ -129,33 +130,46 @@ def _cycle_length_bfs(target: Node, source_id: str) -> int:
     return 2  # fallback: minimum cycle
 
 
+def _flow_bound(start: Node, node_map: dict[str, Node], max_retries: int) -> int:
+    """
+    Steps one token needs: acyclic longest path + max_retries extra trips per loop.
+
+    Detect back-edges from this start event, group them by loop-entry node, take the
+    longest cycle per entry, and charge each one max_retries additional traversals.
+    """
+    acyclic = max(_acyclic_depth(start, frozenset()), 0)
+
+    back_edges: list[tuple[str, str]] = []
+    _find_back_edges(start, set(), set(), back_edges)
+
+    # Per loop-entry (back-edge target): keep the longest cycle length.
+    target_max_cycle: dict[str, int] = {}
+    for source_id, target_id in back_edges:
+        if target_id not in node_map:
+            continue
+        cycle_len = _cycle_length_bfs(node_map[target_id], source_id)
+        prev = target_max_cycle.get(target_id, 0)
+        target_max_cycle[target_id] = max(prev, cycle_len)
+
+    loop_total = sum(c * max_retries for c in target_max_cycle.values())
+    return acyclic + loop_total
+
+
 def compute_bound(bpmn: Bpmn, max_retries: int) -> int:
     """
     Acyclic-skeleton longest path + loop contributions, summed across all pools.
 
-    For each process: compute acyclic depth from its start event(s), detect back-edges,
-    group by loop-entry node, take the longest cycle per entry, multiply by max_retries.
+    The generated C interleaves every pool on ONE shared step counter — each pass of
+    the loop fires a single transition somewhere in the model — so a step spent in one
+    pool is a step unavailable to another. The budget that lets every pool finish is
+    therefore the sum of their costs, not the largest of them. Same for a pool with
+    several start events: each seeds its own token, and all of them have to run.
     """
-    best = 0
-    for process in bpmn.processes.values():
-        for start in process.get_start_states().values():
-            acyclic = max(_acyclic_depth(start, frozenset()), 0)
-
-            back_edges: list[tuple[str, str]] = []
-            _find_back_edges(start, set(), set(), back_edges)
-
-            node_map: dict[str, Node] = dict(process.all_items())
-
-            # Per loop-entry (back-edge target): keep the longest cycle length.
-            target_max_cycle: dict[str, int] = {}
-            for source_id, target_id in back_edges:
-                if target_id not in node_map:
-                    continue
-                cycle_len = _cycle_length_bfs(node_map[target_id], source_id)
-                prev = target_max_cycle.get(target_id, 0)
-                target_max_cycle[target_id] = max(prev, cycle_len)
-
-            loop_total = sum(c * max_retries for c in target_max_cycle.values())
-            best = max(best, acyclic + loop_total)
-
-    return max(best, 1)
+    return max(
+        sum(
+            _flow_bound(start, dict(process.all_items()), max_retries)
+            for process in bpmn.processes.values()
+            for start in process.get_start_states().values()
+        ),
+        1,
+    )

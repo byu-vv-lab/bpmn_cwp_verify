@@ -20,9 +20,11 @@ from bpmncwpverify.builder.cbmc_bound import (
     compute_bound,
 )
 from bpmncwpverify.core.bpmn import (
+    Bpmn,
     EndEvent,
     ExclusiveGatewayNode,
     ParallelGatewayNode,
+    Process,
     SequenceFlow,
     StartEvent,
     Task,
@@ -223,6 +225,80 @@ class TestFindMatchingJoin:
         # join is already in path — _find_matching_join should not return it
         result = _find_matching_join(fork, frozenset({"fork", "join"}))
         assert result is None
+
+
+# ── Multi-pool summing ────────────────────────────────────────────────────────
+
+
+def _single_task_pool(prefix: str):
+    """start → task → end, i.e. 3 firings."""
+    start, task, end = _start(prefix + "s"), _task(prefix + "t"), _end(prefix + "e")
+    _connect(start, task)
+    _connect(task, end)
+    process = Process(prefix, prefix)
+    for node in (start, task, end):
+        process[node.id] = node
+    return process
+
+
+def _bpmn_of(*processes):
+    bpmn = Bpmn()
+    for process in processes:
+        bpmn.processes[process.id] = process
+    return bpmn
+
+
+class TestComputeBoundSumsPools:
+    """The generated C runs every pool on one shared step counter, so the budget
+    that lets them all finish is the sum of their costs, not the largest."""
+
+    def test_single_pool(self):
+        assert compute_bound(_bpmn_of(_single_task_pool("A_")), max_retries=2) == 3
+
+    def test_two_pools_sum(self):
+        bpmn = _bpmn_of(_single_task_pool("A_"), _single_task_pool("B_"))
+        assert compute_bound(bpmn, max_retries=2) == 6
+
+    def test_three_pools_sum(self):
+        bpmn = _bpmn_of(
+            _single_task_pool("A_"), _single_task_pool("B_"), _single_task_pool("C_")
+        )
+        assert compute_bound(bpmn, max_retries=2) == 9
+
+    def test_pools_of_unequal_length_sum(self):
+        # A_: 3 firings. Long pool: start → t1 → t2 → t3 → end = 5.
+        long_process = Process("L_", "L_")
+        nodes = [
+            _start("L_s"),
+            _task("L_1"),
+            _task("L_2"),
+            _task("L_3"),
+            _end("L_e"),
+        ]
+        for source, target in zip(nodes, nodes[1:]):
+            _connect(source, target)
+        for node in nodes:
+            long_process[node.id] = node
+        assert compute_bound(_bpmn_of(long_process), max_retries=2) == 5
+        assert (
+            compute_bound(
+                _bpmn_of(_single_task_pool("A_"), long_process), max_retries=2
+            )
+            == 8
+        )
+
+    def test_two_start_events_in_one_pool_sum(self):
+        # Each start event seeds its own token, so both have to be paid for.
+        process = Process("P", "P")
+        shared_end = _end("e")
+        for prefix in ("x", "y"):
+            start, task = _start(prefix + "s"), _task(prefix + "t")
+            _connect(start, task)
+            _connect(task, shared_end)
+            process[start.id] = start
+            process[task.id] = task
+        process[shared_end.id] = shared_end
+        assert compute_bound(_bpmn_of(process), max_retries=2) == 6
 
 
 # ── compute_bound with real fixtures ─────────────────────────────────────────
