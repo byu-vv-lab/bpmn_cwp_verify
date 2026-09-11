@@ -42,13 +42,26 @@ unaryExpr
     ;
 
 postfixExpr
-    :   ID '[' ID ']'                       # ArrayAccess
+    :   ID LBRACKET ID RBRACKET                       # ArrayAccess
+    |   ID (PERIOD ID)+ (LBRACKET ID RBRACKET)?       # FieldAccess
     |   atom                                # ToAtom
     ;
 
 atom
     :   ID                                  # ID
     |   '(' expr ')'                        # Parens
+    ;
+
+PERIOD
+    :   '.'
+    ;
+
+LBRACKET
+    :   '['
+    ;
+
+RBRACKET
+    :   ']'
     ;
 
 // Lexer rules
