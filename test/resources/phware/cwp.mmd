@@ -6,6 +6,8 @@ stateDiagram-v2
     state "Pt Expired State" as PtExpiredState
     state "Pt Discharged State" as PtDischargedState
 
+    [*] --> InitState: sevNeed = patientNeedInit and trndSevNeed = patientNeedInit and alert = binDecisionInit and examTime = timeInit
+
     InitState --> PtInAppropriateHomeCareState: sevNeed = homeCare and trndSevNeed = homeCare
     InitState --> HospitalState: sevNeed = outsideHomeCare
 

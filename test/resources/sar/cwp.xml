@@ -98,6 +98,14 @@
             <mxPoint y="-49" as="offset" />
           </mxGeometry>
         </mxCell>
+        <mxCell id="initArrow-1" edge="1" parent="1" target="zzKEAjI1_oLO3G-XxQyw-2" style="endArrow=classic;html=1;rounded=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="-60" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="initArrow-2" connectable="0" parent="initArrow-1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="risk = riskInit and comms = communicationInit and conditions = conditionsInit and missingPerson = missingPersonInit and search = searchInit" vertex="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
