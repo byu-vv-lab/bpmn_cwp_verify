@@ -414,10 +414,10 @@ class StateBuilder:
         """
         Initialize StateBuilder object
         """
-        self._consts: list[ConstDecl] = list()
-        self._enums: list[EnumDecl] = list()
-        self._vars: list[VarDecl] = list()
-        self._arrays: list[ArrayDecl] = list()
+        self._consts: list[ConstDecl] = []
+        self._enums: list[EnumDecl] = []
+        self._vars: list[VarDecl] = []
+        self._arrays: list[ArrayDecl] = []
 
     def with_enum_type_decl(self, enum_decl: EnumDecl) -> "StateBuilder":
         """
@@ -540,7 +540,7 @@ class State:
                     for i in antlr_id_set_context_get_children(ctx)
                 ]
 
-            init_list: list[AllowedValueDecl] = list()
+            init_list: list[AllowedValueDecl] = []
             result: list[AllowedValueDecl] = ctx.bind_optional(
                 get_value_decls
             ).or_else_call(lambda: init_list)
@@ -808,10 +808,10 @@ class State:
         """
         Run the given State object through various tests to make sure all variable declarations are type safe
         """
-        self._id2type = Some(dict())
-        self._str2var = Some(dict())
-        self._str2enum = Some(dict())
-        self._str2const = Some(dict())
+        self._id2type = Some({})
+        self._str2var = Some({})
+        self._str2enum = Some({})
+        self._str2const = Some({})
         result: Result[State, Error] = (
             self._build_id_2_type_enums()  # pyright: ignore[reportUnknownMemberType]
             .bind(lambda _: self._build_id_2_type_consts())
