@@ -236,13 +236,13 @@ powerExpression
 
 // FEEL Grammar (2.g) (Path, Descendant, and Filter Expressions)
 pathDescendantFilterExpression
-    :   unaryExpression
+    :   unaryExpression                                         #filterPrimary
     // #50 Filter Expression
-    |   pathDescendantFilterExpression LBRACK expression RBRACK
+    |   pathDescendantFilterExpression LBRACK expression RBRACK #filteraccess
     // #43 Path Expression
-    |   pathDescendantFilterExpression DOT qualifiedName
+    |   pathDescendantFilterExpression DOT qualifiedName        #filterPath
     // #68 Descendant Expression
-    |   pathDescendantFilterExpression SPREAD qualifiedName
+    |   pathDescendantFilterExpression SPREAD qualifiedName     #filterSpread
     ;
 
 unaryExpression
@@ -261,7 +261,7 @@ chooseExpression
     ;
 
 tripleExpression
-    : LPAREN qualifiedName COMMA list COMMA expression RPAREN    #tripExpression
+    : LPAREN expression COMMA list COMMA expression RPAREN    #tripExpression
     ;
 
 tripleList

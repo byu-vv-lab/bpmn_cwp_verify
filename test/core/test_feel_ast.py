@@ -4,6 +4,7 @@ from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
+    ArrayAccessNode,
     BoolLiteralNode,
     ChooseNode,
     EqualNode,
@@ -470,6 +471,23 @@ def test_and_equal_chain() -> None:
     assert feel.ast.left.right.right.name == "buyerName"
     assert feel.ast.right.left.name == "paymentOffered"
     assert feel.ast.right.right.name == "pendingPayment"
+
+
+def test_array_access() -> None:
+    feel = Feel.parse("somelist[1] = true")
+
+    assert isinstance(feel.ast, EqualNode)
+    assert isinstance(feel.ast.left, ArrayAccessNode)
+    assert isinstance(feel.ast.right, BoolLiteralNode)
+
+
+def test_array_access_triple() -> None:
+    feel = Feel.parse("(my_list[1], [], true)")
+
+    assert isinstance(feel.ast, TripleNode)
+    assert isinstance(feel.ast.target, ArrayAccessNode)
+    assert isinstance(feel.ast.target.array, QualifiedNameNode)
+    assert isinstance(feel.ast.target.index, NumberLiteralNode)
 
 
 def test_parser_requires_parenthesis_around_condition() -> None:
