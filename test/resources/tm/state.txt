@@ -10,16 +10,16 @@ enum Box { boxInit ready notReady installed boxRecovered }
 enum Location { locationInit ptRoom }
 
 
-var ptID: ID = idInit
-var ptRm: Room = roomInit
-var ptStatus: PatientStatus = PatientStatusInit
-var hasCare: Care = careInit
-var needsCare: Need = needInit
+var ptID: ID
+var ptRm: Room
+var ptStatus: PatientStatus
+var hasCare: Care
+var needsCare: Need
 
-var orderNum: int = 20001
-var orderStatus: Status = statusInit
-var alertStatus: Status = statusInit
+var orderNum: int
+var orderStatus: Status
+var alertStatus: Status
 
-var boxNum: int = 21
-var boxStatus: Box = boxInit
-var boxLoc: Location = locationInit
+var boxNum: int
+var boxStatus: Box
+var boxLoc: Location
