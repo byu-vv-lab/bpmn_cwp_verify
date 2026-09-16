@@ -85,6 +85,14 @@ source_profile = vvlab
 external_id = VVLAB_EXTERNAL_ID
 ```
 
+### Mermaid File Upload and Live Rendering
+  * Users can upload a .mmd file from the main page (mainPage.html) to see live rendering of Mermaid diagrams
+  * When a CWP file with .mmd extension is uploaded, the interface automatically shows a textarea for Mermaid source code and displays a real-time preview
+  * The Mermaid rendering updates as users type with a 500ms delay for performance
+  * This feature allows users to visualize their CWP models in real-time without needing to submit the form
+  * You can also see the frontend yourself using the "go live" button in the bottom right of vs code while on the mainpage.html file
+
+
 ## Deployments
 
 See [docs/deployments.md](docs/deployments.md) for instructions on how to deploy this project as an AWS Lambda and use it in production.
