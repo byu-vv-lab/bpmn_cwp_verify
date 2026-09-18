@@ -10,6 +10,7 @@ from bpmncwpverify.core.error import Error, ErrorException
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
+    ArrayAccessNode,
     BoolLiteralNode,
     ChooseNode,
     DivideNode,
@@ -187,6 +188,12 @@ class Feel:
             values.reverse()
 
             self.stack.append(ListNode(values))
+
+        def exitFilteraccess(self, ctx: FeelExprParser.FilteraccessContext) -> None:
+            index = self.stack.pop()
+            array = self.stack.pop()
+
+            self.stack.append(ArrayAccessNode(array, index))
 
         def exitChooseExpression(
             self, ctx: FeelExprParser.ChooseExpressionContext

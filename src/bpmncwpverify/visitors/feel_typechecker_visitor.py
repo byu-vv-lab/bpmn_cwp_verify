@@ -21,6 +21,7 @@ from bpmncwpverify.core.error import (
 )
 from bpmncwpverify.core.feel_tree import (
     AddNode,
+    ArrayAccessNode,
     BinaryOperatorNode,
     BoolLiteralNode,
     ChooseNode,
@@ -114,6 +115,15 @@ class TypeCheckerVisitor(FeelVisitor):
                 first = new_type.unwrap()
             self.stack.append(first)
             node.type = Some(first)
+
+    def end_visit_array_access(self, node: ArrayAccessNode) -> None:
+        index_type = self.stack.pop()
+        array_type = self.stack.pop()
+
+        if index_type not in {"bit", "byte", "short", "int"}:
+            raise ErrorException(TypingListOfExpressionsError())
+
+        self.stack.append(array_type)
 
     def end_visit_binary_operator(self, node: BinaryOperatorNode) -> None:
         right = self.stack.pop()

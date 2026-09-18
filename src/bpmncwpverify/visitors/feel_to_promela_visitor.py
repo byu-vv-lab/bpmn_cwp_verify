@@ -4,6 +4,7 @@ from bpmncwpverify.core.error import ErrorException, TypingNotCaughtError
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
+    ArrayAccessNode,
     BinaryOperatorNode,
     BoolLiteralNode,
     ChooseNode,
@@ -64,6 +65,14 @@ class FeelToPromelaVisitor(FeelVisitor):
                 self.promela.write_str(", ")
 
         self.promela.write_str("}")
+        return False
+
+    def visit_array_access(self, node: ArrayAccessNode) -> bool:
+        node.array.accept(self)
+        self.promela.write_str("[")
+        node.index.accept(self)
+        self.promela.write_str("]")
+
         return False
 
     def visit_binary_operator(self, node: BinaryOperatorNode) -> bool:

@@ -3,6 +3,7 @@ from returns.maybe import Some
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
+    ArrayAccessNode,
     BoolLiteralNode,
     ChooseNode,
     EqualNode,
@@ -342,3 +343,46 @@ def test_triple_list() -> None:
     assert isinstance(node.triples[0], TripleNode)
     assert isinstance(node.triples[1], TripleNode)
     assert str(visitor.promela) == "uuvComms = sent\nx = y\n"
+
+
+def test_array_access() -> None:
+    node = ArrayAccessNode(
+        QualifiedNameNode("somelist"),
+        AddNode(NumberLiteralNode("1"), NumberLiteralNode("2")),
+    )
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "somelist[(1 + 2)]"
+
+
+def test_array_access_equal() -> None:
+    node = EqualNode(
+        ArrayAccessNode(
+            QualifiedNameNode("somelist"),
+            NumberLiteralNode("1"),
+        ),
+        BoolLiteralNode("true"),
+    )
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "(somelist[1] == true)"
+
+
+def test_array_access_as_triple_target() -> None:
+    node = TripleNode(
+        ArrayAccessNode(
+            QualifiedNameNode("somelist"),
+            NumberLiteralNode("1"),
+        ),
+        ListNode([]),
+        BoolLiteralNode("true"),
+    )
+    visitor = FeelToPromelaVisitor()
+
+    node.accept(visitor)
+
+    assert str(visitor.promela) == "somelist[1] = true"

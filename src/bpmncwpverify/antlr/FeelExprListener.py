@@ -503,12 +503,39 @@ class FeelExprListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by FeelExprParser#pathDescendantFilterExpression.
-    def enterPathDescendantFilterExpression(self, ctx:FeelExprParser.PathDescendantFilterExpressionContext):
+    # Enter a parse tree produced by FeelExprParser#filterPath.
+    def enterFilterPath(self, ctx:FeelExprParser.FilterPathContext):
         pass
 
-    # Exit a parse tree produced by FeelExprParser#pathDescendantFilterExpression.
-    def exitPathDescendantFilterExpression(self, ctx:FeelExprParser.PathDescendantFilterExpressionContext):
+    # Exit a parse tree produced by FeelExprParser#filterPath.
+    def exitFilterPath(self, ctx:FeelExprParser.FilterPathContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#filteraccess.
+    def enterFilteraccess(self, ctx:FeelExprParser.FilteraccessContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#filteraccess.
+    def exitFilteraccess(self, ctx:FeelExprParser.FilteraccessContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#filterPrimary.
+    def enterFilterPrimary(self, ctx:FeelExprParser.FilterPrimaryContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#filterPrimary.
+    def exitFilterPrimary(self, ctx:FeelExprParser.FilterPrimaryContext):
+        pass
+
+
+    # Enter a parse tree produced by FeelExprParser#filterSpread.
+    def enterFilterSpread(self, ctx:FeelExprParser.FilterSpreadContext):
+        pass
+
+    # Exit a parse tree produced by FeelExprParser#filterSpread.
+    def exitFilterSpread(self, ctx:FeelExprParser.FilterSpreadContext):
         pass
 
 
