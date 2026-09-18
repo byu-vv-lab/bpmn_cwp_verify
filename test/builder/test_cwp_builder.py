@@ -8,7 +8,6 @@ from bpmncwpverify.builder.cwp_builder import CwpBuilder
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpEdgeInvalidStateError,
-    CwpMultStartStateError,
     CwpNoEndStatesError,
     CwpNoParentEdgeError,
     CwpNoStartStateError,
@@ -133,7 +132,7 @@ def test_with_start_edge_resolve(mocker, builder):
     builder._cwp.start_state = start_state
 
     mock_edge = mocker.MagicMock()
-    mock_edge.id = "start_edge"
+    mock_edge.id = "state1"
 
     builder._with_start_edge(mock_edge)
 
@@ -156,6 +155,11 @@ def test_find_start_state(mocker, builder):
     }
     builder._cwp.states = states
 
+    mock_edge = mocker.MagicMock()
+    mock_edge.id = "state1"
+
+    builder._pending_start_edge = mock_edge
+
     builder._find_start_state()
 
     assert builder._cwp.start_state == states["state1"]
@@ -176,19 +180,6 @@ def test_find_start_state_no_start(mocker, builder):
     assert isinstance(exc_info.value.args[0], CwpNoStartStateError)
 
 
-def test_find_start_state_multiple_starts(mocker, builder):
-    states = {
-        "state1": mocker.MagicMock(spec=CwpState, in_edges=[], out_edges=["e1"]),
-        "state2": mocker.MagicMock(spec=CwpState, in_edges=[], out_edges=["e2"]),
-    }
-    builder._cwp.states = states
-
-    with pytest.raises(Exception) as exc_info:
-        builder._find_start_state()
-
-    assert isinstance(exc_info.value.args[0], CwpMultStartStateError)
-
-
 def test_build_success(mocker, builder):
     state1 = create_mock_state(mocker, "state1")
     state2 = create_mock_state(mocker, "state2")
@@ -201,13 +192,15 @@ def test_build_success(mocker, builder):
 
     edge1 = create_mock_edge(mocker, "edge1")
     edge2 = create_mock_edge(mocker, "edge2")
-    start_edge = create_mock_edge(mocker, "Init_Edge")
+
+    mock_start_edge = mocker.MagicMock()
+    mock_start_edge.id = "state1"
 
     builder._pending_edges = [
         (edge1, "state1", "state2"),
         (edge2, "state2", "state3"),
     ]
-    builder._pending_start_edge = start_edge
+    builder._pending_start_edge = mock_start_edge
 
     result = builder.build()
 
@@ -246,13 +239,16 @@ def test_build_no_end_states(mocker, builder):
 
     edge1 = create_mock_edge(mocker, "edge1")
     self_loop = create_mock_edge(mocker, "self_loop")
-    start_edge = create_mock_edge(mocker, "Init_Edge")
+
+    mock_start_edge = mocker.MagicMock()
+    mock_start_edge.id = "state1"
+
+    builder._pending_start_edge = mock_start_edge
 
     builder._pending_edges = [
         (edge1, "state1", "state2"),
         (self_loop, "state2", "state2"),
     ]
-    builder._pending_start_edge = start_edge
 
     result = builder.build()
 

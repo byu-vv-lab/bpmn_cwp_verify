@@ -1,3 +1,4 @@
+from returns.maybe import Some
 from returns.result import Failure, Result, Success
 
 from bpmncwpverify.core.bpmn import Bpmn
@@ -120,7 +121,12 @@ def _generate_state_promela(state: State) -> str:
     str_builder: list[str] = []
     str_builder.append("//**********VARIABLE DECLARATION************//")
     for const_decl in state.consts:
-        str_builder.append(f"#define {const_decl.id} {const_decl.init.value}")
+        match const_decl.init:
+            case Some(init):
+                str_builder.append(f"#define {const_decl.id} {init.value}")
+            case _:
+                continue
+
     for enum_decl in state.enums:
         str_builder.append(
             f"mtype:{enum_decl.id} = {{{' '.join(sorted([value.value for value in enum_decl.values]))}}}"
@@ -164,30 +170,31 @@ def _generate_state_promela(state: State) -> str:
         str_builder.append("}")
     # Generate variable declarations
     for var_decl in state.vars:
-        if var_decl.type_ in {enum.id for enum in state.enums}:
-            str_builder.append(
-                f"mtype:{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-            )
-            if "bit" not in var_decl.type_:
-                str_builder.append(
-                    f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-        elif var_decl.type_ == TYPEDEF:
-            str_builder.append(f"{var_decl.init.value} {var_decl.id}")
-            str_builder.append(f"{var_decl.init.value} old_{var_decl.id}")
-        else:
-            str_builder.append(
-                f"{var_decl.type_} {var_decl.id} = {var_decl.init.value}"
-            )
+        match var_decl.init_value:
+            case Some(init_value):
+                if var_decl.type_ in {enum.id for enum in state.enums}:
+                    str_builder.append(
+                        f"mtype:{var_decl.type_} {var_decl.id} = {init_value.value}"
+                    )
+                    if "bit" not in var_decl.type_:
+                        str_builder.append(
+                            f"hidden mtype:{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                        )
+                else:
+                    str_builder.append(
+                        f"{var_decl.type_} {var_decl.id} = {init_value.value}"
+                    )
 
-            if "bit" not in var_decl.type_ and "bool" not in var_decl.type_:
-                str_builder.append(
-                    f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
-            else:
-                str_builder.append(
-                    f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
-                )
+                    if "bit" not in var_decl.type_ and "bool" not in var_decl.type_:
+                        str_builder.append(
+                            f"hidden {var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                        )
+                    else:
+                        str_builder.append(
+                            f"{var_decl.type_} old_{var_decl.id} = {var_decl.id}"
+                        )
+            case _:
+                continue
     # Initialize each field in typedefs, if empty skip
     str_builder.append("inline typedefInit() {")
     if len(state.typedefs) == 0:

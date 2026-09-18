@@ -1,1 +1,1 @@
-var f: bool = true
+var f: bool

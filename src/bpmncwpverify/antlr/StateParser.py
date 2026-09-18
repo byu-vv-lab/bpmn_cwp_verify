@@ -72,7 +72,7 @@ class StateParser ( Parser ):
                       "LBRACKET", "RBRACKET", "VAR", "ARRAY", "TYPEDEF", 
                       "ID", "WS" ]
 
-    RULE_state = 0
+    RULE_stateFile = 0
     RULE_enum_type_decl = 1
     RULE_id_set = 2
     RULE_const_var_decl = 3
@@ -118,7 +118,7 @@ class StateParser ( Parser ):
 
 
 
-    class StateContext(ParserRuleContext):
+    class StateFileContext(ParserRuleContext):
         __slots__ = 'parser'
 
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
@@ -164,23 +164,23 @@ class StateParser ( Parser ):
 
 
         def getRuleIndex(self):
-            return StateParser.RULE_state
+            return StateParser.RULE_stateFile
 
         def enterRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "enterState" ):
-                listener.enterState(self)
+            if hasattr( listener, "enterStateFile" ):
+                listener.enterStateFile(self)
 
         def exitRule(self, listener:ParseTreeListener):
-            if hasattr( listener, "exitState" ):
-                listener.exitState(self)
+            if hasattr( listener, "exitStateFile" ):
+                listener.exitStateFile(self)
 
 
 
 
-    def state(self):
+    def stateFile(self):
 
-        localctx = StateParser.StateContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 0, self.RULE_state)
+        localctx = StateParser.StateFileContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 0, self.RULE_stateFile)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
@@ -374,11 +374,8 @@ class StateParser ( Parser ):
         def CONST(self):
             return self.getToken(StateParser.CONST, 0)
 
-        def ID(self, i:int=None):
-            if i is None:
-                return self.getTokens(StateParser.ID)
-            else:
-                return self.getToken(StateParser.ID, i)
+        def ID(self):
+            return self.getToken(StateParser.ID, 0)
 
         def COLON(self):
             return self.getToken(StateParser.COLON, 0)
@@ -386,9 +383,6 @@ class StateParser ( Parser ):
         def type_(self):
             return self.getTypedRuleContext(StateParser.TypeContext,0)
 
-
-        def EQUALS(self):
-            return self.getToken(StateParser.EQUALS, 0)
 
         def getRuleIndex(self):
             return StateParser.RULE_const_var_decl
@@ -441,11 +435,8 @@ class StateParser ( Parser ):
         def VAR(self):
             return self.getToken(StateParser.VAR, 0)
 
-        def ID(self, i:int=None):
-            if i is None:
-                return self.getTokens(StateParser.ID)
-            else:
-                return self.getToken(StateParser.ID, i)
+        def ID(self):
+            return self.getToken(StateParser.ID, 0)
 
         def COLON(self):
             return self.getToken(StateParser.COLON, 0)
@@ -453,9 +444,6 @@ class StateParser ( Parser ):
         def type_(self):
             return self.getTypedRuleContext(StateParser.TypeContext,0)
 
-
-        def EQUALS(self):
-            return self.getToken(StateParser.EQUALS, 0)
 
         def LCURLY(self):
             return self.getToken(StateParser.LCURLY, 0)
@@ -605,19 +593,6 @@ class StateParser ( Parser ):
         def primitive_type(self):
             return self.getTypedRuleContext(StateParser.Primitive_typeContext,0)
 
-
-        def EQUALS(self):
-            return self.getToken(StateParser.EQUALS, 0)
-
-        def LCURLY(self):
-            return self.getToken(StateParser.LCURLY, 0)
-
-        def id_set(self):
-            return self.getTypedRuleContext(StateParser.Id_setContext,0)
-
-
-        def RCURLY(self):
-            return self.getToken(StateParser.RCURLY, 0)
 
         def getRuleIndex(self):
             return StateParser.RULE_array_decl

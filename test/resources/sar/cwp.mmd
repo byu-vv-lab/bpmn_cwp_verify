@@ -7,6 +7,8 @@ stateDiagram-v2
     state "Missing Person Located" as MissingPersonLocated
     state "Search Off" as SearchOff
 
+    [*] --> InitState: risk = riskInit and comms = communicationInit and conditions = conditionsInit and missingPerson = missingPersonInit and search = searchInit
+
     InitState --> PlanSearch: search == on and missingPerson == missing and risk == acceptable and conditions == changed and comms == standby
 
     PlanSearch --> DeployTroops: search == on and missingPerson == missing and risk == acceptable and conditions == same and comms == sent

@@ -5,7 +5,6 @@ from returns.result import Failure, Result, Success
 from bpmncwpverify.core.cwp import Cwp, CwpEdge, CwpState
 from bpmncwpverify.core.error import (
     CwpEdgeInvalidStateError,
-    CwpMultStartStateError,
     CwpNoEndStatesError,
     CwpNoParentEdgeError,
     CwpNoStartStateError,
@@ -43,10 +42,10 @@ class CwpBuilder:
             for edge, source_ref, target_ref in self._pending_edges:
                 self._with_edge(edge, source_ref, target_ref)
 
-            self._find_start_state()
             # this should only ever fail if the caller forgot to call with_start_edge()
             if self._pending_start_edge is None:
                 return Failure(CwpNoStartStateError())
+            self._find_start_state()
             self._with_start_edge(self._pending_start_edge)
 
             for expr_checker, expression, parent, state in self._pending_expressions:
@@ -93,7 +92,7 @@ class CwpBuilder:
         return self
 
     def _with_start_edge(self, edge: CwpEdge) -> None:
-        dest = self._cwp.states[self._cwp.start_state.id]
+        dest = self._cwp.states[edge.id]
         dest.in_edges.append(edge)
         edge.set_dest(dest)
         self._cwp.edges[edge.id] = edge
@@ -127,20 +126,12 @@ class CwpBuilder:
             raise ErrorException(result.failure())
 
     def _find_start_state(self) -> None:
-        found: bool = False
-        start_states: list[CwpState] = []
-
-        for cwpState in self._cwp.states.values():
-            if not cwpState.in_edges and cwpState.out_edges:
-                if found:
-                    start_states.append(cwpState)
-                self._cwp.start_state = cwpState
-                self._cwp.start_state.init_state = True
-                found = True
-
-        if not found:
+        if self._pending_start_edge is None:
             raise ErrorException(CwpNoStartStateError())
-        elif start_states:
-            raise ErrorException(
-                CwpMultStartStateError([state.id for state in start_states])
-            )
+
+        target_ref = self._pending_start_edge.id
+        if target_ref not in self._cwp.states:
+            raise ErrorException(CwpEdgeInvalidStateError(target_ref))
+
+        self._cwp.start_state = self._cwp.states[target_ref]
+        self._cwp.start_state.init_state = True

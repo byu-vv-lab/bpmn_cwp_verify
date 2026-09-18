@@ -41,7 +41,7 @@ ID
 WS
 
 rule names:
-state
+stateFile
 enum_type_decl
 id_set
 const_var_decl
