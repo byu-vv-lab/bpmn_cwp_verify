@@ -17,6 +17,8 @@ BYTE: Final[str] = "byte"
 ENUM: Final[str] = "enum"
 SHORT: Final[str] = "short"
 INT: Final[str] = "int"
+TYPEDEF: Final[str] = "typedef"
+ARRAY: Final[str] = "array"
 
 BYTEMIN: Final[int] = 0
 BYTEMAX: Final[int] = 255
