@@ -52,7 +52,7 @@ def _get_argument_parser() -> "argparse.ArgumentParser":
 
     argument_parser.add_argument(
         "state_file",
-        help="State definition text file",
+        help="State definition text file (.txt or .mmd)",
     )
     argument_parser.add_argument(
         "cwp_file",
@@ -86,11 +86,18 @@ def _element_tree_from_string(input: str, type: str) -> IOResult[Element, Error]
 
 def _verify_state(state_str: str) -> Result[State, Error]:
     logging.info("    Verifying state file")
+    # Check if the state file is .mmd or .txt
+    if _is_mermaid_state(state_str):
+        return State.from_mmd_str(state_str)
     return State.from_str(state_str)
 
 
 def _is_mermaid_cwp(cwp_str: str) -> bool:
     return cwp_str.lstrip().startswith("stateDiagram")
+
+
+def _is_mermaid_state(state_str: str) -> bool:
+    return state_str.lstrip().startswith("classDiagram")
 
 
 def _verify_cwp_with_state(cwp_str: str, state: State) -> IOResult[Cwp, Error]:

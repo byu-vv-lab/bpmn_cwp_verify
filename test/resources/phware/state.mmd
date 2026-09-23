@@ -1,0 +1,49 @@
+classDiagram
+    %% Enumerations
+    class PatientNeed {
+        patientNeedInit
+        homeCare
+        discharge
+        expired
+        outsideHomeCare
+    }
+
+    class BinDecision {
+        binDecisionInit
+        yes
+        no
+    }
+
+    class Time {
+        timeInit
+        scheduled
+        unscheduled
+        now
+    }
+
+    %% Variables (with their types)
+    class sevNeed {
+        <<variable>>
+        PatientNeed
+    }
+
+    class trndSevNeed {
+        <<variable>>
+        PatientNeed
+    }
+
+    class alert {
+        <<variable>>
+        BinDecision
+    }
+
+    class examTime {
+        <<variable>>
+        Time
+    }
+
+    %% Relationships
+    sevNeed --> PatientNeed
+    trndSevNeed --> PatientNeed
+    alert --> BinDecision
+    examTime --> Time

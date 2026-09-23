@@ -1,0 +1,64 @@
+classDiagram
+    class RiskState {
+        riskInit
+        acceptable
+        notAcceptable
+        assessing
+    }
+
+    class CommunicationState {
+        communicationInit
+        sent
+        waiting
+        wait
+        updates
+    }
+
+    class ConditionsState {
+        conditionsInit
+        changed
+        same
+    }
+
+    class BlackBoxState {
+        blackBoxInit
+        found
+        missing
+    }
+
+    class SearchState {
+        searchInit
+        on
+        off
+    }
+
+    class risk {
+        <<variable>>
+        RiskState
+    }
+
+    class comms {
+        <<variable>>
+        CommunicationState
+    }
+
+    class conditions {
+        <<variable>>
+        ConditionsState
+    }
+
+    class blackBox {
+        <<variable>>
+        BlackBoxState
+    }
+
+    class search {
+        <<variable>>
+        SearchState
+    }
+
+    risk --> RiskState
+    comms --> CommunicationState
+    conditions --> ConditionsState
+    blackBox --> BlackBoxState
+    search --> SearchState
