@@ -93,13 +93,22 @@ def _is_mermaid_cwp(cwp_str: str) -> bool:
     return cwp_str.lstrip().startswith("stateDiagram")
 
 
-def _verify_cwp_with_state(cwp_str: str, state: State) -> IOResult[Cwp, Error]:
-    logging.info("    Verifying CWP against state")
+def _parse_cwp_file(cwp_str: str) -> IOResult[Element | str, Error]:
     if _is_mermaid_cwp(cwp_str):
-        return IOResult.from_result(CwpMermaidParser.from_mmd(cwp_str, state))
-    return _element_tree_from_string(cwp_str, "CWP").bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda cwp_xml: IOResult.from_result(CwpXmlParser.from_xml(cwp_xml, state))
-    )
+        logging.info("    Identified CWP as Mermaid format")
+        return IOSuccess(cwp_str)
+
+    return _element_tree_from_string(cwp_str, "CWP")
+
+
+def _verify_cwp_with_state(
+    cwp_parsed: Element | str, state: State
+) -> IOResult[Cwp, Error]:
+    logging.info("    Verifying CWP against state")
+    if isinstance(cwp_parsed, str):
+        return IOResult.from_result(CwpMermaidParser.from_mmd(cwp_parsed, state))
+
+    return IOResult.from_result(CwpXmlParser.from_xml(cwp_parsed, state))
 
 
 def _verify_bpmn_with_state(bpmn_xml: Element, state: State) -> IOResult[Bpmn, Error]:
@@ -109,13 +118,13 @@ def _verify_bpmn_with_state(bpmn_xml: Element, state: State) -> IOResult[Bpmn, E
 
 def _verify_inputs(
     state_str: str,
-    cwp_str: str,
+    cwp_parsed: Element | str,
     bpmn_xml: Element,
     verify_fn: Callable[[State, Cwp, Bpmn], IOResult[_R, Error]],
 ) -> IOResult[_R, Error]:
     logging.info("Verifying state and comparing against CWP and BPMN files 0/3")
     return IOResult.from_result(_verify_state(state_str)).bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda state: _verify_cwp_with_state(cwp_str, state).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda state: _verify_cwp_with_state(cwp_parsed, state).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda cwp: _verify_bpmn_with_state(bpmn_xml, state).bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda bpmn: verify_fn(state, cwp, bpmn)
             )
@@ -197,12 +206,29 @@ def _verify_with_cbmc_from_files(
         state_file,
         cwp_file,
         bpmn_file,
-        lambda state, cwp_str, bpmn_str: _element_tree_from_string(
-            bpmn_str, "BPMN"
-        ).bind(  # pyright: ignore[reportUnknownMemberType]
-            lambda bpmn_xml: _verify_inputs(state, cwp_str, bpmn_xml, verify_with_cbmc)
+        lambda state, cwp_str, bpmn_str: _parse_cwp_file(cwp_str).bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda cwp_parsed: _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
+                lambda bpmn_xml: _verify_inputs(
+                    state, cwp_parsed, bpmn_xml, _log_and_verify_with_cbmc
+                )
+            )
         ),
     )
+
+
+def _log_and_verify_with_cbmc(
+    s: State, c: Cwp, b: Bpmn
+) -> IOResult[CbmcVerificationReport, Error]:
+    logging.info("Running CBMC verification on files....")
+    return verify_with_cbmc(s, c, b)
+
+
+def _log_and_verify_with_spin(
+    s: State, c: Cwp, b: Bpmn
+) -> IOResult[SpinVerificationReport, Error]:
+    logging.info("Generating Promela from state, CWP, and BPMN")
+    logging.info("Running Spin verification on generated Promela...")
+    return verify_with_spin(s, c, b)
 
 
 # cli_verify exposes the Spin path for tests and external callers.
@@ -248,7 +274,11 @@ def verify() -> None:
 def web_verify(
     state: str, cwp_str: str, bpmn_str: str
 ) -> IOResult[SpinVerificationReport, Error]:
-    logging.info("Converting input BPMN file to tree 0/1")
-    return _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
-        lambda bpmn_xml: _verify_inputs(state, cwp_str, bpmn_xml, verify_with_spin)
+    logging.info("Converting CWP and BPMN files to trees 0/2")
+    return _parse_cwp_file(cwp_str).bind(  # pyright: ignore[reportUnknownMemberType]
+        lambda cwp_parsed: _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
+            lambda bpmn_xml: _verify_inputs(
+                state, cwp_parsed, bpmn_xml, _log_and_verify_with_spin
+            )
+        )
     )
