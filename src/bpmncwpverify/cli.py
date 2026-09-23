@@ -209,11 +209,18 @@ def _verify_with_cbmc_from_files(
         lambda state, cwp_str, bpmn_str: _parse_cwp_file(cwp_str).bind(  # pyright: ignore[reportUnknownMemberType]
             lambda cwp_parsed: _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
                 lambda bpmn_xml: _verify_inputs(
-                    state, cwp_parsed, bpmn_xml, verify_with_cbmc
+                    state, cwp_parsed, bpmn_xml, _log_and_verify_with_cbmc
                 )
             )
         ),
     )
+
+
+def _log_and_verify_with_cbmc(
+    s: State, c: Cwp, b: Bpmn
+) -> IOResult[CbmcVerificationReport, Error]:
+    logging.info("Running CBMC verification on files....")
+    return verify_with_cbmc(s, c, b)
 
 
 def _log_and_verify_with_spin(
