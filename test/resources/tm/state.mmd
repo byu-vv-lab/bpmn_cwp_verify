@@ -1,0 +1,125 @@
+classDiagram
+    %% Enumerations
+    class ID {
+        idInit
+        KAB
+    }
+
+    class Room {
+        roomInit
+        B201
+        new
+    }
+
+    class PatientStatus {
+        PatientStatusInit
+        recovered
+        stable
+        discharge
+        deceased
+        notStable
+        stable_C_addSvcs
+    }
+
+    class Care {
+        careInit
+        H_monitoring
+        H_transport
+        H_addSvcs
+    }
+
+    class Need {
+        needInit
+        N_immedAssmt
+        N_moreAddSvcs
+    }
+
+    class Status {
+        statusInit
+        issued
+        confirmed
+        cancelled
+        none
+    }
+
+    class Box {
+        boxInit
+        ready
+        notReady
+        installed
+        boxRecovered
+    }
+
+    class Location {
+        locationInit
+        ptRoom
+    }
+
+    %% Variables (with their types)
+    class ptID {
+        <<variable>>
+        ID
+    }
+
+    class ptRm {
+        <<variable>>
+        Room
+    }
+
+    class ptStatus {
+        <<variable>>
+        PatientStatus
+    }
+
+    class hasCare {
+        <<variable>>
+        Care
+    }
+
+    class needsCare {
+        <<variable>>
+        Need
+    }
+
+    class orderNum {
+        <<variable>>
+        int
+    }
+
+    class orderStatus {
+        <<variable>>
+        Status
+    }
+
+    class alertStatus {
+        <<variable>>
+        Status
+    }
+
+    class boxNum {
+        <<variable>>
+        int
+    }
+
+    class boxStatus {
+        <<variable>>
+        Box
+    }
+
+    class boxLoc {
+        <<variable>>
+        Location
+    }
+
+    %% Relationships
+    ptID --> ID
+    ptRm --> Room
+    ptStatus --> PatientStatus
+    hasCare --> Care
+    needsCare --> Need
+    orderNum --> int
+    orderStatus --> Status
+    alertStatus --> Status
+    boxNum --> int
+    boxStatus --> Box
+    boxLoc --> Location

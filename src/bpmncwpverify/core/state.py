@@ -15,6 +15,8 @@ from returns.result import Failure, Result, Success, safe
 
 from bpmncwpverify.antlr.StateLexer import StateLexer
 from bpmncwpverify.antlr.StateListener import StateListener
+from bpmncwpverify.antlr.StateMmdLexer import StateMmdLexer
+from bpmncwpverify.antlr.StateMmdParser import StateMmdParser
 from bpmncwpverify.antlr.StateParser import StateParser
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
@@ -37,7 +39,7 @@ class HasText(Protocol):
 
 
 def antlr_id_set_context_get_children(
-    ctx: StateParser.Id_setContext,
+    ctx: Any,
 ) -> list[TerminalNodeImpl]:
     """
     Returns a list of nodes of type ID from a node of type ID set
@@ -45,7 +47,7 @@ def antlr_id_set_context_get_children(
     Args:
         ctx (StateParser.Id_setContext): Node where list of IDs can be traversed
     """
-    return [antlr_get_terminal_node_impl(i) for i in ctx.getChildren()]  # type: ignore[unused-ignore]
+    return [antlr_get_terminal_node_impl(i) for i in ctx.ID()]
 
 
 def antlr_get_id_set_context(ctx: Any) -> Maybe[StateParser.Id_setContext]:
@@ -62,7 +64,7 @@ def antlr_get_id_set_context(ctx: Any) -> Maybe[StateParser.Id_setContext]:
     """
     if ctx is None:
         return Nothing
-    assert isinstance(ctx, StateParser.Id_setContext)
+    assert hasattr(ctx, "ID")
     return Some(ctx)
 
 
@@ -101,12 +103,14 @@ def antlr_get_type_from_type_context(
     Args:
         ctx (StateParser.Const_var_declContext | StateParser.Var_declContext | StateParser.Array_declContext): The node to retrieve the type
     """
-    if isinstance(ctx, StateParser.Array_declContext):
-        type_context = cast(StateParser.Primitive_typeContext, ctx.primitive_type())  # type: ignore[no-untyped-call]
-        assert isinstance(type_context, StateParser.Primitive_typeContext)
+    if isinstance(
+        ctx, StateParser.Array_declContext | StateMmdParser.Array_declContext
+    ):
+        type_context = ctx.primitive_type()  # type: ignore[no-untyped-call]
     else:
-        type_context = cast(StateParser.TypeContext, ctx.type_())  # type: ignore[no-untyped-call]
-        assert isinstance(type_context, StateParser.TypeContext)
+        type_context = ctx.type_()  # type: ignore[no-untyped-call]
+
+    assert type_context is not None
     return antlr_get_text(type_context)
 
 
@@ -165,6 +169,25 @@ def _get_parser(file_contents: str) -> Result[StateParser, Error]:
     # Add new error listener with ThrowingErrorListener object
     parser.addErrorListener(ThrowingErrorListener())  # type: ignore[unused-ignore]
     return Success(parser)
+
+
+def _get_mmd_parser(file_contents: str) -> Result[StateMmdParser, Error]:
+    """Create a Mermaid state parser with fail-fast lexer/parser errors."""
+    input_stream = InputStream(file_contents)
+    lexer = StateMmdLexer(input_stream)
+    lexer.removeErrorListener(ConsoleErrorListener.INSTANCE)  # type: ignore[unused-ignore]
+    lexer.addErrorListener(ThrowingErrorListener())  # type: ignore[unused-ignore]
+    stream = CommonTokenStream(lexer)
+    parser = StateMmdParser(stream)
+    parser.removeErrorListener(ConsoleErrorListener.INSTANCE)  # type: ignore[unused-ignore]
+    parser.addErrorListener(ThrowingErrorListener())  # type: ignore[unused-ignore]
+    return Success(parser)
+
+
+def _parse_mmd_state(
+    parser: StateMmdParser,
+) -> Result[StateMmdParser.StateFileContext, Error]:
+    return safe(parser.stateFile)().alt(lambda exc: StateSyntaxError(str(exc)))
 
 
 def _parse_state(parser: StateParser) -> Result[StateParser.StateFileContext, Error]:
@@ -1208,7 +1231,18 @@ class State:
         return result
 
     @staticmethod
-    def _from_str(context: StateParser.StateFileContext) -> Result["State", Error]:
+    def from_mmd_str(state_def: str) -> Result["State", Error]:
+        return flow(
+            state_def,
+            _get_mmd_parser,
+            bind_result(_parse_mmd_state),
+            bind_result(State._from_str),
+        )
+
+    @staticmethod
+    def _from_str(
+        context: StateParser.StateFileContext | StateMmdParser.StateFileContext,
+    ) -> Result["State", Error]:
         """
         Return a State object from a valid tree, error otherwise
 
