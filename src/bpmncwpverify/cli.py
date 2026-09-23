@@ -216,6 +216,14 @@ def _verify_with_cbmc_from_files(
     )
 
 
+def _log_and_verify_with_spin(
+    s: State, c: Cwp, b: Bpmn
+) -> IOResult[SpinVerificationReport, Error]:
+    logging.info("Generating Promela from state, CWP, and BPMN")
+    logging.info("Running Spin verification on generated Promela...")
+    return verify_with_spin(s, c, b)
+
+
 # cli_verify exposes the Spin path for tests and external callers.
 # May be a candidate for removal once the public API is clarified.
 def cli_verify(
@@ -259,11 +267,11 @@ def verify() -> None:
 def web_verify(
     state: str, cwp_str: str, bpmn_str: str
 ) -> IOResult[SpinVerificationReport, Error]:
-    logging.info("Parsing input files to trees 0/2")
+    logging.info("Converting CWP and BPMN files to trees 0/2")
     return _parse_cwp_file(cwp_str).bind(  # pyright: ignore[reportUnknownMemberType]
         lambda cwp_parsed: _element_tree_from_string(bpmn_str, "BPMN").bind(  # pyright: ignore[reportUnknownMemberType]
             lambda bpmn_xml: _verify_inputs(
-                state, cwp_parsed, bpmn_xml, verify_with_spin
+                state, cwp_parsed, bpmn_xml, _log_and_verify_with_spin
             )
         )
     )
