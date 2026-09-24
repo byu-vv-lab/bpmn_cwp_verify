@@ -1,4 +1,6 @@
 # type: ignore
+from pathlib import Path
+
 import pytest
 from returns.functions import not_
 from returns.pipeline import is_successful
@@ -6,6 +8,7 @@ from returns.result import Failure, Success
 
 from bpmncwpverify.core.error import ErrorException
 from bpmncwpverify.core.frontends.cwpMermaidParser import CwpMermaidParser
+from bpmncwpverify.core.state import State
 
 
 class TestCwpMermaidParserBuilderListenerStates:
@@ -192,6 +195,18 @@ class TestCwpMermaidParserBuilderListenerEdges:
 
 
 class TestCwpMermaidParserFromMmd:
+    def test_repeated_targets_have_unique_edge_identity(self):
+        resources = Path(__file__).parents[2] / "resources" / "blackbox"
+        state = State.from_str((resources / "state.txt").read_text()).unwrap()
+        cwp = CwpMermaidParser.from_mmd(
+            (resources / "cwp.mmd").read_text(), state
+        ).unwrap()
+
+        # The blackbox CWP has parallel incoming edges and a loop. Every
+        # Mermaid transition must remain present in the model.
+        assert len(cwp.edges) == 10
+        assert len({edge.id for edge in cwp.edges.values()}) == 10
+
     def test_from_mmd_no_error(self, mocker):
         mock_builder_object = mocker.Mock()
         mock_builder_object.with_start_edge.return_value = mock_builder_object

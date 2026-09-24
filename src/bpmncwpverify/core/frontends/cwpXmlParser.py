@@ -106,7 +106,7 @@ class CwpXmlParser:
         if edge_id is None:
             raise ErrorException(CwpEdgeNoStateError(element))
 
-        edge = CwpEdge.from_mmd(target_ref, builder.gen_edge_name())
+        edge = CwpEdge.from_start(target_ref, builder.gen_edge_name())
 
         raw_expr = edge_labels.get(edge_id)
         if raw_expr is not None:
