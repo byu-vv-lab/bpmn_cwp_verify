@@ -153,11 +153,12 @@ def _read_inputs(
     )
 
 
-def _print_result(result: IOResult[_R, Error], format_fn: Callable[[_R], str]) -> None:
+def _print_result(result: IOResult[_R, Error], format_fn: Callable[[_R], str]) -> int:
     if not_(is_successful)(result):
         print(get_error_message(unsafe_perform_io(result.failure())))
-        return
+        return 1
     print(format_fn(unsafe_perform_io(result.unwrap())))
+    return 0
 
 
 # ── Verification entry points ──────────────────────────────────────────────────
@@ -239,19 +240,19 @@ def cli_verify(
     return _read_inputs(state_file, cwp_file, bpmn_file, web_verify)
 
 
-def verify() -> None:
+def verify() -> int:
     argument_parser = _get_argument_parser()
     args = argument_parser.parse_args()
 
     if args.cloud:
-        _print_result(
+        return _print_result(
             _verify_on_lambda_from_files(
                 args.state_file, args.cwp_file, args.bpmn_file
             ),
             lambda r: r.spin_report,
         )
     elif args.cbmc:
-        _print_result(
+        return _print_result(
             _verify_with_cbmc_from_files(
                 args.state_file, args.cwp_file, args.bpmn_file
             ),
@@ -265,7 +266,7 @@ def verify() -> None:
             ),
         )
     else:
-        _print_result(
+        return _print_result(
             cli_verify(args.state_file, args.cwp_file, args.bpmn_file),
             lambda r: r.spin_report,
         )

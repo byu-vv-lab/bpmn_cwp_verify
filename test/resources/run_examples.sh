@@ -7,7 +7,7 @@ readonly SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 readonly REPO_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd -P)
 readonly OUTPUT_ROOT="$REPO_ROOT/tmp/run_examples/latest"
 readonly PYTHON_COMMAND=${PYTHON_BIN:-python}
-readonly VERIFY_CODE='from bpmncwpverify.cli import verify; verify()'
+readonly VERIFY_CODE='import sys; from bpmncwpverify.cli import verify; sys.exit(verify())'
 
 COMPARE_REF=""
 TEMP_ROOT=""
