@@ -38,7 +38,7 @@ class HasText(Protocol):
     def getText(self) -> str | None: ...
 
 
-def antlr_id_set_context_get_children(
+def antlr_get_terminal_children(
     ctx: Any,
 ) -> list[TerminalNodeImpl]:
     """
@@ -560,7 +560,7 @@ class State:
             ) -> list[AllowedValueDecl]:
                 return [
                     State._Listener._get_value_decl(i)
-                    for i in antlr_id_set_context_get_children(ctx)
+                    for i in antlr_get_terminal_children(ctx)
                 ]
 
             init_list: list[AllowedValueDecl] = []
