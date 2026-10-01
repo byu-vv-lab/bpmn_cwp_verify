@@ -1,0 +1,22 @@
+classDiagram
+    %% Arrays
+    class myList {
+        <<array>>
+        int[3]
+    }
+
+    class test {
+        <<array>>
+        bit[2]
+    }
+
+    %% Variables (with their types)
+    class x {
+        <<variable>>
+        int
+    }
+
+    %% Relationships
+    myList --> int
+    test --> bit
+    x --> int

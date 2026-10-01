@@ -1,0 +1,65 @@
+classDiagram
+    %% Enumerations
+    class RiskState {
+        riskInit
+        acceptable
+        notAcceptable
+    }
+
+    class CommunicationState {
+        communicationInit
+        listening
+        standby
+        sent
+    }
+
+    class ConditionsState {
+        conditionsInit
+        changed
+        same
+    }
+
+    class MissingPersonState {
+        missingPersonInit
+        found
+        missing
+    }
+
+    class SearchState {
+        searchInit
+        on
+        off
+    }
+
+    %% Variables (with their types)
+    class risk {
+        <<variable>>
+        RiskState
+    }
+
+    class comms {
+        <<variable>>
+        CommunicationState
+    }
+
+    class conditions {
+        <<variable>>
+        ConditionsState
+    }
+
+    class missingPerson {
+        <<variable>>
+        MissingPersonState
+    }
+
+    class search {
+        <<variable>>
+        SearchState
+    }
+
+    %% Relationships
+    risk --> RiskState
+    comms --> CommunicationState
+    conditions --> ConditionsState
+    missingPerson --> MissingPersonState
+    search --> SearchState
