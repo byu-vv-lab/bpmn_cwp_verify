@@ -1,0 +1,73 @@
+classDiagram
+    %% Enumerations
+    class all {
+        INIT
+        other
+    }
+
+    class TermsType {
+        agreed
+        failed
+        pending
+        noRetry
+    }
+
+    class OwnerType {
+        buyerName
+        sellerName
+    }
+
+    %% Constants (with their types)
+    class paymentAmount {
+        <<constant>>
+        byte
+    }
+
+    class belowPaymentAmount {
+        <<constant>>
+        byte
+    }
+
+    class noRetryPayment {
+        <<constant>>
+        byte
+    }
+
+    class pendingPayment {
+        <<constant>>
+        byte
+    }
+
+    %% Variables (with their types)
+    class terms {
+        <<variable>>
+        TermsType
+    }
+
+    class backpackOwner {
+        <<variable>>
+        OwnerType
+    }
+
+    class paymentOwner {
+        <<variable>>
+        OwnerType
+    }
+
+    class paymentOffered {
+        <<variable>>
+        byte
+    }
+
+    %% Relationships
+    terms --> TermsType
+    backpackOwner --> OwnerType
+    paymentOwner --> OwnerType
+    paymentOffered --> byte
+
+    %% Notes about the DSL structure
+    class diagram {
+        <<DSL Definition>>
+        This represents the state model defined in face2face/state.txt
+        Contains enums, constants, and variables with different types
+    }
