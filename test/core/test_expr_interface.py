@@ -51,6 +51,16 @@ from bpmncwpverify.core.state import State
             "a[0] != b[1]",
             "bool",
         ),
+        (
+            "typedef MyTypedef { var a: int = 0 } var myTypedef: typedef = MyTypedef",
+            "myTypedef.a + 1",
+            "int",
+        ),
+        (
+            "typedef MyTypedef { var innerTypedef: typedef = InnerTypedef typedef InnerTypedef { var a: int = 0} } var myTypedef: typedef = MyTypedef",
+            "myTypedef.innerTypedef.a < 1",
+            "bool",
+        ),
     ],
 )
 def test_given_good_state_when_build_then_success(state, expression, expression_type):

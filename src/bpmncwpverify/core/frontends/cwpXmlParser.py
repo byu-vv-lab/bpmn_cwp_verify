@@ -16,6 +16,7 @@ from bpmncwpverify.core.error import (
 )
 from bpmncwpverify.core.expr import ExpressionListener
 from bpmncwpverify.core.state import State
+from bpmncwpverify.core.typechecking import TYPEDEF
 from bpmncwpverify.visitors.cwp_graph_visitor import CwpGraphVizVisitor
 
 
