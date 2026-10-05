@@ -313,9 +313,9 @@ class ExpressionListener(ExprListener):
             result: Result[str, Error] = Success(listener.final_type)
             return result
         except Exception as exception:
-            assert len(exception.args) == 1
-            error: Error = exception.args[0]
-            return Failure(error)
+            if len(exception.args) == 1 and isinstance(exception.args[0], Error):
+                return Failure(exception.args[0])
+            return Failure(ExpressionParseError(str(exception)))
 
     @staticmethod
     def type_check(expression: str, state: State) -> Result[str, Error]:
