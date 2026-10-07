@@ -21,8 +21,8 @@ Usage:
   $SCRIPT_NAME --compare REF
   $SCRIPT_NAME --help
 
-Run every immediate directory under test/resources with both its XML and
-Mermaid CWP files. Results are written to tmp/run_examples/latest/.
+Run every immediate directory under test/resources with its Mermaid CWP
+file. Results are written to tmp/run_examples/latest/.
 
 With --compare, REF is checked out into a detached temporary worktree. Its
 verification output is compared with the current working tree without
@@ -33,6 +33,22 @@ EOF
 die() {
     printf 'error: %s\n' "$*" >&2
     exit 2
+}
+
+print_success() {
+    if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
+        printf '\033[32m%s\033[0m\n' "$*"
+    else
+        printf '%s\n' "$*"
+    fi
+}
+
+print_failure() {
+    if [[ -t 2 && -z ${NO_COLOR:-} ]]; then
+        printf '\033[31m%s\033[0m\n' "$*" >&2
+    else
+        printf '%s\n' "$*" >&2
+    fi
 }
 
 cleanup() {
@@ -150,7 +166,7 @@ record_discovery_error() {
     printf 'ERROR: %s\n' "$message" >"$raw_log"
     append_case_artifacts \
         "$tree_root" "$suite_dir" "$example_name" "$format" 2 "$raw_log"
-    printf '  [ERROR] %s/%s: %s\n' "$example_name" "$format" "$message" >&2
+    print_failure "  [ERROR] $example_name/$format: $message"
 }
 
 run_case() {
@@ -184,12 +200,11 @@ run_case() {
         "$tree_root" "$suite_dir" "$example_name" "$format" "$status" "$raw_log"
 
     if ((status == 0)); then
-        printf '  [DONE] %s/%s\n' "$example_name" "$format"
+        print_success "  [DONE] $example_name/$format"
         return 0
     fi
 
-    printf '  [FAIL] %s/%s exited with status %d\n' \
-        "$example_name" "$format" "$status" >&2
+    print_failure "  [FAIL] $example_name/$format exited with status $status"
     return 1
 }
 
@@ -203,15 +218,12 @@ run_suite() {
     local state_path
     local state_file
     local bpmn_file
-    local xml_file
     local mmd_file
     local common_error
-    local xml_error
     local mmd_error
     local suite_failed=0
     local case_count=0
     local -a bpmn_candidates
-    local -a xml_candidates
 
     mkdir -p -- "$suite_dir/logs"
     printf 'case\texit_status\tlog\n' >"$suite_dir/summary.tsv"
@@ -221,17 +233,15 @@ run_suite() {
 
     while IFS= read -r -d '' example_dir; do
         example_name=${example_dir##*/}
-        state_path="$example_dir/state.txt"
-        state_file="test/resources/$example_name/state.txt"
+        state_path="$example_dir/state.mmd"
+        state_file="test/resources/$example_name/state.mmd"
         bpmn_file=""
-        xml_file=""
         mmd_file="test/resources/$example_name/cwp.mmd"
         common_error=""
-        xml_error=""
         mmd_error=""
 
         if [[ ! -f $state_path ]]; then
-            common_error="missing state.txt"
+            common_error="missing state.mmd"
         fi
 
         shopt -s nullglob
@@ -247,42 +257,15 @@ run_suite() {
             common_error="${common_error:+$common_error; }missing workflow*.bpmn or test_bpmn.bpmn"
         fi
 
-        if [[ -f "$example_dir/cwp.xml" ]]; then
-            xml_file="test/resources/$example_name/cwp.xml"
-        else
-            shopt -s nullglob
-            xml_candidates=("$example_dir"/*_cwp.xml)
-            shopt -u nullglob
-            if ((${#xml_candidates[@]} == 1)); then
-                xml_file="test/resources/$example_name/${xml_candidates[0]##*/}"
-            elif ((${#xml_candidates[@]} > 1)); then
-                xml_error="multiple *_cwp.xml fallback files"
-            else
-                xml_error="missing cwp.xml or a unique *_cwp.xml fallback"
-            fi
-        fi
-
         if [[ ! -f "$example_dir/cwp.mmd" ]]; then
             mmd_error="missing cwp.mmd"
         fi
 
         if [[ -n $common_error ]]; then
             record_discovery_error \
-                "$tree_root" "$suite_dir" "$example_name" xml "$common_error"
-            record_discovery_error \
                 "$tree_root" "$suite_dir" "$example_name" mmd "$common_error"
             suite_failed=1
         else
-            if [[ -n $xml_error ]]; then
-                record_discovery_error \
-                    "$tree_root" "$suite_dir" "$example_name" xml "$xml_error"
-                suite_failed=1
-            elif ! run_case \
-                "$tree_root" "$suite_dir" "$example_name" xml \
-                "$state_file" "$xml_file" "$bpmn_file"; then
-                suite_failed=1
-            fi
-
             if [[ -n $mmd_error ]]; then
                 record_discovery_error \
                     "$tree_root" "$suite_dir" "$example_name" mmd "$mmd_error"
@@ -294,9 +277,10 @@ run_suite() {
             fi
         fi
 
-        case_count=$((case_count + 2))
+        case_count=$((case_count + 1))
     done < <(
-        find "$resources_dir" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z
+        find "$resources_dir" -mindepth 1 -maxdepth 1 -type d \
+            ! -name tmp -print0 | sort -z
     )
 
     if ((case_count == 0)); then
