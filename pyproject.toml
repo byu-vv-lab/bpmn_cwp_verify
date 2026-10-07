@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 verify = "bpmncwpverify.cli:verify"
+vce = "bpmncwpverify.vce:vce"
 cli_verify = "bpmncwpverify.client_cli.clientcli:cli_verify"
 generate-stubs = "bpmncwpverify.cli:generate_stubs"
 

@@ -1,0 +1,119 @@
+{
+    "error": "SpinInvalidEndStateError",
+    "issue": "Assert: No viable path to take",
+    "init_variables": [
+        "x = 0"
+    ],
+    "trace_steps": [
+        {
+            "id": "Simple_example",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Start",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Increment_x",
+            "changed_vars": [
+                "x = 1"
+            ],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Increment_x",
+            "changed_vars": [
+                "x = 2"
+            ],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Increment_x",
+            "changed_vars": [
+                "x = 3"
+            ],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Increment_x",
+            "changed_vars": [
+                "x = 4"
+            ],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Increment_x",
+            "changed_vars": [
+                "x = 5"
+            ],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Increment_x"
+            ]
+        },
+        {
+            "id": "Increment_x",
+            "changed_vars": [
+                "x = 6"
+            ],
+            "cur_cwp_state": [
+                "End"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "End"
+            ]
+        }
+    ]
+}
