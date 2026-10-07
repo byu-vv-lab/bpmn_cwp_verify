@@ -146,6 +146,10 @@ class SpinOutputParser:
             file_path, SpinInvalidEndStateError, bpmn
         )
 
+        counter_example_json = counter_example.to_json()
+        with open("trace.json", "w") as trace_file:
+            trace_file.write(counter_example_json)
+
         return (
             Failure(SpinInvalidEndStateError(counter_example.to_json(), errors))
             if errors
