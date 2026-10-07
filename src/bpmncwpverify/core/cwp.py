@@ -83,11 +83,21 @@ class CwpState:
 
 
 class CwpEdge:
-    __slots__ = ["id", "name", "expression", "parent_id", "source", "dest", "is_leaf"]
+    __slots__ = [
+        "id",
+        "name",
+        "target_id",
+        "expression",
+        "parent_id",
+        "source",
+        "dest",
+        "is_leaf",
+    ]
 
-    def __init__(self, id: str, name: str) -> None:
+    def __init__(self, id: str, name: str, target_id: str | None = None) -> None:
         self.id = id
         self.name = name
+        self.target_id = target_id
         self.expression: Feel
         self.parent_id: str
 
@@ -258,7 +268,14 @@ class CwpEdge:
 
     @staticmethod
     def from_mmd(target_id: str, name: str) -> "CwpEdge":
-        return CwpEdge(target_id, name)
+        # Mermaid has no edge IDs. Use the generated edge name as the identity
+        # and retain the target state separately for start-edge resolution.
+        return CwpEdge(name, name, target_id)
+
+    @staticmethod
+    def from_start(target_id: str, name: str) -> "CwpEdge":
+        """Create the legacy XML start edge keyed by its target state ID."""
+        return CwpEdge(target_id, name, target_id)
 
 
 class CwpVisitor:

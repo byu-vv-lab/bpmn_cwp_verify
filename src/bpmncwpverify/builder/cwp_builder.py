@@ -92,7 +92,8 @@ class CwpBuilder:
         return self
 
     def _with_start_edge(self, edge: CwpEdge) -> None:
-        dest = self._cwp.states[edge.id]
+        target_id = edge.target_id if isinstance(edge.target_id, str) else edge.id
+        dest = self._cwp.states[target_id]
         dest.in_edges.append(edge)
         edge.set_dest(dest)
         self._cwp.edges[edge.id] = edge
@@ -129,7 +130,8 @@ class CwpBuilder:
         if self._pending_start_edge is None:
             raise ErrorException(CwpNoStartStateError())
 
-        target_ref = self._pending_start_edge.id
+        edge = self._pending_start_edge
+        target_ref = edge.target_id if isinstance(edge.target_id, str) else edge.id
         if target_ref not in self._cwp.states:
             raise ErrorException(CwpEdgeInvalidStateError(target_ref))
 
