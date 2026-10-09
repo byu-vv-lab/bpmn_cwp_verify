@@ -56,6 +56,32 @@ class ListNode(ExpressionNode):
         visitor.end_visit_list(self)
 
 
+class IntervalNode(ExpressionNode):
+    __slots__ = ["lower", "upper", "lower_inclusive", "upper_inclusive", "type"]
+
+    def __init__(
+        self,
+        lower: ExpressionNode,
+        upper: ExpressionNode,
+        lower_inclusive: bool = True,
+        upper_inclusive: bool = True,
+    ):
+        self.lower: ExpressionNode = lower
+        self.upper: ExpressionNode = upper
+        self.lower_inclusive: bool = lower_inclusive
+        self.upper_inclusive: bool = upper_inclusive
+        self.type: Maybe[str] = Nothing
+
+    def accept(self, visitor: "FeelVisitor") -> None:
+        result = visitor.visit_interval(self)
+
+        if result:
+            self.lower.accept(visitor)
+            self.upper.accept(visitor)
+
+        visitor.end_visit_interval(self)
+
+
 class BinaryOperatorNode(ExpressionNode):
     __slots__ = ["left", "right"]
 
@@ -197,7 +223,7 @@ class IfNode(ExpressionNode):
 class ChooseNode(ExpressionNode):
     __slots__ = ["choices"]
 
-    def __init__(self, choices: ListNode):
+    def __init__(self, choices: ListNode | IntervalNode):
         self.choices = choices
 
     def accept(self, visitor: "FeelVisitor") -> None:
@@ -270,6 +296,12 @@ class FeelVisitor:
         return True
 
     def end_visit_list(self, node: ListNode) -> None:
+        pass
+
+    def visit_interval(self, node: IntervalNode) -> bool:
+        return True
+
+    def end_visit_interval(self, node: IntervalNode) -> None:
         pass
 
     def visit_binary_operator(self, node: BinaryOperatorNode) -> bool:

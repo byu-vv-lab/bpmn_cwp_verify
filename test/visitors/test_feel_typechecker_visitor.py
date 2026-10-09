@@ -1,4 +1,5 @@
 import pytest
+from returns.maybe import Nothing, Some
 
 from bpmncwpverify.core.error import (
     ErrorException,
@@ -10,12 +11,14 @@ from bpmncwpverify.core.error import (
     ExpressionRelationCompatabilityError,
     ExpressionTripleInputError,
     ExpressionUnrecognizedID,
+    IntervalValidationError,
     TypingAssignCompatabilityError,
     TypingListCompatibiltiyError,
     TypingListOfExpressionsError,
     TypingNoTypeError,
     TypingTripleVariableError,
 )
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     BoolLiteralNode,
@@ -23,7 +26,9 @@ from bpmncwpverify.core.feel_tree import (
     ComparisonOperatorNode,
     ConditionalOperatorNode,
     EqualNode,
+    ExpressionNode,
     IfNode,
+    IntervalNode,
     ListNode,
     NotNode,
     NumberLiteralNode,
@@ -43,6 +48,7 @@ from bpmncwpverify.core.typechecking import (
     BOOL,
     BYTE,
     INT,
+    SHORT,
 )
 from bpmncwpverify.visitors.feel_typechecker_visitor import TypeCheckerVisitor
 
@@ -521,6 +527,119 @@ def test_choose() -> None:
     assert type == BYTE
 
 
+@pytest.mark.parametrize("opening", ["[", "(", "]"])
+@pytest.mark.parametrize("closing", ["]", ")", "["])
+def test_choose_interval_endpoint_types(opening: str, closing: str) -> None:
+    feel = Feel.parse(f"choose {opening}2..5{closing}")
+    visitor = TypeCheckerVisitor(State([], [], [], []))
+
+    feel.ast.accept(visitor)
+
+    assert visitor.stack == [BYTE]
+    assert isinstance(feel.ast, ChooseNode)
+    assert isinstance(feel.ast.choices, IntervalNode)
+    assert feel.ast.choices.type == Some(BYTE)
+
+
+@pytest.mark.parametrize(
+    ("interval", "expected_type"),
+    [
+        ("[0..1]", BIT),
+        ("[1..10]", BYTE),
+        ("[0..255]", BYTE),
+        ("[255..256]", SHORT),
+        ("[256..32767]", SHORT),
+        ("[32767..32768]", INT),
+        ("[32768..2147483647]", INT),
+        ("[5..5]", BYTE),
+        ("[1..2)", BYTE),
+        ("(0..1]", BIT),
+    ],
+)
+def test_choose_interval_integer_type(interval: str, expected_type: str) -> None:
+    feel = Feel.parse("choose " + interval)
+
+    assert feel.type_check(State([], [], [], [])).unwrap() == expected_type
+    assert isinstance(feel.ast, ChooseNode)
+    assert feel.ast.choices.type == Some(expected_type)
+
+
+@pytest.mark.parametrize(
+    "interval",
+    [
+        "[5..1]",
+        "[5..5)",
+        "[5..5[",
+        "(5..5]",
+        "]5..5]",
+        "(5..5)",
+        "(5..5[",
+        "]5..5)",
+        "]5..5[",
+        "(1..2)",
+        "(1..2[",
+        "]1..2)",
+        "]1..2[",
+    ],
+)
+def test_choose_interval_rejects_empty_range(interval: str) -> None:
+    feel = Feel.parse("choose " + interval)
+
+    result = feel.type_check(State([], [], [], []))
+
+    assert isinstance(result.failure(), IntervalValidationError)
+    assert isinstance(feel.ast, ChooseNode)
+    assert feel.ast.choices.type == Nothing
+
+
+@pytest.mark.parametrize(
+    ("lower", "upper", "error_type"),
+    [
+        (BoolLiteralNode("true"), NumberLiteralNode("5"), IntervalValidationError),
+        (NumberLiteralNode("2"), BoolLiteralNode("false"), IntervalValidationError),
+        (QualifiedNameNode("x"), NumberLiteralNode("5"), IntervalValidationError),
+        (NumberLiteralNode("2"), QualifiedNameNode("x"), IntervalValidationError),
+        (
+            AddNode(NumberLiteralNode("1"), NumberLiteralNode("1")),
+            NumberLiteralNode("5"),
+            IntervalValidationError,
+        ),
+        (
+            NumberLiteralNode("2"),
+            AddNode(NumberLiteralNode("2"), NumberLiteralNode("3")),
+            IntervalValidationError,
+        ),
+        (NumberLiteralNode("-1"), NumberLiteralNode("5"), IntervalValidationError),
+        (NumberLiteralNode("2"), NumberLiteralNode("-1"), IntervalValidationError),
+        (NumberLiteralNode("1.5"), NumberLiteralNode("5"), TypingNoTypeError),
+        (NumberLiteralNode("2"), NumberLiteralNode("5.5"), TypingNoTypeError),
+        (NumberLiteralNode("2147483648"), NumberLiteralNode("5"), TypingNoTypeError),
+        (NumberLiteralNode("2"), NumberLiteralNode("2147483648"), TypingNoTypeError),
+    ],
+)
+def test_choose_interval_rejects_invalid_bounds(
+    lower: ExpressionNode, upper: ExpressionNode, error_type: type
+) -> None:
+    interval = IntervalNode(lower, upper)
+    visitor = TypeCheckerVisitor(State([], [], [], []))
+
+    with pytest.raises(ErrorException) as error:
+        ChooseNode(interval).accept(visitor)
+
+    assert isinstance(error.value.error, error_type)
+    assert interval.type == Nothing
+
+
+@pytest.mark.parametrize("opening", ["[", "(", "]"])
+@pytest.mark.parametrize("closing", ["]", ")", "["])
+def test_interval_requires_choose(opening: str, closing: str) -> None:
+    feel = Feel.parse(f"{opening}1..5{closing}")
+
+    result = feel.type_check(State([], [], [], []))
+
+    assert isinstance(result.failure(), IntervalValidationError)
+
+
 def test_choose_enums() -> None:
     builder = StateBuilder()
     builder.with_var_decl(
@@ -988,3 +1107,14 @@ def test_triple_list() -> None:
     assert len(visitor.stack) == 1
     type = visitor.stack.pop()
     assert type == "triples"
+
+
+@pytest.mark.parametrize("interval", ["[-1..5]", "[0..-1]"])
+def test_choose_interval_rejects_parsed_negative_bounds(interval: str) -> None:
+    feel = Feel.parse("choose " + interval)
+
+    result = feel.type_check(State([], [], [], []))
+
+    assert isinstance(result.failure(), IntervalValidationError)
+    assert isinstance(feel.ast, ChooseNode)
+    assert feel.ast.choices.type == Nothing

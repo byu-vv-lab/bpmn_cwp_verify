@@ -128,3 +128,7 @@ def get_type_literal(literal: str) -> Result[str, TypingNoTypeError]:
         return Failure(TypingNoTypeError(literal))
     except Exception:
         return Failure(TypingNoTypeError(literal))
+
+
+def is_integer_type(type_name: str) -> bool:
+    return type_name in {BIT, BYTE, SHORT, INT}

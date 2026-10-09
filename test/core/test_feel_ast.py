@@ -10,6 +10,7 @@ from bpmncwpverify.core.feel_tree import (
     GENode,
     GTNode,
     IfNode,
+    IntervalNode,
     LENode,
     ListNode,
     LTNode,
@@ -274,6 +275,52 @@ def test_parse_choose() -> None:
     assert feel.ast.choices.values[0].value == "1"
 
 
+@pytest.mark.parametrize("prefix", ["", "choose "])
+@pytest.mark.parametrize(
+    ("interval", "lower_inclusive", "upper_inclusive"),
+    [
+        ("[1..5]", True, True),
+        ("[1..5)", True, False),
+        ("[1..5[", True, False),
+        ("(1..5]", False, True),
+        ("]1..5]", False, True),
+        ("(1..5)", False, False),
+        ("(1..5[", False, False),
+        ("]1..5)", False, False),
+        ("]1..5[", False, False),
+    ],
+)
+def test_parse_interval(
+    prefix: str, interval: str, lower_inclusive: bool, upper_inclusive: bool
+) -> None:
+    feel = Feel.parse(prefix + interval)
+    node = feel.ast
+    if prefix:
+        assert isinstance(node, ChooseNode)
+        node = node.choices
+
+    assert isinstance(node, IntervalNode)
+    assert isinstance(node.lower, NumberLiteralNode)
+    assert isinstance(node.upper, NumberLiteralNode)
+    assert node.lower.value == "1"
+    assert node.upper.value == "5"
+    assert node.lower_inclusive is lower_inclusive
+    assert node.upper_inclusive is upper_inclusive
+
+
+def test_parse_choose_interval_with_whitespace() -> None:
+    feel = Feel.parse("choose ( 1 .. 5 ]")
+
+    assert isinstance(feel.ast, ChooseNode)
+    assert isinstance(feel.ast.choices, IntervalNode)
+    assert isinstance(feel.ast.choices.lower, NumberLiteralNode)
+    assert isinstance(feel.ast.choices.upper, NumberLiteralNode)
+    assert feel.ast.choices.lower.value == "1"
+    assert feel.ast.choices.upper.value == "5"
+    assert not feel.ast.choices.lower_inclusive
+    assert feel.ast.choices.upper_inclusive
+
+
 def test_parse_xor() -> None:
     feel = Feel.parse("1 Xor 2")
 
@@ -484,3 +531,20 @@ def test_parser_requires_parenthesis_around_condition() -> None:
     assert isinstance(feel_good.ast, TripleNode)
     assert isinstance(feel_good.ast.value, IfNode)
     assert isinstance(feel_broken.ast, TripleNode)
+
+
+@pytest.mark.parametrize(
+    ("interval", "lower", "upper"),
+    [("[-1..5]", "-1", "5"), ("[0..-1]", "0", "-1")],
+)
+def test_parse_interval_preserves_negative_bounds(
+    interval: str, lower: str, upper: str
+) -> None:
+    feel = Feel.parse("choose " + interval)
+
+    assert isinstance(feel.ast, ChooseNode)
+    assert isinstance(feel.ast.choices, IntervalNode)
+    assert isinstance(feel.ast.choices.lower, NumberLiteralNode)
+    assert isinstance(feel.ast.choices.upper, NumberLiteralNode)
+    assert feel.ast.choices.lower.value == lower
+    assert feel.ast.choices.upper.value == upper

@@ -5,7 +5,7 @@ from returns.result import Failure, Result, Success
 
 from bpmncwpverify.antlr.FeelExprLexer import FeelExprLexer
 from bpmncwpverify.antlr.FeelExprListener import FeelExprListener
-from bpmncwpverify.antlr.FeelExprParser import FeelExprParser  # type: ignore
+from bpmncwpverify.antlr.FeelExprParser import FeelExprParser
 from bpmncwpverify.core.error import Error, ErrorException
 from bpmncwpverify.core.feel_tree import (
     AddNode,
@@ -18,6 +18,7 @@ from bpmncwpverify.core.feel_tree import (
     GENode,
     GTNode,
     IfNode,
+    IntervalNode,
     LENode,
     ListNode,
     LTNode,
@@ -53,7 +54,7 @@ class Feel:
         stream = CommonTokenStream(lexer)
         parser = FeelExprParser(stream)
 
-        tree = parser.compilation_unit()
+        tree = parser.compilation_unit()  # type: ignore
 
         listener = cls._Listener()
         ParseTreeWalker().walk(listener, tree)
@@ -95,7 +96,7 @@ class Feel:
             right = self.stack.pop()
             left = self.stack.pop()
 
-            if ctx.ADD():
+            if ctx.ADD():  # type: ignore
                 self.stack.append(AddNode(left, right))
             else:
                 self.stack.append(SubtractNode(left, right))
@@ -104,7 +105,7 @@ class Feel:
             right = self.stack.pop()
             left = self.stack.pop()
 
-            if ctx.MUL():
+            if ctx.MUL():  # type: ignore
                 self.stack.append(MultiplyNode(left, right))
             else:
                 self.stack.append(DivideNode(left, right))
@@ -115,21 +116,35 @@ class Feel:
 
             self.stack.append(PowerNode(left, right))
 
+        def exitSignedUnaryExpressionMinus(
+            self, ctx: FeelExprParser.SignedUnaryExpressionMinusContext
+        ) -> None:
+            operand = self.stack.pop()
+            if isinstance(operand, NumberLiteralNode):
+                value = operand.value
+                self.stack.append(
+                    NumberLiteralNode(
+                        value[1:] if value.startswith("-") else "-" + value
+                    )
+                )
+            else:
+                self.stack.append(SubtractNode(NumberLiteralNode("0"), operand))
+
         def exitCompExpression(self, ctx: FeelExprParser.CompExpressionContext) -> None:
             right = self.stack.pop()
             left = self.stack.pop()
 
-            if ctx.LT():
+            if ctx.LT():  # type: ignore
                 self.stack.append(LTNode(left, right))
-            elif ctx.GT():
+            elif ctx.GT():  # type: ignore
                 self.stack.append(GTNode(left, right))
-            elif ctx.LE():
+            elif ctx.LE():  # type: ignore
                 self.stack.append(LENode(left, right))
-            elif ctx.GE():
+            elif ctx.GE():  # type: ignore
                 self.stack.append(GENode(left, right))
-            elif ctx.EQUAL():
+            elif ctx.EQUAL():  # type: ignore
                 self.stack.append(EqualNode(left, right))
-            elif ctx.NOTEQUAL():
+            elif ctx.NOTEQUAL():  # type: ignore
                 self.stack.append(NotEqualNode(left, right))
 
         def exitCondAnd(self, ctx: FeelExprParser.CondAndContext) -> None:
@@ -173,7 +188,7 @@ class Feel:
             pass
 
         def exitList(self, ctx: FeelExprParser.ListContext) -> None:
-            if ctx.expressionList() is None:
+            if ctx.expressionList() is None:  # type: ignore
                 self.stack.append(ListNode([]))
 
         def exitExpressionList(self, ctx: FeelExprParser.ExpressionListContext) -> None:
@@ -188,10 +203,23 @@ class Feel:
 
             self.stack.append(ListNode(values))
 
+        def exitInterval(self, ctx: FeelExprParser.IntervalContext) -> None:
+            upper = self.stack.pop()
+            lower = self.stack.pop()
+
+            opening = cast(HasText, ctx.getChild(0)).getText()
+            closing = cast(HasText, ctx.getChild(ctx.getChildCount() - 1)).getText()
+
+            self.stack.append(
+                IntervalNode(lower, upper, opening == "[", closing == "]")
+            )
+
         def exitChooseExpression(
             self, ctx: FeelExprParser.ChooseExpressionContext
         ) -> None:
-            contents = cast(ListNode, self.stack.pop())
+            contents = self.stack.pop()
+
+            assert isinstance(contents, ListNode | IntervalNode)
 
             self.stack.append(ChooseNode(contents))
 

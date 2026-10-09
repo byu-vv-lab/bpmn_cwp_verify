@@ -1,5 +1,7 @@
+import pytest
 from returns.maybe import Some
 
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
@@ -7,6 +9,7 @@ from bpmncwpverify.core.feel_tree import (
     ChooseNode,
     EqualNode,
     IfNode,
+    IntervalNode,
     ListNode,
     MultiplyNode,
     NotNode,
@@ -17,7 +20,76 @@ from bpmncwpverify.core.feel_tree import (
     TripleNode,
     XOrNode,
 )
+from bpmncwpverify.core.state import State
 from bpmncwpverify.visitors.feel_to_promela_visitor import FeelToPromelaVisitor
+
+
+@pytest.mark.parametrize(
+    ("interval", "expected_bounds"),
+    [
+        ("[1..5]", "1..5"),
+        ("[1..5)", "1..4"),
+        ("[1..5[", "1..4"),
+        ("(1..5]", "2..5"),
+        ("]1..5]", "2..5"),
+        ("(1..5)", "2..4"),
+        ("(1..5[", "2..4"),
+        ("]1..5)", "2..4"),
+        ("]1..5[", "2..4"),
+        ("[5..5]", "5..5"),
+        ("[1..2)", "1..1"),
+        ("(0..1]", "1..1"),
+    ],
+)
+def test_choose_interval_selection(interval: str, expected_bounds: str) -> None:
+    feel = Feel.parse("choose " + interval)
+    assert isinstance(feel.ast, ChooseNode)
+    assert isinstance(feel.ast.choices, IntervalNode)
+    feel.ast.choices.type = Some("byte")
+    visitor = FeelToPromelaVisitor("activity")
+
+    feel.ast.accept(visitor)
+
+    assert str(visitor.promela) == "choose_activity_0"
+    assert str(visitor.selects) == (
+        f"atomic{{select(choose_activity_0 : {expected_bounds})}}\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("interval", "expected_type"),
+    [
+        ("[0..1]", "bit"),
+        ("[1..10]", "byte"),
+        ("[255..256]", "short"),
+        ("[32767..32768]", "int"),
+    ],
+)
+def test_choose_interval_declares_selected_variable(
+    interval: str, expected_type: str
+) -> None:
+    feel = Feel.parse("choose " + interval)
+    feel.type_check(State([], [], [], [])).unwrap()
+    visitor = FeelToPromelaVisitor("activity")
+
+    feel.ast.accept(visitor)
+
+    assert str(visitor.choose) == f"{expected_type} choose_activity_0\n"
+
+
+def test_multiple_choose_intervals_have_distinct_variables() -> None:
+    feel = Feel.parse("if true then choose [1..5] else choose ]1..5)")
+    assert feel.type_check(State([], [], [], [])).unwrap() == "byte"
+    visitor = FeelToPromelaVisitor("activity")
+
+    feel.ast.accept(visitor)
+
+    assert str(visitor.promela) == "(true -> choose_activity_0 : choose_activity_1)"
+    assert str(visitor.choose) == "byte choose_activity_0\nbyte choose_activity_1\n"
+    assert str(visitor.selects) == (
+        "atomic{select(choose_activity_0 : 1..5)}\n"
+        "atomic{select(choose_activity_1 : 2..4)}\n"
+    )
 
 
 def test_list() -> None:
