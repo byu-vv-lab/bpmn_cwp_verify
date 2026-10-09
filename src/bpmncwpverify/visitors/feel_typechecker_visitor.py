@@ -12,6 +12,7 @@ from bpmncwpverify.core.error import (
     ExpressionRelationCompatabilityError,
     ExpressionTripleInputError,
     ExpressionUnrecognizedID,
+    IntervalValidationError,
     TypingAssignCompatabilityError,
     TypingListCompatibiltiyError,
     TypingListOfExpressionsError,
@@ -30,6 +31,7 @@ from bpmncwpverify.core.feel_tree import (
     ExpressionNode,
     FeelVisitor,
     IfNode,
+    IntervalNode,
     ListNode,
     MultiplyNode,
     NotNode,
@@ -49,6 +51,7 @@ from bpmncwpverify.core.typechecking import (
     get_type_assign,
     get_type_literal,
     get_widened_type_result,
+    is_integer_type,
 )
 
 
@@ -114,6 +117,11 @@ class TypeCheckerVisitor(FeelVisitor):
                 first = new_type.unwrap()
             self.stack.append(first)
             node.type = Some(first)
+
+    def visit_interval(self, node: IntervalNode) -> bool:
+        raise ErrorException(
+            IntervalValidationError("Intervals are only supported through choose")
+        )
 
     def end_visit_binary_operator(self, node: BinaryOperatorNode) -> None:
         right = self.stack.pop()
@@ -188,10 +196,72 @@ class TypeCheckerVisitor(FeelVisitor):
         else:
             raise ErrorException(ExpressionIfConditionError(cond_type))
 
-    def end_visit_choose(self, node: ChooseNode) -> None:
-        list_type = self.stack.pop()
+    def visit_choose(self, node: ChooseNode) -> bool:
+        if isinstance(node.choices, IntervalNode):
+            interval_node = node.choices
+            interval_node.type = Nothing
 
-        self.stack.append(list_type)
+            if not isinstance(interval_node.lower, NumberLiteralNode) or not isinstance(
+                interval_node.upper, NumberLiteralNode
+            ):
+                raise ErrorException(
+                    IntervalValidationError("Interval bounds must be integer literals")
+                )
+
+            interval_node.lower.accept(self)
+            interval_node.upper.accept(self)
+
+            upper_type = self.stack.pop()
+            lower_type = self.stack.pop()
+
+            if not is_integer_type(lower_type) or not is_integer_type(upper_type):
+                raise ErrorException(
+                    IntervalValidationError("Interval bounds must have integer types")
+                )
+
+            interval_type = get_widened_type_result(lower_type, upper_type)
+            if not is_successful(interval_type):
+                raise ErrorException(
+                    IntervalValidationError(
+                        "Interval bounds have incompatible integer types"
+                    )
+                )
+
+            lower = int(interval_node.lower.value)
+            upper = int(interval_node.upper.value)
+
+            if lower < 0 or upper < 0:
+                raise ErrorException(
+                    IntervalValidationError("Interval bounds must be nonnegative")
+                )
+
+            if lower > upper:
+                raise ErrorException(
+                    IntervalValidationError(
+                        "Interval lower bound must not exceed upper bound"
+                    )
+                )
+
+            first = lower + (not interval_node.lower_inclusive)
+            last = upper - (not interval_node.upper_inclusive)
+            if first > last:
+                raise ErrorException(
+                    IntervalValidationError(
+                        "Interval must contain at least one integer"
+                    )
+                )
+
+            interval_node.type = Some(interval_type.unwrap())
+            self.stack.append(interval_type.unwrap())
+
+            return False
+
+        return True
+
+    def end_visit_choose(self, node: ChooseNode) -> None:
+        element_type = self.stack.pop()
+
+        self.stack.append(element_type)
 
     def visit_triple(self, node: TripleNode) -> bool:
         target_input_visitor = TypeCheckerTripleInputTargetVisitor(

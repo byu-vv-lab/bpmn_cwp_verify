@@ -773,11 +773,19 @@ class TypingNotNonBoolError(Error):
 
 
 class TypingNotCaughtError(Error):
-    __slpts__ = ["explination"]
+    __slots__ = ["explination"]
 
     def __init__(self, explination: str) -> None:
         super().__init__()
         self.explination = explination
+
+
+class IntervalValidationError(Error):
+    __slots__ = ["reason"]
+
+    def __init__(self, reason: str) -> None:
+        super().__init__()
+        self.reason = reason
 
 
 def get_error_message(error: Error) -> str:
@@ -1050,6 +1058,8 @@ def get_error_message(error: Error) -> str:
             return f"TYPING ERROR: literal '{id}' has an unknown type"
         case TypingNotCaughtError(explination=explination):
             return explination
+        case IntervalValidationError(reason=reason):
+            return f"TYPING ERROR: {reason}"
         case StateArraySizeError(
             id=id,
             line=line,

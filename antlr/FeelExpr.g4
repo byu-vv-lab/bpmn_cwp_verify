@@ -258,6 +258,7 @@ unaryExpressionNotPlusMinus
 
 chooseExpression
     : CHOOSE list
+    | CHOOSE interval
     ;
 
 tripleExpression
