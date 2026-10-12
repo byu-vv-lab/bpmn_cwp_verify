@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid & JSON Trace Viewer for VS Code</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        vscode: {
+                            bg: '#1e1e1e',
+                            sidebar: '#252526',
+                            border: '#333333',
+                            hover: '#2a2d2e',
+                            accent: '#0e639c',
+                            text: '#cccccc',
+                            heading: '#ffffff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Mermaid.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #424242;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f4f4f;
+        }
+    </style>
+</head>
+<body class="bg-vscode-bg text-vscode-text min-h-screen flex flex-col selection:bg-vscode-accent selection:text-white">
+
+    <!-- Top Header Bar -->
+    <header class="bg-vscode-sidebar border-b border-vscode-border px-6 py-3 flex items-center justify-between select-none">
+        <div class="flex items-center space-x-3">
+            <div class="bg-vscode-accent text-white p-2 rounded-lg shadow-sm">
+                <i class="fa-solid fa-code-branch text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-semibold text-vscode-heading text-base tracking-wide">Mermaid & Trace Step Viewer</h1>
+                <p class="text-xs text-gray-400">Step through diagram states seamlessly</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 text-xs bg-vscode-bg px-3 py-1.5 rounded border border-vscode-border">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-gray-300" id="globalStatusText">Ready for files</span>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1700px] w-full mx-auto">
+
+        <!-- Left Column: Mermaid Diagram Viewer -->
+        <section class="bg-vscode-sidebar border border-vscode-border rounded-xl flex flex-col overflow-hidden shadow-lg">
+            <div class="px-5 py-3.5 border-b border-vscode-border flex items-center justify-between bg-[#2d2d2d]">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-diagram-project text-blue-400"></i>
+                    <h2 class="font-medium text-vscode-heading text-sm">Mermaid Diagram Canvas</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="toggleMermaidCode" class="text-xs px-2.5 py-1 bg-vscode-bg hover:bg-vscode-hover border border-vscode-border rounded text-gray-300 transition hidden">
+                        <i class="fa-solid fa-code mr-1"></i> Toggle Source
+                    </button>
+                    <span id="mermaidStatus" class="text-xs text-gray-400 italic">No file loaded</span>
+                </div>
+            </div>
+
+            <!-- Drop Zone / Upload Prompt for Mermaid -->
+            <div id="mermaidDropZone" class="flex-1 relative flex flex-col items-center justify-center p-8 border-2 border-dashed border-vscode-border m-4 rounded-lg hover:border-vscode-accent transition-all cursor-pointer group bg-vscode-bg/50 min-h-[300px]">
+                <input type="file" id="mermaidFileInput" accept=".mmd,.txt,.mermaid" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                <div class="w-14 h-14 rounded-full bg-vscode-sidebar border border-vscode-border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-blue-400">
+                    <i class="fa-solid fa-file-arrow-up text-2xl"></i>
+                </div>
+                <p class="text-sm font-medium text-vscode-heading mb-1">Drop your Mermaid file here, or <span class="text-blue-400 underline">browse</span></p>
+                <p class="text-xs text-gray-400">Supports .mmd, .txt, or .mermaid diagrams</p>
+            </div>
+
+            <!-- Rendered Diagram Container (Hidden initially) -->
+            <div id="mermaidContainer" class="hidden flex-1 overflow-auto p-6 flex items-center justify-center bg-[#181818] relative min-h-[350px]">
+                <div id="mermaidOutput" class="w-full h-full flex items-center justify-center"></div>
+            </div>
+
+            <!-- Footer info for Mermaid -->
+            <div class="px-4 py-2 bg-vscode-bg border-t border-vscode-border text-xs text-gray-400 flex justify-between items-center">
+                <span id="mermaidFileName" class="truncate max-w-[250px]">No diagram selected</span>
+                <span id="activeNodeIndicator" class="font-mono text-emerald-400">Active ID: None</span>
+            </div>
+
+            <!-- Collapsible raw code view -->
+            <div id="mermaidSourceContainer" class="hidden bg-[#141414] border-t border-vscode-border p-3 max-h-40 overflow-auto font-mono text-xs text-gray-300">
+                <pre id="mermaidSourceText"></pre>
+            </div>
+        </section>
+
+        <!-- Right Column: Trace Step Controls & JSON File Upload -->
+        <section class="bg-vscode-sidebar border border-vscode-border rounded-xl flex flex-col overflow-hidden shadow-lg">
+            <div class="px-5 py-3.5 border-b border-vscode-border flex items-center justify-between bg-[#2d2d2d]">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-shoe-prints text-emerald-400"></i>
+                    <h2 class="font-medium text-vscode-heading text-sm">Trace Step Navigation</h2>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="jsonStatus" class="text-xs text-gray-400 italic">No trace loaded</span>
+                </div>
+            </div>
+
+            <!-- Drop Zone / Upload Prompt for JSON Trace File -->
+            <div id="jsonDropZone" class="relative flex flex-col items-center justify-center p-8 border-2 border-dashed border-vscode-border m-4 rounded-lg hover:border-vscode-accent transition-all cursor-pointer group bg-vscode-bg/50">
+                <input type="file" id="jsonFileInput" accept=".json" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                <div class="w-14 h-14 rounded-full bg-vscode-sidebar border border-vscode-border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-emerald-400">
+                    <i class="fa-solid fa-file-code text-2xl"></i>
+                </div>
+                <p class="text-sm font-medium text-vscode-heading mb-1">Drop your JSON trace file here, or <span class="text-emerald-400 underline">browse</span></p>
+                <p class="text-xs text-gray-400">Supports execution trace logs with trace_steps</p>
+            </div>
+
+            <!-- Navigation Control Panel (Hidden until JSON loaded) -->
+            <div id="traceControlPanel" class="hidden flex-1 p-6 flex flex-col justify-between">
+                <div class="space-y-6">
+                    <!-- Status & Metadata Badge -->
+                    <div class="bg-vscode-bg p-4 rounded-lg border border-vscode-border space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-400">File Name:</span>
+                            <span id="jsonFileName" class="font-mono text-gray-200">trace.json</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-400">Total Steps:</span>
+                            <span id="totalStepsCount" class="font-mono font-semibold text-emerald-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-400">Error State:</span>
+                            <span id="errorStateLabel" class="font-mono text-red-400">None</span>
+                        </div>
+                    </div>
+
+                    <!-- Step Counter Display -->
+                    <div class="text-center py-4 bg-[#141414] rounded-lg border border-vscode-border">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Current Position</p>
+                        <div class="text-2xl font-mono font-bold text-vscode-heading">
+                            Step <span id="currentStepNum" class="text-emerald-400">0</span> <span class="text-xs text-gray-500 font-normal">/ <span id="totalStepNumText">0</span></span>
+                        </div>
+                        <p id="currentStepIdDisplay" class="text-xs text-blue-400 font-mono mt-1">ID: None</p>
+                    </div>
+
+                    <!-- Quick Jump Slider or Timeline -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>Start</span>
+                            <span>Timeline</span>
+                            <span>End</span>
+                        </div>
+                        <input type="range" id="stepRangeInput" min="0" max="0" value="0" class="w-full accent-emerald-500 cursor-pointer bg-vscode-bg h-2 rounded">
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="grid grid-cols-3 gap-3 pt-6 border-t border-vscode-border">
+                    <button id="resetStepsBtn" class="px-4 py-2.5 bg-vscode-bg hover:bg-vscode-hover border border-vscode-border rounded-lg text-xs font-medium text-gray-300 transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Reset</span>
+                    </button>
+                    <button id="stepBackBtn" disabled class="px-4 py-2.5 bg-[#333333] hover:bg-[#3c3c3c] disabled:opacity-40 disabled:cursor-not-allowed border border-vscode-border rounded-lg text-xs font-medium text-gray-100 transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-chevron-left"></i>
+                        <span>Back</span>
+                    </button>
+                    <button id="stepFwdBtn" disabled class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed border border-emerald-500 rounded-lg text-xs font-semibold text-white transition flex items-center justify-center space-x-1 shadow-sm">
+                        <span>Forward</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer info for JSON -->
+            <div class="px-4 py-2 bg-vscode-bg border-t border-vscode-border text-xs text-gray-400 flex justify-between items-center">
+                <span>Trace Execution Log</span>
+                <span id="jsonLoadedBadge" class="text-gray-500">Awaiting upload</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Application Logic Script -->
+    <script>
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'loose',
+            fontFamily: 'Inter, system-ui, sans-serif'
+        });
+
+        // DOM Element references
+        const mermaidFileInput = document.getElementById('mermaidFileInput');
+        const mermaidDropZone = document.getElementById('mermaidDropZone');
+        const mermaidContainer = document.getElementById('mermaidContainer');
+        const mermaidOutput = document.getElementById('mermaidOutput');
+        const mermaidStatus = document.getElementById('mermaidStatus');
+        const mermaidFileName = document.getElementById('mermaidFileName');
+        const toggleMermaidCode = document.getElementById('toggleMermaidCode');
+        const mermaidSourceContainer = document.getElementById('mermaidSourceContainer');
+        const mermaidSourceText = document.getElementById('mermaidSourceText');
+        const activeNodeIndicator = document.getElementById('activeNodeIndicator');
+
+        const jsonFileInput = document.getElementById('jsonFileInput');
+        const jsonDropZone = document.getElementById('jsonDropZone');
+        const jsonTraceControlPanel = document.getElementById('traceControlPanel');
+        const jsonStatus = document.getElementById('jsonStatus');
+        const jsonFileName = document.getElementById('jsonFileName');
+        const totalStepsCount = document.getElementById('totalStepsCount');
+        const errorStateLabel = document.getElementById('errorStateLabel');
+        const currentStepNumEl = document.getElementById('currentStepNum');
+        const totalStepNumText = document.getElementById('totalStepNumText');
+        const currentStepIdDisplay = document.getElementById('currentStepIdDisplay');
+        const stepRangeInput = document.getElementById('stepRangeInput');
+        const resetStepsBtn = document.getElementById('resetStepsBtn');
+        const stepBackBtn = document.getElementById('stepBackBtn');
+        const stepFwdBtn = document.getElementById('stepFwdBtn');
+        const jsonLoadedBadge = document.getElementById('jsonLoadedBadge');
+        const globalStatusText = document.getElementById('globalStatusText');
+
+        // State variables
+        let currentMermaidSource = '';
+        let traceSteps = [];
+        let currentStepIndex = -1; // -1 means initial state before any step
+        let lastValidActiveId = null; // Keeps track of last valid node ID that was successfully highlighted
+
+        function getMermaidNodeIds(source) {
+            const nodeIds = new Map();
+            const stateDeclaration = /^\s*state\s+(?:"([^"]+)"|'([^']+)'|([A-Za-z_][\w-]*))\s+as\s+([A-Za-z_][\w-]*)\s*$/gm;
+            let match;
+
+            while ((match = stateDeclaration.exec(source)) !== null) {
+                const label = match[1] || match[2] || match[3];
+                const alias = match[4];
+                nodeIds.set(label, alias);
+                nodeIds.set(alias, alias);
+            }
+
+            return nodeIds;
+        }
+
+        function getMermaidNodeId(source, traceId) {
+            if (!traceId) return null;
+            return getMermaidNodeIds(source).get(traceId.trim()) || null;
+        }
+
+        function setupDragAndDrop(dropZone, fileInput, callback) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('border-vscode-accent', 'bg-vscode-hover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('border-vscode-accent', 'bg-vscode-hover');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    callback(files[0]);
+                }
+            }, false);
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    callback(fileInput.files[0]);
+                }
+            });
+        }
+
+        async function handleMermaidFile(file) {
+            mermaidFileName.textContent = file.name;
+            mermaidStatus.textContent = 'Parsing...';
+
+            try {
+                const text = await file.text();
+                currentMermaidSource = text;
+                lastValidActiveId = null;
+
+                mermaidSourceText.textContent = text;
+                toggleMermaidCode.classList.remove('hidden');
+
+                const currentTraceId = currentStepIndex >= 0
+                    ? traceSteps[currentStepIndex]?.id
+                    : null;
+                await renderDiagramWithHighlight(currentTraceId);
+
+                mermaidStatus.textContent = 'Rendered';
+                mermaidStatus.className = 'text-xs text-emerald-400 font-medium';
+                globalStatusText.textContent = 'Diagram loaded';
+            } catch (err) {
+                console.error(err);
+                mermaidStatus.textContent = 'Syntax error';
+                mermaidStatus.className = 'text-xs text-red-400 font-medium';
+                mermaidOutput.innerHTML = `<div class="p-4 bg-red-950/40 border border-red-900/50 rounded text-red-200 text-xs">
+                    <p class="font-semibold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Mermaid Error</p>
+                    <p class="font-mono text-[11px] opacity-90">${err.message || err}</p>
+                </div>`;
+            }
+        }
+
+        async function renderDiagramWithHighlight(nodeIdToHighlight) {
+            if (!currentMermaidSource) return;
+
+            mermaidDropZone.classList.add('hidden');
+            mermaidContainer.classList.remove('hidden');
+
+            // Resolve the trace ID to a declared Mermaid node, rather than
+            // matching arbitrary text such as a state label or transition.
+            let processedSource = currentMermaidSource;
+
+            if (nodeIdToHighlight) {
+                const cleanId = nodeIdToHighlight.trim();
+                const mermaidNodeId = getMermaidNodeId(currentMermaidSource, cleanId);
+
+                if (mermaidNodeId) {
+                    lastValidActiveId = mermaidNodeId;
+                    processedSource = `${currentMermaidSource}\nstyle ${mermaidNodeId} fill:green;`;
+                    activeNodeIndicator.textContent = `Active ID: ${cleanId}`;
+                } else {
+                    // Trace IDs without a Mermaid node (for example, x_or)
+                    // should not clear the last linked node.
+                    if (lastValidActiveId) {
+                        processedSource = `${currentMermaidSource}\nstyle ${lastValidActiveId} fill:green;`;
+                        activeNodeIndicator.textContent = `Active ID: ${lastValidActiveId} (cached)`;
+                    } else {
+                        activeNodeIndicator.textContent = `Active ID: ${cleanId} (not in diagram)`;
+                    }
+                }
+            } else {
+                activeNodeIndicator.textContent = `Active ID: None`;
+            }
+
+            const uniqueId = 'mermaid-svg-' + Date.now();
+            mermaidOutput.innerHTML = '';
+
+            try {
+                const { svg } = await mermaid.render(uniqueId, processedSource);
+                mermaidOutput.innerHTML = svg;
+            } catch (renderErr) {
+                console.warn('Highlight style error or node missing:', renderErr);
+                // Fallback to plain render without custom style if style injection fails
+                const { svg } = await mermaid.render(uniqueId + '-fallback', currentMermaidSource);
+                mermaidOutput.innerHTML = svg;
+            }
+        }
+
+        async function handleJsonFile(file) {
+            jsonFileName.textContent = file.name;
+            jsonStatus.textContent = 'Processing...';
+
+            try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+
+                if (parsed.trace_steps && Array.isArray(parsed.trace_steps)) {
+                    traceSteps = parsed.trace_steps;
+                    currentStepIndex = -1;
+                    lastValidActiveId = null;
+
+                    // Update UI stats
+                    totalStepsCount.textContent = traceSteps.length;
+                    totalStepNumText.textContent = traceSteps.length;
+                    stepRangeInput.max = traceSteps.length;
+                    stepRangeInput.value = 0;
+
+                    if (parsed.error) {
+                        errorStateLabel.textContent = parsed.error;
+                    } else {
+                        errorStateLabel.textContent = 'None';
+                    }
+
+                    jsonDropZone.classList.add('hidden');
+                    jsonTraceControlPanel.classList.remove('hidden');
+
+                    jsonStatus.textContent = 'Loaded';
+                    jsonStatus.className = 'text-xs text-emerald-400 font-medium';
+                    jsonLoadedBadge.textContent = `${traceSteps.length} trace steps loaded`;
+
+                    updateStepView();
+                } else {
+                    throw new Error("Missing 'trace_steps' array in JSON");
+                }
+            } catch (err) {
+                console.error(err);
+                jsonStatus.textContent = 'Invalid format';
+                jsonStatus.className = 'text-xs text-red-400 font-medium';
+                jsonLoadedBadge.textContent = 'Error parsing trace file';
+            }
+        }
+
+        async function updateStepView() {
+            currentStepNumEl.textContent = currentStepIndex + 1;
+            stepRangeInput.value = currentStepIndex + 1;
+
+            let activeId = null;
+            if (currentStepIndex >= 0 && currentStepIndex < traceSteps.length) {
+                const currentStep = traceSteps[currentStepIndex];
+                activeId = currentStep.id || null;
+                currentStepIdDisplay.textContent = `ID: ${activeId || 'None'}`;
+            } else {
+                currentStepIdDisplay.textContent = 'ID: None (Start)';
+            }
+
+            // Update button disabled states
+            stepBackBtn.disabled = currentStepIndex < 0;
+            stepFwdBtn.disabled = currentStepIndex >= traceSteps.length - 1;
+
+            // Re-render diagram highlighting current or preserving previous valid ID
+            await renderDiagramWithHighlight(activeId);
+        }
+
+        stepFwdBtn.addEventListener('click', async () => {
+            if (currentStepIndex < traceSteps.length - 1) {
+                currentStepIndex++;
+                await updateStepView();
+            }
+        });
+
+        stepBackBtn.addEventListener('click', async () => {
+            if (currentStepIndex >= -1) {
+                currentStepIndex--;
+                await updateStepView();
+            }
+        });
+
+        resetStepsBtn.addEventListener('click', async () => {
+            currentStepIndex = -1;
+            lastValidActiveId = null;
+            await updateStepView();
+        });
+
+        stepRangeInput.addEventListener('input', async (e) => {
+            const val = parseInt(e.target.value, 10);
+            currentStepIndex = val - 1;
+            await updateStepView();
+        });
+
+        setupDragAndDrop(mermaidDropZone, mermaidFileInput, handleMermaidFile);
+        setupDragAndDrop(jsonDropZone, jsonFileInput, handleJsonFile);
+
+        toggleMermaidCode.addEventListener('click', () => {
+            if (mermaidSourceContainer.classList.contains('hidden')) {
+                mermaidSourceContainer.classList.remove('hidden');
+                toggleMermaidCode.innerHTML = '<i class="fa-solid fa-code mr-1"></i> Hide Source';
+            } else {
+                mermaidSourceContainer.classList.add('hidden');
+                toggleMermaidCode.innerHTML = '<i class="fa-solid fa-code mr-1"></i> Toggle Source';
+            }
+        });
+    </script>
+</body>
+</html>
