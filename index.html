@@ -243,26 +243,25 @@
         let currentMermaidSource = '';
         let traceSteps = [];
         let currentStepIndex = -1; // -1 means initial state before any step
-        let lastValidActiveId = null; // Keeps track of last valid node ID that was successfully highlighted
+        let lastValidActiveIds = []; // Keeps track of last valid node IDs that were successfully highlighted
+        let nodeIdMap = new Map(); // Maps trace IDs to Mermaid node IDs for quick lookup
 
-        function getMermaidNodeIds(source) {
-            const nodeIds = new Map();
+
+        function setMermaidNodeIds(mermaid_text) {
             const stateDeclaration = /^\s*state\s+(?:"([^"]+)"|'([^']+)'|([A-Za-z_][\w-]*))\s+as\s+([A-Za-z_][\w-]*)\s*$/gm;
             let match;
 
-            while ((match = stateDeclaration.exec(source)) !== null) {
+            while ((match = stateDeclaration.exec(mermaid_text)) !== null) {
                 const label = match[1] || match[2] || match[3];
                 const alias = match[4];
-                nodeIds.set(label, alias);
-                nodeIds.set(alias, alias);
+                nodeIdMap.set(label, alias);
+                nodeIdMap.set(alias, alias);
             }
-
-            return nodeIds;
         }
 
-        function getMermaidNodeId(source, traceId) {
+        function getMermaidNodeIdMap(traceId) {
             if (!traceId) return null;
-            return getMermaidNodeIds(source).get(traceId.trim()) || null;
+            return nodeIdMap.get(traceId.trim()) || null;
         }
 
         function setupDragAndDrop(dropZone, fileInput, callback) {
@@ -307,11 +306,14 @@
                 currentMermaidSource = text;
                 lastValidActiveId = null;
 
+                nodeIdMap.clear();
+                setMermaidNodeIds(text);
+
                 mermaidSourceText.textContent = text;
                 toggleMermaidCode.classList.remove('hidden');
 
                 const currentTraceId = currentStepIndex >= 0
-                    ? traceSteps[currentStepIndex]?.id
+                    ? traceSteps[currentStepIndex]?.cur_cwp_state
                     : null;
                 await renderDiagramWithHighlight(currentTraceId);
 
@@ -340,25 +342,30 @@
             let processedSource = currentMermaidSource;
 
             if (nodeIdToHighlight) {
-                const cleanId = nodeIdToHighlight.trim();
-                const mermaidNodeId = getMermaidNodeId(currentMermaidSource, cleanId);
-
-                if (mermaidNodeId) {
-                    lastValidActiveId = mermaidNodeId;
-                    processedSource = `${currentMermaidSource}\nstyle ${mermaidNodeId} fill:green;`;
-                    activeNodeIndicator.textContent = `Active ID: ${cleanId}`;
-                } else {
-                    // Trace IDs without a Mermaid node (for example, x_or)
-                    // should not clear the last linked node.
-                    if (lastValidActiveId) {
-                        processedSource = `${currentMermaidSource}\nstyle ${lastValidActiveId} fill:green;`;
-                        activeNodeIndicator.textContent = `Active ID: ${lastValidActiveId} (cached)`;
-                    } else {
-                        activeNodeIndicator.textContent = `Active ID: ${cleanId} (not in diagram)`;
-                    }
+                let nodeIdMapEntries = [];
+                for (let i = 0; i < nodeIdToHighlight.length; i++) {
+                    const node = nodeIdToHighlight[i];
+                    nodeIdMapEntries[i] = getMermaidNodeIdMap(node);
                 }
+
+                if (nodeIdMapEntries.length > 0) {
+                    // If the trace ID maps to a Mermaid node, highlight it
+                    lastValidActiveIds = nodeIdMapEntries;
+                    let injection = "classDef curState fill:green;\n";
+                    let states = "";
+                    for (let i = 0; i < nodeIdMapEntries.length; i++) {
+                        injection += `class ${nodeIdMapEntries[i]} curState\n`;
+                        states += `${nodeIdMapEntries[i]} `;
+                    }
+                    processedSource = `${currentMermaidSource}\n${injection}`;
+                    activeNodeIndicator.textContent = `In State(s): ${states}`;
+                } else {
+                    // If the trace ID does not map to a Mermaid node
+                    activeNodeIndicator.textContent = `Unrecognized State(s): ${states}`;
+                }
+
             } else {
-                activeNodeIndicator.textContent = `Active ID: None`;
+                activeNodeIndicator.textContent = `In State: None`;
             }
 
             const uniqueId = 'mermaid-svg-' + Date.now();
@@ -426,7 +433,7 @@
             let activeId = null;
             if (currentStepIndex >= 0 && currentStepIndex < traceSteps.length) {
                 const currentStep = traceSteps[currentStepIndex];
-                activeId = currentStep.id || null;
+                activeId = currentStep.cur_cwp_state || null;
                 currentStepIdDisplay.textContent = `ID: ${activeId || 'None'}`;
             } else {
                 currentStepIdDisplay.textContent = 'ID: None (Start)';
