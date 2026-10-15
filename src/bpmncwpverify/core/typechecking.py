@@ -93,7 +93,11 @@ def get_relational_type_result(
         "bool": "boolean",
     }
 
-    if ltype == rtype or similar_mapping[ltype] == similar_mapping[rtype]:
+    if ltype == rtype or (
+        ltype in similar_mapping
+        and rtype in similar_mapping
+        and similar_mapping[ltype] == similar_mapping[rtype]
+    ):
         return Success(BOOL)
 
     return Failure(error(ltype, rtype))
