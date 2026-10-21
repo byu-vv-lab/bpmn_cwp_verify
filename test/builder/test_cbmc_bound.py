@@ -20,9 +20,11 @@ from bpmncwpverify.builder.cbmc_bound import (
     compute_bound,
 )
 from bpmncwpverify.core.bpmn import (
+    Bpmn,
     EndEvent,
     ExclusiveGatewayNode,
     ParallelGatewayNode,
+    Process,
     SequenceFlow,
     StartEvent,
     Task,
@@ -66,6 +68,13 @@ def _connect(source, target, flow_id: str | None = None) -> SequenceFlow:
     source.add_out_flow(flow)
     target.add_in_flow(flow)
     return flow
+
+
+def _load_bpmn_and_state(state_path: Path, bpmn_path: Path):
+    """Same as _load_bpmn, but also hands back the State for trip-count derivation."""
+    state_str = unsafe_perform_io(read_file_as_string(str(state_path)).unwrap())
+    state = State.from_str(state_str).unwrap()
+    return _load_bpmn(state_path, bpmn_path), state
 
 
 def _load_bpmn(state_path: Path, bpmn_path: Path):
@@ -225,6 +234,80 @@ class TestFindMatchingJoin:
         assert result is None
 
 
+# ── Multi-pool summing ────────────────────────────────────────────────────────
+
+
+def _single_task_pool(prefix: str):
+    """start → task → end, i.e. 3 firings."""
+    start, task, end = _start(prefix + "s"), _task(prefix + "t"), _end(prefix + "e")
+    _connect(start, task)
+    _connect(task, end)
+    process = Process(prefix, prefix)
+    for node in (start, task, end):
+        process[node.id] = node
+    return process
+
+
+def _bpmn_of(*processes):
+    bpmn = Bpmn()
+    for process in processes:
+        bpmn.processes[process.id] = process
+    return bpmn
+
+
+class TestComputeBoundSumsPools:
+    """The generated C runs every pool on one shared step counter, so the budget
+    that lets them all finish is the sum of their costs, not the largest."""
+
+    def test_single_pool(self):
+        assert compute_bound(_bpmn_of(_single_task_pool("A_")), max_retries=2) == 3
+
+    def test_two_pools_sum(self):
+        bpmn = _bpmn_of(_single_task_pool("A_"), _single_task_pool("B_"))
+        assert compute_bound(bpmn, max_retries=2) == 6
+
+    def test_three_pools_sum(self):
+        bpmn = _bpmn_of(
+            _single_task_pool("A_"), _single_task_pool("B_"), _single_task_pool("C_")
+        )
+        assert compute_bound(bpmn, max_retries=2) == 9
+
+    def test_pools_of_unequal_length_sum(self):
+        # A_: 3 firings. Long pool: start → t1 → t2 → t3 → end = 5.
+        long_process = Process("L_", "L_")
+        nodes = [
+            _start("L_s"),
+            _task("L_1"),
+            _task("L_2"),
+            _task("L_3"),
+            _end("L_e"),
+        ]
+        for source, target in zip(nodes, nodes[1:]):
+            _connect(source, target)
+        for node in nodes:
+            long_process[node.id] = node
+        assert compute_bound(_bpmn_of(long_process), max_retries=2) == 5
+        assert (
+            compute_bound(
+                _bpmn_of(_single_task_pool("A_"), long_process), max_retries=2
+            )
+            == 8
+        )
+
+    def test_two_start_events_in_one_pool_sum(self):
+        # Each start event seeds its own token, so both have to be paid for.
+        process = Process("P", "P")
+        shared_end = _end("e")
+        for prefix in ("x", "y"):
+            start, task = _start(prefix + "s"), _task(prefix + "t")
+            _connect(start, task)
+            _connect(task, shared_end)
+            process[start.id] = start
+            process[task.id] = task
+        process[shared_end.id] = shared_end
+        assert compute_bound(_bpmn_of(process), max_retries=2) == 6
+
+
 # ── compute_bound with real fixtures ─────────────────────────────────────────
 
 
@@ -247,6 +330,43 @@ class TestComputeBoundSimpleExample:
     def test_bound_minimum_is_acyclic_depth(self, bpmn):
         # With max_retries=0, only the acyclic skeleton contributes.
         assert compute_bound(bpmn, max_retries=0) == 4
+
+
+class TestComputeBoundDerivesTripCount:
+    """With a State, a counter loop gets its real trip count instead of max_retries."""
+
+    @pytest.fixture(scope="class")
+    def simple(self):
+        return _load_bpmn_and_state(
+            RESOURCES / "simple_example" / "state.txt",
+            RESOURCES / "simple_example" / "simple_open.bpmn",
+        )
+
+    @pytest.fixture(scope="class")
+    def face2face(self):
+        return _load_bpmn_and_state(
+            RESOURCES / "face2face" / "state.txt",
+            RESOURCES / "face2face" / "face2face_open.bpmn",
+        )
+
+    def test_simple_example_is_14(self, simple):
+        # `x <= 5` from x=0 stepping by 1 needs 5 extra trips: 4 + 2×5 = 14.
+        bpmn, state = simple
+        assert compute_bound(bpmn, max_retries=2, state=state) == 14
+
+    def test_simple_example_ignores_max_retries_once_derived(self, simple):
+        # The derived count replaces max_retries rather than scaling with it.
+        bpmn, state = simple
+        assert compute_bound(bpmn, max_retries=8, state=state) == 14
+
+    def test_face2face_unchanged_at_25(self, face2face):
+        # Its back-edge guards are not integer counters, so it falls back.
+        bpmn, state = face2face
+        assert compute_bound(bpmn, max_retries=2, state=state) == 25
+
+    def test_without_state_falls_back_everywhere(self, simple):
+        bpmn, _ = simple
+        assert compute_bound(bpmn, max_retries=2) == 8
 
 
 class TestComputeBoundFace2Face:
