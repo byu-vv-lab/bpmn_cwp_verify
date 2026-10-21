@@ -317,6 +317,9 @@
                     : null;
                 await renderDiagramWithHighlight(currentTraceId);
 
+                const currentChangedVars = currentStepIndex >= 0 ? traceSteps[currentStepIndex]?.changed_vars : null;
+                await renderDiagramWithChangedVars(currentChangedVars);
+
                 mermaidStatus.textContent = 'Rendered';
                 mermaidStatus.className = 'text-xs text-emerald-400 font-medium';
                 globalStatusText.textContent = 'Diagram loaded';
@@ -379,6 +382,33 @@
                 // Fallback to plain render without custom style if style injection fails
                 const { svg } = await mermaid.render(uniqueId + '-fallback', currentMermaidSource);
                 mermaidOutput.innerHTML = svg;
+            }
+        }
+
+        async function renderDiagramWithChangedVars(changedVars) {
+            if (!currentMermaidSource) return;
+
+            if (changedVars && changedVars.length > 0) {
+                let processedSource = currentMermaidSource;
+                let injection = "state \"Changed Vars\" as ChangedVars\nnote right of ChangedVars";
+                let varList = "";
+                for (let i = 0; i < changedVars.length; i++) {
+                    varList += `${changedVars[i]}\n`;
+                }
+                processedSource += `\n${injection}\n${varList}\nend note`;
+
+                const uniqueId = 'mermaid-svg-vars-' + Date.now();
+                mermaidOutput.innerHTML = '';
+
+                try {
+                    const { svg } = await mermaid.render(uniqueId, processedSource);
+                    mermaidOutput.innerHTML = svg;
+                } catch (renderErr) {
+                    console.warn('Changed vars render error: ', renderErr);
+                // Fallback to plain render without custom style if style injection fails
+                    const { svg } = await mermaid.render(uniqueId + '-fallback', currentMermaidSource);
+                    mermaidOutput.innerHTML = svg;
+                }
             }
         }
 
@@ -445,6 +475,9 @@
 
             // Re-render diagram highlighting current or preserving previous valid ID
             await renderDiagramWithHighlight(activeId);
+
+            const currentChangedVars = currentStepIndex >= 0 ? traceSteps[currentStepIndex]?.changed_vars : null;
+            await renderDiagramWithChangedVars(currentChangedVars);
         }
 
         stepFwdBtn.addEventListener('click', async () => {
