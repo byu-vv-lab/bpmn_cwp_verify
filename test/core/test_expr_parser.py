@@ -206,12 +206,14 @@ def test_or_input_test(or_input):
         "a + b",
         "a * b",
         "-a",
+        "a.b",
         # Unary and Binary Operations
         "-a + b",
         "a + b * c",
         "a * b + c",
         "(a + b) * c",
         "-a * -b",
+        "a.b + c.d",
         # Logical and Relational Operations
         "a < b",
         "a <= b",
@@ -234,6 +236,7 @@ def test_or_input_test(or_input):
         "a[0] >= b[1]",
         "a[0] != b[1]",
         "a[0] + b[1] == b[1] + a[0]",
+        "a.b < c.d",
         # Complex Nested Expressions
         "a * (b + c) / d",
         "a + b * (c - d) / e",
@@ -246,6 +249,7 @@ def test_or_input_test(or_input):
         "a + b * c == d / e - f",
         "!a || !b && !c",
         "a < b || (c >= d && e < f)",
+        "a.b < c.d || e.f > g.h",
         # Complex Combinations
         "((a + b) * c < d) && e",
         "(a / b) * (c + d) - e",
@@ -316,6 +320,7 @@ def test_valid_inputs(input_text):
         "((a && b) || (c < d &&))",
         "((a || (b * c))) || + d",
         "(a || b)) * c",
+        "a.",
     ],
 )
 def test_invalid_inputs(input_text):

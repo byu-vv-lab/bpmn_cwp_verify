@@ -49,7 +49,7 @@ from bpmncwpverify.visitors.feel_typechecker_visitor import TypeCheckerVisitor
 
 def test_byte_number_literal() -> None:
     node = NumberLiteralNode("45")
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -61,7 +61,7 @@ def test_byte_number_literal() -> None:
 
 def test_decimal_number_literal() -> None:
     node = NumberLiteralNode("1.5")
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -73,7 +73,7 @@ def test_decimal_number_literal() -> None:
 
 def test_int_number_literal() -> None:
     node = NumberLiteralNode("100000")
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -85,7 +85,7 @@ def test_int_number_literal() -> None:
 
 def test_bit_number_literal() -> None:
     node = NumberLiteralNode("0")
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -97,7 +97,7 @@ def test_bit_number_literal() -> None:
 
 def test_bool_boolean_literal() -> None:
     node = BoolLiteralNode("true")
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -176,7 +176,7 @@ def test_list_of_number_literals() -> None:
     node = ListNode(
         [NumberLiteralNode("2"), NumberLiteralNode("3"), NumberLiteralNode("4")]
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -188,7 +188,7 @@ def test_list_of_number_literals() -> None:
 
 def test_list_empty() -> None:
     node = ListNode([])
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -202,7 +202,7 @@ def test_list_of_number_literals_not_same_type() -> None:
     node = ListNode(
         [NumberLiteralNode("1"), NumberLiteralNode("2"), NumberLiteralNode("3")]
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -216,7 +216,7 @@ def test_list_of_bool_and_number_literals() -> None:
     node = ListNode(
         [BoolLiteralNode("true"), NumberLiteralNode("2"), NumberLiteralNode("3")]
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -235,7 +235,7 @@ def test_list_of_none_leaf_nodes() -> None:
             NumberLiteralNode("4"),
         ]
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -246,7 +246,7 @@ def test_list_of_none_leaf_nodes() -> None:
 
 def test_binary_add_2_bytes() -> None:
     node = AddNode(NumberLiteralNode("2"), NumberLiteralNode("2"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -257,7 +257,7 @@ def test_binary_add_2_bytes() -> None:
 
 def test_binary_add_bool_byte() -> None:
     node = AddNode(BoolLiteralNode("false"), NumberLiteralNode("2"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -270,7 +270,7 @@ def test_binary_add_bool_byte() -> None:
 
 def test_binary_add_bit_byte() -> None:
     node = AddNode(NumberLiteralNode("0"), NumberLiteralNode("2"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -295,7 +295,7 @@ def test_binary_add_qualified_name_byte_with_byte() -> None:
 
 def test_comparision_bit_and_bit() -> None:
     node = ComparisonOperatorNode(NumberLiteralNode("0"), NumberLiteralNode("1"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -306,7 +306,7 @@ def test_comparision_bit_and_bit() -> None:
 
 def test_comparision_byte_and_byte() -> None:
     node = ComparisonOperatorNode(NumberLiteralNode("3"), NumberLiteralNode("2"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -317,7 +317,7 @@ def test_comparision_byte_and_byte() -> None:
 
 def test_comparision_bit_and_byte() -> None:
     node = ComparisonOperatorNode(NumberLiteralNode("0"), NumberLiteralNode("2"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -328,7 +328,7 @@ def test_comparision_bit_and_byte() -> None:
 
 def test_comparision_bool_and_byte() -> None:
     node = ComparisonOperatorNode(BoolLiteralNode("true"), NumberLiteralNode("2"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -360,7 +360,7 @@ def test_conditional_bool_and_bool() -> None:
 
 def test_conditional_bit_and_bit() -> None:
     node = ConditionalOperatorNode(NumberLiteralNode("1"), NumberLiteralNode("0"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -373,7 +373,7 @@ def test_conditional_bit_and_bit() -> None:
 
 def test_conditional_bool_and_bit() -> None:
     node = ConditionalOperatorNode(BoolLiteralNode("false"), NumberLiteralNode("0"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -386,7 +386,7 @@ def test_conditional_bool_and_bit() -> None:
 
 def test_conditional_bit_and_byte() -> None:
     node = ConditionalOperatorNode(NumberLiteralNode("1"), NumberLiteralNode("42"))
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -401,7 +401,7 @@ def test_conditional_not_with_bools() -> None:
     node = ConditionalOperatorNode(
         BoolLiteralNode("true"), NotNode(BoolLiteralNode("false"))
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -414,7 +414,7 @@ def test_conditional_not_with_bool_and_bit() -> None:
     node = ConditionalOperatorNode(
         BoolLiteralNode("true"), NotNode(NumberLiteralNode("0"))
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -428,7 +428,7 @@ def test_if_true_bit_and_bit() -> None:
     node = IfNode(
         BoolLiteralNode("true"), NumberLiteralNode("1"), NumberLiteralNode("0")
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -441,7 +441,7 @@ def test_if_true_byte_and_byte() -> None:
     node = IfNode(
         BoolLiteralNode("false"), NumberLiteralNode("42"), NumberLiteralNode("43")
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -454,7 +454,7 @@ def test_if_true_bit_and_byte() -> None:
     node = IfNode(
         BoolLiteralNode("false"), NumberLiteralNode("1"), NumberLiteralNode("42")
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
@@ -467,7 +467,7 @@ def test_if_true_bool_bit() -> None:
     node = IfNode(
         BoolLiteralNode("false"), BoolLiteralNode("true"), NumberLiteralNode("0")
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     with pytest.raises(ErrorException) as error:
@@ -512,7 +512,7 @@ def test_choose() -> None:
             [NumberLiteralNode("3"), NumberLiteralNode("4"), NumberLiteralNode("5")]
         )
     )
-    state = State([], [], [], [])
+    state = State([], [], [], [], [])
     visitor = TypeCheckerVisitor(state)
 
     node.accept(visitor)
