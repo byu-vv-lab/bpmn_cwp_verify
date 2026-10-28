@@ -36,7 +36,7 @@ def _read_file_contents(name: str) -> IOResult[str, Error]:
 
 
 def _open_file_for_reading(filename: str) -> TextIO:
-    return open(filename)
+    return Path(filename).open("r")
 
 
 def _open_file_for_writing(filename: str) -> TextIO:

@@ -44,7 +44,7 @@ class FeelToCbmcVisitor(FeelVisitor):
     `nondet_int()`/`__CPROVER_assume()` pairs a `choose(...)` needs).
     """
 
-    __slots__ = ["expr", "stmts", "choose_id", "_choose_idx"]
+    __slots__ = ["_choose_idx", "choose_id", "expr", "stmts"]
 
     def __init__(self, choose_id: str) -> None:
         self.expr: str = ""

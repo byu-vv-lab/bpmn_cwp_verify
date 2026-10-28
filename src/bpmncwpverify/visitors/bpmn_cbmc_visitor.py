@@ -41,9 +41,9 @@ from bpmncwpverify.visitors.feel_to_cbmc_visitor import (
 
 class BpmnCbmcVisitor(BpmnVisitor):
     __slots__ = [
-        "_transitions",  # list[tuple[Node, SequenceFlow | None]]
-        "_places",  # dict[str, bool] — place_name → initial bool value
         "_end_event_ids",  # list[str] — end event node IDs, for reachability block
+        "_places",  # dict[str, bool] — place_name → initial bool value
+        "_transitions",  # list[tuple[Node, SequenceFlow | None]]
         "_visited_ids",  # set[str] — DFS pruning
         "error",  # Error | None
     ]

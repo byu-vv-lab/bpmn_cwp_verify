@@ -16,11 +16,11 @@ from bpmncwpverify.visitors.feel_to_cbmc_visitor import translate_feel_expr
 
 class CwpCbmcVisitor(CwpVisitor):
     __slots__ = [
-        "_states",  # list[CwpState] tracked states (with in_edges), DFS order
-        "_edges",  # dict[str, CwpEdge] all edges, keyed by edge.id
-        "_visited_ids",  # set[str] visited state IDs — prevents double-visit
-        "_init_state",  # CwpState | None — first tracked state (dest of start_state)
         "_cwp_start_state",  # CwpState | None — the CWP start_state (excluded from reachability)
+        "_edges",  # dict[str, CwpEdge] all edges, keyed by edge.id
+        "_init_state",  # CwpState | None — first tracked state (dest of start_state)
+        "_states",  # list[CwpState] tracked states (with in_edges), DFS order
+        "_visited_ids",  # set[str] visited state IDs — prevents double-visit
     ]
 
     def __init__(self) -> None:

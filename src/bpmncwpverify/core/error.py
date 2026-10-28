@@ -16,6 +16,7 @@ class ErrorException(Exception):
     __slots__ = ["error"]
 
     def __init__(self, error: Error) -> None:
+        super().__init__(error)
         self.error = error
 
 
@@ -33,6 +34,14 @@ class BpmnNoElementNameError(Error):
     def __init__(self, ids: list[str]) -> None:
         super().__init__()
         self.ids = ids
+
+
+class BpmnMissingElementIdError(Error):
+    __slots__ = ["element_name"]
+
+    def __init__(self, element_name: str) -> None:
+        super().__init__()
+        self.element_name = element_name
 
 
 class BpmnNoSwimLaneNameError(Error):
@@ -97,7 +106,7 @@ class BpmnInvalidIdError(Error):
 
 
 class BpmnMissingEventsError(Error):
-    __slots__ = ["start_events", "end_events"]
+    __slots__ = ["end_events", "start_events"]
 
     def __init__(self, start_events: int, end_events: int) -> None:
         super().__init__()
@@ -122,7 +131,7 @@ class BpmnMsgFlowSamePoolError(Error):
 
 
 class BpmnMsgGatewayError(Error):
-    __slots__ = ["gateway_type", "gateway_id"]
+    __slots__ = ["gateway_id", "gateway_type"]
 
     def __init__(self, gateway_type: str, gateway_id: str) -> None:
         super().__init__()
@@ -147,7 +156,7 @@ class BpmnMsgNodeTypeError(Error):
 
 
 class BpmnMsgSrcError(Error):
-    __slots__ = ["obj_type", "node_id"]
+    __slots__ = ["node_id", "obj_type"]
 
     def __init__(self, obj_type: str, node_id: str) -> None:
         super().__init__()
@@ -164,7 +173,7 @@ class BpmnMsgStartEventError(Error):
 
 
 class BpmnMsgTargetError(Error):
-    __slots__ = ["obj_type", "node_id"]
+    __slots__ = ["node_id", "obj_type"]
 
     def __init__(self, obj_type: str, node_id: str) -> None:
         super().__init__()
@@ -198,7 +207,7 @@ class BpmnSeqFlowNoExprError(Error):
 
 
 class BpmnStructureError(Error):
-    __slots__ = ["node_id", "error_msg"]
+    __slots__ = ["error_msg", "node_id"]
 
     def __init__(self, node_id: str, error_msg: str) -> None:
         super().__init__()
@@ -255,7 +264,7 @@ class CwpEdgeNoExpressionError(Error):
 
 
 class CwpUnsupportedElementError(Error):
-    __slots__ = ["number_of_elements", "element"]
+    __slots__ = ["element", "number_of_elements"]
 
     def __init__(self, number_of_elements: int, element: str) -> None:
         super().__init__()
@@ -269,6 +278,14 @@ class CwpFileStructureError(Error):
     def __init__(self, element: str) -> None:
         super().__init__()
         self.element = element
+
+
+class CwpMissingElementIdError(Error):
+    __slots__ = ["element_name"]
+
+    def __init__(self, element_name: str) -> None:
+        super().__init__()
+        self.element_name = element_name
 
 
 class CwpGraphConnError(Error):
@@ -394,7 +411,7 @@ class ExpressionRelationCompatabilityError(Error):
 
 
 class ExpressionIfBranchCompatabilityError(Error):
-    __slots__ = ["thentype", "elsetype"]
+    __slots__ = ["elsetype", "thentype"]
 
     def __init__(self, thentype: str, elsetype: str) -> None:
         super().__init__()
@@ -473,7 +490,7 @@ class FileXmlParseError(Error):
 
 
 class FlowExpressionError(Error):
-    __slots__ = ["flow_id", "expression", "exception_str"]
+    __slots__ = ["exception_str", "expression", "flow_id"]
 
     def __init__(self, flow_id: str, expression: str, exception_str: str):
         super().__init__()
@@ -483,7 +500,7 @@ class FlowExpressionError(Error):
 
 
 class HttpError(Error):
-    __slots__ = ["status", "reason", "body"]
+    __slots__ = ["body", "reason", "status"]
 
     def __init__(self, status: int, reason: str, body: str):
         super().__init__()
@@ -509,7 +526,7 @@ class LambdaVerificationError(Error):
 
 
 class MessageError(Error):
-    __slots__ = ["node_id", "error_msg"]
+    __slots__ = ["error_msg", "node_id"]
 
     def __init__(self, node_id: str, error_msg: str) -> None:
         super().__init__()
@@ -595,7 +612,7 @@ class SpinSyntaxError(Error):
 
 
 class StateInitNotInValues(Error):
-    __slots__ = ["id", "line", "column", "values"]
+    __slots__ = ["column", "id", "line", "values"]
 
     def __init__(
         self, id: str, line: Maybe[int], column: Maybe[int], values: set[str]
@@ -608,7 +625,7 @@ class StateInitNotInValues(Error):
 
 
 class StateMultipleDefinitionError(Error):
-    __slots__ = ("id", "line", "column", "prev_line", "prev_column")
+    __slots__ = ("column", "id", "line", "prev_column", "prev_line")
 
     def __init__(
         self,
@@ -627,7 +644,7 @@ class StateMultipleDefinitionError(Error):
 
 
 class StateArraySizeError(Error):
-    __slots__ = ["id", "line", "column", "expected_size", "actual_size"]
+    __slots__ = ["actual_size", "column", "expected_size", "id", "line"]
 
     def __init__(
         self,
@@ -786,6 +803,8 @@ def get_error_message(error: Error) -> str:
             return (
                 f"Bpmn error: {ids} must have a name that is different from their ID."
             )
+        case BpmnMissingElementIdError(element_name=element_name):
+            return f"BPMN ERROR: {element_name} element is missing its id."
         case BpmnUnsupportedStartEvent(id=id):
             return f"Bpmn error: {id} is not a supported start event"
         case BpmnNoSwimLaneNameError(ids=ids):
@@ -850,6 +869,8 @@ def get_error_message(error: Error) -> str:
             return f"CWP ERROR: {element} is/are not supported and there exists {number_of_elements}"
         case CwpFileStructureError(element=element):
             return f"A {element} element is missing from your cwp file."
+        case CwpMissingElementIdError(element_name=element_name):
+            return f"CWP ERROR: {element_name} element is missing its id."
         case CwpGraphConnError():
             return "CWP ERROR: Graph is not connected."
         case CwpMultStartStateError(start_states=start_states):

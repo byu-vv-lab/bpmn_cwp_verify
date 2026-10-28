@@ -13,7 +13,11 @@ from bpmncwpverify.core.bpmn import (
     Task,
     get_element_type,
 )
-from bpmncwpverify.core.error import Error
+from bpmncwpverify.core.error import (
+    BpmnMissingElementIdError,
+    Error,
+    ErrorException,
+)
 from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.state import State
 
@@ -45,7 +49,7 @@ def from_xml(
 ) -> Result["Process", Error]:
     id = element.attrib.get("id")
     if not id:
-        raise Exception("Id cannot be None")
+        raise ErrorException(BpmnMissingElementIdError("process"))
 
     name: str = get_process_name(id, participants)
 

@@ -2,6 +2,7 @@
 # encoding: utf-8
 # type: ignore
 from antlr4 import *
+from bpmncwpverify.core.error import ErrorException, ExpressionParseError
 from io import StringIO
 import sys
 if sys.version_info[1] > 5:
@@ -6123,7 +6124,7 @@ class FeelExprParser ( Parser ):
         self._predicates[37] = self.unaryExpression_sempred
         pred = self._predicates.get(ruleIndex, None)
         if pred is None:
-            raise Exception("No predicate with index:" + str(ruleIndex))
+            raise ErrorException(ExpressionParseError("No predicate with index:" + str(ruleIndex)))
         else:
             return pred(localctx, predIndex)
 

@@ -4,10 +4,12 @@ from xml.etree.ElementTree import Element
 from returns.result import Failure, Result, Success
 
 from bpmncwpverify.core.error import (
+    BpmnMissingElementIdError,
     BpmnStructureError,
     BpmnUnrecognizedElement,
     BpmnUnsupportedStartEvent,
     Error,
+    ErrorException,
 )
 from bpmncwpverify.core.feel import Feel
 
@@ -21,7 +23,7 @@ class BpmnElement:
     Parent class for all BPMN elements
     """
 
-    __slots__ = ["name", "id"]
+    __slots__ = ["id", "name"]
 
     def __init__(self, id: str, name: str) -> None:
         """
@@ -38,7 +40,7 @@ class BpmnElement:
     def from_xml(cls: type[T], element: Element) -> T:
         id = element.attrib.get("id")
         if not id:
-            raise Exception("Id cannot be None")
+            raise ErrorException(BpmnMissingElementIdError(element.tag))
         name: str = element.attrib.get("name", id)
 
         subclass_attrs = cls._extract_attributes(element)
@@ -63,9 +65,9 @@ class Node(BpmnElement):
     """
 
     __slots__ = [
-        "out_flows",
         "in_flows",
         "in_msgs",
+        "out_flows",
         "out_msgs",
     ]
 
@@ -379,7 +381,7 @@ class Flow(BpmnElement):
     Parent class for all BPMN flows
     """
 
-    __slots__ = ["source_node", "target_node", "is_leaf"]
+    __slots__ = ["is_leaf", "source_node", "target_node"]
 
     def __init__(self, id: str, name: str) -> None:
         """
@@ -422,7 +424,7 @@ class Process(BpmnElement):
     Representation of the business process being modeled
     """
 
-    __slots__ = ["_flows", "_elements", "_start_states"]
+    __slots__ = ["_elements", "_flows", "_start_states"]
 
     def __init__(self, id: str, name: str):
         """
@@ -461,7 +463,7 @@ class Process(BpmnElement):
             return self._start_states[key]
         elif key in self._flows:
             return self._flows[key]
-        raise Exception(
+        raise ErrorException(
             BpmnStructureError(key, "Key not found in any of the processe's elements")
         )
 
@@ -526,7 +528,7 @@ class Bpmn:
     BPMN Promela/graph constructor
     """
 
-    __slots__ = ["processes", "id_to_element", "inter_process_msgs"]
+    __slots__ = ["id_to_element", "inter_process_msgs", "processes"]
 
     def __init__(self) -> None:
         """

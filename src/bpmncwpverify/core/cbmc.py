@@ -21,10 +21,10 @@ OUTPUT_FILE = "./tmp/verification.c"
 
 class CbmcVerificationReport:
     __slots__ = [
-        "file_path",
-        "c_code",
         "bound",
+        "c_code",
         "correctness_output",
+        "file_path",
         "reachability_output",
     ]
 

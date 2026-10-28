@@ -31,10 +31,10 @@ NL_DOUBLE = 2
 
 class Context:
     __slots__ = [
-        "_element",
-        "_is_parallel",
         "_behavior",
         "_boundary_events",
+        "_element",
+        "_is_parallel",
     ]
 
     def __init__(self, element: Node) -> None:
@@ -89,7 +89,7 @@ class TokenPositions:
     flows and one of its incoming message flows.
     """
 
-    __slots__ = ["seq_flows", "msg_flows", "standalone"]
+    __slots__ = ["msg_flows", "seq_flows", "standalone"]
 
     def __init__(
         self,
@@ -174,13 +174,13 @@ def get_put_locations(element: Node) -> TokenPositions:
 
 class PromelaGenVisitor(BpmnVisitor):
     __slots__ = [
-        "defs",
-        "process",
-        "local_var_defs",
-        "local_chooseschooses",
-        "global_var_defs",
         "behaviors",
+        "defs",
+        "global_var_defs",
         "init_proc_contents",
+        "local_chooseschooses",
+        "local_var_defs",
+        "process",
         "promela",
     ]
 

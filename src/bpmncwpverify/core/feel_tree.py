@@ -40,7 +40,7 @@ class QualifiedNameNode(ExpressionNode):
 
 
 class ListNode(ExpressionNode):
-    __slots__ = ["values", "type"]
+    __slots__ = ["type", "values"]
 
     def __init__(self, values: list[ExpressionNode]):
         self.values = values
@@ -175,7 +175,7 @@ class NotNode(ExpressionNode):
 
 
 class IfNode(ExpressionNode):
-    __slots__ = ["condition", "thendo", "elsedo"]
+    __slots__ = ["condition", "elsedo", "thendo"]
 
     def __init__(
         self, condition: ExpressionNode, thendo: ExpressionNode, elsedo: ExpressionNode
@@ -209,7 +209,7 @@ class ChooseNode(ExpressionNode):
 
 
 class TripleNode(ExpressionNode):
-    __slots__ = ["target", "inputs", "value"]
+    __slots__ = ["inputs", "target", "value"]
 
     def __init__(self, target: ExpressionNode, inputs: ListNode, value: ExpressionNode):
         self.target = target

@@ -149,7 +149,7 @@ def _generate_c(
 
 
 class CbmcBuilder:
-    __slots__ = ["bpmn", "cwp", "state", "max_retries", "last_bound"]
+    __slots__ = ["bpmn", "cwp", "last_bound", "max_retries", "state"]
 
     def __init__(self) -> None:
         self.bpmn: Result[Bpmn, Error] = Failure(

@@ -1,6 +1,7 @@
 # Generated from antlr/Expr.g4 by ANTLR 4.13.2
 # encoding: utf-8
 from antlr4 import *
+from bpmncwpverify.core.error import ErrorException, ExpressionParseError
 from io import StringIO
 import sys
 if sys.version_info[1] > 5:
@@ -1128,7 +1129,7 @@ class ExprParser ( Parser ):
         self._predicates[7] = self.mulDivExpr_sempred
         pred = self._predicates.get(ruleIndex, None)
         if pred is None:
-            raise Exception("No predicate with index:" + str(ruleIndex))
+            raise ErrorException(ExpressionParseError("No predicate with index:" + str(ruleIndex)))
         else:
             return pred(localctx, predIndex)
 
