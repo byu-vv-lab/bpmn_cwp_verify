@@ -15,7 +15,10 @@ from bpmncwpverify.core.bpmn import (
 )
 from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.util.stringmanager import IndentAction, StringManager
-from bpmncwpverify.visitors.feel_to_promela_visitor import FeelToPromelaVisitor
+from bpmncwpverify.visitors.feel_to_promela_visitor import (
+    FeelToPromelaVisitor,
+    translate_feel_expr,
+)
 
 ##############
 # Constants
@@ -665,9 +668,7 @@ class ExclusiveGatewayBuilder(AtomicBuilder):
         expr.write_str("if", NL_SINGLE)
 
         for flow in self.context.element.out_flows:
-            source_changer = FeelToPromelaVisitor(flow.id)
-            flow.expression.ast.accept(source_changer)
-            flow_expression = str(source_changer.promela)
+            flow_expression = translate_feel_expr(flow.expression, flow.id)
 
             expr.write_str(
                 f":: {flow_expression} -> putToken({generate_location_label(flow.target_node, flow)})",

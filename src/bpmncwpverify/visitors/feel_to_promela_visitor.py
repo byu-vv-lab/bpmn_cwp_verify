@@ -1,6 +1,11 @@
 from returns.maybe import Nothing
 
-from bpmncwpverify.core.error import ErrorException, TypingNotCaughtError
+from bpmncwpverify.core.error import (
+    ErrorException,
+    PromelaUnsupportedExpressionError,
+    TypingNotCaughtError,
+)
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
@@ -31,6 +36,24 @@ from bpmncwpverify.core.feel_tree import (
     XOrNode,
 )
 from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
+
+
+def translate_feel_expr(expression: Feel, owner_id: str) -> str:
+    """Render a condition, rejecting expressions requiring executable setup."""
+    visitor = FeelToPromelaVisitor(owner_id)
+    expression.ast.accept(visitor)
+
+    if str(visitor.selects) or str(visitor.choose):
+        raise ErrorException(
+            PromelaUnsupportedExpressionError(
+                owner_id,
+                "FEEL guard/edge expression requires selection statements or "
+                "temporary declarations (e.g. choose); use choose in task "
+                "behavior instead",
+            )
+        )
+
+    return str(visitor.promela)
 
 
 class FeelToPromelaVisitor(FeelVisitor):
