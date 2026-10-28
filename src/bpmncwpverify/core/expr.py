@@ -15,6 +15,7 @@ from bpmncwpverify.antlr.ExprParser import ExprParser
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
+    ErrorException,
     ExpressionComputationCompatabilityError,
     ExpressionNegatorError,
     ExpressionParseError,
@@ -108,7 +109,7 @@ class ExpressionListener(ExprListener):
     Contains interface used to interact with other classes outside of expression checking functionality
     """
 
-    __slots__ = ["state", "type_stack", "final_type"]
+    __slots__ = ["final_type", "state", "type_stack"]
 
     def __init__(self, state: State) -> None:
         """
@@ -135,7 +136,7 @@ class ExpressionListener(ExprListener):
                 left_type, right_type, ExpressionComputationCompatabilityError
             )
         ):
-            raise Exception(result.failure())
+            raise ErrorException(result.failure())
         self.type_stack.append(result.unwrap())
 
     def check_and_or_types(self, left_type: str, right_type: str) -> None:
@@ -152,7 +153,7 @@ class ExpressionListener(ExprListener):
                 left_type, right_type, ExpressionRelationCompatabilityError
             )
         ):
-            raise Exception(result.failure())
+            raise ErrorException(result.failure())
         self.type_stack.append(result.unwrap())
 
     def exitStart(self, ctx: ExprParser.StartContext) -> None:
@@ -195,7 +196,7 @@ class ExpressionListener(ExprListener):
         """
         expr_type = self.type_stack.pop()
         if expr_type != typechecking.BOOL:
-            raise Exception(ExpressionRelationalNotError(expr_type))
+            raise ErrorException(ExpressionRelationalNotError(expr_type))
         self.type_stack.append(typechecking.BOOL)
 
     def exitRelational(self, ctx: ExprParser.RelationalContext) -> None:
@@ -213,7 +214,7 @@ class ExpressionListener(ExprListener):
                 left_type, right_type, ExpressionRelationCompatabilityError
             )
         ):
-            raise Exception(result.failure())
+            raise ErrorException(result.failure())
         self.type_stack.append(typechecking.BOOL)
 
     def exitAddSub(self, ctx: ExprParser.AddSubContext) -> None:
@@ -247,7 +248,7 @@ class ExpressionListener(ExprListener):
         """
         expr_type = self.type_stack.pop()
         if expr_type == typechecking.BOOL:
-            raise Exception(ExpressionNegatorError(expr_type))
+            raise ErrorException(ExpressionNegatorError(expr_type))
         self.type_stack.append(expr_type)
 
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext) -> None:
@@ -265,11 +266,11 @@ class ExpressionListener(ExprListener):
 
         array_type = self.state.get_type(array_name)
         if not_(is_successful)(array_type):
-            raise Exception(ExpressionUnrecognizedID(array_name))
+            raise ErrorException(ExpressionUnrecognizedID(array_name))
 
         index_type = self.state.get_type(index_text)
         if not_(is_successful)(index_type):
-            raise Exception(ExpressionUnrecognizedID(index_text))
+            raise ErrorException(ExpressionUnrecognizedID(index_text))
 
         if index_type.unwrap() not in {
             typechecking.BIT,
@@ -277,7 +278,7 @@ class ExpressionListener(ExprListener):
             typechecking.SHORT,
             typechecking.INT,
         }:
-            raise Exception(
+            raise ErrorException(
                 ExpressionRelationCompatabilityError(array_name, index_type.unwrap())
             )
 
@@ -294,7 +295,7 @@ class ExpressionListener(ExprListener):
         identifier = antlr_get_text(node)
         type = self.state.get_type(identifier)  # Variable type retrieval method
         if not_(is_successful)(type):
-            raise Exception(ExpressionUnrecognizedID(identifier))
+            raise ErrorException(ExpressionUnrecognizedID(identifier))
         self.type_stack.append(type.unwrap())
 
     @staticmethod

@@ -53,7 +53,7 @@ from bpmncwpverify.core.typechecking import (
 
 
 class TypeCheckerVisitor(FeelVisitor):
-    __slots__ = ["state", "stack"]
+    __slots__ = ["stack", "state"]
 
     def __init__(self, state: State):
         self.state = state
@@ -266,7 +266,7 @@ class TypeCheckerTripleInputTargetVisitor(TypeCheckerVisitor):
 
 
 class TypeCheckerTripleValueVisitor(TypeCheckerVisitor):
-    __slots__ = ["stack", "state", "scope"]
+    __slots__ = ["scope", "stack", "state"]
 
     def __init__(self, stack: list[str], state: State) -> None:
         self.stack = stack

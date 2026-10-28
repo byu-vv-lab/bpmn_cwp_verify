@@ -14,15 +14,15 @@ PRIME_SUFFIX = "_prime"
 
 class CwpPromelaVisitor(CwpVisitor):
     __slots__ = [
-        "cwp_states",
-        "update_state_inline",
         "caculate_state_inline",
-        "prime_vars",
-        "vars",
         "chooses",
-        "proper_path_block",
-        "var_reassignment",
+        "cwp_states",
         "list_of_cwp_states",
+        "prime_vars",
+        "proper_path_block",
+        "update_state_inline",
+        "var_reassignment",
+        "vars",
     ]
 
     def __init__(self) -> None:

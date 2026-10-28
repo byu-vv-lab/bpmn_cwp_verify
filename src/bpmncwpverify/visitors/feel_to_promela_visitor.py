@@ -33,7 +33,7 @@ from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
 
 
 class FeelToPromelaVisitor(FeelVisitor):
-    __slots__ = ["promela", "choose", "selects", "choose_id", "index"]
+    __slots__ = ["choose", "choose_id", "index", "promela", "selects"]
 
     def __init__(self, choose_id: str = "") -> None:
         self.promela = StringManager()

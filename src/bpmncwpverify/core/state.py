@@ -360,7 +360,7 @@ class VarDecl(DeclLoc):
     Represents variable declaration using keyword var
     """
 
-    __slots__ = ["col", "id", "line", "type_", "init_value", "allowed_values"]
+    __slots__ = ["allowed_values", "col", "id", "init_value", "line", "type_"]
 
     def __init__(
         self,
@@ -501,9 +501,9 @@ class State:
         "_consts",
         "_enums",
         "_id2type",
+        "_str2const",
         "_str2enum",
         "_str2var",
-        "_str2const",
         "_vars",
     ]
 

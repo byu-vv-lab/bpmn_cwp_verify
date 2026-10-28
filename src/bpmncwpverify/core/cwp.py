@@ -13,7 +13,9 @@ from bpmncwpverify.core.error import (
     CwpInvalidAssignmentTargetError,
     CwpInvalidLiteralError,
     CwpInvalidStartEdgeError,
+    CwpMissingElementIdError,
     Error,
+    ErrorException,
 )
 from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
@@ -28,7 +30,7 @@ from bpmncwpverify.core.feel_tree import (
 
 
 class Cwp:
-    __slots__ = ["states", "edges", "start_state", "end_states"]
+    __slots__ = ["edges", "end_states", "start_state", "states"]
 
     def __init__(self) -> None:
         self.states: dict[str, CwpState] = {}
@@ -44,7 +46,7 @@ class Cwp:
 
 
 class CwpState:
-    __slots__ = ["id", "name", "out_edges", "in_edges", "init_state"]
+    __slots__ = ["id", "in_edges", "init_state", "name", "out_edges"]
 
     def __init__(self, id: str, name: str) -> None:
         self.id = id
@@ -72,7 +74,7 @@ class CwpState:
     def from_xml(element: Element) -> "CwpState":
         id = element.get("id")
         if id is None:
-            raise Exception("id not in cwp state")
+            raise ErrorException(CwpMissingElementIdError("state"))
 
         name = element.get("value") or id
         return CwpState(id, CwpState._clean_name(name))
@@ -84,14 +86,14 @@ class CwpState:
 
 class CwpEdge:
     __slots__ = [
-        "id",
-        "name",
-        "target_id",
+        "dest",
         "expression",
+        "id",
+        "is_leaf",
+        "name",
         "parent_id",
         "source",
-        "dest",
-        "is_leaf",
+        "target_id",
     ]
 
     def __init__(self, id: str, name: str, target_id: str | None = None) -> None:
@@ -263,7 +265,7 @@ class CwpEdge:
     def from_xml(element: Element, name: str) -> "CwpEdge":
         id = element.get("id")
         if id is None:
-            raise Exception("No ID for edge or no targetRef")
+            raise ErrorException(CwpMissingElementIdError("edge"))
         return CwpEdge(id, name)
 
     @staticmethod
