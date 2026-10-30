@@ -1,6 +1,11 @@
 from returns.maybe import Nothing
 
-from bpmncwpverify.core.error import ErrorException, TypingNotCaughtError
+from bpmncwpverify.core.error import (
+    ErrorException,
+    PromelaUnsupportedExpressionError,
+    TypingNotCaughtError,
+)
+from bpmncwpverify.core.feel import Feel
 from bpmncwpverify.core.feel_tree import (
     AddNode,
     AndNode,
@@ -15,6 +20,7 @@ from bpmncwpverify.core.feel_tree import (
     GENode,
     GTNode,
     IfNode,
+    IntervalNode,
     LENode,
     ListNode,
     LTNode,
@@ -30,6 +36,24 @@ from bpmncwpverify.core.feel_tree import (
     XOrNode,
 )
 from bpmncwpverify.util.stringmanager import NL_SINGLE, StringManager
+
+
+def translate_feel_expr(expression: Feel, owner_id: str) -> str:
+    """Render a condition, rejecting expressions requiring executable setup."""
+    visitor = FeelToPromelaVisitor(owner_id)
+    expression.ast.accept(visitor)
+
+    if str(visitor.selects) or str(visitor.choose):
+        raise ErrorException(
+            PromelaUnsupportedExpressionError(
+                owner_id,
+                "FEEL guard/edge expression requires selection statements or "
+                "temporary declarations (e.g. choose); use choose in task "
+                "behavior instead",
+            )
+        )
+
+    return str(visitor.promela)
 
 
 class FeelToPromelaVisitor(FeelVisitor):
@@ -169,6 +193,26 @@ class FeelToPromelaVisitor(FeelVisitor):
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
+        if isinstance(node.choices, IntervalNode):
+            interval_node = node.choices
+            assert isinstance(interval_node.lower, NumberLiteralNode)
+            assert isinstance(interval_node.upper, NumberLiteralNode)
+
+            lower = int(interval_node.lower.value) + (not interval_node.lower_inclusive)
+            upper = int(interval_node.upper.value) - (not interval_node.upper_inclusive)
+            variable = f"choose_{self.choose_id}_{self.index}"
+
+            self.choose.write_str(
+                f"{interval_node.type.unwrap()} {variable}", NL_SINGLE
+            )
+            self.selects.write_str(
+                f"atomic{{select({variable} : {lower}..{upper})}}", NL_SINGLE
+            )
+            self.promela.write_str(variable)
+
+            self.index += 1
+            return False
+
         choose_array: StringManager = StringManager()
 
         choose_visitor = FeelToPromelaChooseVisitor(
@@ -250,6 +294,7 @@ class FeelToPromelaChooseVisitor(FeelVisitor):
         return False
 
     def visit_choose(self, node: ChooseNode) -> bool:
+        assert isinstance(node.choices, ListNode)
         self.found_choose = True
         if node.choices.type == Nothing:
             raise ErrorException(

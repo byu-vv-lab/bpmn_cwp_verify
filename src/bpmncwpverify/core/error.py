@@ -668,6 +668,15 @@ class StateAntlrWalkerError(Error):
         super().__init__()
 
 
+class PromelaUnsupportedExpressionError(Error):
+    __slots__ = ["element_id", "reason"]
+
+    def __init__(self, element_id: str, reason: str) -> None:
+        super().__init__()
+        self.element_id = element_id
+        self.reason = reason
+
+
 class CbmcUnsupportedElementError(Error):
     __slots__ = ["element_id", "element_type"]
 
@@ -773,11 +782,19 @@ class TypingNotNonBoolError(Error):
 
 
 class TypingNotCaughtError(Error):
-    __slpts__ = ["explination"]
+    __slots__ = ["explination"]
 
     def __init__(self, explination: str) -> None:
         super().__init__()
         self.explination = explination
+
+
+class IntervalValidationError(Error):
+    __slots__ = ["reason"]
+
+    def __init__(self, reason: str) -> None:
+        super().__init__()
+        self.reason = reason
 
 
 def get_error_message(error: Error) -> str:
@@ -991,6 +1008,8 @@ def get_error_message(error: Error) -> str:
             return f"STATE ERROR: multiple definition of '{id}'{location_first}{location_second}"
         case StateSyntaxError(msg=msg):
             return f"STATE SYNTAX ERROR: {msg}"
+        case PromelaUnsupportedExpressionError(element_id=element_id, reason=reason):
+            return f"PROMELA ERROR: unsupported condition (id: {element_id}): {reason}"
         case CbmcUnsupportedElementError(
             element_id=element_id, element_type=element_type
         ):
@@ -1050,6 +1069,8 @@ def get_error_message(error: Error) -> str:
             return f"TYPING ERROR: literal '{id}' has an unknown type"
         case TypingNotCaughtError(explination=explination):
             return explination
+        case IntervalValidationError(reason=reason):
+            return f"TYPING ERROR: {reason}"
         case StateArraySizeError(
             id=id,
             line=line,

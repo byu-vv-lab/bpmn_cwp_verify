@@ -3,7 +3,7 @@ from returns.result import Failure, Result, Success
 
 from bpmncwpverify.core.bpmn import Bpmn
 from bpmncwpverify.core.cwp import Cwp
-from bpmncwpverify.core.error import Error, NotInitializedError
+from bpmncwpverify.core.error import Error, ErrorException, NotInitializedError
 from bpmncwpverify.core.state import State
 from bpmncwpverify.util.stringmanager import (
     NL_DOUBLE,
@@ -106,11 +106,15 @@ def _generate_state_dump(state: State) -> str:
 
 
 def _generate_promela(state: State, cwp: Cwp, bpmn: Bpmn) -> Result[str, Error]:
-    cwp_pml = _generate_cwp_promela(cwp, state)
-    state_dump_pml = _generate_state_dump(state)
-    logger_pml = _generate_logger(state, cwp)
-    vars_pml = _generate_state_promela(state)
-    bpmn_pml = _generate_bpmn_promela(bpmn)
+    try:
+        cwp_pml = _generate_cwp_promela(cwp, state)
+        state_dump_pml = _generate_state_dump(state)
+        logger_pml = _generate_logger(state, cwp)
+        vars_pml = _generate_state_promela(state)
+        bpmn_pml = _generate_bpmn_promela(bpmn)
+    except ErrorException as e:
+        return Failure(e.error)
+
     pml = f"{DEBUG_PROMELA}{vars_pml}{cwp_pml}{logger_pml}{state_dump_pml}{bpmn_pml}"
     return Success(pml)
 

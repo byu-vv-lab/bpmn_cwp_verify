@@ -19,6 +19,7 @@ from bpmncwpverify.core.feel_tree import (
     GENode,
     GTNode,
     IfNode,
+    IntervalNode,
     LENode,
     ListNode,
     LTNode,
@@ -189,10 +190,19 @@ class FeelToCbmcVisitor(FeelVisitor):
         t_var = f"t_choose_{self.choose_id}_{self._choose_idx}"
         self._choose_idx += 1
 
-        value_texts = [self._render(value) for value in node.choices.values]
+        if isinstance(node.choices, IntervalNode):
+            interval = node.choices
+            assert isinstance(interval.lower, NumberLiteralNode)
+            assert isinstance(interval.upper, NumberLiteralNode)
+
+            lower = int(interval.lower.value) + (not interval.lower_inclusive)
+            upper = int(interval.upper.value) - (not interval.upper_inclusive)
+            assume = f"{t_var} >= {lower} && {t_var} <= {upper}"
+        else:
+            value_texts = [self._render(value) for value in node.choices.values]
+            assume = " || ".join(f"{t_var} == {value}" for value in value_texts)
 
         self.stmts.append(f"int {t_var} = nondet_int();")
-        assume = " || ".join(f"{t_var} == {value}" for value in value_texts)
         self.stmts.append(f"__CPROVER_assume({assume});")
 
         self.expr += t_var

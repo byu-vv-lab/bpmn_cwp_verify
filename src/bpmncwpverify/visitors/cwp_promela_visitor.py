@@ -5,7 +5,7 @@ from bpmncwpverify.util.stringmanager import (
     IndentAction,
     StringManager,
 )
-from bpmncwpverify.visitors.feel_to_promela_visitor import FeelToPromelaVisitor
+from bpmncwpverify.visitors.feel_to_promela_visitor import translate_feel_expr
 
 START_STR = "//**********CWP VARIABLE DECLARATION************//"
 END_STR = "//**********************************************//"
@@ -43,10 +43,7 @@ class CwpPromelaVisitor(CwpVisitor):
 
         edges: list[str] = []
         for edge in state.in_edges:
-            source_changer = FeelToPromelaVisitor(edge.id)
-            edge.expression.ast.accept(source_changer)
-            edges.append(str(source_changer.promela))
-            self.chooses.write_str(source_changer.choose)
+            edges.append(translate_feel_expr(edge.expression, edge.id))
 
         guard.write_str(
             " && ".join(edges if state.in_edges else ["true"])
@@ -56,10 +53,7 @@ class CwpPromelaVisitor(CwpVisitor):
 
         edges = []
         for edge in state.out_edges:
-            source_changer = FeelToPromelaVisitor(edge.id)
-            edge.expression.ast.accept(source_changer)
-            edges.append(str(source_changer.promela))
-            self.chooses.write_str(source_changer.choose)
+            edges.append(translate_feel_expr(edge.expression, edge.id))
 
         guard.write_str(
             " || ".join(edges if state.out_edges else ["false"])
