@@ -12,10 +12,13 @@ class ErrorTrace:
     Class to represent an error trace.
     """
 
-    __slots__ = ["id", "changed_vars", "cur_cwp_state", "related_variables"]
+    __slots__ = ["id", "name", "changed_vars", "cur_cwp_state", "related_variables"]
 
-    def __init__(self, id: str, changed_vars: list[str], cur_cwp_state: list[str]):
+    def __init__(
+        self, id: str, name: str, changed_vars: list[str], cur_cwp_state: list[str]
+    ):
         self.id = id
+        self.name = name
         self.changed_vars = changed_vars
         self.cur_cwp_state = cur_cwp_state
 
@@ -50,6 +53,7 @@ class CounterExample:
             "trace_steps": [
                 {
                     "id": step.id,
+                    "name": step.name,
                     "changed_vars": step.changed_vars,
                     "cur_cwp_state": step.cur_cwp_state,
                 }
@@ -118,6 +122,7 @@ class CounterExample:
         line_index = 0
         steps: list[ErrorTrace] = []
         id = ""
+        name = ""
         changed_variables: list[str] = []
         state: list[str] = []
         issue = ""
@@ -125,11 +130,12 @@ class CounterExample:
         while line_index < len(lines):
             if "ID: " in lines[line_index]:
                 id = lines[line_index].split(":", 1)[1].strip()
+                name = ""
 
                 if id in bpmn.processes:
-                    id = bpmn.processes[id].name
+                    name = bpmn.processes[id].name
                 elif id in bpmn.id_to_element:
-                    id = bpmn.id_to_element[id].name
+                    name = bpmn.id_to_element[id].name
 
                 state = []
                 line_index += 1
@@ -152,6 +158,6 @@ class CounterExample:
                 line_index += 1
 
             if line_index == len(lines) or "ID: " in lines[line_index] and id != "":
-                steps.append(ErrorTrace(id, changed_variables, state))
+                steps.append(ErrorTrace(id, name, changed_variables, state))
 
         return steps, issue

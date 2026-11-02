@@ -76,6 +76,40 @@ def test_counterexample_extract_steps(mocker):
 
     assert issue == ""
     assert len(steps) == 1
-    assert steps[0].id == "start"
+    assert steps[0].id == "Event_1"
+    assert steps[0].name == "start"
     assert steps[0].changed_vars == ["test_var1", "test_var2"]
     assert steps[0].cur_cwp_state == ["test_state1"]
+
+
+def test_extract_steps_with_duplicate_names(mocker):
+    bpmn = Bpmn()
+    ids = ["AUV_Active_Search", "ROV_Active_Search"]
+
+    for task_id in ids:
+        element = mocker.Mock()
+        element.id = task_id
+        element.name = "Active Search"
+        bpmn.id_to_element[task_id] = element
+
+    test_string = """ID: AUV_Active_Search
+                    Changed Vars:
+                    blackBox = found
+                    Current state: RetrieveBlackBox
+                    ID: ROV_Active_Search
+                    Changed Vars:
+                    Current state: RetrieveBlackBox
+                    """
+
+    steps, issue = CounterExample.extract_steps_v_two(test_string, bpmn)
+
+    assert issue == ""
+    assert len(steps) == 2
+    assert [step.id for step in steps] == ids
+    assert [step.name for step in steps] == [
+        "Active Search",
+        "Active Search",
+    ]
+    assert steps[0].changed_vars == ["blackBox = found"]
+    assert steps[1].changed_vars == []
+    assert all(step.cur_cwp_state == ["RetrieveBlackBox"] for step in steps)
