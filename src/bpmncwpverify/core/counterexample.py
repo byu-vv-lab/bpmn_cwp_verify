@@ -49,7 +49,7 @@ class CounterExample:
         format = {
             "error": str(self.error),
             "issue": self.issue,
-            "init variables": self.vars,
+            "init_variables": self.vars,
             "trace_steps": [
                 {
                     "id": step.id,

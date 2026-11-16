@@ -1,0 +1,214 @@
+{
+    "error": "SpinInvalidEndStateError",
+    "issue": "Assert: Not a valid CWP transition",
+    "init_variables": [
+        "risk = riskInit",
+        "comms = communicationInit",
+        "conditions = conditionsInit",
+        "blackBox = blackBoxInit",
+        "search = searchInit"
+    ],
+    "trace_steps": [
+        {
+            "id": "ROV",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "InitState"
+            ]
+        },
+        {
+            "id": "Start",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "InitState"
+            ]
+        },
+        {
+            "id": "AUV",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "InitState"
+            ]
+        },
+        {
+            "id": "Start",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "InitState"
+            ]
+        },
+        {
+            "id": "Commander",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "InitState"
+            ]
+        },
+        {
+            "id": "Missing Black Box",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "InitState"
+            ]
+        },
+        {
+            "id": "Plan Search",
+            "changed_vars": [
+                "risk = assessing",
+                "comms = wait",
+                "conditions = changed",
+                "blackBox = missing",
+                "search = on"
+            ],
+            "cur_cwp_state": [
+                "PlanSearch"
+            ]
+        },
+        {
+            "id": "Deploy Searchers",
+            "changed_vars": [
+                "risk = acceptable",
+                "comms = sent",
+                "conditions = same"
+            ],
+            "cur_cwp_state": [
+                "Deploy"
+            ]
+        },
+        {
+            "id": "Receive Deploy",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "Deploy"
+            ]
+        },
+        {
+            "id": "Deployed",
+            "changed_vars": [
+                "comms = waiting"
+            ],
+            "cur_cwp_state": [
+                "ActiveSearch"
+            ]
+        },
+        {
+            "id": "Active Search",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "ActiveSearch"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "ActiveSearch"
+            ]
+        },
+        {
+            "id": "Active Search",
+            "changed_vars": [
+                "blackBox = found"
+            ],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Black Box Located Notify Command",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Search Off Found",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Receive Deploy",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Deployed",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Active Search",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Black Box Located Ping Command",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Search Off Found",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Receive Deployed",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Await Updates",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Xor",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Receive Response",
+            "changed_vars": [],
+            "cur_cwp_state": [
+                "RetrieveBlackBox"
+            ]
+        },
+        {
+            "id": "Retrieve Black Box",
+            "changed_vars": [],
+            "cur_cwp_state": []
+        }
+    ]
+}
