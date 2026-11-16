@@ -15,6 +15,7 @@ from bpmncwpverify.antlr.ExprParser import ExprParser
 from bpmncwpverify.core import typechecking
 from bpmncwpverify.core.error import (
     Error,
+    ExpressionArrayAccessError,
     ExpressionComputationCompatabilityError,
     ExpressionNegatorError,
     ExpressionParseError,
@@ -252,7 +253,7 @@ class ExpressionListener(ExprListener):
 
     def exitArrayAccess(self, ctx: ExprParser.ArrayAccessContext) -> None:
         """
-        Verify expressions using [] are valid, raise ExpressionRelationCompatabilityError otherwise
+        Verify expressions using [] are valid, raise ExpressionArrayAccessError otherwise
 
         Args:
             ctx (ExprParser.ArrayAccessContext): Type of node that parser is traversing through
@@ -263,25 +264,27 @@ class ExpressionListener(ExprListener):
         array_name = antlr_get_text(array_node)
         index_text = antlr_get_text(index_node)
 
+        def validate_array_type(array_type: str) -> Result[None, Error]:
+            if array_type != typechecking.ARRAY:
+                return Failure(ExpressionArrayAccessError(array_name, array_type))
+            return Success(None)
+
         array_type = self.state.get_type(array_name)
-        if not_(is_successful)(array_type):
-            raise Exception(ExpressionUnrecognizedID(array_name))
+        array_type.bind(validate_array_type)  # type: ignore[reportUnknownMemberType, unused-ignore]
+
+        def validate_index_type(index_type: str) -> Result[None, Error]:
+            if index_type != typechecking.INT:
+                return Failure(ExpressionArrayAccessError(array_name, index_text))
+            return Success(None)
 
         index_type = self.state.get_type(index_text)
-        if not_(is_successful)(index_type):
-            raise Exception(ExpressionUnrecognizedID(index_text))
+        index_type.bind(validate_index_type)  # type: ignore[reportUnknownMemberType, unused-ignore]
 
-        if index_type.unwrap() not in {
-            typechecking.BIT,
-            typechecking.BYTE,
-            typechecking.SHORT,
-            typechecking.INT,
-        }:
-            raise Exception(
-                ExpressionRelationCompatabilityError(array_name, index_type.unwrap())
-            )
+        def append_type(array_type: str) -> Result[None, Error]:
+            self.type_stack.append(array_type)
+            return Success(None)
 
-        self.type_stack.append(array_type.unwrap())
+        array_type.bind(append_type)  # type: ignore[reportUnknownMemberType, unused-ignore]
 
     def enterID(self, ctx: ExprParser.IDContext) -> None:
         """
@@ -295,6 +298,34 @@ class ExpressionListener(ExprListener):
         type = self.state.get_type(identifier)  # Variable type retrieval method
         if not_(is_successful)(type):
             raise Exception(ExpressionUnrecognizedID(identifier))
+        self.type_stack.append(type.unwrap())
+
+    def exitFieldAccess(self, ctx: ExprParser.FieldAccessContext) -> None:
+        """
+        Retrieve variable type of given ID, raise ExpressionUnrecognizedID otherwise
+
+        Args:
+            ctx (ExprParser.FieldAccessContext): Type of node that parser is traversing through
+        """
+        nodes = ctx.ID()
+        assert nodes is not None
+        nodes = [antlr_get_terminal_node_impl(node) for node in nodes]  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
+        path = ""
+        index = ""
+        for node in nodes:
+            path += antlr_get_text(node) + "."
+        path = path[:-1]  # Remove the trailing "."
+        if ctx.LBRACKET() is not None and ctx.RBRACKET() is not None:  # type: ignore[no-untyped-call]
+            # if the field access has an array index, separate the index from the path
+            index = path[-1]
+            path = path[:-2]
+
+        type = self.state.get_type(path)  # Variable type retrieval method
+        if not_(is_successful)(type):
+            raise Exception(ExpressionUnrecognizedID(path))
+        index_check = self.state.get_type(index)
+        if not_(is_successful)(index_check):
+            raise Exception(ExpressionUnrecognizedID(index))
         self.type_stack.append(type.unwrap())
 
     @staticmethod

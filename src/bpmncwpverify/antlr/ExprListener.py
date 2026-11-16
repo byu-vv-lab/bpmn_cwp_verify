@@ -161,6 +161,15 @@ class ExprListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by ExprParser#FieldAccess.
+    def enterFieldAccess(self, ctx:ExprParser.FieldAccessContext):
+        pass
+
+    # Exit a parse tree produced by ExprParser#FieldAccess.
+    def exitFieldAccess(self, ctx:ExprParser.FieldAccessContext):
+        pass
+
+
     # Enter a parse tree produced by ExprParser#ToAtom.
     def enterToAtom(self, ctx:ExprParser.ToAtomContext):
         pass
